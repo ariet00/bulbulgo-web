@@ -1,7 +1,7 @@
 'use client'
 
 import { useAdminAnalytics } from '@/hooks/queries/admin'
-import { Users, FileText, MessageSquare, CheckCircle, Building2 } from 'lucide-react'
+import { Users, FileText, MessageSquare, CheckCircle, Building2, Smartphone, Monitor, Globe, Info } from 'lucide-react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Link } from '@/i18n/routing'
 
@@ -22,7 +22,7 @@ export default function AdminDashboard() {
                                 <Users className="h-8 w-8" />
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Users</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Total Users</div>
                                 <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
                             </div>
                         </CardContent>
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
                                 <FileText className="h-8 w-8" />
                             </div>
                             <div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Trips</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Total Trips</div>
                                 <div className="text-2xl font-bold">{stats?.total_trips || 0}</div>
                             </div>
                         </CardContent>
@@ -84,6 +84,89 @@ export default function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* User Platforms */}
+                <Card>
+                    <CardContent className="p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Smartphone className="mr-2 h-5 w-5" /> Platforms
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Android</span>
+                                <span className="font-bold">{stats?.platforms?.android || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">iOS</span>
+                                <span className="font-bold">{stats?.platforms?.ios || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Web</span>
+                                <span className="font-bold">{stats?.platforms?.web || 0}</span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Trip Stats */}
+                <Card>
+                    <CardContent className="p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <FileText className="mr-2 h-5 w-5" /> Trip Stats
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Chat Parser Trips (ID: 22)</span>
+                                <span className="font-bold text-blue-600">{stats?.chat_parser_trips || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Other Users Trips</span>
+                                <span className="font-bold">{stats?.other_users_trips || 0}</span>
+                            </div>
+                            <div className="pt-2 border-t">
+                                <div className="text-sm font-medium mb-2 uppercase text-xs text-gray-400">By Type</div>
+                                {Object.entries(stats?.trips_by_type || {}).map(([type, count]: [string, any]) => (
+                                    <div key={type} className="flex justify-between items-center mb-1">
+                                        <span className="text-sm text-gray-500 capitalize">{type}</span>
+                                        <span className="font-medium text-sm">{count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Trip Statuses */}
+                <Card>
+                    <CardContent className="p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Info className="mr-2 h-5 w-5" /> Trip Statuses
+                        </h3>
+                        <div className="space-y-2">
+                            {Object.entries(stats?.trips_by_status || {}).map(([status, count]: [string, any]) => (
+                                <div key={status} className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-500 capitalize">{status}</span>
+                                    <span className="font-bold">{count}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="pt-4 mt-4 border-t">
+                            <h4 className="text-sm font-medium mb-2 uppercase text-xs text-gray-400 flex items-center">
+                                <CheckCircle className="mr-1 h-3 w-3" /> Vehicles by Type
+                            </h4>
+                            <div className="space-y-1">
+                                {Object.entries(stats?.vehicles_by_type || {}).map(([type, count]: [string, any]) => (
+                                    <div key={type} className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-500 capitalize">{type}</span>
+                                        <span className="font-medium text-sm">{count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     )
