@@ -4,8 +4,7 @@ import { useToastStore } from '@/store/useToastStore'
 import { useUserStore } from '@/store/useUserStore'
 import { getServerSession } from 'next-auth'
 
-console.log('process.env.BACKEND_URL', process.env.BACKEND_URL)
-const baseURL = process.env.BACKEND_URL
+const baseURL = process.env.NEXT_PUBLIC_API_URL
 
 const requester = axios.create({
     baseURL: baseURL,

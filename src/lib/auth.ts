@@ -2,7 +2,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { AuthOptions } from 'next-auth'
 
 
-const baseURL = process.env.BACKEND_URL
+const baseURL = process.env.NEXT_PUBLIC_API_URL
 
 export const authOptions: AuthOptions = {
   providers: [

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 
 export const serverFetch = async (endpoint: string, options: RequestInit & { refreshToken?: string } = {}) => {
-    const baseURL = process.env.BACKEND_URL;
+    const baseURL = process.env.NEXT_PUBLIC_API_URL;
     const url = endpoint.startsWith('http') ? endpoint : `${baseURL}${endpoint}`;
     const session = await getServerSession(authOptions)
 
