@@ -4,8 +4,8 @@ import { useToastStore } from '@/store/useToastStore'
 import { useUserStore } from '@/store/useUserStore'
 import { getServerSession } from 'next-auth'
 
-
-const baseURL = process.env.BACKEND_URL || 'http://localhost:8008/api/v1'
+console.log('process.env.BACKEND_URL', process.env.BACKEND_URL)
+const baseURL = process.env.BACKEND_URL
 
 const requester = axios.create({
     baseURL: baseURL,
