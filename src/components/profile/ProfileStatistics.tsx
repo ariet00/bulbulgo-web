@@ -47,14 +47,14 @@ export function ProfileStatistics({ userId }: ProfileStatisticsProps) {
                     <FileText className="h-4 w-4 text-muted-foreground" />
                     <div className="space-y-1">
                         <p className="text-sm font-medium leading-none">{t("totalAds")}</p>
-                        <p className="text-sm text-muted-foreground">{stats.total_ads_count}</p>
+                        <p className="text-sm text-muted-foreground">{stats.total_trips_count}</p>
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     <div className="space-y-1">
                         <p className="text-sm font-medium leading-none">{t("activeAds")}</p>
-                        <p className="text-sm text-muted-foreground">{stats.active_ads_count}</p>
+                        <p className="text-sm text-muted-foreground">{stats.total_companies_count}</p>
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getMessaging, Messaging } from 'firebase/messaging'
+import { getMessaging, Messaging, isSupported } from 'firebase/messaging'
 
 // TODO: Replace with your app's Firebase project configuration
 // See: https://firebase.google.com/docs/web/setup#config-object
@@ -17,11 +17,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 // Initialize Firebase Cloud Messaging and get a reference to the service
-let messaging: Messaging | null = null
-
-if (typeof window !== 'undefined') {
-  // Only initialize messaging in the browser
-  messaging = getMessaging(app)
+const getMessagingInstance = async (): Promise<Messaging | null> => {
+  if (typeof window !== 'undefined') {
+    const supported = await isSupported()
+    if (supported) {
+      return getMessaging(app)
+    }
+  }
+  return null
 }
 
-export { messaging }
+export { getMessagingInstance }
