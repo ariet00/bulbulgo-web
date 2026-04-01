@@ -3,13 +3,17 @@
 import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useThreedsAccounts } from '@/hooks/queries/threeds'
+import { AddAccountDialog } from '@/components/threeds/AddAccountDialog'
 
 export default function ThreedsDashboard() {
   const { data: accounts, isLoading } = useThreedsAccounts()
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Threads Automation Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Threads Automation Dashboard</h1>
+        <AddAccountDialog />
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Your Accounts</CardTitle>
@@ -23,9 +27,9 @@ export default function ThreedsDashboard() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {accounts?.map((acc: any) => (
-                <div key={acc.id} className="p-4 border rounded-lg">
-                  <p className="font-semibold">{acc.username}</p>
-                  <p className="text-xs text-muted-foreground">Status: {acc.is_active ? 'Active' : 'Inactive'}</p>
+                <div key={acc.id} className="p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
+                  <p className="font-semibold text-lg">{acc.username}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Status: {acc.is_active ? 'Active' : 'Error/Inactive'}</p>
                 </div>
               ))}
             </div>
