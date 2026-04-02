@@ -25,9 +25,9 @@ export const submitAccount2FA = async (accountId: number, code: string) => {
   return response.data
 }
 
-export const getGeneratedPosts = async (params?: { 
-  account_id?: number, 
-  skip?: number, 
+export const getGeneratedPosts = async (params?: {
+  account_id?: number,
+  skip?: number,
   limit?: number,
   status?: string,
   q?: string,
@@ -38,9 +38,9 @@ export const getGeneratedPosts = async (params?: {
   return response.data
 }
 
-export const getRecommendations = async (params?: { 
-  account_id?: number, 
-  skip?: number, 
+export const getRecommendations = async (params?: {
+  account_id?: number,
+  skip?: number,
   limit?: number,
   sort_by?: string,
   order?: string,
@@ -73,5 +73,20 @@ export const updatePost = async (postId: number, data: any) => {
 
 export const publishPost = async (postId: number) => {
   const response = await requester.post(`/threeds/posts/${postId}/publish`)
+  return response.data
+}
+
+export const deletePost = async (postId: number) => {
+  const response = await requester.delete(`/threeds/posts/${postId}`)
+  return response.data
+}
+
+export const deleteRecommendation = async (itemId: number) => {
+  const response = await requester.delete(`/threeds/recommendations/${itemId}`)
+  return response.data
+}
+
+export const getLogs = async (params: { account_id: number; skip?: number; limit?: number }) => {
+  const response = await requester.get('/threeds/logs/', { params })
   return response.data
 }

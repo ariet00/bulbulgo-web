@@ -1,3 +1,5 @@
+'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as api from '@/apis/threeds'
 
@@ -32,9 +34,9 @@ export const useThreedsAccountStatus = (accountId: number | null) => {
     queryFn: () => api.getAccountStatus(accountId!),
     enabled: !!accountId,
     refetchInterval: (query) => {
-       const status = query.state?.data?.status;
-       // Stop polling if completed or failed, else poll every 1.5 seconds
-       return (status === 'completed' || status === 'failed') ? false : 1500;
+      const status = query.state?.data?.status;
+      // Stop polling if completed or failed, else poll every 1.5 seconds
+      return (status === 'completed' || status === 'failed') ? false : 1500;
     }
   })
 }
@@ -45,9 +47,9 @@ export const useSubmitThreeds2FA = () => {
   })
 }
 
-export const useThreedsPosts = (params?: { 
-  account_id?: number, 
-  skip?: number, 
+export const useThreedsPosts = (params?: {
+  account_id?: number,
+  skip?: number,
   limit?: number,
   status?: string,
   q?: string,
@@ -60,9 +62,9 @@ export const useThreedsPosts = (params?: {
   })
 }
 
-export const useThreedsRecommendations = (params?: { 
-  account_id?: number, 
-  skip?: number, 
+export const useThreedsRecommendations = (params?: {
+  account_id?: number,
+  skip?: number,
   limit?: number,
   sort_by?: string,
   order?: string,
@@ -72,5 +74,18 @@ export const useThreedsRecommendations = (params?: {
   return useQuery({
     queryKey: ['threeds', 'recommendations', params],
     queryFn: () => api.getRecommendations(params),
+  })
+}
+
+export const useThreedsLogs = (params: {
+  account_id: number,
+  skip?: number,
+  limit?: number
+}) => {
+  return useQuery({
+    queryKey: ['threeds', 'logs', params],
+    queryFn: () => api.getLogs(params),
+    enabled: !!params.account_id,
+    refetchInterval: 5000 // Refresh logs every 5 seconds
   })
 }

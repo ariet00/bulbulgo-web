@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation'
 import {
   useThreedsAccount,
   useThreedsRecommendations,
-  useThreedsPosts
+  useThreedsPosts,
+  useThreedsLogs
 } from '@/hooks/queries/threeds'
 import {
   useCollectAccountData,
@@ -20,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Pagination } from '@/components/ui/pagination-custom'
+import { Badge } from '@/components/ui/badge'
 import { FeedItemCard } from '@/components/threeds/FeedItemCard'
 import { PostCard } from '@/components/threeds/PostCard'
 import {
@@ -37,7 +39,9 @@ import {
   Settings,
   FileText,
   TrendingUp,
-  Save
+  Save,
+  ClipboardList,
+  AlertCircle
 } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { toast } from 'sonner'
@@ -50,6 +54,7 @@ export default function AccountDetailPage() {
   // State for pagination
   const [feedPage, setFeedPage] = useState(1)
   const [draftPage, setDraftPage] = useState(1)
+  const [logPage, setLogPage] = useState(1)
   const pageSize = 12
 
   // State for filtering and sorting
@@ -95,6 +100,15 @@ export default function AccountDetailPage() {
     order: draftSortOrder
   })
 
+  const {
+    data: logsData,
+    isLoading: isLogsLoading
+  } = useThreedsLogs({
+    account_id: accountId,
+    skip: (logPage - 1) * 20,
+    limit: 20
+  })
+
   // Mutations
   const { mutate: collect, isPending: isCollecting } = useCollectAccountData()
   const { mutate: generate, isPending: isGenerating } = useGenerateDrafts()
@@ -130,6 +144,9 @@ export default function AccountDetailPage() {
         persona_interests: account.persona_interests || '',
         persona_whitelist: account.persona_whitelist || '',
         persona_blacklist: account.persona_blacklist || '',
+        ai_persona_template: account.ai_persona_template || '',
+        ai_generation_prompt: account.ai_generation_prompt || '',
+        ai_model: account.ai_model || 'gpt-4o-mini'
       })
     }
   }, [account, settings])
@@ -199,7 +216,7 @@ export default function AccountDetailPage() {
 
       {/* Main Content */}
       <Tabs defaultValue="feed" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-md mb-8">
+        <TabsList className="grid w-full grid-cols-4 max-w-xl mb-8">
           <TabsTrigger value="feed" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Trends
           </TabsTrigger>
@@ -208,6 +225,9 @@ export default function AccountDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" /> Settings
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" /> Logs
           </TabsTrigger>
         </TabsList>
 
@@ -406,7 +426,7 @@ export default function AccountDetailPage() {
 
         {/* SETTINGS TAB */}
         <TabsContent value="settings" className="outline-none">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2">
             {/* AI Persona */}
             <Card className="shadow-sm">
               <CardHeader>
@@ -418,7 +438,7 @@ export default function AccountDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="role">Role / Occupation</Label>
                     <Input
@@ -437,7 +457,7 @@ export default function AccountDetailPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="age">Approximate Age</Label>
                     <Input
@@ -458,7 +478,7 @@ export default function AccountDetailPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="country">Country</Label>
                     <Input
@@ -499,7 +519,7 @@ export default function AccountDetailPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="whitelist">Whitelist Topics (Prefer)</Label>
                     <Textarea
@@ -554,34 +574,126 @@ export default function AccountDetailPage() {
                   Configure how AI generates post candidates.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Inspiration Source</Label>
-                  <Select
-                    value={settings?.gen_mode || 'both'}
-                    onValueChange={val => setSettings({ ...settings, gen_mode: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="topic_only">Persona Role (Topic) Only</SelectItem>
-                      <SelectItem value="recs_only">Recent Trends Only</SelectItem>
-                      <SelectItem value="both">Hybrid (Topic + Trends)</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <CardContent className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">AI Model</Label>
+                    <Select
+                      value={settings?.ai_model || 'gpt-4o-mini'}
+                      onValueChange={val => setSettings({ ...settings, ai_model: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4o-mini">GPT-4o mini (Fast & Cheap)</SelectItem>
+                        <SelectItem value="gpt-4o">GPT-4o (Smartest)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Inspiration Source</Label>
+                    <Select
+                      value={settings?.gen_mode || 'both'}
+                      onValueChange={val => setSettings({ ...settings, gen_mode: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="topic_only">Persona Role (Topic) Only</SelectItem>
+                        <SelectItem value="recs_only">Recent Trends Only</SelectItem>
+                        <SelectItem value="both">Hybrid (Topic + Trends)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="numPosts" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Drafts per generation</Label>
+                    <Input
+                      id="numPosts"
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={settings?.gen_num_posts || 1}
+                      onChange={e => setSettings({ ...settings, gen_num_posts: e.target.value })}
+                    />
+                    <p className="text-[10px] text-muted-foreground italic">Number of drafts to create in each AI run.</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="numPosts">Drafts per generation</Label>
-                  <Input
-                    id="numPosts"
-                    type="number"
-                    min={1}
-                    max={5}
-                    value={settings?.gen_num_posts || 1}
-                    onChange={e => setSettings({ ...settings, gen_num_posts: e.target.value })}
+
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">AI Persona Instructions</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[10px] text-muted-foreground"
+                      onClick={() => setSettings({
+                        ...settings,
+                        ai_persona_template: `You are a {age}-year-old {gender} acting as a '{role}'{location}. 
+- Background: {context}
+- Tone of Voice: {tone}
+- Languages: {languages}
+- Interests/Hobbies: {interests}
+- Preferred Topics to Write About: {whitelist}
+- STRICTLY FORBIDDEN TOPICS (BLACKLIST): {blacklist}. NEVER write about these.
+
+Write exclusively in this persona's voice and style.`
+                      })}
+                    >
+                      Reset to Default
+                    </Button>
+                  </div>
+                  <Textarea
+                    className="min-h-[120px] font-mono text-[11px] leading-relaxed"
+                    placeholder="Enter custom persona instructions..."
+                    value={settings?.ai_persona_template || ''}
+                    onChange={e => setSettings({ ...settings, ai_persona_template: e.target.value })}
                   />
-                  <p className="text-[10px] text-muted-foreground">Number of drafts to create in each AI run.</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Placeholders: <code className="bg-muted px-1 rounded">{`{age}, {gender}, {role}, {location}, {context}, {tone}, {languages}, {interests}, {whitelist}, {blacklist}`}</code>
+                  </p>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Post Generation Prompt</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[10px] text-muted-foreground"
+                      onClick={() => setSettings({
+                        ...settings,
+                        ai_generation_prompt: `You are an expert social media manager for Threads (the Instagram app). 
+Your goal is to generate engaging, viral-ready posts in Russian based on the following trends:
+
+TRENDS AND STYLE SUMMARY:
+{context_summary}
+
+TASK:
+Generate EXACTLY {num_posts} new post drafts. 
+- Tone: Natural, conversational, slightly provocative or relatable (standard Threads style).
+- Language: Russian.
+- Each post should have a strong 'hook' in the first line.
+- Use emojis sparingly but effectively.
+- Output MUST be a JSON array of strings.
+
+Format:
+["Post 1 text", ...]`
+                      })}
+                    >
+                      Reset to Default
+                    </Button>
+                  </div>
+                  <Textarea
+                    className="min-h-[120px] font-mono text-[11px] leading-relaxed"
+                    placeholder="Enter custom generation prompt..."
+                    value={settings?.ai_generation_prompt || ''}
+                    onChange={e => setSettings({ ...settings, ai_generation_prompt: e.target.value })}
+                  />
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Placeholders: <code className="bg-muted px-1 rounded">{`{context_summary}, {num_posts}`}</code>
+                  </p>
                 </div>
               </CardContent>
               <CardFooter className="bg-muted/30 border-t py-4">
@@ -762,6 +874,95 @@ export default function AccountDetailPage() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        {/* LOGS TAB */}
+        <TabsContent value="logs" className="outline-none">
+          <Card className="shadow-sm border-none bg-transparent">
+            <CardHeader className="px-0">
+              <CardTitle>Activity Logs</CardTitle>
+              <CardDescription>
+                Track background tasks and system events for this account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0">
+              <div className="rounded-xl border bg-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50 transition-colors">
+                        <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground w-[180px]">Timestamp</th>
+                        <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground w-[120px]">Module</th>
+                        <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">Level</th>
+                        <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Message</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {isLogsLoading ? (
+                        [...Array(5)].map((_, i) => (
+                          <tr key={i} className="animate-pulse">
+                            <td className="p-4"><div className="h-4 w-32 bg-muted rounded" /></td>
+                            <td className="p-4"><div className="h-4 w-20 bg-muted rounded" /></td>
+                            <td className="p-4"><div className="h-4 w-16 bg-muted rounded" /></td>
+                            <td className="p-4"><div className="h-4 w-full bg-muted rounded" /></td>
+                          </tr>
+                        ))
+                      ) : logsData?.items?.length > 0 ? (
+                        logsData.items.map((log: any) => (
+                          <tr key={log.id} className="hover:bg-muted/30 transition-colors group">
+                            <td className="p-4 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
+                              {new Date(log.created_at).toLocaleString()}
+                            </td>
+                            <td className="p-4">
+                              <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider">
+                                {log.module}
+                              </Badge>
+                            </td>
+                            <td className="p-4">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${log.level === 'ERROR' ? 'bg-red-100 text-red-700' :
+                                log.level === 'WARNING' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-blue-100 text-blue-700'
+                                }`}>
+                                {log.level === 'ERROR' && <AlertCircle className="h-3 w-3 mr-1" />}
+                                {log.level}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-col gap-1">
+                                <p className="font-medium text-foreground">{log.message}</p>
+                                {log.data && Object.keys(log.data).length > 0 && (
+                                  <pre className="text-[10px] bg-muted p-2 rounded border max-h-[100px] overflow-y-auto">
+                                    {JSON.stringify(log.data, null, 2)}
+                                  </pre>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="p-8 text-center text-muted-foreground italic">
+                            No activity logs found for this account.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {logsData?.total > 20 && (
+                <div className="mt-4">
+                  <Pagination
+                    page={logPage}
+                    total={logsData.total}
+                    size={20}
+                    onPageChange={setLogPage}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -4,10 +4,10 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, CalendarDays, Edit2, Save, X, Rocket, Loader2 } from 'lucide-react'
+import { Check, CalendarDays, Edit2, Save, X, Rocket, Loader2, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Textarea } from '@/components/ui/textarea'
-import { useUpdatePost, usePublishPost } from '@/hooks/mutations/threeds'
+import { useUpdatePost, usePublishPost, useDeletePost } from '@/hooks/mutations/threeds'
 
 interface PostCardProps {
   post: any
@@ -16,14 +16,21 @@ interface PostCardProps {
 export function PostCard({ post }: PostCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(post.text)
-  
+
   const updatePost = useUpdatePost()
   const publishPost = usePublishPost()
+  const deletePost = useDeletePost()
 
   const isDraft = post.status === 'draft'
   const isApproved = post.status === 'approved'
   const isPublished = post.status === 'published'
   const isError = post.status === 'error'
+
+  const handleDelete = async () => {
+    if (confirm('Are you sure you want to delete this post?')) {
+      await deletePost.mutateAsync(post.id)
+    }
+  }
 
   const handleSave = async () => {
     try {
@@ -58,11 +65,11 @@ export function PostCard({ post }: PostCardProps) {
 
   return (
     <Card className={`flex flex-col h-full border-l-4 transition-all hover:bg-muted/5 shadow-sm
-      ${isDraft ? 'border-l-blue-400' : 
-        isApproved ? 'border-l-amber-400' : 
-        isPublished ? 'border-l-green-500' : 
-        'border-l-red-500'}`}>
-      
+      ${isDraft ? 'border-l-blue-400' :
+        isApproved ? 'border-l-amber-400' :
+          isPublished ? 'border-l-green-500' :
+            'border-l-red-500'}`}>
+
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="flex items-center space-x-2">
           <Badge variant={isPublished ? "default" : isError ? "destructive" : "secondary"} className="font-semibold px-2 py-0">
@@ -78,7 +85,7 @@ export function PostCard({ post }: PostCardProps) {
       <CardContent className="flex-1 space-y-4">
         {isEditing ? (
           <div className="space-y-3">
-            <Textarea 
+            <Textarea
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               className="min-h-[140px] text-sm leading-relaxed resize-none focus-visible:ring-blue-400"
@@ -101,9 +108,9 @@ export function PostCard({ post }: PostCardProps) {
           <div className="p-4 bg-muted/20 rounded-lg border border-border/50 text-sm whitespace-pre-wrap leading-relaxed relative group">
             {post.text}
             {!isPublished && (
-              <Button 
-                size="icon" 
-                variant="outline" 
+              <Button
+                size="icon"
+                variant="outline"
                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 bg-background border-dashed"
                 onClick={() => setIsEditing(true)}
               >
@@ -117,11 +124,14 @@ export function PostCard({ post }: PostCardProps) {
       <CardFooter className="flex justify-end gap-2 py-4 border-t bg-muted/5 mt-auto">
         {isDraft && !isEditing && (
           <>
+            <Button size="sm" variant="ghost" className="h-9 text-destructive hover:bg-destructive/10" onClick={handleDelete} disabled={deletePost.isPending}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
             <Button size="sm" variant="outline" className="h-9" onClick={() => setIsEditing(true)}>
               <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="h-9 bg-blue-600 hover:bg-blue-700 shadow-sm"
               onClick={handleApprove}
               disabled={updatePost.isPending}
@@ -133,15 +143,20 @@ export function PostCard({ post }: PostCardProps) {
         )}
 
         {(isApproved || isError) && !isEditing && (
-          <Button 
-            size="sm" 
-            className="h-9 bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all hover:scale-[1.02]"
-            onClick={handlePublish}
-            disabled={publishPost.isPending}
-          >
-            {publishPost.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Rocket className="h-3.5 w-3.5 mr-1" />}
-            Publish to Threads
-          </Button>
+          <>
+            <Button size="sm" variant="ghost" className="h-9 text-destructive hover:bg-destructive/10" onClick={handleDelete} disabled={deletePost.isPending}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              className="h-9 bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all hover:scale-[1.02]"
+              onClick={handlePublish}
+              disabled={publishPost.isPending}
+            >
+              {publishPost.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Rocket className="h-3.5 w-3.5 mr-1" />}
+              Publish to Threads
+            </Button>
+          </>
         )}
 
         {isPublished && (

@@ -3,8 +3,10 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, Repeat2, Quote, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Heart, MessageCircle, Repeat2, ExternalLink, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { useDeleteRecommendation } from '@/hooks/mutations/threeds'
 
 interface FeedItemProps {
   item: any
@@ -12,6 +14,14 @@ interface FeedItemProps {
 
 export function FeedItemCard({ item }: FeedItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const deleteMutation = useDeleteRecommendation()
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (confirm('Remove this item from recommendations?')) {
+      await deleteMutation.mutateAsync(item.id)
+    }
+  }
   const isLongText = item.text?.length > 200
 
   return (
@@ -28,16 +38,27 @@ export function FeedItemCard({ item }: FeedItemProps) {
             </p>
           </div>
         </div>
-        <Badge variant="secondary" className="text-[10px]">
-          Score: {item.combined_score?.toFixed(1) || '0.0'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-[10px]">
+            Score: {item.combined_score?.toFixed(1) || '0.0'}
+          </Badge>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 pt-2 space-y-2">
         <p className={`text-sm whitespace-pre-wrap transition-all duration-300 ${isExpanded ? '' : 'line-clamp-4'}`}>
           {item.text}
         </p>
         {isLongText && (
-          <button 
+          <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-[10px] font-medium text-primary hover:underline flex items-center gap-0.5"
           >
@@ -61,9 +82,9 @@ export function FeedItemCard({ item }: FeedItemProps) {
             <Repeat2 className="h-3 w-3" /> {item.reposts_count || 0}
           </span>
         </div>
-        <a 
-          href={`https://www.threads.net/@${item.author_username}/post/${item.external_id}`} 
-          target="_blank" 
+        <a
+          href={`https://www.threads.net/@${item.author_username}/post/${item.external_id}`}
+          target="_blank"
           rel="noopener noreferrer"
           className="text-muted-foreground hover:text-primary"
         >
