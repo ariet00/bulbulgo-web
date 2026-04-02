@@ -8,6 +8,14 @@ export const useThreedsAccounts = () => {
   })
 }
 
+export const useThreedsAccount = (accountId: number) => {
+  return useQuery({
+    queryKey: ['threeds', 'account', accountId],
+    queryFn: () => api.getAccount(accountId),
+    enabled: !!accountId
+  })
+}
+
 export const useCreateThreedsAccount = () => {
   const queryClient = useQueryClient()
   return useMutation({
@@ -37,16 +45,16 @@ export const useSubmitThreeds2FA = () => {
   })
 }
 
-export const useThreedsPosts = () => {
+export const useThreedsPosts = (params?: { account_id?: number, skip?: number, limit?: number }) => {
   return useQuery({
-    queryKey: ['threeds', 'posts'],
-    queryFn: api.getGeneratedPosts,
+    queryKey: ['threeds', 'posts', params],
+    queryFn: () => api.getGeneratedPosts(params),
   })
 }
 
-export const useThreedsRecommendations = () => {
+export const useThreedsRecommendations = (params?: { account_id?: number, skip?: number, limit?: number }) => {
   return useQuery({
-    queryKey: ['threeds', 'recommendations'],
-    queryFn: api.getRecommendations,
+    queryKey: ['threeds', 'recommendations', params],
+    queryFn: () => api.getRecommendations(params),
   })
 }

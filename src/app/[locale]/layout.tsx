@@ -38,8 +38,12 @@ export default async function RootLayout({
   const messages = await getMessages()
   const session = await getServerSession(authOptions);
   if (session) {
-    const user = await getMe()
-    session.user = user || session.user || {}
+    try {
+      const user = await getMe()
+      session.user = user || session.user || {}
+    } catch (error) {
+      console.warn("Failed to fetch user in layout:", error)
+    }
   }
   return (
     <html lang={locale} suppressHydrationWarning>
