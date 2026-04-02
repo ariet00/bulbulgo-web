@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { collectAccountData, generateDrafts, updateAccount } from '@/apis/threeds'
+import { collectAccountData, generateDrafts, updateAccount, updatePost, publishPost } from '@/apis/threeds'
 import { toast } from 'sonner'
 
 export const useCollectAccountData = () => {
@@ -43,6 +43,36 @@ export const useUpdateAccount = () => {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.detail || 'Failed to update account')
+    }
+  })
+}
+
+export const useUpdatePost = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ postId, data }: { postId: number, data: any }) => updatePost(postId, data),
+    onSuccess: () => {
+      toast.success('Post updated successfully')
+      queryClient.invalidateQueries({ queryKey: ['threeds', 'posts'] })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.detail || 'Failed to update post')
+    }
+  })
+}
+
+export const usePublishPost = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (postId: number) => publishPost(postId),
+    onSuccess: () => {
+      toast.success('Post published successfully')
+      queryClient.invalidateQueries({ queryKey: ['threeds', 'posts'] })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.detail || 'Failed to publish post')
     }
   })
 }

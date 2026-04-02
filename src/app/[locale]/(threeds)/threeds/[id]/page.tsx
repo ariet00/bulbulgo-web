@@ -21,13 +21,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Pagination } from '@/components/ui/pagination-custom'
 import { FeedItemCard } from '@/components/threeds/FeedItemCard'
-import { DraftPostCard } from '@/components/threeds/DraftPostCard'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import { PostCard } from '@/components/threeds/PostCard'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select'
 import {
   Loader2,
@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { toast } from 'sonner'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export default function AccountDetailPage() {
   const params = useParams()
@@ -51,17 +52,47 @@ export default function AccountDetailPage() {
   const [draftPage, setDraftPage] = useState(1)
   const pageSize = 12
 
+  // State for filtering and sorting
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 500)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
+  const [minLikes, setMinLikes] = useState<number>(0)
+
+  // State for Drafts filtering
+  const [draftSearchQuery, setDraftSearchQuery] = useState('')
+  const debouncedDraftSearch = useDebounce(draftSearchQuery, 500)
+  const [draftStatus, setDraftStatus] = useState('all')
+  const [draftSortOrder, setDraftSortOrder] = useState('desc')
+
   // Queries
   const { data: account, isLoading: isAccLoading } = useThreedsAccount(accountId)
-  const { data: feedData, isLoading: isFeedLoading } = useThreedsRecommendations({
+  const {
+    data: feedData,
+    isLoading: isFeedLoading,
+    isFetching: isFeedFetching,
+    refetch: refetchFeed
+  } = useThreedsRecommendations({
     account_id: accountId,
     skip: (feedPage - 1) * pageSize,
-    limit: pageSize
+    limit: pageSize,
+    sort_by: sortBy,
+    order: sortOrder,
+    min_likes: minLikes > 0 ? minLikes : undefined,
+    q: debouncedSearch || undefined
   })
-  const { data: draftsData, isLoading: isDraftsLoading } = useThreedsPosts({
+  const {
+    data: draftsData,
+    isLoading: isDraftsLoading,
+    isFetching: isDraftsFetching,
+    refetch: refetchDrafts
+  } = useThreedsPosts({
     account_id: accountId,
     skip: (draftPage - 1) * pageSize,
-    limit: pageSize
+    limit: pageSize,
+    status: draftStatus !== 'all' ? draftStatus : undefined,
+    q: debouncedDraftSearch || undefined,
+    order: draftSortOrder
   })
 
   // Mutations
@@ -84,7 +115,7 @@ export default function AccountDetailPage() {
         collector_min_likes: account.collector_min_likes || 0,
         collector_with_media_only: account.collector_with_media_only || false,
         collector_no_media_only: account.collector_no_media_only || false,
-        
+
         // Advanced settings defaults
         gen_num_posts: account.gen_num_posts || 1,
         gen_mode: account.gen_mode || 'both',
@@ -92,6 +123,13 @@ export default function AccountDetailPage() {
         coll_window_hours: account.coll_window_hours || 24,
         coll_interval_mins: account.coll_interval_mins || 60,
         gen_interval_mins: account.gen_interval_mins || 1440,
+        persona_country: account.persona_country || '',
+        persona_city: account.persona_city || '',
+        persona_languages: account.persona_languages || '',
+        persona_tone: account.persona_tone || '',
+        persona_interests: account.persona_interests || '',
+        persona_whitelist: account.persona_whitelist || '',
+        persona_blacklist: account.persona_blacklist || '',
       })
     }
   }, [account, settings])
@@ -147,15 +185,14 @@ export default function AccountDetailPage() {
             className="shadow-sm"
           >
             {isCollecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
-            Refresh Trends
+            Collect Trends
           </Button>
           <Button
             onClick={() => generate(accountId)}
             disabled={isGenerating}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all active:scale-95"
           >
             {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-            Generate Magic
+            Generate Post
           </Button>
         </div>
       </div>
@@ -167,7 +204,7 @@ export default function AccountDetailPage() {
             <TrendingUp className="h-4 w-4" /> Trends
           </TabsTrigger>
           <TabsTrigger value="drafts" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" /> AI Drafts
+            <FileText className="h-4 w-4" /> Posts
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" /> Settings
@@ -176,6 +213,70 @@ export default function AccountDetailPage() {
 
         {/* FEED TAB */}
         <TabsContent value="feed" className="space-y-4 outline-none">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
+            <div className="flex items-center gap-3 flex-1 min-w-[280px]">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Search in trends..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9"
+                />
+                <Loader2 className={`absolute left-3 top-2.5 h-4 w-4 text-muted-foreground ${debouncedSearch !== searchQuery || isFeedFetching ? 'animate-spin' : ''}`} />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Min Likes:</span>
+                <Input
+                  type="number"
+                  value={minLikes}
+                  onChange={(e) => setMinLikes(parseInt(e.target.value) || 0)}
+                  className="w-20 h-9 px-2"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Sort by:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-9 w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="likes">🔥 Engagment</SelectItem>
+                    <SelectItem value="reposts">🔄 Reposts</SelectItem>
+                    <SelectItem value="replies">💬 Replies</SelectItem>
+                    <SelectItem value="created_at">📅 Newest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="h-9 w-[90px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Desc</SelectItem>
+                  <SelectItem value="asc">Asc</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="h-6 w-px bg-border mx-1 hidden md:block" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => refetchFeed()}
+                disabled={isFeedFetching}
+                className="h-9 text-muted-foreground hover:text-primary"
+              >
+                <RefreshCcw className={`h-4 w-4 mr-2 ${isFeedFetching ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
           {isFeedLoading ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {[...Array(8)].map((_, i) => <div key={i} className="h-[200px] rounded-lg bg-muted animate-pulse" />)}
@@ -211,6 +312,65 @@ export default function AccountDetailPage() {
 
         {/* DRAFTS TAB */}
         <TabsContent value="drafts" className="space-y-4 outline-none">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
+            <div className="flex items-center gap-3 flex-1 min-w-[280px]">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Search in drafts..."
+                  value={draftSearchQuery}
+                  onChange={(e) => setDraftSearchQuery(e.target.value)}
+                  className="pl-9 h-9"
+                />
+                <Loader2 className={`absolute left-3 top-2.5 h-4 w-4 text-muted-foreground ${debouncedDraftSearch !== draftSearchQuery || isDraftsFetching ? 'animate-spin' : ''}`} />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status:</span>
+                <Select value={draftStatus} onValueChange={setDraftStatus}>
+                  <SelectTrigger className="h-9 w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">📝 Draft</SelectItem>
+                    <SelectItem value="approved">✅ Approved</SelectItem>
+                    <SelectItem value="scheduled">⏰ Scheduled</SelectItem>
+                    <SelectItem value="published">🚀 Published</SelectItem>
+                    <SelectItem value="error">❌ Error</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Order:</span>
+                <Select value={draftSortOrder} onValueChange={setDraftSortOrder}>
+                  <SelectTrigger className="h-9 w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="desc">Newest</SelectItem>
+                    <SelectItem value="asc">Oldest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="h-6 w-px bg-border mx-1 hidden md:block" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => refetchDrafts()}
+                disabled={isDraftsFetching}
+                className="h-9 text-muted-foreground hover:text-primary"
+              >
+                <RefreshCcw className={`h-4 w-4 mr-2 ${isDraftsFetching ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
           {isDraftsLoading ? (
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
               {[...Array(4)].map((_, i) => <div key={i} className="h-[250px] rounded-lg bg-muted animate-pulse" />)}
@@ -219,7 +379,7 @@ export default function AccountDetailPage() {
             <>
               <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                 {draftsData.items.map((post: any) => (
-                  <DraftPostCard key={post.id} post={post} />
+                  <PostCard key={post.id} post={post} />
                 ))}
               </div>
               <Pagination
@@ -277,14 +437,89 @@ export default function AccountDetailPage() {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Approximate Age</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      value={settings?.persona_age || ''}
+                      onChange={e => setSettings({ ...settings, persona_age: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tone">Tone of Voice</Label>
+                    <Input
+                      id="tone"
+                      value={settings?.persona_tone || ''}
+                      onChange={e => setSettings({ ...settings, persona_tone: e.target.value })}
+                      placeholder="e.g. Sarcastic, Professional"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input
+                      id="country"
+                      value={settings?.persona_country || ''}
+                      onChange={e => setSettings({ ...settings, persona_country: e.target.value })}
+                      placeholder="e.g. United Kingdom"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      value={settings?.persona_city || ''}
+                      onChange={e => setSettings({ ...settings, persona_city: e.target.value })}
+                      placeholder="e.g. London"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="age">Approximate Age</Label>
+                  <Label htmlFor="languages">Languages</Label>
                   <Input
-                    id="age"
-                    type="number"
-                    value={settings?.persona_age || ''}
-                    onChange={e => setSettings({ ...settings, persona_age: e.target.value })}
+                    id="languages"
+                    value={settings?.persona_languages || ''}
+                    onChange={e => setSettings({ ...settings, persona_languages: e.target.value })}
+                    placeholder="e.g. English, Russian"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="interests">Interests & Hobbies</Label>
+                  <Input
+                    id="interests"
+                    value={settings?.persona_interests || ''}
+                    onChange={e => setSettings({ ...settings, persona_interests: e.target.value })}
+                    placeholder="e.g. Crypto, Coffee, Sci-Fi"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="whitelist">Whitelist Topics (Prefer)</Label>
+                    <Textarea
+                      id="whitelist"
+                      value={settings?.persona_whitelist || ''}
+                      onChange={e => setSettings({ ...settings, persona_whitelist: e.target.value })}
+                      placeholder="e.g. AI News, Startups"
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="blacklist">Blacklist Topics (Avoid)</Label>
+                    <Textarea
+                      id="blacklist"
+                      value={settings?.persona_blacklist || ''}
+                      onChange={e => setSettings({ ...settings, persona_blacklist: e.target.value })}
+                      placeholder="e.g. Politics, Religion"
+                      className="min-h-[80px]"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="context">Style & Context</Label>
@@ -297,6 +532,16 @@ export default function AccountDetailPage() {
                   />
                 </div>
               </CardContent>
+              <CardFooter className="bg-muted/30 border-t py-4">
+                <Button
+                  className="w-full"
+                  onClick={handleSaveSettings}
+                  disabled={updateAccount.isPending}
+                >
+                  {updateAccount.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Save Persona
+                </Button>
+              </CardFooter>
             </Card>
 
             {/* AI Strategy */}
@@ -312,9 +557,9 @@ export default function AccountDetailPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Inspiration Source</Label>
-                  <Select 
-                    value={settings?.gen_mode || 'both'} 
-                    onValueChange={val => setSettings({...settings, gen_mode: val})}
+                  <Select
+                    value={settings?.gen_mode || 'both'}
+                    onValueChange={val => setSettings({ ...settings, gen_mode: val })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select mode" />
@@ -339,6 +584,16 @@ export default function AccountDetailPage() {
                   <p className="text-[10px] text-muted-foreground">Number of drafts to create in each AI run.</p>
                 </div>
               </CardContent>
+              <CardFooter className="bg-muted/30 border-t py-4">
+                <Button
+                  className="w-full"
+                  onClick={handleSaveSettings}
+                  disabled={updateAccount.isPending}
+                >
+                  {updateAccount.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Save Strategy
+                </Button>
+              </CardFooter>
             </Card>
 
             {/* Automation Schedule */}
@@ -354,9 +609,9 @@ export default function AccountDetailPage() {
               <CardContent className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Feed Collection Frequency</Label>
-                  <Select 
-                    value={String(settings?.coll_interval_mins || 60)} 
-                    onValueChange={val => setSettings({...settings, coll_interval_mins: val})}
+                  <Select
+                    value={String(settings?.coll_interval_mins || 60)}
+                    onValueChange={val => setSettings({ ...settings, coll_interval_mins: val })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -372,9 +627,9 @@ export default function AccountDetailPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>AI Generation Frequency</Label>
-                  <Select 
-                    value={String(settings?.gen_interval_mins || 1440)} 
-                    onValueChange={val => setSettings({...settings, gen_interval_mins: val})}
+                  <Select
+                    value={String(settings?.gen_interval_mins || 1440)}
+                    onValueChange={val => setSettings({ ...settings, gen_interval_mins: val })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -389,6 +644,16 @@ export default function AccountDetailPage() {
                   </Select>
                 </div>
               </CardContent>
+              <CardFooter className="bg-muted/30 border-t py-4">
+                <Button
+                  className="w-full"
+                  onClick={handleSaveSettings}
+                  disabled={updateAccount.isPending}
+                >
+                  {updateAccount.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Save Schedule
+                </Button>
+              </CardFooter>
             </Card>
 
             {/* Collector Settings */}
@@ -406,9 +671,9 @@ export default function AccountDetailPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Collection Mode</Label>
-                      <Select 
-                        value={settings?.coll_mode || 'latest_n'} 
-                        onValueChange={val => setSettings({...settings, coll_mode: val})}
+                      <Select
+                        value={settings?.coll_mode || 'latest_n'}
+                        onValueChange={val => setSettings({ ...settings, coll_mode: val })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -436,9 +701,9 @@ export default function AccountDetailPage() {
                     ) : (
                       <div className="space-y-2">
                         <Label>Time Window</Label>
-                        <Select 
-                          value={String(settings?.coll_window_hours || 24)} 
-                          onValueChange={val => setSettings({...settings, coll_window_hours: val})}
+                        <Select
+                          value={String(settings?.coll_window_hours || 24)}
+                          onValueChange={val => setSettings({ ...settings, coll_window_hours: val })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -452,7 +717,7 @@ export default function AccountDetailPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <Label htmlFor="minLikes">Min Likes Threshold</Label>
@@ -491,7 +756,7 @@ export default function AccountDetailPage() {
                     disabled={updateAccount.isPending}
                   >
                     {updateAccount.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Apply Settings
+                    Save Collector
                   </Button>
                 </CardFooter>
               </Card>

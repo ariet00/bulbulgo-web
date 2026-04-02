@@ -1,9 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, Repeat2, Quote, ExternalLink } from 'lucide-react'
+import { Heart, MessageCircle, Repeat2, Quote, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 interface FeedItemProps {
@@ -11,6 +11,9 @@ interface FeedItemProps {
 }
 
 export function FeedItemCard({ item }: FeedItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const isLongText = item.text?.length > 200
+
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -29,8 +32,22 @@ export function FeedItemCard({ item }: FeedItemProps) {
           Score: {item.combined_score?.toFixed(1) || '0.0'}
         </Badge>
       </CardHeader>
-      <CardContent className="flex-1 pt-2">
-        <p className="text-sm line-clamp-4 whitespace-pre-wrap">{item.text}</p>
+      <CardContent className="flex-1 pt-2 space-y-2">
+        <p className={`text-sm whitespace-pre-wrap transition-all duration-300 ${isExpanded ? '' : 'line-clamp-4'}`}>
+          {item.text}
+        </p>
+        {isLongText && (
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-[10px] font-medium text-primary hover:underline flex items-center gap-0.5"
+          >
+            {isExpanded ? (
+              <>Show Less <ChevronUp className="h-3 w-3" /></>
+            ) : (
+              <>Read More <ChevronDown className="h-3 w-3" /></>
+            )}
+          </button>
+        )}
       </CardContent>
       <CardFooter className="border-t bg-muted/20 flex justify-between py-2 px-4">
         <div className="flex space-x-4 text-xs text-muted-foreground">

@@ -45,14 +45,30 @@ export const useSubmitThreeds2FA = () => {
   })
 }
 
-export const useThreedsPosts = (params?: { account_id?: number, skip?: number, limit?: number }) => {
+export const useThreedsPosts = (params?: { 
+  account_id?: number, 
+  skip?: number, 
+  limit?: number,
+  status?: string,
+  q?: string,
+  sort_by?: string,
+  order?: string
+}) => {
   return useQuery({
     queryKey: ['threeds', 'posts', params],
     queryFn: () => api.getGeneratedPosts(params),
   })
 }
 
-export const useThreedsRecommendations = (params?: { account_id?: number, skip?: number, limit?: number }) => {
+export const useThreedsRecommendations = (params?: { 
+  account_id?: number, 
+  skip?: number, 
+  limit?: number,
+  sort_by?: string,
+  order?: string,
+  min_likes?: number,
+  q?: string
+}) => {
   return useQuery({
     queryKey: ['threeds', 'recommendations', params],
     queryFn: () => api.getRecommendations(params),

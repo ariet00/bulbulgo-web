@@ -25,12 +25,28 @@ export const submitAccount2FA = async (accountId: number, code: string) => {
   return response.data
 }
 
-export const getGeneratedPosts = async (params?: { account_id?: number, skip?: number, limit?: number }) => {
+export const getGeneratedPosts = async (params?: { 
+  account_id?: number, 
+  skip?: number, 
+  limit?: number,
+  status?: string,
+  q?: string,
+  sort_by?: string,
+  order?: string
+}) => {
   const response = await requester.get('/threeds/posts/', { params })
   return response.data
 }
 
-export const getRecommendations = async (params?: { account_id?: number, skip?: number, limit?: number }) => {
+export const getRecommendations = async (params?: { 
+  account_id?: number, 
+  skip?: number, 
+  limit?: number,
+  sort_by?: string,
+  order?: string,
+  min_likes?: number,
+  q?: string
+}) => {
   const response = await requester.get('/threeds/recommendations/', { params })
   return response.data
 }
@@ -47,5 +63,15 @@ export const generateDrafts = async (accountId: number) => {
 
 export const updateAccount = async (accountId: number, data: any) => {
   const response = await requester.patch(`/threeds/accounts/${accountId}`, data)
+  return response.data
+}
+
+export const updatePost = async (postId: number, data: any) => {
+  const response = await requester.patch(`/threeds/posts/${postId}`, data)
+  return response.data
+}
+
+export const publishPost = async (postId: number) => {
+  const response = await requester.post(`/threeds/posts/${postId}/publish`)
   return response.data
 }
