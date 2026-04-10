@@ -7,9 +7,10 @@ import { log } from "console";
 const intlMiddleware = createMiddleware(routing);
 
 const protectedPathPrefixes = [
-    "/ads/post",
+    "/admin",
+    "/dashboard",
     "/account",
-    '/messages'
+    "/messages"
 ];
 
 export async function proxy(req: NextRequest) {
@@ -27,14 +28,15 @@ export async function proxy(req: NextRequest) {
 
     if (isProtected) {
         const token = await getToken({ req, raw: true });
-        // TODO add check for user role and admin role
+
         if (!token) {
             // Get the current locale to construct the login URL
             const localeMatch = pathname.match(/^\/(en|ru)/);
             const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
 
+            // Use absolute URL construction for reliability
             const signInUrl = new URL(`/${locale}/login`, req.url);
-            signInUrl.searchParams.set("callbackUrl", pathname);
+            signInUrl.searchParams.set("callbackUrl", req.url);
 
             return NextResponse.redirect(signInUrl);
         }

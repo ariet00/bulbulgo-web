@@ -5,19 +5,24 @@ import { getToken } from "next-auth/jwt";
 
 const intlMiddleware = createMiddleware(routing);
 
+const protectedPathPrefixes = [
+    "/",
+];
+
 export async function proxy(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
     const { device } = userAgent(req);
 
     // Remove locale prefix to check path
-    const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "");
+    const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "") || "/";
 
-    // Skip auth check for public assets and api
-    const isPublic = pathnameWithoutLocale.startsWith("/_next") ||
-        pathnameWithoutLocale.startsWith("/api") ||
-        pathname.includes(".");
+    // Check if the path starts with any of the protected prefixes
+    const isProtected = protectedPathPrefixes.some(prefix =>
+        pathnameWithoutLocale === prefix ||
+        (prefix === "/" ? true : pathnameWithoutLocale.startsWith(`${prefix}/`))
+    );
 
-    if (!isPublic) {
+    if (isProtected) {
         const token = await getToken({ req, raw: true });
 
         if (!token) {
@@ -25,19 +30,8 @@ export async function proxy(req: NextRequest) {
             const localeMatch = pathname.match(/^\/(en|ru)/);
             const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
 
-            // Redirect to the main application's login page
-            // We expect NEXT_PUBLIC_MAIN_APP_URL to be set in Vercel (e.g., https://bulbulgo-web.vercel.app)
-            let mainAppBase = process.env.NEXT_PUBLIC_MAIN_APP_URL || "http://localhost:3000";
-
-            // Clean up the URL: remove trailing slashes and ensure it's not just a protocol
-            mainAppBase = mainAppBase.trim().replace(/\/+$/, "");
-
-            if ((!process.env.NEXT_PUBLIC_MAIN_APP_URL || mainAppBase === 'https:' || mainAppBase === 'http:')) {
-                console.error("NEXT_PUBLIC_MAIN_APP_URL is invalid or missing in production:", process.env.NEXT_PUBLIC_MAIN_APP_URL);
-                // Fallback to a safer value if possible, or keep localhost to make the error obvious
-            }
-
-            const signInUrl = new URL(`${mainAppBase}/${locale}/login`, req.url);
+            // Redirect to the local application's login page
+            const signInUrl = new URL(`/${locale}/login`, req.url);
             signInUrl.searchParams.set("callbackUrl", req.url);
 
             return NextResponse.redirect(signInUrl);
