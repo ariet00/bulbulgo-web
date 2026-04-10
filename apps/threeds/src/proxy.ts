@@ -17,7 +17,8 @@ export async function proxy(req: NextRequest) {
     const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "") || "/";
 
     // Check if the path starts with any of the protected prefixes
-    const isProtected = protectedPathPrefixes.some(prefix =>
+    // but skip protection for the login page to avoid redirect loops
+    const isProtected = pathnameWithoutLocale !== "/login" && protectedPathPrefixes.some(prefix =>
         pathnameWithoutLocale === prefix ||
         (prefix === "/" ? true : pathnameWithoutLocale.startsWith(`${prefix}/`))
     );
