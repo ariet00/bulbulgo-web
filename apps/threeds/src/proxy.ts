@@ -13,24 +13,27 @@ export async function proxy(req: NextRequest) {
     const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "");
 
     // Skip auth check for public assets and api
-    const isPublic = pathnameWithoutLocale === "" || 
-                     pathnameWithoutLocale === "/" ||
-                     pathnameWithoutLocale.startsWith("/_next") ||
-                     pathnameWithoutLocale.startsWith("/api") ||
-                     pathname.includes(".");
+    const isPublic = pathnameWithoutLocale.startsWith("/_next") ||
+        pathnameWithoutLocale.startsWith("/api") ||
+        pathname.includes(".");
 
     if (!isPublic) {
         const token = await getToken({ req, raw: true });
-        
+
         if (!token) {
             // Get the current locale to construct the login URL
             const localeMatch = pathname.match(/^\/(en|ru)/);
             const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
 
             // Redirect to the main application's login page
-            // Assuming the main app is on port 3000 and shared session/cookie domain
-            const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || "http://localhost:3000";
-            const signInUrl = new URL(`${mainAppUrl}/${locale}/login`, req.url);
+            // We expect NEXT_PUBLIC_MAIN_APP_URL to be set in Vercel (e.g., https://bulbulgo-web.vercel.app)
+            const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL;
+
+            if (!mainAppUrl && process.env.NODE_ENV === 'production') {
+                console.error("NEXT_PUBLIC_MAIN_APP_URL is not set in production!");
+            }
+
+            const signInUrl = new URL(`${mainAppUrl || "http://localhost:3000"}/${locale}/login`, req.url);
             signInUrl.searchParams.set("callbackUrl", req.url);
 
             return NextResponse.redirect(signInUrl);
