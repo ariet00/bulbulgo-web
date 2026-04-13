@@ -36,24 +36,24 @@ export default function Navbar() {
           className="flex items-center gap-2 text-xl font-bold text-primary cursor-pointer"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            D
+            B
           </div>
-          <span>Doska</span>
+          <span>BulBul Go</span>
         </Link>
 
-        <div className="hidden flex-1 items-center justify-center px-8 md:flex gap-4">
+        {/* <div className="hidden flex-1 items-center justify-center px-8 md:flex gap-4"> */}
 
-          <div className="flex w-full max-w-2xl items-center gap-2 bg-muted rounded-full px-2 border focus-within:ring-1 focus-within:ring-ring">
+        {/* <div className="flex w-full max-w-2xl items-center gap-2 bg-muted rounded-full px-2 border focus-within:ring-1 focus-within:ring-ring">
             <SearchInput/>
             <div className="h-6 w-px bg-border"/>
             <RegionSelector/>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
 
         <div className="flex items-center gap-4">
-          {isDev && user ? <CompanySelector/> : null}
+          {isDev && user ? <CompanySelector /> : null}
           {/*<LanguageSwitcher />*/}
-          <ThemeToggle/>
+          <ThemeToggle />
 
           {user && (
             <DropdownMenu>
@@ -63,14 +63,14 @@ export default function Navbar() {
                   size="icon"
                   className="rounded-full cursor-pointer relative"
                 >
-                  <Bell className="h-5 w-5"/>
+                  <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"/>
+                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80 p-0">
-                <NotificationList onClose={() => { }}/>
+                <NotificationList onClose={() => { }} />
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -83,7 +83,7 @@ export default function Navbar() {
                   size="icon"
                   className="rounded-full cursor-pointer"
                 >
-                  <User className="h-5 w-5"/>
+                  <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -93,7 +93,7 @@ export default function Navbar() {
                       href="/admin"
                       className="cursor-pointer text-primary font-medium"
                     >
-                      <LayoutDashboard className="mr-2 h-4 w-4"/>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
                       Admin Panel
                     </Link>
                   </DropdownMenuItem>
@@ -106,7 +106,7 @@ export default function Navbar() {
                   <Link href="/messages" className="cursor-pointer">{t(
                     'chat')}</Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator/>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
                     signOut()
@@ -124,7 +124,7 @@ export default function Navbar() {
                 size="icon"
                 className="rounded-full cursor-pointer"
               >
-                <User className="h-5 w-5"/>
+                <User className="h-5 w-5" />
               </Button>
             </Link>
           )}
