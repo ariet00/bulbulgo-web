@@ -7,7 +7,7 @@ import { Badge } from '@doska/ui'
 import { Check, CalendarDays, Edit2, Save, X, Rocket, Loader2, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Textarea } from '@doska/ui'
-import { useUpdatePost, usePublishPost, useDeletePost } from '@doska/shared'
+import { useUpdateThreadsPost, usePublishThreadsPost, useDeleteThreadsPost } from '@doska/shared'
 
 interface PostCardProps {
   post: any
@@ -17,9 +17,9 @@ export function PostCard({ post }: PostCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(post.text)
 
-  const updatePost = useUpdatePost()
-  const publishPost = usePublishPost()
-  const deletePost = useDeletePost()
+  const updatePost = useUpdateThreadsPost()
+  const publishPost = usePublishThreadsPost()
+  const deletePost = useDeleteThreadsPost()
 
   const isDraft = post.status === 'draft'
   const isApproved = post.status === 'approved'

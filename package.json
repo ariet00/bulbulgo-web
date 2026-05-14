@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "turbo dev",
     "dev:web": "turbo dev --filter=@doska/web",
-    "dev:threeds": "turbo dev --filter=@doska/threeds",
+    "dev:content-manager": "turbo dev --filter=@doska/content-manager",
     "build": "turbo build",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""

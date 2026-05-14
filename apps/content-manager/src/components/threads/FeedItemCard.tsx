@@ -6,7 +6,7 @@ import { Badge } from '@doska/ui'
 import { Button } from '@doska/ui'
 import { Heart, MessageCircle, Repeat2, ExternalLink, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { useDeleteRecommendation } from '@doska/shared'
+import { useDeleteThreadsRecommendation } from '@doska/shared'
 
 interface FeedItemProps {
   item: any
@@ -14,7 +14,7 @@ interface FeedItemProps {
 
 export function FeedItemCard({ item }: FeedItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const deleteMutation = useDeleteRecommendation()
+  const deleteMutation = useDeleteThreadsRecommendation()
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault()
