@@ -44,7 +44,10 @@ export default function ContentManagerDashboard() {
 
   const handleDelete = async (account: ContentAccount) => {
     if (confirm(`Удалить аккаунт @${account.username}?`)) {
-      await deleteAccount.mutateAsync(account.id)
+      await deleteAccount.mutateAsync({
+        platform: account.platform,
+        accountId: account.id,
+      })
     }
   }
 

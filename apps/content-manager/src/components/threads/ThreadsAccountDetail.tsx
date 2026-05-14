@@ -152,6 +152,7 @@ export function ThreadsAccountDetail({ account }: Props) {
 
   const handleSaveSettings = async () => {
     await updateAccount.mutateAsync({
+      platform: 'threads',
       accountId,
       data: {
         data: {

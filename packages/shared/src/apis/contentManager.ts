@@ -40,21 +40,78 @@ export const getContentAccount = async (accountId: number): Promise<ContentAccou
   return response.data
 }
 
-export const createContentAccount = async (
-  data: CreateAccountPayload,
+export interface CreateThreadsAccountBody {
+  username: string
+  display_name?: string
+  password: string
+}
+export interface CreateInstagramAccountBody {
+  username: string
+  display_name?: string
+  access_token: string
+}
+export interface CreateTikTokAccountBody {
+  username: string
+  display_name?: string
+  access_token: string
+}
+export interface CreateWhatsAppAccountBody {
+  phone: string
+  display_name?: string
+  api_token: string
+}
+export interface CreateTelegramAccountBody {
+  bot_token: string
+  display_name?: string
+}
+
+export const createThreadsAccount = async (
+  data: CreateThreadsAccountBody,
 ): Promise<ContentAccount> => {
-  const response = await requester.post('/content-manager/accounts/', data)
+  const response = await requester.post('/content-manager/threads/accounts/', data)
   return response.data
+}
+export const createInstagramAccount = async (
+  data: CreateInstagramAccountBody,
+): Promise<ContentAccount> => {
+  const response = await requester.post('/content-manager/instagram/accounts/', data)
+  return response.data
+}
+export const createTikTokAccount = async (
+  data: CreateTikTokAccountBody,
+): Promise<ContentAccount> => {
+  const response = await requester.post('/content-manager/tiktok/accounts/', data)
+  return response.data
+}
+export const createWhatsAppAccount = async (
+  data: CreateWhatsAppAccountBody,
+): Promise<ContentAccount> => {
+  const response = await requester.post('/content-manager/whatsapp/accounts/', data)
+  return response.data
+}
+export const createTelegramAccount = async (
+  data: CreateTelegramAccountBody,
+): Promise<ContentAccount> => {
+  const response = await requester.post('/content-manager/telegram/accounts/', data)
+  return response.data
+}
+
+function accountPath(platform: Platform, accountId: number): string {
+  return `/content-manager/${platform}/accounts/${accountId}`
 }
 
 export const updateContentAccount = async (
+  platform: Platform,
   accountId: number,
   data: UpdateAccountPayload,
 ): Promise<ContentAccount> => {
-  const response = await requester.patch(`/content-manager/accounts/${accountId}`, data)
+  const response = await requester.patch(accountPath(platform, accountId), data)
   return response.data
 }
 
-export const deleteContentAccount = async (accountId: number): Promise<void> => {
-  await requester.delete(`/content-manager/accounts/${accountId}`)
+export const deleteContentAccount = async (
+  platform: Platform,
+  accountId: number,
+): Promise<void> => {
+  await requester.delete(accountPath(platform, accountId))
 }

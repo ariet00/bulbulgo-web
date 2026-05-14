@@ -20,7 +20,11 @@ import {
   SelectValue,
 } from '@doska/ui'
 import {
-  useCreateContentAccount,
+  useCreateInstagramAccount,
+  useCreateTelegramAccount,
+  useCreateThreadsAccount,
+  useCreateTikTokAccount,
+  useCreateWhatsAppAccount,
   useSubmitThreads2FA,
   useThreadsAccountStatus,
   type Platform,
@@ -55,39 +59,6 @@ const EMPTY_FORM: FormState = {
   displayName: '',
 }
 
-function buildCreatePayload(platform: Platform, form: FormState) {
-  const base = {
-    platform,
-    username: form.username || form.phone || form.botToken,
-    display_name: form.displayName || undefined,
-  }
-  switch (platform) {
-    case 'threads':
-      return {
-        ...base,
-        credentials: { password: form.password },
-      }
-    case 'instagram':
-    case 'tiktok':
-      return {
-        ...base,
-        credentials: { access_token: form.accessToken },
-      }
-    case 'whatsapp':
-      return {
-        ...base,
-        username: form.phone,
-        credentials: { api_token: form.apiToken },
-      }
-    case 'telegram':
-      return {
-        ...base,
-        username: form.botToken,
-        credentials: { bot_token: form.botToken },
-      }
-  }
-}
-
 export function AddAccountDialog() {
   const [open, setOpen] = useState(false)
   const [platform, setPlatform] = useState<Platform>('instagram')
@@ -95,12 +66,24 @@ export function AddAccountDialog() {
   const [createdId, setCreatedId] = useState<number | null>(null)
   const [twoFaCode, setTwoFaCode] = useState('')
 
-  const createAccount = useCreateContentAccount()
+  const createThreads = useCreateThreadsAccount()
+  const createInstagram = useCreateInstagramAccount()
+  const createTikTok = useCreateTikTokAccount()
+  const createWhatsApp = useCreateWhatsAppAccount()
+  const createTelegram = useCreateTelegramAccount()
   const submit2FA = useSubmitThreads2FA()
+
   const { data: statusData } = useThreadsAccountStatus(
     platform === 'threads' ? createdId : null,
   )
   const status = statusData?.status
+
+  const isPending =
+    createThreads.isPending ||
+    createInstagram.isPending ||
+    createTikTok.isPending ||
+    createWhatsApp.isPending ||
+    createTelegram.isPending
 
   useEffect(() => {
     if (!open) {
@@ -118,15 +101,43 @@ export function AddAccountDialog() {
   }, [status])
 
   const handleSubmit = async () => {
-    const payload = buildCreatePayload(platform, form)
-    if (!payload.username) return
     try {
-      const created = await createAccount.mutateAsync(payload)
       if (platform === 'threads') {
+        if (!form.username || !form.password) return
+        const created = await createThreads.mutateAsync({
+          username: form.username,
+          display_name: form.displayName || undefined,
+          password: form.password,
+        })
         setCreatedId(created.id)
-      } else {
-        setOpen(false)
+        return
       }
+
+      if (platform === 'instagram') {
+        await createInstagram.mutateAsync({
+          username: form.username,
+          display_name: form.displayName || undefined,
+          access_token: form.accessToken,
+        })
+      } else if (platform === 'tiktok') {
+        await createTikTok.mutateAsync({
+          username: form.username,
+          display_name: form.displayName || undefined,
+          access_token: form.accessToken,
+        })
+      } else if (platform === 'whatsapp') {
+        await createWhatsApp.mutateAsync({
+          phone: form.phone,
+          display_name: form.displayName || undefined,
+          api_token: form.apiToken,
+        })
+      } else if (platform === 'telegram') {
+        await createTelegram.mutateAsync({
+          bot_token: form.botToken,
+          display_name: form.displayName || undefined,
+        })
+      }
+      setOpen(false)
     } catch (e) {
       console.error(e)
     }
@@ -254,10 +265,8 @@ export function AddAccountDialog() {
             )}
 
             <DialogFooter>
-              <Button onClick={handleSubmit} disabled={createAccount.isPending}>
-                {createAccount.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+              <Button onClick={handleSubmit} disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Подключить
               </Button>
             </DialogFooter>

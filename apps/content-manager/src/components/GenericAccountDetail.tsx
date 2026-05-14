@@ -56,6 +56,7 @@ export function GenericAccountDetail({ account }: Props) {
 
   const handleSave = async () => {
     await updateAccount.mutateAsync({
+      platform: account.platform,
       accountId: account.id,
       data: {
         username,
@@ -68,7 +69,10 @@ export function GenericAccountDetail({ account }: Props) {
 
   const handleDelete = async () => {
     if (!confirm(`Удалить аккаунт @${account.username}?`)) return
-    await deleteAccount.mutateAsync(account.id)
+    await deleteAccount.mutateAsync({
+      platform: account.platform,
+      accountId: account.id,
+    })
     router.push('/')
   }
 
