@@ -14,6 +14,7 @@ export type TelegramUser = {
 export type TelegramInit = {
   initData: string
   user: TelegramUser | null
+  startParam: string | null
 }
 
 export async function getTelegramInit(): Promise<TelegramInit | null> {
@@ -25,6 +26,7 @@ export async function getTelegramInit(): Promise<TelegramInit | null> {
     return {
       initData: WebApp.initData,
       user: (WebApp.initDataUnsafe?.user as TelegramUser | undefined) ?? null,
+      startParam: (WebApp.initDataUnsafe as any)?.start_param ?? null,
     }
   } catch (err) {
     console.warn('Telegram WebApp SDK unavailable:', err)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 
@@ -9,16 +9,25 @@ import { getTelegramInit } from '@/lib/telegram'
 import { useBookingStore } from '@/store/useBookingStore'
 import type { Business } from '@/types/booking'
 
-const FALLBACK_BOT_SLUG = process.env.NEXT_PUBLIC_BOT_SLUG || 'booking-bot'
+const FALLBACK_BOT_SLUG = process.env.NEXT_PUBLIC_BOT_SLUG || ''
 
 /**
  * Mini App entry: validates Telegram initData with the backend, stores
  * the access token + bot slug, fetches the business context, and routes
  * to the client or owner home page.
+ *
+ * The bot slug is resolved in this priority:
+ *  1. `?bot=<slug>` query param (set per-bot via @BotFather)
+ *  2. Telegram WebApp `start_param` (alternative BotFather-driven channel)
+ *  3. `NEXT_PUBLIC_BOT_SLUG` env (legacy single-bot fallback)
+ *
+ * Once resolved, the slug is persisted to localStorage so client-side
+ * navigation away from the entry URL keeps working.
  */
 export function MiniAppBootstrap() {
   const t = useTranslations('home')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { bootStatus, errorMessage, setBootStatus, setError, setBusiness } = useBookingStore()
 
   useEffect(() => {
@@ -33,8 +42,16 @@ export function MiniAppBootstrap() {
         return
       }
 
+      const urlSlug = searchParams.get('bot')
+      const startParam = tg.startParam || null
+      const slug = urlSlug || startParam || FALLBACK_BOT_SLUG
+      if (!slug) {
+        setError('Bot slug is not configured. Open the Mini App from the bot.')
+        setBootStatus('error')
+        return
+      }
+
       try {
-        const slug = FALLBACK_BOT_SLUG
         const authRes = await api.post(`/api/v1/bot/${slug}/auth`, {
           init_data: tg.initData,
         })
