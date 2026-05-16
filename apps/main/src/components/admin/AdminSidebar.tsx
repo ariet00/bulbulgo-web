@@ -10,6 +10,7 @@ import {
     LayoutDashboard,
     List,
     MessageSquare,
+    Timer,
     Users,
 } from 'lucide-react'
 import { cn } from '@doska/shared'
@@ -21,6 +22,12 @@ const sections: NavSection[] = [
     {
         items: [
             { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: 'Ops',
+        items: [
+            { name: 'Celery', href: '/admin/celery', icon: Timer },
         ],
     },
     {

@@ -17,6 +17,8 @@ export const adminKeys = {
     chat: (id: number) => [...adminKeys.chats(), id] as const,
     analytics: () => [...adminKeys.all, 'analytics'] as const,
     bookingBots: (onlyUnlinked: boolean) => [...adminKeys.all, 'booking-bots', onlyUnlinked] as const,
+    celeryTasks: () => [...adminKeys.all, 'celery-tasks'] as const,
+    celeryTask: (id: number) => [...adminKeys.celeryTasks(), id] as const,
 }
 
 export const useAdminUsers = (page: number = 1, size: number = 40) => {
@@ -120,5 +122,20 @@ export const useAdminBookingBots = (onlyUnlinked = false) => {
     return useQuery({
         queryKey: adminKeys.bookingBots(onlyUnlinked),
         queryFn: () => adminApi.getBookingBots(onlyUnlinked),
+    })
+}
+
+export const useAdminCeleryTasks = () => {
+    return useQuery({
+        queryKey: adminKeys.celeryTasks(),
+        queryFn: () => adminApi.listCeleryTasks(),
+    })
+}
+
+export const useAdminCeleryTask = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.celeryTask(id),
+        queryFn: () => adminApi.getCeleryTask(id),
+        enabled: !!id,
     })
 }

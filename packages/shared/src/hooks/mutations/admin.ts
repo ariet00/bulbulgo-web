@@ -3,6 +3,8 @@ import {
     adminApi,
     BookingLinkRequest,
     BookingOnboardRequest,
+    CeleryPeriodicTaskCreate,
+    CeleryPeriodicTaskUpdate,
 } from '../../apis/admin'
 import { adminKeys } from '../queries/admin'
 import { toast } from 'sonner'
@@ -127,6 +129,55 @@ export const useAdminLinkBookingBot = () => {
             invalidateBookingBots(qc)
             qc.invalidateQueries({ queryKey: adminKeys.companies() })
             toast.success('Бот привязан к компании')
+        },
+    })
+}
+
+// === Celery beat ===
+const invalidateCeleryTasks = (qc: ReturnType<typeof useQueryClient>) => {
+    qc.invalidateQueries({ queryKey: adminKeys.celeryTasks() })
+}
+
+export const useAdminCreateCeleryTask = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: CeleryPeriodicTaskCreate) => adminApi.createCeleryTask(body),
+        onSuccess: () => {
+            invalidateCeleryTasks(qc)
+            toast.success('Periodic task created')
+        },
+    })
+}
+
+export const useAdminUpdateCeleryTask = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: CeleryPeriodicTaskUpdate }) =>
+            adminApi.updateCeleryTask(id, body),
+        onSuccess: (_, { id }) => {
+            invalidateCeleryTasks(qc)
+            qc.invalidateQueries({ queryKey: adminKeys.celeryTask(id) })
+        },
+    })
+}
+
+export const useAdminDeleteCeleryTask = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteCeleryTask(id),
+        onSuccess: () => {
+            invalidateCeleryTasks(qc)
+            toast.success('Periodic task deleted')
+        },
+    })
+}
+
+export const useAdminRefreshCeleryBeat = () => {
+    return useMutation({
+        mutationFn: () => adminApi.refreshCeleryBeat(),
+        onSuccess: (res) => {
+            if (res.ok) toast.success('Beat reload signalled')
+            else toast.message(`Beat not reloaded: ${res.reason ?? 'unknown'}`)
         },
     })
 }

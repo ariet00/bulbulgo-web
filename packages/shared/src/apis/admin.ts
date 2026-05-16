@@ -14,6 +14,7 @@ const requests = {
     get: <T>(url: string) => requester.get<T>(url).then(responseBody),
     post: <T>(url: string, body: {}) => requester.post<T>(url, body).then(responseBody),
     put: <T>(url: string, body: {}) => requester.put<T>(url, body).then(responseBody),
+    patch: <T>(url: string, body: {}) => requester.patch<T>(url, body).then(responseBody),
     delete: <T>(url: string) => requester.delete<T>(url).then(responseBody),
 }
 
@@ -68,6 +69,20 @@ export const adminApi = {
         requests.post<BookingOnboardResponse>('/admin/booking/onboard', body),
     linkBookingBot: (body: BookingLinkRequest) =>
         requests.post<BookingLinkResponse>('/admin/booking/link', body),
+
+    // Celery beat — periodic tasks
+    listCeleryTasks: () =>
+        requests.get<CeleryPeriodicTask[]>('/admin/celery/periodic-tasks'),
+    getCeleryTask: (id: number) =>
+        requests.get<CeleryPeriodicTask>(`/admin/celery/periodic-tasks/${id}`),
+    createCeleryTask: (body: CeleryPeriodicTaskCreate) =>
+        requests.post<CeleryPeriodicTask>('/admin/celery/periodic-tasks', body),
+    updateCeleryTask: (id: number, body: CeleryPeriodicTaskUpdate) =>
+        requests.patch<CeleryPeriodicTask>(`/admin/celery/periodic-tasks/${id}`, body),
+    deleteCeleryTask: (id: number) =>
+        requests.delete<any>(`/admin/celery/periodic-tasks/${id}`),
+    refreshCeleryBeat: () =>
+        requests.post<{ ok: boolean; reason?: string }>('/admin/celery/refresh-beat', {}),
 }
 
 export interface BookingBotItem {
@@ -116,4 +131,66 @@ export interface BookingLinkResponse {
     created_company: boolean
     settings_created: boolean
     schedule_created: boolean
+}
+
+// === Celery beat ===
+
+export interface CeleryCrontab {
+    id?: number | null
+    minute: string
+    hour: string
+    day_of_week: string
+    day_of_month: string
+    month_of_year: string
+    timezone: string
+}
+
+export interface CeleryInterval {
+    id?: number | null
+    every: number
+    period: 'seconds' | 'minutes' | 'hours' | 'days'
+}
+
+export interface CeleryPeriodicTask {
+    id: number
+    name: string
+    task: string
+    args: string
+    kwargs: string
+    queue: string | null
+    enabled: boolean
+    one_off: boolean
+    expire_seconds: number | null
+    last_run_at: string | null
+    total_run_count: number
+    date_changed: string | null
+    description: string | null
+    crontab: CeleryCrontab | null
+    interval: CeleryInterval | null
+}
+
+export interface CeleryPeriodicTaskCreate {
+    name: string
+    task: string
+    args?: string
+    kwargs?: string
+    queue?: string | null
+    enabled?: boolean
+    one_off?: boolean
+    description?: string | null
+    crontab?: CeleryCrontab | null
+    interval?: CeleryInterval | null
+}
+
+export interface CeleryPeriodicTaskUpdate {
+    name?: string
+    task?: string
+    args?: string
+    kwargs?: string
+    queue?: string | null
+    enabled?: boolean
+    one_off?: boolean
+    description?: string | null
+    crontab?: CeleryCrontab | null
+    interval?: CeleryInterval | null
 }
