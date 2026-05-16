@@ -16,6 +16,7 @@ export const adminKeys = {
     chats: () => [...adminKeys.all, 'chats'] as const,
     chat: (id: number) => [...adminKeys.chats(), id] as const,
     analytics: () => [...adminKeys.all, 'analytics'] as const,
+    bookingBots: (onlyUnlinked: boolean) => [...adminKeys.all, 'booking-bots', onlyUnlinked] as const,
 }
 
 export const useAdminUsers = (page: number = 1, size: number = 40) => {
@@ -112,5 +113,12 @@ export const useAdminAnalytics = () => {
     return useQuery({
         queryKey: adminKeys.analytics(),
         queryFn: () => adminApi.getAnalytics(),
+    })
+}
+
+export const useAdminBookingBots = (onlyUnlinked = false) => {
+    return useQuery({
+        queryKey: adminKeys.bookingBots(onlyUnlinked),
+        queryFn: () => adminApi.getBookingBots(onlyUnlinked),
     })
 }

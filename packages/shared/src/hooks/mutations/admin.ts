@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi } from '../../apis/admin'
+import {
+    adminApi,
+    BookingLinkRequest,
+    BookingOnboardRequest,
+} from '../../apis/admin'
 import { adminKeys } from '../queries/admin'
 import { toast } from 'sonner'
 
@@ -83,6 +87,46 @@ export const useAdminDeleteProperty = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: adminKeys.properties() })
             toast.success('Property deleted')
+        },
+    })
+}
+
+const invalidateBookingBots = (qc: ReturnType<typeof useQueryClient>) => {
+    qc.invalidateQueries({ queryKey: [...adminKeys.all, 'booking-bots'] })
+}
+
+export const useAdminRegisterBookingBot = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: { slug: string; token: string; name?: string }) =>
+            adminApi.registerBookingBot(body),
+        onSuccess: () => {
+            invalidateBookingBots(qc)
+            toast.success('Bot registered')
+        },
+    })
+}
+
+export const useAdminOnboardBooking = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: BookingOnboardRequest) => adminApi.onboardBooking(body),
+        onSuccess: () => {
+            invalidateBookingBots(qc)
+            qc.invalidateQueries({ queryKey: adminKeys.companies() })
+            toast.success('Бизнес создан и привязан к боту')
+        },
+    })
+}
+
+export const useAdminLinkBookingBot = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: BookingLinkRequest) => adminApi.linkBookingBot(body),
+        onSuccess: () => {
+            invalidateBookingBots(qc)
+            qc.invalidateQueries({ queryKey: adminKeys.companies() })
+            toast.success('Бот привязан к компании')
         },
     })
 }

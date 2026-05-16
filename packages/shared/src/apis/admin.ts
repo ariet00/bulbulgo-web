@@ -58,4 +58,62 @@ export const adminApi = {
 
     // Analytics
     getAnalytics: () => requests.get<any>('/admin/analytics/'),
+
+    // Booking — bots & onboarding
+    getBookingBots: (onlyUnlinked = false) =>
+        requests.get<BookingBotItem[]>(`/admin/booking/bots?only_unlinked=${onlyUnlinked}`),
+    registerBookingBot: (body: { slug: string; token: string; name?: string }) =>
+        requests.post<BookingBotItem>('/admin/booking/bots', body),
+    onboardBooking: (body: BookingOnboardRequest) =>
+        requests.post<BookingOnboardResponse>('/admin/booking/onboard', body),
+    linkBookingBot: (body: BookingLinkRequest) =>
+        requests.post<BookingLinkResponse>('/admin/booking/link', body),
+}
+
+export interface BookingBotItem {
+    bot_id: number
+    bot_slug: string
+    bot_name: string | null
+    is_active: boolean
+    company_id: number | null
+    company_slug: string | null
+    company_name: string | null
+    owner_id: number | null
+}
+
+export interface BookingOnboardRequest {
+    owner_user_id: number
+    name: string
+    slug: string
+    description?: string
+    bot_token: string
+    bot_name?: string
+    timezone?: string
+    currency?: string
+}
+
+export interface BookingOnboardResponse {
+    company_id: number
+    bot_id: number
+    bot_slug: string
+    webhook_set: boolean
+}
+
+export interface BookingLinkRequest {
+    bot_slug: string
+    owner_user_id: number
+    company_name: string
+    company_slug?: string
+    description?: string
+    timezone?: string
+    currency?: string
+}
+
+export interface BookingLinkResponse {
+    company_id: number
+    bot_id: number
+    bot_slug: string
+    created_company: boolean
+    settings_created: boolean
+    schedule_created: boolean
 }
