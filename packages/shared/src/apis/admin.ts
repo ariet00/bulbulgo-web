@@ -78,8 +78,14 @@ export const adminApi = {
         requests.get<BookingBotItem[]>(`/admin/booking/bots?only_unlinked=${onlyUnlinked}`),
     getBookingBot: (id: number) =>
         requests.get<BookingBotItem>(`/admin/booking/bots/${id}`),
-    registerBookingBot: (body: { slug: string; token: string; name?: string; username?: string }) =>
-        requests.post<BookingBotItem>('/admin/booking/bots', body),
+    registerBookingBot: (body: {
+        slug: string
+        token: string
+        name?: string
+        username?: string
+        bot_type?: string
+        mini_app_url?: string
+    }) => requests.post<BookingBotItem>('/admin/booking/bots', body),
     updateBookingBot: (id: number, body: BookingBotUpdate) =>
         requests.patch<BookingBotUpdateResponse>(`/admin/booking/bots/${id}`, body),
     onboardBooking: (body: BookingOnboardRequest) =>
@@ -107,6 +113,8 @@ export interface BookingBotItem {
     bot_slug: string
     bot_name: string | null
     bot_username: string | null
+    bot_type: string | null
+    mini_app_url: string | null
     is_active: boolean
     company_id: number | null
     company_slug: string | null
@@ -162,6 +170,9 @@ export interface BookingBotUpdate {
     is_active?: boolean
     /** 0 → unlink, >0 → link/move, omit → no change */
     company_id?: number | null
+    bot_type?: string
+    /** Empty string clears it. */
+    mini_app_url?: string
 }
 
 export interface BookingBotUpdateResponse {

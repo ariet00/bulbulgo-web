@@ -24,6 +24,8 @@ export default function NewBookingBotPage() {
     const [token, setToken] = useState('')
     const [name, setName] = useState('')
     const [username, setUsername] = useState('')
+    const [botType, setBotType] = useState('booking')
+    const [miniAppUrl, setMiniAppUrl] = useState('')
     const [companyId, setCompanyId] = useState<number | null>(null)
 
     const submit = async () => {
@@ -33,6 +35,8 @@ export default function NewBookingBotPage() {
             token: token.trim(),
             name: name || undefined,
             username: username.trim() || undefined,
+            bot_type: botType,
+            mini_app_url: miniAppUrl.trim() || undefined,
         })
         if (companyId) {
             await updateBot.mutateAsync({
@@ -91,6 +95,30 @@ export default function NewBookingBotPage() {
                         />
                         <p className="text-xs text-muted-foreground mt-1">
                             Без <code>@</code>. Нужен для входа через браузер (Login Widget).
+                        </p>
+                    </div>
+                    <div>
+                        <Label>Тип бота</Label>
+                        <select
+                            value={botType}
+                            onChange={(e) => setBotType(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                        >
+                            <option value="booking">booking</option>
+                            <option value="akcha">akcha</option>
+                            <option value="popytka">popytka</option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label>Mini App URL</Label>
+                        <Input
+                            value={miniAppUrl}
+                            onChange={(e) => setMiniAppUrl(e.target.value)}
+                            placeholder="https://akcha.example.com"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            URL Telegram Mini App. Хранится в{' '}
+                            <code>telegram_bots.data.mini_app_url</code>.
                         </p>
                     </div>
                     <div>

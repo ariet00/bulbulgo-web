@@ -37,6 +37,8 @@ export default function EditBookingBotPage() {
 
     const [name, setName] = useState('')
     const [username, setUsername] = useState('')
+    const [botType, setBotType] = useState('booking')
+    const [miniAppUrl, setMiniAppUrl] = useState('')
     const [isActive, setIsActive] = useState(true)
     const [companyId, setCompanyId] = useState<number | null>(null)
 
@@ -44,6 +46,8 @@ export default function EditBookingBotPage() {
         if (!bot) return
         setName(bot.bot_name ?? '')
         setUsername(bot.bot_username ?? '')
+        setBotType(bot.bot_type ?? 'booking')
+        setMiniAppUrl(bot.mini_app_url ?? '')
         setIsActive(bot.is_active)
         setCompanyId(bot.company_id ?? null)
     }, [bot])
@@ -57,7 +61,13 @@ export default function EditBookingBotPage() {
     if (!bot) return null
 
     const save = async () => {
-        const patch: any = { name, username, is_active: isActive }
+        const patch: any = {
+            name,
+            username,
+            is_active: isActive,
+            bot_type: botType,
+            mini_app_url: miniAppUrl,
+        }
         if (companyId !== (bot.company_id ?? null)) {
             patch.company_id = companyId ?? 0
         }
@@ -113,6 +123,35 @@ export default function EditBookingBotPage() {
                             Username бота без <code>@</code>. Нужен для входа через браузер
                             (Telegram Login Widget). Также выполните{' '}
                             <code>/setdomain</code> у @BotFather и укажите домен сайта.
+                        </p>
+                    </div>
+                    <div>
+                        <Label>Тип бота</Label>
+                        <select
+                            value={botType}
+                            onChange={(e) => setBotType(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                        >
+                            <option value="booking">booking</option>
+                            <option value="akcha">akcha</option>
+                            <option value="popytka">popytka</option>
+                        </select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Определяет диспетчер aiogram. Меняйте только при миграции бота
+                            между доменами — после смены перезапустите FastAPI.
+                        </p>
+                    </div>
+                    <div>
+                        <Label>Mini App URL</Label>
+                        <Input
+                            value={miniAppUrl}
+                            onChange={(e) => setMiniAppUrl(e.target.value)}
+                            placeholder="https://akcha.example.com"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            URL Telegram Mini App для этого бота. Пустая строка очищает.
+                            Хранится в <code>telegram_bots.data.mini_app_url</code>.
+                            Перезапустите FastAPI для сброса кэша конфигурации.
                         </p>
                     </div>
                     <div className="flex items-center justify-between">
