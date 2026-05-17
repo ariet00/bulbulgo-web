@@ -1,0 +1,65 @@
+{
+  "home": {
+    "hello": "Акча",
+    "status": {
+      "pending": "Подключаемся к Telegram…",
+      "ready": "Готово — вы авторизованы.",
+      "noTelegram": "Откройте приложение из Telegram, чтобы войти.",
+      "error": "Не удалось авторизоваться"
+    },
+    "browser": {
+      "signInPrompt": "Войдите через Telegram, чтобы продолжить"
+    }
+  },
+  "nav": {
+    "dashboard": "Дашборд",
+    "transactions": "История",
+    "debts": "Долги",
+    "wallets": "Кошельки",
+    "categories": "Категории",
+    "settings": "Настройки"
+  },
+  "dashboard": {
+    "balance": "Баланс",
+    "month_income": "Доход (месяц)",
+    "month_expense": "Расход (месяц)",
+    "net_debt": "Чистый долг",
+    "no_data": "Пока нет операций. Запишите первую через бота."
+  },
+  "transactions": {
+    "title": "История",
+    "empty": "Операций ещё нет",
+    "export_csv": "Экспорт CSV",
+    "filters": {
+      "all": "Все",
+      "income": "Доходы",
+      "expense": "Расходы"
+    }
+  },
+  "wallets": {
+    "title": "Кошельки",
+    "add": "Добавить кошелёк",
+    "name": "Название",
+    "currency": "Валюта",
+    "delete_confirm": "Удалить кошелёк?"
+  },
+  "categories": {
+    "title": "Категории",
+    "income": "Доходы",
+    "expense": "Расходы",
+    "add": "Добавить категорию"
+  },
+  "debts": {
+    "title": "Долги",
+    "i_owe": "Я должен",
+    "they_owe": "Мне должны",
+    "all": "Все",
+    "empty": "Активных долгов нет",
+    "close": "Закрыть"
+  },
+  "common": {
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить"
+  }
+}
