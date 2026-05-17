@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8008'
+// NEXT_PUBLIC_API_URL must include the /api/v1 suffix (matches the rest of the
+// monorepo apps — content-manager etc). All requests below use paths RELATIVE
+// to this base, e.g. `/akcha/me/` → `<base>/akcha/me/`.
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8008/api/v1'
 
 export const api = axios.create({
   baseURL,

@@ -29,7 +29,7 @@ type BotInfo = { slug: string; name?: string | null; username: string; bot_type?
 /**
  * Browser fallback when there is no Telegram Mini App context.
  *
- * 1. Loads bot's @username from GET /api/v1/bot/{slug}/info.
+ * 1. Loads bot's @username from GET /bot/{slug}/info.
  * 2. Renders the official telegram-widget.js button.
  * 3. On auth callback, posts the signed widget payload to /auth/widget,
  *    then reuses the same finishAuth flow as the Mini App path.
@@ -47,7 +47,7 @@ export function BrowserLoginGate({ slug }: { slug: string }) {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await api.get<BotInfo>(`/api/v1/bot/${slug}/info`)
+        const res = await api.get<BotInfo>(`/bot/${slug}/info`)
         if (cancelled) return
         setBot(res.data)
       } catch (err: any) {
@@ -66,7 +66,7 @@ export function BrowserLoginGate({ slug }: { slug: string }) {
     window.onTelegramAuth = async (user: TelegramWidgetUser) => {
       setBusy(true)
       try {
-        const authRes = await api.post(`/api/v1/bot/${slug}/auth/widget`, user)
+        const authRes = await api.post(`/bot/${slug}/auth/widget`, user)
         const { me } = await finishAuth(authRes.data, slug)
         setMe(me)
         router.replace('/dashboard')

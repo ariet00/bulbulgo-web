@@ -78,7 +78,7 @@ export function MiniAppBootstrap() {
       const slug = urlSlug || startParam || FALLBACK_BOT_SLUG
 
       try {
-        const authRes = await api.post(`/api/v1/bot/${slug}/auth`, { init_data: tg.initData })
+        const authRes = await api.post(`/bot/${slug}/auth`, { init_data: tg.initData })
         if (cancelled) return
         const { me } = await finishAuth(authRes.data, slug)
         if (cancelled) return

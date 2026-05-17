@@ -8,7 +8,7 @@ import type {
   Wallet,
 } from '@/types/akcha'
 
-const root = '/api/v1/akcha'
+const root = '/akcha'
 
 export interface TxFilters {
   wallet_id?: number
@@ -64,7 +64,7 @@ export const akchaApi = {
     if (filters.to) params.set('to', filters.to)
     if (filters.type) params.set('type', filters.type)
     if (filters.wallet_id) params.set('wallet_id', String(filters.wallet_id))
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8008'
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8008/api/v1'
     return `${baseURL}${root}/transactions/export?${params.toString()}`
   },
 
