@@ -22,6 +22,8 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import {
+    CATEGORIES_BY_TYPE,
+    CompanyCategorySelect,
     CompanyStatusSelect,
     CompanyTypeSelect,
 } from '@/components/admin/selectors/StaticSelects'
@@ -38,6 +40,7 @@ export default function EditCompanyPage() {
     const [name, setName] = useState('')
     const [slug, setSlug] = useState('')
     const [type, setType] = useState<string>('')
+    const [category, setCategory] = useState<string>('')
     const [status, setStatus] = useState<string>('')
     const [description, setDescription] = useState('')
     const [legalForm, setLegalForm] = useState<'ip' | 'legal'>('ip')
@@ -48,10 +51,18 @@ export default function EditCompanyPage() {
         setName(company.name ?? '')
         setSlug(company.slug ?? '')
         setType(company.type ?? '')
+        setCategory(company.category ?? '')
         setStatus(company.status ?? '')
         setDescription(company.description ?? '')
         setLegalForm(company.legal_form === 'legal' ? 'legal' : 'ip')
     }, [company])
+
+    const onTypeChange = (next: string) => {
+        setType(next)
+        if (!(CATEGORIES_BY_TYPE[next] || []).some((c) => c.value === category)) {
+            setCategory('')
+        }
+    }
 
     if (isLoading || !company) return <div>Loading...</div>
 
@@ -61,6 +72,7 @@ export default function EditCompanyPage() {
         if (name !== company.name) body.name = name
         if (slug !== company.slug) body.slug = slug
         if (type !== company.type) body.type = type
+        if (category !== (company.category ?? '')) body.category = category || undefined
         if (status !== company.status) body.status = status
         if ((description || '') !== (company.description || '')) body.description = description
         if (legalForm !== (company.legal_form ?? 'ip')) body.legal_form = legalForm
@@ -97,13 +109,19 @@ export default function EditCompanyPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label>Тип</Label>
-                            <CompanyTypeSelect value={type} onChange={setType} />
+                            <CompanyTypeSelect value={type} onChange={onTypeChange} />
                         </div>
                         <div>
                             <Label>Статус</Label>
                             <CompanyStatusSelect value={status} onChange={setStatus} />
                         </div>
                     </div>
+                    {(CATEGORIES_BY_TYPE[type]?.length ?? 0) > 0 && (
+                        <div>
+                            <Label>Категория</Label>
+                            <CompanyCategorySelect type={type} value={category} onChange={setCategory} />
+                        </div>
+                    )}
                     <div>
                         <Label>Юридическая форма</Label>
                         <select

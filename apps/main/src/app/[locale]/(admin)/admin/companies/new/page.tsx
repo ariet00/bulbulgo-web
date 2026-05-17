@@ -15,6 +15,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import {
+    CATEGORIES_BY_TYPE,
+    CompanyCategorySelect,
     CompanyStatusSelect,
     CompanyTypeSelect,
     CurrencySelect,
@@ -30,7 +32,13 @@ export default function NewCompanyPage() {
     const [name, setName] = useState('')
     const [slug, setSlug] = useState('')
     const [type, setType] = useState<string>('booking')
+    const [category, setCategory] = useState<string>('')
     const [status, setStatus] = useState<string>('active')
+
+    const onTypeChange = (next: string) => {
+        setType(next)
+        setCategory('')
+    }
     const [description, setDescription] = useState('')
     const [legalForm, setLegalForm] = useState<'ip' | 'legal'>('ip')
 
@@ -44,6 +52,7 @@ export default function NewCompanyPage() {
             name: name.trim(),
             slug: slug.trim(),
             type,
+            category: category || undefined,
             status,
             legal_form: legalForm,
             description: description || undefined,
@@ -80,13 +89,19 @@ export default function NewCompanyPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label>Тип *</Label>
-                            <CompanyTypeSelect value={type} onChange={setType} />
+                            <CompanyTypeSelect value={type} onChange={onTypeChange} />
                         </div>
                         <div>
                             <Label>Статус</Label>
                             <CompanyStatusSelect value={status} onChange={setStatus} />
                         </div>
                     </div>
+                    {(CATEGORIES_BY_TYPE[type]?.length ?? 0) > 0 && (
+                        <div>
+                            <Label>Категория</Label>
+                            <CompanyCategorySelect type={type} value={category} onChange={setCategory} />
+                        </div>
+                    )}
                     <div>
                         <Label>Юридическая форма</Label>
                         <select

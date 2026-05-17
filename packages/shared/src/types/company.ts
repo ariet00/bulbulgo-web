@@ -5,6 +5,7 @@ export interface Company {
     name: string;
     description?: string;
     type?: string;
+    category?: string | null;
     legal_form?: 'ip' | 'legal';
     status: 'active' | 'moderation' | 'disabled';
     settings?: Record<string, any>;
@@ -22,6 +23,7 @@ export interface CompanyCreate {
     name: string;
     slug: string;
     type: string;
+    category?: string;
     description?: string;
     settings?: Record<string, any>;
     data?: Record<string, any>;
@@ -31,6 +33,7 @@ export interface CompanyUpdate {
     name?: string;
     description?: string;
     type?: string;
+    category?: string;
     status?: string;
     settings?: Record<string, any>;
     data?: Record<string, any>;

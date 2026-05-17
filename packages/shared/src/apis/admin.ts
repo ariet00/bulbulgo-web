@@ -174,6 +174,7 @@ export interface AdminCompanyCreate {
     name: string
     slug: string
     type: string
+    category?: string
     description?: string
     status?: string
     legal_form?: 'ip' | 'legal'
@@ -190,6 +191,7 @@ export interface AdminCompanyUpdate {
     description?: string
     status?: string
     type?: string
+    category?: string
     legal_form?: 'ip' | 'legal'
 }
 
