@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 
 import { toast } from 'sonner'
 
-import { api } from '@/lib/api'
+import { api, loadAccessToken, loadBotSlug, setAccessToken, setBotSlug } from '@/lib/api'
 import { bookingApi } from '@/apis/booking'
 import { finishAuth } from '@/lib/finishAuth'
 import { getTelegramInit } from '@/lib/telegram'
@@ -36,10 +36,43 @@ export function MiniAppBootstrap() {
     let cancelled = false
     ;(async () => {
       setBootStatus('pending')
-      const tg = await getTelegramInit()
-      if (cancelled) return
 
       const urlSlug = searchParams.get('bot')
+
+      // Fast path: reuse existing session if a token is already stored.
+      const existingToken = loadAccessToken()
+      const cachedSlug = urlSlug || loadBotSlug() || FALLBACK_BOT_SLUG
+      if (existingToken && cachedSlug) {
+        setBotSlug(cachedSlug)
+        try {
+          const biz = await api.get('/api/v1/booking/business')
+          if (cancelled) return
+          const business = {
+            company: biz.data.company,
+            is_owner: biz.data.is_owner,
+            is_staff: biz.data.is_staff ?? false,
+            settings: biz.data.settings ?? null,
+          }
+          setBusiness(business)
+          setBootStatus('ready')
+          if (business.is_owner || business.is_staff) router.replace('/owner')
+          else router.replace('/book')
+          return
+        } catch (err: any) {
+          if (cancelled) return
+          if (err?.response?.status === 401) {
+            setAccessToken(null)
+            // Token expired/invalid — fall through to full auth below.
+          } else {
+            setError(err?.response?.data?.message ?? err?.message ?? 'Unknown error')
+            setBootStatus('error')
+            return
+          }
+        }
+      }
+
+      const tg = await getTelegramInit()
+      if (cancelled) return
 
       if (!tg || !tg.initData) {
         const slug = urlSlug || FALLBACK_BOT_SLUG
