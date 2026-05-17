@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
     adminApi,
+    AdminCompanyCreate,
+    AdminCompanyUpdate,
+    BookingBotUpdate,
     BookingLinkRequest,
     BookingOnboardRequest,
     CeleryPeriodicTaskCreate,
@@ -30,6 +33,30 @@ export const useAdminDeleteCompany = () => {
             queryClient.invalidateQueries({ queryKey: adminKeys.companies() })
             queryClient.invalidateQueries({ queryKey: adminKeys.analytics() })
             toast.success('Company deleted')
+        },
+    })
+}
+
+export const useAdminCreateCompany = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminCompanyCreate) => adminApi.createCompany(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.companies() })
+            toast.success('Компания создана')
+        },
+    })
+}
+
+export const useAdminUpdateCompany = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: AdminCompanyUpdate }) =>
+            adminApi.updateCompany(id, body),
+        onSuccess: (_data, { id }) => {
+            qc.invalidateQueries({ queryKey: adminKeys.companies() })
+            qc.invalidateQueries({ queryKey: adminKeys.company(id) })
+            toast.success('Компания обновлена')
         },
     })
 }
@@ -129,6 +156,24 @@ export const useAdminLinkBookingBot = () => {
             invalidateBookingBots(qc)
             qc.invalidateQueries({ queryKey: adminKeys.companies() })
             toast.success('Бот привязан к компании')
+        },
+    })
+}
+
+export const useAdminUpdateBookingBot = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: BookingBotUpdate }) =>
+            adminApi.updateBookingBot(id, body),
+        onSuccess: (res, { id }) => {
+            invalidateBookingBots(qc)
+            qc.invalidateQueries({ queryKey: adminKeys.bookingBot(id) })
+            qc.invalidateQueries({ queryKey: adminKeys.companies() })
+            if (res.needs_booking_settings) {
+                toast.warning('У компании нет booking-настроек — создайте их.')
+            } else {
+                toast.success('Бот обновлён')
+            }
         },
     })
 }

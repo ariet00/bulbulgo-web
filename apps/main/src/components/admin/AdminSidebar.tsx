@@ -48,7 +48,7 @@ const sections: NavSection[] = [
     {
         label: 'Booking',
         items: [
-            { name: 'Bots & Companies', href: '/admin/booking', icon: CalendarCheck },
+            { name: 'Bots', href: '/admin/booking/bots', icon: CalendarCheck },
         ],
     },
 ]

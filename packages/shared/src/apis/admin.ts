@@ -20,16 +20,29 @@ const requests = {
 
 export const adminApi = {
     // Users
-    getUsers: (page = 1, size = 40) =>
-        requests.get<Page<any>>(`/admin/users/?page=${page}&size=${size}`),
+    getUsers: (page = 1, size = 40, q?: string) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (q) params.set('q', q)
+        return requests.get<Page<any>>(`/admin/users/?${params.toString()}`)
+    },
     getUser: (id: number) => requests.get<any>(`/admin/users/${id}`),
+    searchUsers: (q: string, size = 20) =>
+        requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     banUser: (id: number, isActive: boolean) =>
         requests.put<any>(`/admin/users/${id}/ban?is_active=${isActive}`, {}),
 
     // Companies
-    getCompanies: (page = 1, size = 40) =>
-        requests.get<Page<any>>(`/admin/companies/?page=${page}&size=${size}`),
+    getCompanies: (page = 1, size = 40, q?: string, type?: string) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (q) params.set('q', q)
+        if (type) params.set('type', type)
+        return requests.get<Page<any>>(`/admin/companies/?${params.toString()}`)
+    },
     getCompany: (id: number) => requests.get<any>(`/admin/companies/${id}`),
+    createCompany: (body: AdminCompanyCreate) =>
+        requests.post<any>('/admin/companies/', body),
+    updateCompany: (id: number, body: AdminCompanyUpdate) =>
+        requests.patch<any>(`/admin/companies/${id}`, body),
     deleteCompany: (id: number) => requests.delete<any>(`/admin/companies/${id}`),
 
     // Trips
@@ -63,8 +76,12 @@ export const adminApi = {
     // Booking — bots & onboarding
     getBookingBots: (onlyUnlinked = false) =>
         requests.get<BookingBotItem[]>(`/admin/booking/bots?only_unlinked=${onlyUnlinked}`),
+    getBookingBot: (id: number) =>
+        requests.get<BookingBotItem>(`/admin/booking/bots/${id}`),
     registerBookingBot: (body: { slug: string; token: string; name?: string }) =>
         requests.post<BookingBotItem>('/admin/booking/bots', body),
+    updateBookingBot: (id: number, body: BookingBotUpdate) =>
+        requests.patch<BookingBotUpdateResponse>(`/admin/booking/bots/${id}`, body),
     onboardBooking: (body: BookingOnboardRequest) =>
         requests.post<BookingOnboardResponse>('/admin/booking/onboard', body),
     linkBookingBot: (body: BookingLinkRequest) =>
@@ -93,7 +110,12 @@ export interface BookingBotItem {
     company_id: number | null
     company_slug: string | null
     company_name: string | null
+    company_type: string | null
+    company_status: string | null
     owner_id: number | null
+    owner_username: string | null
+    owner_name: string | null
+    owner_phone: string | null
 }
 
 export interface BookingOnboardRequest {
@@ -131,6 +153,40 @@ export interface BookingLinkResponse {
     created_company: boolean
     settings_created: boolean
     schedule_created: boolean
+}
+
+export interface BookingBotUpdate {
+    name?: string
+    is_active?: boolean
+    /** 0 → unlink, >0 → link/move, omit → no change */
+    company_id?: number | null
+}
+
+export interface BookingBotUpdateResponse {
+    bot: BookingBotItem
+    needs_booking_settings: boolean
+}
+
+export interface AdminCompanyCreate {
+    owner_user_id: number
+    name: string
+    slug: string
+    type: string
+    description?: string
+    status?: string
+    timezone?: string
+    currency?: string
+    default_working_start?: string
+    default_working_end?: string
+}
+
+export interface AdminCompanyUpdate {
+    owner_user_id?: number
+    name?: string
+    slug?: string
+    description?: string
+    status?: string
+    type?: string
 }
 
 // === Celery beat ===

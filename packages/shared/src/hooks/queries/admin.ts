@@ -17,14 +17,23 @@ export const adminKeys = {
     chat: (id: number) => [...adminKeys.chats(), id] as const,
     analytics: () => [...adminKeys.all, 'analytics'] as const,
     bookingBots: (onlyUnlinked: boolean) => [...adminKeys.all, 'booking-bots', onlyUnlinked] as const,
+    bookingBot: (id: number) => [...adminKeys.all, 'booking-bot', id] as const,
     celeryTasks: () => [...adminKeys.all, 'celery-tasks'] as const,
     celeryTask: (id: number) => [...adminKeys.celeryTasks(), id] as const,
 }
 
-export const useAdminUsers = (page: number = 1, size: number = 40) => {
+export const useAdminUsers = (page: number = 1, size: number = 40, q?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.users(), { page, size }],
-        queryFn: () => adminApi.getUsers(page, size),
+        queryKey: [...adminKeys.users(), { page, size, q: q ?? null }],
+        queryFn: () => adminApi.getUsers(page, size, q),
+    })
+}
+
+export const useAdminUserSearch = (q: string, size: number = 20) => {
+    return useQuery({
+        queryKey: [...adminKeys.users(), 'search', { q, size }],
+        queryFn: () => adminApi.searchUsers(q, size),
+        enabled: q.length > 0,
     })
 }
 
@@ -36,10 +45,18 @@ export const useAdminUser = (id: number) => {
     })
 }
 
-export const useAdminCompanies = (page: number = 1, size: number = 40) => {
+export const useAdminCompanies = (
+    page: number = 1,
+    size: number = 40,
+    q?: string,
+    type?: string,
+) => {
     return useQuery({
-        queryKey: [...adminKeys.companies(), { page, size }],
-        queryFn: () => adminApi.getCompanies(page, size),
+        queryKey: [
+            ...adminKeys.companies(),
+            { page, size, q: q ?? null, type: type ?? null },
+        ],
+        queryFn: () => adminApi.getCompanies(page, size, q, type),
     })
 }
 
@@ -122,6 +139,14 @@ export const useAdminBookingBots = (onlyUnlinked = false) => {
     return useQuery({
         queryKey: adminKeys.bookingBots(onlyUnlinked),
         queryFn: () => adminApi.getBookingBots(onlyUnlinked),
+    })
+}
+
+export const useAdminBookingBot = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.bookingBot(id),
+        queryFn: () => adminApi.getBookingBot(id),
+        enabled: !!id,
     })
 }
 
