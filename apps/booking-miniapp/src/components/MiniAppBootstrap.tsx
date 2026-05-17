@@ -1,34 +1,33 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
-import { api, setAccessToken, setBotSlug } from '@/lib/api'
+import { api } from '@/lib/api'
+import { finishAuth } from '@/lib/finishAuth'
 import { getTelegramInit } from '@/lib/telegram'
 import { useBookingStore } from '@/store/useBookingStore'
-import type { Business } from '@/types/booking'
+import { BrowserLoginGate } from './BrowserLoginGate'
 
 const FALLBACK_BOT_SLUG = process.env.NEXT_PUBLIC_BOT_SLUG || ''
 
 /**
- * Mini App entry: validates Telegram initData with the backend, stores
- * the access token + bot slug, fetches the business context, and routes
- * to the client or owner home page.
+ * Entry: tries Telegram Mini App auth first (signed initData). If the page
+ * is opened outside Telegram, falls back to <BrowserLoginGate> which renders
+ * the official Telegram Login Widget button.
  *
- * The bot slug is resolved in this priority:
- *  1. `?bot=<slug>` query param (set per-bot via @BotFather)
- *  2. Telegram WebApp `start_param` (alternative BotFather-driven channel)
- *  3. `NEXT_PUBLIC_BOT_SLUG` env (legacy single-bot fallback)
- *
- * Once resolved, the slug is persisted to localStorage so client-side
- * navigation away from the entry URL keeps working.
+ * Bot slug resolution priority:
+ *   1. `?bot=<slug>` query param
+ *   2. Telegram WebApp `start_param` (mini-app only)
+ *   3. `NEXT_PUBLIC_BOT_SLUG` env (legacy single-bot fallback)
  */
 export function MiniAppBootstrap() {
   const t = useTranslations('home')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { bootStatus, errorMessage, setBootStatus, setError, setBusiness } = useBookingStore()
+  const [browserSlug, setBrowserSlug] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -37,12 +36,20 @@ export function MiniAppBootstrap() {
       const tg = await getTelegramInit()
       if (cancelled) return
 
+      const urlSlug = searchParams.get('bot')
+
       if (!tg || !tg.initData) {
+        const slug = urlSlug || FALLBACK_BOT_SLUG
+        if (!slug) {
+          setError('Bot slug is not configured. Open with ?bot=<slug>.')
+          setBootStatus('error')
+          return
+        }
+        setBrowserSlug(slug)
         setBootStatus('no-telegram')
         return
       }
 
-      const urlSlug = searchParams.get('bot')
       const startParam = tg.startParam || null
       const slug = urlSlug || startParam || FALLBACK_BOT_SLUG
       if (!slug) {
@@ -57,22 +64,11 @@ export function MiniAppBootstrap() {
         })
         if (cancelled) return
 
-        setAccessToken(authRes.data.access_token)
-        setBotSlug(authRes.data.bot?.slug ?? slug)
-
-        const biz = await api.get<{ company: Business['company']; is_owner: boolean; settings: Business['settings'] }>(
-          '/api/v1/booking/business',
-        )
+        const { business } = await finishAuth(authRes.data, slug)
         if (cancelled) return
 
-        const business: Business = {
-          company: biz.data.company,
-          is_owner: biz.data.is_owner,
-          settings: biz.data.settings ?? null,
-        }
         setBusiness(business)
         setBootStatus('ready')
-
         router.replace(business.is_owner ? '/owner' : '/book')
       } catch (err: any) {
         if (cancelled) return
@@ -86,13 +82,16 @@ export function MiniAppBootstrap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  if (bootStatus === 'no-telegram' && browserSlug) {
+    return <BrowserLoginGate slug={browserSlug} />
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
       <h1 className="text-2xl font-semibold">{t('hello')}</h1>
       <p className="mt-3 text-sm text-muted-foreground">
         {bootStatus === 'pending' && t('status.pending')}
         {bootStatus === 'ready' && t('status.ready')}
-        {bootStatus === 'no-telegram' && t('status.noTelegram')}
         {bootStatus === 'error' && (errorMessage ? `${t('status.error')}: ${errorMessage}` : t('status.error'))}
       </p>
     </main>

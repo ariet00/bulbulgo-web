@@ -36,12 +36,14 @@ export default function EditBookingBotPage() {
     const update = useAdminUpdateBookingBot()
 
     const [name, setName] = useState('')
+    const [username, setUsername] = useState('')
     const [isActive, setIsActive] = useState(true)
     const [companyId, setCompanyId] = useState<number | null>(null)
 
     useEffect(() => {
         if (!bot) return
         setName(bot.bot_name ?? '')
+        setUsername(bot.bot_username ?? '')
         setIsActive(bot.is_active)
         setCompanyId(bot.company_id ?? null)
     }, [bot])
@@ -55,7 +57,7 @@ export default function EditBookingBotPage() {
     if (!bot) return null
 
     const save = async () => {
-        const patch: any = { name, is_active: isActive }
+        const patch: any = { name, username, is_active: isActive }
         if (companyId !== (bot.company_id ?? null)) {
             patch.company_id = companyId ?? 0
         }
@@ -99,6 +101,19 @@ export default function EditBookingBotPage() {
                     <div>
                         <Label>Имя</Label>
                         <Input value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div>
+                        <Label>Telegram username</Label>
+                        <Input
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="my_booking_bot"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Username бота без <code>@</code>. Нужен для входа через браузер
+                            (Telegram Login Widget). Также выполните{' '}
+                            <code>/setdomain</code> у @BotFather и укажите домен сайта.
+                        </p>
                     </div>
                     <div className="flex items-center justify-between">
                         <Label>Активен</Label>

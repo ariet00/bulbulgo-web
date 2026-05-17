@@ -23,6 +23,7 @@ export default function NewBookingBotPage() {
     const [slug, setSlug] = useState('')
     const [token, setToken] = useState('')
     const [name, setName] = useState('')
+    const [username, setUsername] = useState('')
     const [companyId, setCompanyId] = useState<number | null>(null)
 
     const submit = async () => {
@@ -31,6 +32,7 @@ export default function NewBookingBotPage() {
             slug: slug.trim(),
             token: token.trim(),
             name: name || undefined,
+            username: username.trim() || undefined,
         })
         if (companyId) {
             await updateBot.mutateAsync({
@@ -79,6 +81,17 @@ export default function NewBookingBotPage() {
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Анна Парикмахер"
                         />
+                    </div>
+                    <div>
+                        <Label>Telegram username</Label>
+                        <Input
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="my_booking_bot"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Без <code>@</code>. Нужен для входа через браузер (Login Widget).
+                        </p>
                     </div>
                     <div>
                         <Label>Компания (опционально)</Label>

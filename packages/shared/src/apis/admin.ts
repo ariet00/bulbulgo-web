@@ -78,7 +78,7 @@ export const adminApi = {
         requests.get<BookingBotItem[]>(`/admin/booking/bots?only_unlinked=${onlyUnlinked}`),
     getBookingBot: (id: number) =>
         requests.get<BookingBotItem>(`/admin/booking/bots/${id}`),
-    registerBookingBot: (body: { slug: string; token: string; name?: string }) =>
+    registerBookingBot: (body: { slug: string; token: string; name?: string; username?: string }) =>
         requests.post<BookingBotItem>('/admin/booking/bots', body),
     updateBookingBot: (id: number, body: BookingBotUpdate) =>
         requests.patch<BookingBotUpdateResponse>(`/admin/booking/bots/${id}`, body),
@@ -106,6 +106,7 @@ export interface BookingBotItem {
     bot_id: number
     bot_slug: string
     bot_name: string | null
+    bot_username: string | null
     is_active: boolean
     company_id: number | null
     company_slug: string | null
@@ -157,6 +158,7 @@ export interface BookingLinkResponse {
 
 export interface BookingBotUpdate {
     name?: string
+    username?: string
     is_active?: boolean
     /** 0 → unlink, >0 → link/move, omit → no change */
     company_id?: number | null

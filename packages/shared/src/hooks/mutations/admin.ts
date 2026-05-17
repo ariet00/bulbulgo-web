@@ -127,7 +127,7 @@ const invalidateBookingBots = (qc: ReturnType<typeof useQueryClient>) => {
 export const useAdminRegisterBookingBot = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (body: { slug: string; token: string; name?: string }) =>
+        mutationFn: (body: { slug: string; token: string; name?: string; username?: string }) =>
             adminApi.registerBookingBot(body),
         onSuccess: () => {
             invalidateBookingBots(qc)
