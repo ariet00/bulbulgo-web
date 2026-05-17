@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 
 import { useUpdateSettings } from '@/hooks/mutations'
 import { useCurrencies, useSettings } from '@/hooks/queries'
+import { useBookingStore } from '@/store/useBookingStore'
 import type { BookingSettings } from '@/types/booking'
 
 const TIMEZONES = ['UTC', 'Asia/Almaty', 'Asia/Bishkek', 'Asia/Tashkent', 'Europe/Moscow']
@@ -15,6 +16,8 @@ export default function OwnerSettings() {
   const { data, isLoading } = useSettings()
   const { data: currencies } = useCurrencies()
   const update = useUpdateSettings()
+  const { business } = useBookingStore()
+  const isLegal = business?.company?.legal_form === 'legal'
   const [draft, setDraft] = useState<BookingSettings | null>(null)
 
   useEffect(() => {
@@ -146,9 +149,17 @@ export default function OwnerSettings() {
       </Card>
 
       <Card className="p-3 space-y-2 mb-3">
-        <Link href="/owner/schedule" className="block text-sm">
-          Расписание →
+        <Link href="/owner/services" className="block text-sm">
+          Услуги →
         </Link>
+        <Link href="/owner/finance" className="block text-sm">
+          Финансы →
+        </Link>
+        {isLegal && (
+          <Link href="/owner/employees" className="block text-sm">
+            Команда →
+          </Link>
+        )}
         <Link href="/owner/schedule/time-off" className="block text-sm">
           Исключения →
         </Link>

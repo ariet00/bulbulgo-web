@@ -14,7 +14,13 @@ import {
   useCompleteAppointment,
   useNoShowAppointment,
 } from '@/hooks/mutations'
-import { useAppointments, useEmployees, useSchedule, useSettings } from '@/hooks/queries'
+import {
+  useAppointments,
+  useEmployees,
+  useSchedule,
+  useScheduleOverrides,
+  useSettings,
+} from '@/hooks/queries'
 import { formatPrice, formatTime } from '@/lib/format'
 import { classifyDay } from '@/lib/scheduleClassify'
 import { useBookingStore } from '@/store/useBookingStore'
@@ -60,14 +66,27 @@ export default function OwnerCalendar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
+  const overridesRange = useMemo(
+    () => ({
+      from: format(startOfDay(today), 'yyyy-MM-dd'),
+      to: format(days[days.length - 1], 'yyyy-MM-dd'),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
   const { data: timeOffs } = useQuery({
     queryKey: ['booking', 'time-off', timeOffRange],
     queryFn: () => bookingApi.listTimeOff(timeOffRange),
   })
+  const { data: overrides } = useScheduleOverrides({
+    from: overridesRange.from,
+    to: overridesRange.to,
+    userId: staffFilter,
+  })
 
   const dayMeta = useMemo(
-    () => classifyDay(day, schedule, timeOffs, pattern),
-    [day, schedule, timeOffs, pattern],
+    () => classifyDay(day, schedule, timeOffs, pattern, overrides),
+    [day, schedule, timeOffs, pattern, overrides],
   )
 
   const completeMut = useCompleteAppointment()
@@ -137,7 +156,7 @@ export default function OwnerCalendar() {
       <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
         {days.map((d) => {
           const same = format(d, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
-          const meta = classifyDay(d, schedule, timeOffs, pattern)
+          const meta = classifyDay(d, schedule, timeOffs, pattern, overrides)
           const isWorking = meta.kind === 'working'
           const isTimeOff = meta.kind === 'timeoff'
           const baseBorder = same

@@ -1,7 +1,8 @@
-import { differenceInCalendarDays, endOfDay, parseISO, startOfDay } from 'date-fns'
+import { differenceInCalendarDays, endOfDay, format, parseISO, startOfDay } from 'date-fns'
 
 import type {
   BookingScheduleItem,
+  BookingScheduleOverride,
   BookingTimeOff,
   SchedulePattern,
 } from '@/types/booking'
@@ -37,20 +38,35 @@ export type DayMeta = {
   kind: DayKind
   reason?: string | null
   hours?: { start: string; end: string } | null
+  /** True when the day's classification comes from a per-date override row. */
+  isOverride?: boolean
 }
 
 const trimTime = (t: string | null | undefined) => (t ? t.slice(0, 5) : '')
 
 /**
  * Decide the classification of a calendar day given the current schedule
- * draft, full-day time-off entries, and an optional rotation pattern.
+ * draft, full-day time-off entries, rotation pattern, and per-date overrides.
+ *
+ * Override precedence: per-date override → time-off → rotation → weekday template.
  */
 export function classifyDay(
   date: Date,
   items: BookingScheduleItem[] | undefined,
   timeOffs: BookingTimeOff[] | undefined,
   pattern: SchedulePattern | null | undefined,
+  overrides?: BookingScheduleOverride[],
 ): DayMeta {
+  const isoDate = format(date, 'yyyy-MM-dd')
+  const override = overrides?.find((o) => o.override_date === isoDate)
+  if (override) {
+    if (!override.is_working_day) return { kind: 'off', isOverride: true }
+    const hours = override.start_time && override.end_time
+      ? { start: trimTime(override.start_time), end: trimTime(override.end_time) }
+      : null
+    return { kind: 'working', hours, isOverride: true }
+  }
+
   const dayStart = startOfDay(date)
   const dayEnd = endOfDay(date)
   const fullDayOff = timeOffs?.find((t) => {

@@ -38,6 +38,22 @@ export const useSchedule = (userId?: number | null) =>
     queryFn: () => bookingApi.getSchedule({ user_id: userId ?? null }),
   })
 
+export const useScheduleOverrides = (params: {
+  from: string
+  to: string
+  userId?: number | null
+}) =>
+  useQuery({
+    queryKey: ['booking', 'schedule-overrides', params.userId ?? null, params.from, params.to],
+    queryFn: () =>
+      bookingApi.listScheduleOverrides({
+        from: params.from,
+        to: params.to,
+        user_id: params.userId ?? null,
+      }),
+    enabled: Boolean(params.from && params.to),
+  })
+
 export const useSettings = () =>
   useQuery({
     queryKey: ['booking', 'settings'],

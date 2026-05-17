@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, Home, Scissors, Settings, UserPlus, Users, Wallet } from 'lucide-react'
+import { Calendar, CalendarClock, Home, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -17,10 +17,8 @@ type Item = {
 const ALL_ITEMS: Item[] = [
   { href: '/owner', icon: Home, label: 'Главная' },
   { href: '/owner/calendar', icon: Calendar, label: 'Календарь' },
-  { href: '/owner/services', icon: Scissors, label: 'Услуги', ownerOnly: true },
+  { href: '/owner/schedule', icon: CalendarClock, label: 'Расписание', ownerOnly: true },
   { href: '/owner/clients', icon: Users, label: 'Клиенты' },
-  { href: '/owner/employees', icon: UserPlus, label: 'Команда', ownerOnly: true, legalOnly: true },
-  { href: '/owner/finance', icon: Wallet, label: 'Финансы', ownerOnly: true },
   { href: '/owner/settings', icon: Settings, label: 'Ещё', ownerOnly: true },
 ]
 

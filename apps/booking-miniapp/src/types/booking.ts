@@ -138,6 +138,22 @@ export type BookingScheduleItem = {
   is_working_day: boolean
 }
 
+export type BookingScheduleOverride = {
+  id: number
+  override_date: string
+  start_time: string | null
+  end_time: string | null
+  is_working_day: boolean
+  user_id: number | null
+}
+
+export type BookingScheduleOverrideUpsert = {
+  override_date: string
+  start_time: string | null
+  end_time: string | null
+  is_working_day: boolean
+}
+
 export type BookingTimeOff = {
   id: number
   company_id: number

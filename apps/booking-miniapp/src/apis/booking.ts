@@ -3,6 +3,8 @@ import type {
   Appointment,
   AvailabilitySlot,
   BookingScheduleItem,
+  BookingScheduleOverride,
+  BookingScheduleOverrideUpsert,
   BookingSettings,
   BookingTimeOff,
   Business,
@@ -73,6 +75,31 @@ export const bookingApi = {
         `${root}/schedule/preset`,
         body,
       )
+      .then((r) => r.data),
+
+  // schedule overrides (per-date hour customisation)
+  listScheduleOverrides: (params: { from: string; to: string; user_id?: number | null }) =>
+    api
+      .get<BookingScheduleOverride[]>(`${root}/schedule/overrides`, {
+        params: {
+          from: params.from,
+          to: params.to,
+          ...(params.user_id != null ? { user_id: params.user_id } : {}),
+        },
+      })
+      .then((r) => r.data),
+  upsertScheduleOverrides: (body: {
+    items: BookingScheduleOverrideUpsert[]
+    user_id?: number | null
+  }) =>
+    api
+      .post<BookingScheduleOverride[]>(`${root}/schedule/overrides/batch`, body)
+      .then((r) => r.data),
+  deleteScheduleOverride: (overrideDate: string, params?: { user_id?: number | null }) =>
+    api
+      .delete(`${root}/schedule/overrides/${overrideDate}`, {
+        params: params?.user_id != null ? { user_id: params.user_id } : undefined,
+      })
       .then((r) => r.data),
 
   // currencies (global, not bot-scoped)

@@ -143,3 +143,26 @@ export const useApplySchedulePreset = () => {
     },
   })
 }
+
+export const useUpsertScheduleOverrides = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: bookingApi.upsertScheduleOverrides,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['booking', 'schedule-overrides'] })
+      qc.invalidateQueries({ queryKey: ['booking', 'availability'] })
+    },
+  })
+}
+
+export const useDeleteScheduleOverride = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ date, user_id }: { date: string; user_id?: number | null }) =>
+      bookingApi.deleteScheduleOverride(date, user_id != null ? { user_id } : undefined),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['booking', 'schedule-overrides'] })
+      qc.invalidateQueries({ queryKey: ['booking', 'availability'] })
+    },
+  })
+}
