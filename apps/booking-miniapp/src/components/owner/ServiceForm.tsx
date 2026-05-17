@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Input, Label, Sheet, SheetContent, SheetHeader, SheetTitle } from '@doska/ui'
+import { Button, Input, Label } from '@doska/ui'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -8,13 +8,12 @@ import { useCreateService, useUpdateService } from '@/hooks/mutations'
 import type { Service, ServiceCategory } from '@/types/booking'
 
 type Props = {
-  open: boolean
-  onOpenChange: (v: boolean) => void
   service?: Service | null
   categories: ServiceCategory[]
+  onDone: () => void
 }
 
-export function ServiceForm({ open, onOpenChange, service, categories }: Props) {
+export function ServiceForm({ service, categories, onDone }: Props) {
   const create = useCreateService()
   const update = useUpdateService()
 
@@ -35,16 +34,8 @@ export function ServiceForm({ open, onOpenChange, service, categories }: Props) 
       setBufferBefore(service.buffer_before_min)
       setBufferAfter(service.buffer_after_min)
       setDescription(service.description || '')
-    } else {
-      setName('')
-      setDuration(30)
-      setPrice('0')
-      setCategoryId(null)
-      setBufferBefore(0)
-      setBufferAfter(0)
-      setDescription('')
     }
-  }, [service, open])
+  }, [service])
 
   const submit = async () => {
     if (!name.trim() || duration <= 0) {
@@ -68,7 +59,7 @@ export function ServiceForm({ open, onOpenChange, service, categories }: Props) 
         await create.mutateAsync(payload)
         toast.success('Услуга создана')
       }
-      onOpenChange(false)
+      onDone()
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Ошибка')
     }
@@ -79,92 +70,84 @@ export function ServiceForm({ open, onOpenChange, service, categories }: Props) 
     try {
       await update.mutateAsync({ id: service.id, patch: { is_active: !service.is_active } })
       toast.success(service.is_active ? 'Услуга скрыта' : 'Услуга активна')
-      onOpenChange(false)
+      onDone()
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Ошибка')
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{service ? 'Редактировать услугу' : 'Новая услуга'}</SheetTitle>
-        </SheetHeader>
+    <div className="space-y-3">
+      <div>
+        <Label>Название</Label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Стрижка" />
+      </div>
 
-        <div className="space-y-3 pt-4">
-          <div>
-            <Label>Название</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Стрижка" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label>Длительность, мин</Label>
-              <Input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)}
-              />
-            </div>
-            <div>
-              <Label>Цена</Label>
-              <Input value={price} onChange={(e) => setPrice(e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <Label>Категория</Label>
-            <select
-              value={categoryId ?? ''}
-              onChange={(e) => setCategoryId(e.target.value ? parseInt(e.target.value, 10) : null)}
-              className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-            >
-              <option value="">Без категории</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label>Буфер до, мин</Label>
-              <Input
-                type="number"
-                value={bufferBefore}
-                onChange={(e) => setBufferBefore(parseInt(e.target.value, 10) || 0)}
-              />
-            </div>
-            <div>
-              <Label>Буфер после, мин</Label>
-              <Input
-                type="number"
-                value={bufferAfter}
-                onChange={(e) => setBufferAfter(parseInt(e.target.value, 10) || 0)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label>Описание</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button className="flex-1" onClick={submit} disabled={create.isPending || update.isPending}>
-              {service ? 'Сохранить' : 'Создать'}
-            </Button>
-            {service && (
-              <Button variant="outline" onClick={toggleActive}>
-                {service.is_active ? 'Скрыть' : 'Показать'}
-              </Button>
-            )}
-          </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label>Длительность, мин</Label>
+          <Input
+            type="number"
+            value={duration}
+            onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)}
+          />
         </div>
-      </SheetContent>
-    </Sheet>
+        <div>
+          <Label>Цена</Label>
+          <Input value={price} onChange={(e) => setPrice(e.target.value)} />
+        </div>
+      </div>
+
+      <div>
+        <Label>Категория</Label>
+        <select
+          value={categoryId ?? ''}
+          onChange={(e) => setCategoryId(e.target.value ? parseInt(e.target.value, 10) : null)}
+          className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option value="">Без категории</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label>Буфер до, мин</Label>
+          <Input
+            type="number"
+            value={bufferBefore}
+            onChange={(e) => setBufferBefore(parseInt(e.target.value, 10) || 0)}
+          />
+        </div>
+        <div>
+          <Label>Буфер после, мин</Label>
+          <Input
+            type="number"
+            value={bufferAfter}
+            onChange={(e) => setBufferAfter(parseInt(e.target.value, 10) || 0)}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Описание</Label>
+        <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <Button className="flex-1" onClick={submit} disabled={create.isPending || update.isPending}>
+          {service ? 'Сохранить' : 'Создать'}
+        </Button>
+        {service && (
+          <Button variant="outline" onClick={toggleActive}>
+            {service.is_active ? 'Скрыть' : 'Показать'}
+          </Button>
+        )}
+      </div>
+    </div>
   )
 }

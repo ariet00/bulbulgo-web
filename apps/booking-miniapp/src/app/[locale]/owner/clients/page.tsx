@@ -1,13 +1,10 @@
 'use client'
 
-import { Button, Card, Input, Sheet, SheetContent, SheetHeader, SheetTitle, Skeleton } from '@doska/ui'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Button, Card, Input, Skeleton } from '@doska/ui'
 import { Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
-import { toast } from 'sonner'
 
-import { bookingApi } from '@/apis/booking'
 import { useClients } from '@/hooks/queries'
 import { formatPrice } from '@/lib/format'
 import { useBookingStore } from '@/store/useBookingStore'
@@ -15,35 +12,9 @@ import { useBookingStore } from '@/store/useBookingStore'
 export default function OwnerClients() {
   const { business } = useBookingStore()
   const currency = business?.settings?.currency || 'KZT'
-  const qc = useQueryClient()
 
   const [search, setSearch] = useState('')
   const { data, isLoading } = useClients(search || undefined)
-
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-
-  const create = useMutation({
-    mutationFn: bookingApi.createClient,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['booking', 'clients'] }),
-  })
-
-  const submit = async () => {
-    if (!name.trim()) {
-      toast.error('Имя обязательно')
-      return
-    }
-    try {
-      await create.mutateAsync({ name: name.trim(), phone: phone || undefined })
-      toast.success('Клиент добавлен')
-      setName('')
-      setPhone('')
-      setOpen(false)
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Ошибка')
-    }
-  }
 
   return (
     <main className="mx-auto max-w-md p-4">
@@ -59,9 +30,11 @@ export default function OwnerClients() {
             className="pl-8"
           />
         </div>
-        <Button onClick={() => setOpen(true)} size="default">
-          <Plus className="size-4" />
-        </Button>
+        <Link href="/owner/clients/new">
+          <Button size="default">
+            <Plus className="size-4" />
+          </Button>
+        </Link>
       </div>
 
       {isLoading ? (
@@ -97,30 +70,6 @@ export default function OwnerClients() {
           ))}
         </div>
       )}
-
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom">
-          <SheetHeader>
-            <SheetTitle>Новый клиент</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-3 pt-4">
-            <div>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />
-            </div>
-            <div>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Телефон"
-                inputMode="tel"
-              />
-            </div>
-            <Button onClick={submit} className="w-full" disabled={create.isPending}>
-              Создать
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </main>
   )
 }

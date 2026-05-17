@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { bookingApi } from '@/apis/booking'
+import { useBookingStore } from '@/store/useBookingStore'
 
 const invalidateAppointments = (qc: ReturnType<typeof useQueryClient>) =>
   qc.invalidateQueries({ queryKey: ['booking', 'appointments'] })
@@ -78,7 +79,10 @@ export const useUpdateSettings = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: bookingApi.updateSettings,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['booking', 'settings'] }),
+    onSuccess: (updated) => {
+      qc.invalidateQueries({ queryKey: ['booking', 'settings'] })
+      useBookingStore.getState().setSettings(updated)
+    },
   })
 }
 

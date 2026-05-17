@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  Button,
-  Input,
-  Label,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@doska/ui'
+import { Button, Input, Label } from '@doska/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -17,20 +9,21 @@ import { bookingApi } from '@/apis/booking'
 import type { ServiceCategory } from '@/types/booking'
 
 type Props = {
-  open: boolean
-  onOpenChange: (v: boolean) => void
   category?: ServiceCategory | null
+  onDone: () => void
 }
 
-export function CategoryForm({ open, onOpenChange, category }: Props) {
+export function CategoryForm({ category, onDone }: Props) {
   const qc = useQueryClient()
   const [name, setName] = useState('')
   const [order, setOrder] = useState(0)
 
   useEffect(() => {
-    setName(category?.name ?? '')
-    setOrder(category?.order ?? 0)
-  }, [category, open])
+    if (category) {
+      setName(category.name)
+      setOrder(category.order)
+    }
+  }, [category])
 
   const create = useMutation({
     mutationFn: bookingApi.createCategory,
@@ -55,7 +48,7 @@ export function CategoryForm({ open, onOpenChange, category }: Props) {
         await create.mutateAsync({ name: name.trim(), order })
       }
       toast.success('Сохранено')
-      onOpenChange(false)
+      onDone()
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Ошибка')
     }
@@ -67,43 +60,36 @@ export function CategoryForm({ open, onOpenChange, category }: Props) {
     try {
       await remove.mutateAsync(category.id)
       toast.success('Удалено')
-      onOpenChange(false)
+      onDone()
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Ошибка')
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom">
-        <SheetHeader>
-          <SheetTitle>{category ? 'Редактировать категорию' : 'Новая категория'}</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-3 pt-4">
-          <div>
-            <Label>Название</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Стрижки" />
-          </div>
-          <div>
-            <Label>Порядок сортировки</Label>
-            <Input
-              type="number"
-              value={order}
-              onChange={(e) => setOrder(parseInt(e.target.value, 10) || 0)}
-            />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <Button className="flex-1" onClick={submit}>
-              {category ? 'Сохранить' : 'Создать'}
-            </Button>
-            {category && (
-              <Button variant="outline" onClick={onDelete} disabled={remove.isPending}>
-                Удалить
-              </Button>
-            )}
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <div className="space-y-3">
+      <div>
+        <Label>Название</Label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Стрижки" />
+      </div>
+      <div>
+        <Label>Порядок сортировки</Label>
+        <Input
+          type="number"
+          value={order}
+          onChange={(e) => setOrder(parseInt(e.target.value, 10) || 0)}
+        />
+      </div>
+      <div className="flex gap-2 pt-2">
+        <Button className="flex-1" onClick={submit} disabled={create.isPending || update.isPending}>
+          {category ? 'Сохранить' : 'Создать'}
+        </Button>
+        {category && (
+          <Button variant="outline" onClick={onDelete} disabled={remove.isPending}>
+            Удалить
+          </Button>
+        )}
+      </div>
+    </div>
   )
 }

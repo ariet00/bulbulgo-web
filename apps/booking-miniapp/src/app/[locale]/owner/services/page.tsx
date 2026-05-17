@@ -2,10 +2,9 @@
 
 import { Badge, Button, Card, Skeleton } from '@doska/ui'
 import { Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useMemo } from 'react'
 
-import { CategoryForm } from '@/components/owner/CategoryForm'
-import { ServiceForm } from '@/components/owner/ServiceForm'
 import { useCategories, useServices } from '@/hooks/queries'
 import { formatDuration, formatPrice } from '@/lib/format'
 import { useBookingStore } from '@/store/useBookingStore'
@@ -17,11 +16,6 @@ export default function OwnerServices() {
 
   const { data: categories, isLoading: catsLoading } = useCategories(true)
   const { data: services, isLoading: svcLoading } = useServices({ include_inactive: true })
-
-  const [editService, setEditService] = useState<Service | null>(null)
-  const [serviceOpen, setServiceOpen] = useState(false)
-  const [editCategory, setEditCategory] = useState<ServiceCategory | null>(null)
-  const [categoryOpen, setCategoryOpen] = useState(false)
 
   const grouped = useMemo(() => {
     const cats = categories ?? []
@@ -39,26 +33,21 @@ export default function OwnerServices() {
     return ordered
   }, [categories, services])
 
-  const openNewService = () => {
-    setEditService(null)
-    setServiceOpen(true)
-  }
-  const openNewCategory = () => {
-    setEditCategory(null)
-    setCategoryOpen(true)
-  }
-
   return (
     <main className="mx-auto max-w-md p-4">
       <h1 className="text-xl font-semibold mb-3">Услуги</h1>
 
       <div className="flex gap-2 mb-3">
-        <Button className="flex-1" onClick={openNewService}>
-          <Plus className="size-4 mr-1" /> Услуга
-        </Button>
-        <Button className="flex-1" variant="outline" onClick={openNewCategory}>
-          <Plus className="size-4 mr-1" /> Категория
-        </Button>
+        <Link href="/owner/services/new" className="flex-1">
+          <Button className="w-full">
+            <Plus className="size-4 mr-1" /> Услуга
+          </Button>
+        </Link>
+        <Link href="/owner/services/categories/new" className="flex-1">
+          <Button className="w-full" variant="outline">
+            <Plus className="size-4 mr-1" /> Категория
+          </Button>
+        </Link>
       </div>
 
       {catsLoading || svcLoading ? (
@@ -79,15 +68,12 @@ export default function OwnerServices() {
                   {category?.name ?? 'Без категории'}
                 </h2>
                 {category && (
-                  <button
-                    onClick={() => {
-                      setEditCategory(category)
-                      setCategoryOpen(true)
-                    }}
+                  <Link
+                    href={`/owner/services/categories/${category.id}`}
                     className="text-xs text-primary"
                   >
                     Изменить
-                  </button>
+                  </Link>
                 )}
               </div>
               <div className="space-y-1">
@@ -95,27 +81,22 @@ export default function OwnerServices() {
                   <p className="text-xs text-muted-foreground px-1">Нет услуг.</p>
                 ) : (
                   items.map((s) => (
-                    <Card
-                      key={s.id}
-                      className="p-3 cursor-pointer"
-                      onClick={() => {
-                        setEditService(s)
-                        setServiceOpen(true)
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {s.name}
-                            {!s.is_active && <Badge variant="secondary">скрыто</Badge>}
+                    <Link key={s.id} href={`/owner/services/${s.id}`}>
+                      <Card className="p-3 cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              {s.name}
+                              {!s.is_active && <Badge variant="secondary">скрыто</Badge>}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatDuration(s.duration_min)}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatDuration(s.duration_min)}
-                          </div>
+                          <div className="font-semibold">{formatPrice(s.price, currency)}</div>
                         </div>
-                        <div className="font-semibold">{formatPrice(s.price, currency)}</div>
-                      </div>
-                    </Card>
+                      </Card>
+                    </Link>
                   ))
                 )}
               </div>
@@ -123,14 +104,6 @@ export default function OwnerServices() {
           ))}
         </div>
       )}
-
-      <ServiceForm
-        open={serviceOpen}
-        onOpenChange={setServiceOpen}
-        service={editService}
-        categories={categories ?? []}
-      />
-      <CategoryForm open={categoryOpen} onOpenChange={setCategoryOpen} category={editCategory} />
     </main>
   )
 }
