@@ -89,7 +89,57 @@ export const useUpdateSettings = () => {
 export const useReplaceSchedule = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: bookingApi.replaceSchedule,
+    mutationFn: ({ items, user_id }: { items: Parameters<typeof bookingApi.replaceSchedule>[0]; user_id?: number | null }) =>
+      bookingApi.replaceSchedule(items, user_id != null ? { user_id } : undefined),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['booking', 'schedule'] }),
+  })
+}
+
+export const useCreateInvite = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: bookingApi.createInvite,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['booking', 'employees'] }),
+  })
+}
+
+export const useAcceptInvite = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (token: string) => bookingApi.acceptInvite(token),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['booking', 'employees'] })
+      qc.invalidateQueries({ queryKey: ['booking', 'business'] })
+    },
+  })
+}
+
+export const useUpdateEmployee = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, body }: { userId: number; body: Parameters<typeof bookingApi.updateEmployee>[1] }) =>
+      bookingApi.updateEmployee(userId, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['booking', 'employees'] }),
+  })
+}
+
+export const useDeleteEmployee = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (userId: number) => bookingApi.deleteEmployee(userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['booking', 'employees'] }),
+  })
+}
+
+export const useApplySchedulePreset = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: bookingApi.applySchedulePreset,
+    onSuccess: ({ settings }) => {
+      qc.invalidateQueries({ queryKey: ['booking', 'schedule'] })
+      qc.invalidateQueries({ queryKey: ['booking', 'settings'] })
+      qc.invalidateQueries({ queryKey: ['booking', 'availability'] })
+      useBookingStore.getState().setSettings(settings)
+    },
   })
 }

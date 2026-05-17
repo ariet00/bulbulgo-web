@@ -29,8 +29,20 @@ export default function BookPage() {
 
   const proceed = () => {
     if (selected.length === 0) return
-    const qs = selected.map((id) => `service_ids=${id}`).join('&')
-    router.push(`/book/slot?${qs}`)
+    const constraining = selectedServices
+      .map((s) => s.staff_ids ?? [])
+      .filter((arr) => arr.length > 0)
+    const intersection = constraining.reduce<number[]>(
+      (acc, arr) => (acc.length === 0 ? arr : acc.filter((x) => arr.includes(x))),
+      [],
+    )
+    const needsStaffPick = constraining.length > 0 && intersection.length > 1
+    const qsParts = selected.map((id) => `service_ids=${id}`)
+    if (needsStaffPick) {
+      router.push(`/book/staff?${qsParts.join('&')}`)
+    } else {
+      router.push(`/book/slot?${qsParts.join('&')}`)
+    }
   }
 
   return (

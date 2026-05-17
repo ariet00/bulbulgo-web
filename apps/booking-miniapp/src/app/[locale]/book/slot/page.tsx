@@ -21,6 +21,8 @@ export default function SlotPage() {
     () => params.getAll('service_ids').map((s) => parseInt(s, 10)).filter(Boolean),
     [params],
   )
+  const staffIdParam = params.get('staff_id')
+  const staffId = staffIdParam ? parseInt(staffIdParam, 10) : null
 
   const { business } = useBookingStore()
   const currency = business?.settings?.currency || 'KZT'
@@ -43,6 +45,7 @@ export default function SlotPage() {
   const { data: slots, isLoading: slotsLoading } = useAvailability({
     date: isoDate,
     service_ids: serviceIds,
+    staff_id: staffId,
   })
 
   const createAppt = useCreateAppointment()
@@ -52,6 +55,7 @@ export default function SlotPage() {
       const ap = await createAppt.mutateAsync({
         starts_at: startIso,
         service_ids: serviceIds,
+        staff_id: staffId,
       })
       toast.success('Запись создана')
       router.replace(`/me?highlight=${ap.id}`)

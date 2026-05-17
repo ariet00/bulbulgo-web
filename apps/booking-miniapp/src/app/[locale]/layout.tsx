@@ -13,12 +13,15 @@ export const metadata: Metadata = {
 }
 
 // Telegram Mini App webview prefers no zoom & full-viewport — match that.
+// `viewportFit: cover` is required for `env(safe-area-inset-*)` to resolve on iOS,
+// so our bottom nav can lift above the home indicator.
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
   themeColor: '#ffffff',
+  viewportFit: 'cover',
 }
 
 export default async function LocaleLayout({

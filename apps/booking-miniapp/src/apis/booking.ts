@@ -7,7 +7,12 @@ import type {
   BookingTimeOff,
   Business,
   Client,
+  Currency,
+  Employee,
+  InviteAcceptResponse,
+  InviteCreated,
   RevenueReport,
+  SchedulePatternType,
   Service,
   ServiceCategory,
   Transaction,
@@ -45,9 +50,45 @@ export const bookingApi = {
   deleteService: (id: number) => api.delete(`${root}/services/${id}`).then((r) => r.data),
 
   // schedule
-  getSchedule: () => api.get<BookingScheduleItem[]>(`${root}/schedule`).then((r) => r.data),
-  replaceSchedule: (items: BookingScheduleItem[]) =>
-    api.put<BookingScheduleItem[]>(`${root}/schedule`, { items }).then((r) => r.data),
+  getSchedule: (params?: { user_id?: number | null }) =>
+    api
+      .get<BookingScheduleItem[]>(`${root}/schedule`, {
+        params: params?.user_id != null ? { user_id: params.user_id } : undefined,
+      })
+      .then((r) => r.data),
+  replaceSchedule: (items: BookingScheduleItem[], params?: { user_id?: number | null }) =>
+    api
+      .put<BookingScheduleItem[]>(`${root}/schedule`, { items }, {
+        params: params?.user_id != null ? { user_id: params.user_id } : undefined,
+      })
+      .then((r) => r.data),
+  applySchedulePreset: (body: {
+    type: SchedulePatternType
+    start_time?: string
+    end_time?: string
+    user_id?: number | null
+  }) =>
+    api
+      .post<{ settings: BookingSettings; schedule: BookingScheduleItem[] }>(
+        `${root}/schedule/preset`,
+        body,
+      )
+      .then((r) => r.data),
+
+  // currencies (global, not bot-scoped)
+  listCurrencies: () => api.get<Currency[]>('/api/v1/currencies/').then((r) => r.data),
+
+  // employees (Юр-companies)
+  listEmployees: () => api.get<Employee[]>(`${root}/employees`).then((r) => r.data),
+  createInvite: () => api.post<InviteCreated>(`${root}/employees/invite`).then((r) => r.data),
+  acceptInvite: (token: string) =>
+    api.post<InviteAcceptResponse>(`${root}/employees/invite/${token}/accept`).then((r) => r.data),
+  updateEmployee: (
+    userId: number,
+    body: { display_name?: string; color?: string; position?: string; status?: string },
+  ) => api.patch<Employee>(`${root}/employees/${userId}`, body).then((r) => r.data),
+  deleteEmployee: (userId: number) =>
+    api.delete<{ ok: boolean }>(`${root}/employees/${userId}`).then((r) => r.data),
 
   // time-off
   listTimeOff: (params?: { from?: string; to?: string }) =>
@@ -57,10 +98,14 @@ export const bookingApi = {
   deleteTimeOff: (id: number) => api.delete(`${root}/time-off/${id}`).then((r) => r.data),
 
   // availability
-  availability: (params: { date: string; service_ids: number[] }) =>
+  availability: (params: { date: string; service_ids: number[]; staff_id?: number | null }) =>
     api
       .get<AvailabilitySlot[]>(`${root}/availability`, {
-        params: { date: params.date, service_ids: params.service_ids },
+        params: {
+          date: params.date,
+          service_ids: params.service_ids,
+          ...(params.staff_id != null ? { staff_id: params.staff_id } : {}),
+        },
         paramsSerializer: { indexes: null },
       })
       .then((r) => r.data),
@@ -72,12 +117,19 @@ export const bookingApi = {
     api.post<Client>(`${root}/clients`, body).then((r) => r.data),
 
   // appointments
-  listAppointments: (params?: { from?: string; to?: string; status?: string; limit?: number }) =>
+  listAppointments: (params?: {
+    from?: string
+    to?: string
+    status?: string
+    staff_id?: number | null
+    limit?: number
+  }) =>
     api.get<Appointment[]>(`${root}/appointments`, { params }).then((r) => r.data),
   getAppointment: (id: number) => api.get<Appointment>(`${root}/appointments/${id}`).then((r) => r.data),
   createAppointment: (body: {
     starts_at: string
     service_ids: number[]
+    staff_id?: number | null
     notes?: string
     client_id?: number
     client_name?: string

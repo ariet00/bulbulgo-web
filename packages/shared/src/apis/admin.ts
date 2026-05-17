@@ -176,6 +176,7 @@ export interface AdminCompanyCreate {
     type: string
     description?: string
     status?: string
+    legal_form?: 'ip' | 'legal'
     timezone?: string
     currency?: string
     default_working_start?: string
@@ -189,6 +190,7 @@ export interface AdminCompanyUpdate {
     description?: string
     status?: string
     type?: string
+    legal_form?: 'ip' | 'legal'
 }
 
 // === Celery beat ===

@@ -5,9 +5,18 @@ export type Business = {
     name: string
     description?: string | null
     type?: string | null
+    legal_form?: 'ip' | 'legal'
   }
   is_owner: boolean
+  is_staff?: boolean
   settings: BookingSettings | null
+}
+
+export type SchedulePatternType = '5/2' | '6/1' | '7/0' | '2/2' | '1/1' | '3/3' | 'custom'
+
+export type SchedulePattern = {
+  type: SchedulePatternType
+  anchor_date?: string | null
 }
 
 export type BookingSettings = {
@@ -21,6 +30,35 @@ export type BookingSettings = {
   auto_confirm: boolean
   reminder_24h_enabled: boolean
   reminder_2h_enabled: boolean
+  schedule_pattern?: SchedulePattern | null
+}
+
+export type Currency = {
+  id: number
+  code: string
+  symbol: string
+  name: string
+}
+
+export type Employee = {
+  user_id: number
+  is_owner: boolean
+  status: string
+  display_name: string
+  phone?: string | null
+  color?: string | null
+  position?: string | null
+}
+
+export type InviteCreated = {
+  token: string
+  url: string
+  expires_at: string
+}
+
+export type InviteAcceptResponse = {
+  company_id: number
+  is_staff: boolean
 }
 
 export type ServiceCategory = {
@@ -44,6 +82,7 @@ export type Service = {
   buffer_before_min: number
   buffer_after_min: number
   is_active: boolean
+  staff_ids?: number[]
 }
 
 export type Client = {

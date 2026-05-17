@@ -32,6 +32,7 @@ export default function NewCompanyPage() {
     const [type, setType] = useState<string>('booking')
     const [status, setStatus] = useState<string>('active')
     const [description, setDescription] = useState('')
+    const [legalForm, setLegalForm] = useState<'ip' | 'legal'>('ip')
 
     const [timezone, setTimezone] = useState<string>('Asia/Almaty')
     const [currency, setCurrency] = useState<string>('KZT')
@@ -44,6 +45,7 @@ export default function NewCompanyPage() {
             slug: slug.trim(),
             type,
             status,
+            legal_form: legalForm,
             description: description || undefined,
         }
         if (type === 'booking') {
@@ -84,6 +86,20 @@ export default function NewCompanyPage() {
                             <Label>Статус</Label>
                             <CompanyStatusSelect value={status} onChange={setStatus} />
                         </div>
+                    </div>
+                    <div>
+                        <Label>Юридическая форма</Label>
+                        <select
+                            value={legalForm}
+                            onChange={(e) => setLegalForm(e.target.value as 'ip' | 'legal')}
+                            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                        >
+                            <option value="ip">ИП (один владелец)</option>
+                            <option value="legal">Юр. лицо (владелец + сотрудники)</option>
+                        </select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Для Юр-компаний в miniapp доступна вкладка «Сотрудники» и приглашения.
+                        </p>
                     </div>
                     <div>
                         <Label>Владелец *</Label>

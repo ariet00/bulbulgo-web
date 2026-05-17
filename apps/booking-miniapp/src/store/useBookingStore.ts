@@ -9,6 +9,7 @@ type BookingStoreState = {
   errorMessage: string | null
   business: Business | null
   isOwner: boolean
+  isStaff: boolean
   setBootStatus: (s: BookingStoreState['bootStatus']) => void
   setError: (msg: string | null) => void
   setBusiness: (b: Business | null) => void
@@ -20,9 +21,15 @@ export const useBookingStore = create<BookingStoreState>((set) => ({
   errorMessage: null,
   business: null,
   isOwner: false,
+  isStaff: false,
   setBootStatus: (s) => set({ bootStatus: s }),
   setError: (msg) => set({ errorMessage: msg }),
-  setBusiness: (b) => set({ business: b, isOwner: b?.is_owner ?? false }),
+  setBusiness: (b) =>
+    set({
+      business: b,
+      isOwner: b?.is_owner ?? false,
+      isStaff: b?.is_staff ?? false,
+    }),
   setSettings: (s) =>
     set((state) => ({
       business: state.business ? { ...state.business, settings: s } : state.business,

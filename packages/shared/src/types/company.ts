@@ -5,6 +5,7 @@ export interface Company {
     name: string;
     description?: string;
     type?: string;
+    legal_form?: 'ip' | 'legal';
     status: 'active' | 'moderation' | 'disabled';
     settings?: Record<string, any>;
     data?: {

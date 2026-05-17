@@ -40,6 +40,7 @@ export default function EditCompanyPage() {
     const [type, setType] = useState<string>('')
     const [status, setStatus] = useState<string>('')
     const [description, setDescription] = useState('')
+    const [legalForm, setLegalForm] = useState<'ip' | 'legal'>('ip')
 
     useEffect(() => {
         if (!company) return
@@ -49,6 +50,7 @@ export default function EditCompanyPage() {
         setType(company.type ?? '')
         setStatus(company.status ?? '')
         setDescription(company.description ?? '')
+        setLegalForm(company.legal_form === 'legal' ? 'legal' : 'ip')
     }, [company])
 
     if (isLoading || !company) return <div>Loading...</div>
@@ -61,6 +63,7 @@ export default function EditCompanyPage() {
         if (type !== company.type) body.type = type
         if (status !== company.status) body.status = status
         if ((description || '') !== (company.description || '')) body.description = description
+        if (legalForm !== (company.legal_form ?? 'ip')) body.legal_form = legalForm
         if (Object.keys(body).length === 0) return
         await update.mutateAsync({ id: companyId, body })
     }
@@ -100,6 +103,17 @@ export default function EditCompanyPage() {
                             <Label>Статус</Label>
                             <CompanyStatusSelect value={status} onChange={setStatus} />
                         </div>
+                    </div>
+                    <div>
+                        <Label>Юридическая форма</Label>
+                        <select
+                            value={legalForm}
+                            onChange={(e) => setLegalForm(e.target.value as 'ip' | 'legal')}
+                            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                        >
+                            <option value="ip">ИП (один владелец)</option>
+                            <option value="legal">Юр. лицо (владелец + сотрудники)</option>
+                        </select>
                     </div>
                     <div>
                         <Label>Владелец</Label>

@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { useCreateService, useUpdateService } from '@/hooks/mutations'
+import { useEmployees } from '@/hooks/queries'
+import { useBookingStore } from '@/store/useBookingStore'
 import type { Service, ServiceCategory } from '@/types/booking'
 
 type Props = {
@@ -16,6 +18,9 @@ type Props = {
 export function ServiceForm({ service, categories, onDone }: Props) {
   const create = useCreateService()
   const update = useUpdateService()
+  const { business } = useBookingStore()
+  const isLegal = business?.company?.legal_form === 'legal'
+  const { data: employees } = useEmployees()
 
   const [name, setName] = useState('')
   const [duration, setDuration] = useState(30)
@@ -24,6 +29,7 @@ export function ServiceForm({ service, categories, onDone }: Props) {
   const [bufferBefore, setBufferBefore] = useState(0)
   const [bufferAfter, setBufferAfter] = useState(0)
   const [description, setDescription] = useState('')
+  const [staffIds, setStaffIds] = useState<number[]>([])
 
   useEffect(() => {
     if (service) {
@@ -34,15 +40,20 @@ export function ServiceForm({ service, categories, onDone }: Props) {
       setBufferBefore(service.buffer_before_min)
       setBufferAfter(service.buffer_after_min)
       setDescription(service.description || '')
+      setStaffIds(service.staff_ids ?? [])
     }
   }, [service])
+
+  const toggleStaff = (uid: number) => {
+    setStaffIds((prev) => (prev.includes(uid) ? prev.filter((x) => x !== uid) : [...prev, uid]))
+  }
 
   const submit = async () => {
     if (!name.trim() || duration <= 0) {
       toast.error('Заполните название и длительность')
       return
     }
-    const payload = {
+    const payload: any = {
       name: name.trim(),
       duration_min: duration,
       price,
@@ -50,6 +61,9 @@ export function ServiceForm({ service, categories, onDone }: Props) {
       buffer_before_min: bufferBefore,
       buffer_after_min: bufferAfter,
       description: description || undefined,
+    }
+    if (isLegal) {
+      payload.staff_ids = staffIds
     }
     try {
       if (service) {
@@ -137,6 +151,33 @@ export function ServiceForm({ service, categories, onDone }: Props) {
         <Label>Описание</Label>
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
+
+      {isLegal && (
+        <div>
+          <Label>Кто выполняет</Label>
+          <div className="space-y-1 mt-1 max-h-40 overflow-y-auto border rounded-md p-2">
+            {(employees ?? []).map((e) => (
+              <label key={e.user_id} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={staffIds.includes(e.user_id)}
+                  onChange={() => toggleStaff(e.user_id)}
+                />
+                <span>{e.display_name}</span>
+                {e.is_owner && <span className="text-xs text-muted-foreground">(владелец)</span>}
+              </label>
+            ))}
+            {(employees?.length ?? 0) === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Сотрудников пока нет — добавьте на странице «Сотрудники».
+              </p>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Если никого не выбрать — услугу выполняет только владелец.
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-2 pt-2">
         <Button className="flex-1" onClick={submit} disabled={create.isPending || update.isPending}>

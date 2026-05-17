@@ -6,14 +6,14 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { useUpdateSettings } from '@/hooks/mutations'
-import { useSettings } from '@/hooks/queries'
+import { useCurrencies, useSettings } from '@/hooks/queries'
 import type { BookingSettings } from '@/types/booking'
 
 const TIMEZONES = ['UTC', 'Asia/Almaty', 'Asia/Bishkek', 'Asia/Tashkent', 'Europe/Moscow']
-const CURRENCIES = ['KZT', 'KGS', 'UZS', 'RUB', 'USD', 'EUR']
 
 export default function OwnerSettings() {
   const { data, isLoading } = useSettings()
+  const { data: currencies } = useCurrencies()
   const update = useUpdateSettings()
   const [draft, setDraft] = useState<BookingSettings | null>(null)
 
@@ -79,11 +79,15 @@ export default function OwnerSettings() {
             onChange={(e) => setField('currency', e.target.value)}
             className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
           >
-            {CURRENCIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {(currencies ?? []).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} — {c.name}
+                {c.symbol ? ` (${c.symbol})` : ''}
               </option>
             ))}
+            {!currencies?.some((c) => c.code === draft.currency) && (
+              <option value={draft.currency}>{draft.currency}</option>
+            )}
           </select>
         </div>
       </Card>

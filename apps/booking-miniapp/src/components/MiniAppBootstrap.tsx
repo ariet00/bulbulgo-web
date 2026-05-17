@@ -4,7 +4,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
+import { toast } from 'sonner'
+
 import { api } from '@/lib/api'
+import { bookingApi } from '@/apis/booking'
 import { finishAuth } from '@/lib/finishAuth'
 import { getTelegramInit } from '@/lib/telegram'
 import { useBookingStore } from '@/store/useBookingStore'
@@ -64,12 +67,32 @@ export function MiniAppBootstrap() {
         })
         if (cancelled) return
 
-        const { business } = await finishAuth(authRes.data, slug)
+        let { business } = await finishAuth(authRes.data, slug)
         if (cancelled) return
+
+        const inviteToken = searchParams.get('invite')
+        if (inviteToken) {
+          try {
+            await bookingApi.acceptInvite(inviteToken)
+            toast.success('Вы добавлены в команду')
+            // Re-fetch business to reflect new staff role.
+            const biz = await api.get('/api/v1/booking/business')
+            business = {
+              company: biz.data.company,
+              is_owner: biz.data.is_owner,
+              is_staff: biz.data.is_staff,
+              settings: biz.data.settings ?? null,
+            }
+          } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? 'Не удалось принять приглашение')
+          }
+        }
 
         setBusiness(business)
         setBootStatus('ready')
-        router.replace(business.is_owner ? '/owner' : '/book')
+        if (business.is_owner) router.replace('/owner')
+        else if (business.is_staff) router.replace('/owner')
+        else router.replace('/book')
       } catch (err: any) {
         if (cancelled) return
         setError(err?.response?.data?.message ?? err?.message ?? 'Unknown error')

@@ -14,52 +14,12 @@ import {
   useCompleteAppointment,
   useNoShowAppointment,
 } from '@/hooks/mutations'
-import { useAppointments, useSchedule } from '@/hooks/queries'
+import { useAppointments, useEmployees, useSchedule, useSettings } from '@/hooks/queries'
 import { formatPrice, formatTime } from '@/lib/format'
+import { classifyDay } from '@/lib/scheduleClassify'
 import { useBookingStore } from '@/store/useBookingStore'
-import type { BookingScheduleItem, BookingTimeOff } from '@/types/booking'
 
 const DAY_RANGE = 14
-
-/** JS Date.getDay() returns 0=Sun..6=Sat; backend uses 0=Mon..6=Sun. */
-const toBackendWeekday = (d: Date) => (d.getDay() + 6) % 7
-
-type DayMeta = {
-  isWorking: boolean
-  hours: { start: string; end: string } | null
-  timeOff: BookingTimeOff | null
-}
-
-const trimTime = (t: string | null | undefined) => (t ? t.slice(0, 5) : '')
-
-function classifyDay(
-  date: Date,
-  schedule: BookingScheduleItem[] | undefined,
-  timeOffs: BookingTimeOff[] | undefined,
-): DayMeta {
-  const row = schedule?.find((s) => s.weekday === toBackendWeekday(date))
-  const dayStart = startOfDay(date)
-  const dayEnd = endOfDay(date)
-
-  // Day is "off" by time-off only when an entry fully covers the day.
-  const fullDayOff = timeOffs?.find((t) => {
-    const ts = new Date(t.starts_at)
-    const te = new Date(t.ends_at)
-    return ts <= dayStart && te >= dayEnd
-  }) ?? null
-
-  if (fullDayOff) {
-    return { isWorking: false, hours: null, timeOff: fullDayOff }
-  }
-  if (!row || !row.is_working_day) {
-    return { isWorking: false, hours: null, timeOff: null }
-  }
-  return {
-    isWorking: true,
-    hours: { start: trimTime(row.start_time), end: trimTime(row.end_time) },
-    timeOff: null,
-  }
-}
 
 export default function OwnerCalendar() {
   const router = useRouter()
@@ -76,15 +36,21 @@ export default function OwnerCalendar() {
   )
   const [day, setDay] = useState<Date>(today)
 
+  const [staffFilter, setStaffFilter] = useState<number | null>(null)
   const range = useMemo(
     () => ({
       from: startOfDay(day).toISOString(),
       to: endOfDay(day).toISOString(),
+      staff_id: staffFilter,
     }),
-    [day],
+    [day, staffFilter],
   )
   const { data: apps, isLoading } = useAppointments(range)
-  const { data: schedule } = useSchedule()
+  const { data: schedule } = useSchedule(staffFilter)
+  const { data: settings } = useSettings()
+  const { data: employees } = useEmployees()
+  const pattern = settings?.schedule_pattern ?? null
+  const isLegal = business?.company?.legal_form === 'legal'
 
   const timeOffRange = useMemo(
     () => ({
@@ -100,8 +66,8 @@ export default function OwnerCalendar() {
   })
 
   const dayMeta = useMemo(
-    () => classifyDay(day, schedule, timeOffs),
-    [day, schedule, timeOffs],
+    () => classifyDay(day, schedule, timeOffs, pattern),
+    [day, schedule, timeOffs, pattern],
   )
 
   const completeMut = useCompleteAppointment()
@@ -148,15 +114,37 @@ export default function OwnerCalendar() {
       </button>
       <h1 className="text-xl font-semibold mb-3">Календарь</h1>
 
+      {isLegal && (
+        <div className="mb-3">
+          <select
+            value={staffFilter == null ? 'all' : String(staffFilter)}
+            onChange={(e) =>
+              setStaffFilter(e.target.value === 'all' ? null : parseInt(e.target.value, 10))
+            }
+            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            <option value="all">Все мастера</option>
+            {(employees ?? []).map((emp) => (
+              <option key={emp.user_id} value={emp.user_id}>
+                {emp.display_name}
+                {emp.is_owner ? ' (владелец)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
         {days.map((d) => {
           const same = format(d, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
-          const meta = classifyDay(d, schedule, timeOffs)
+          const meta = classifyDay(d, schedule, timeOffs, pattern)
+          const isWorking = meta.kind === 'working'
+          const isTimeOff = meta.kind === 'timeoff'
           const baseBorder = same
             ? 'border-primary bg-primary/10'
-            : meta.isWorking
+            : isWorking
               ? 'border-border'
-              : meta.timeOff
+              : isTimeOff
                 ? 'border-amber-300 bg-amber-50'
                 : 'border-dashed border-border bg-muted/40'
           return (
@@ -167,22 +155,20 @@ export default function OwnerCalendar() {
             >
               <div
                 className={`text-xs ${
-                  meta.isWorking ? 'text-muted-foreground' : 'text-muted-foreground/70'
+                  isWorking ? 'text-muted-foreground' : 'text-muted-foreground/70'
                 }`}
               >
                 {format(d, 'EEE', { locale: ru })}
               </div>
               <div
                 className={`font-semibold ${
-                  meta.isWorking ? '' : 'text-muted-foreground line-through decoration-1'
+                  isWorking ? '' : 'text-muted-foreground line-through decoration-1'
                 }`}
               >
                 {format(d, 'd', { locale: ru })}
               </div>
-              {meta.timeOff && (
-                <div className="text-[10px] text-amber-700 mt-0.5">искл.</div>
-              )}
-              {!meta.isWorking && !meta.timeOff && (
+              {isTimeOff && <div className="text-[10px] text-amber-700 mt-0.5">искл.</div>}
+              {meta.kind === 'off' && (
                 <div className="text-[10px] text-muted-foreground/70 mt-0.5">вых.</div>
               )}
             </button>
@@ -191,13 +177,13 @@ export default function OwnerCalendar() {
       </div>
 
       <div className="text-xs text-muted-foreground mb-3 px-1">
-        {dayMeta.isWorking && dayMeta.hours ? (
+        {dayMeta.kind === 'working' && dayMeta.hours ? (
           <span>
             Рабочий день · {dayMeta.hours.start}–{dayMeta.hours.end}
           </span>
-        ) : dayMeta.timeOff ? (
+        ) : dayMeta.kind === 'timeoff' ? (
           <span className="text-amber-700">
-            Исключение{dayMeta.timeOff.reason ? `: ${dayMeta.timeOff.reason}` : ''}
+            Исключение{dayMeta.reason ? `: ${dayMeta.reason}` : ''}
           </span>
         ) : (
           <span>Выходной по расписанию</span>

@@ -21,6 +21,7 @@ export async function finishAuth(authData: AuthResponse, fallbackSlug: string): 
   const biz = await api.get<{
     company: Business['company']
     is_owner: boolean
+    is_staff?: boolean
     settings: Business['settings']
   }>('/api/v1/booking/business')
 
@@ -28,6 +29,7 @@ export async function finishAuth(authData: AuthResponse, fallbackSlug: string): 
     business: {
       company: biz.data.company,
       is_owner: biz.data.is_owner,
+      is_staff: biz.data.is_staff ?? false,
       settings: biz.data.settings ?? null,
     },
   }

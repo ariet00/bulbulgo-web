@@ -14,23 +14,28 @@ export const useServices = (params?: { category_id?: number; include_inactive?: 
     queryFn: () => bookingApi.listServices(params),
   })
 
-export const useAvailability = (params: { date: string; service_ids: number[] }) =>
+export const useAvailability = (params: { date: string; service_ids: number[]; staff_id?: number | null }) =>
   useQuery({
-    queryKey: ['booking', 'availability', params.date, params.service_ids],
+    queryKey: ['booking', 'availability', params.date, params.service_ids, params.staff_id ?? null],
     queryFn: () => bookingApi.availability(params),
     enabled: params.service_ids.length > 0 && Boolean(params.date),
   })
 
-export const useAppointments = (params?: { from?: string; to?: string; status?: string }) =>
+export const useAppointments = (params?: {
+  from?: string
+  to?: string
+  status?: string
+  staff_id?: number | null
+}) =>
   useQuery({
     queryKey: ['booking', 'appointments', params],
     queryFn: () => bookingApi.listAppointments(params),
   })
 
-export const useSchedule = () =>
+export const useSchedule = (userId?: number | null) =>
   useQuery({
-    queryKey: ['booking', 'schedule'],
-    queryFn: () => bookingApi.getSchedule(),
+    queryKey: ['booking', 'schedule', userId ?? null],
+    queryFn: () => bookingApi.getSchedule({ user_id: userId ?? null }),
   })
 
 export const useSettings = () =>
@@ -49,4 +54,17 @@ export const useRevenue = (params: { from?: string; to?: string; group_by?: 'day
   useQuery({
     queryKey: ['booking', 'revenue', params],
     queryFn: () => bookingApi.revenue(params),
+  })
+
+export const useCurrencies = () =>
+  useQuery({
+    queryKey: ['booking', 'currencies'],
+    queryFn: () => bookingApi.listCurrencies(),
+    staleTime: 24 * 60 * 60 * 1000,
+  })
+
+export const useEmployees = () =>
+  useQuery({
+    queryKey: ['booking', 'employees'],
+    queryFn: () => bookingApi.listEmployees(),
   })

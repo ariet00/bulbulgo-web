@@ -1,26 +1,50 @@
 'use client'
 
-import { Calendar, Home, Scissors, Settings, Users, Wallet } from 'lucide-react'
+import { Calendar, Home, Scissors, Settings, UserPlus, Users, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const items = [
+import { useBookingStore } from '@/store/useBookingStore'
+
+type Item = {
+  href: string
+  icon: typeof Home
+  label: string
+  ownerOnly?: boolean
+  legalOnly?: boolean
+}
+
+const ALL_ITEMS: Item[] = [
   { href: '/owner', icon: Home, label: 'Главная' },
   { href: '/owner/calendar', icon: Calendar, label: 'Календарь' },
-  { href: '/owner/services', icon: Scissors, label: 'Услуги' },
+  { href: '/owner/services', icon: Scissors, label: 'Услуги', ownerOnly: true },
   { href: '/owner/clients', icon: Users, label: 'Клиенты' },
-  { href: '/owner/finance', icon: Wallet, label: 'Финансы' },
-  { href: '/owner/settings', icon: Settings, label: 'Ещё' },
+  { href: '/owner/employees', icon: UserPlus, label: 'Команда', ownerOnly: true, legalOnly: true },
+  { href: '/owner/finance', icon: Wallet, label: 'Финансы', ownerOnly: true },
+  { href: '/owner/settings', icon: Settings, label: 'Ещё', ownerOnly: true },
 ]
 
 export function OwnerNav() {
   const pathname = usePathname()
-  // strip locale prefix like "/ru" so /ru/owner/calendar matches /owner/calendar
   const normalized = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/'
+  const { isOwner, business } = useBookingStore()
+  const isLegal = business?.company?.legal_form === 'legal'
+
+  const items = ALL_ITEMS.filter((it) => {
+    if (it.ownerOnly && !isOwner) return false
+    if (it.legalOnly && !isLegal) return false
+    return true
+  })
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 border-t bg-background z-40">
-      <div className="mx-auto max-w-md grid grid-cols-6">
+    <nav
+      className="fixed bottom-0 left-0 right-0 border-t bg-background z-40"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div
+        className="mx-auto max-w-md grid"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
         {items.map(({ href, icon: Icon, label }) => {
           const active =
             href === '/owner' ? normalized === '/owner' : normalized.startsWith(href)

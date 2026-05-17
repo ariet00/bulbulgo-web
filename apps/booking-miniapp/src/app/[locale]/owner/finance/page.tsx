@@ -31,7 +31,7 @@ function range(period: Period) {
 export default function FinancePage() {
   const router = useRouter()
   const { business } = useBookingStore()
-  const currency = business?.settings?.currency || 'KZT'
+  const currency = business?.settings?.currency
   const [period, setPeriod] = useState<Period>('week')
   const [groupBy, setGroupBy] = useState<'day' | 'service' | 'client'>('day')
 
