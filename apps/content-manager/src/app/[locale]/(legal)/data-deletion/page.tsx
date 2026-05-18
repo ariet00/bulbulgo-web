@@ -19,7 +19,7 @@ export default function DataDeletionPage() {
       <h2>Self-service (recommended)</h2>
       <ol>
         <li>
-          Sign in to <a href="https://admin.bulbul.asia">admin.bulbul.asia</a>.
+          Sign in to <a href="https://content-manager.bulbul.asia">admin.bulbul.asia</a>.
         </li>
         <li>
           For each connected social-media account, open the account&rsquo;s detail page and

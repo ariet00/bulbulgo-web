@@ -30,7 +30,7 @@ export default function PrivacyPage() {
         This policy explains what personal data we collect, how we use it, the legal basis for
         processing, with whom we share it, how long we keep it, and your rights. It applies to the
         web application available at{' '}
-        <a href="https://admin.bulbul.asia">https://admin.bulbul.asia</a> and the supporting
+        <a href="https://content-manager.bulbul.asia">https://content-manager.bulbul.asia</a> and the supporting
         backend at <a href="https://api.bulbul.asia">https://api.bulbul.asia</a>.
       </p>
 
