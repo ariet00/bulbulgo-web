@@ -25,16 +25,22 @@ import {
   useCreateThreadsAccount,
   useCreateTikTokAccount,
   useCreateWhatsAppAccount,
+  useStartInstagramOAuth,
+  useStartPagesOAuth,
+  useStartThreadsOAuth,
   useSubmitThreads2FA,
   useThreadsAccountStatus,
   type Platform,
 } from '@doska/shared'
 import { Loader2 } from 'lucide-react'
 
+import { WhatsAppEmbeddedSignupButton } from '@/components/whatsapp/WhatsAppEmbeddedSignupButton'
+
 const PLATFORMS: { value: Platform; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
   { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'threads', label: 'Threads' },
+  { value: 'pages', label: 'Facebook Page' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'telegram', label: 'Telegram' },
 ]
@@ -72,6 +78,9 @@ export function AddAccountDialog() {
   const createWhatsApp = useCreateWhatsAppAccount()
   const createTelegram = useCreateTelegramAccount()
   const submit2FA = useSubmitThreads2FA()
+  const startThreadsOAuth = useStartThreadsOAuth()
+  const startInstagramOAuth = useStartInstagramOAuth()
+  const startPagesOAuth = useStartPagesOAuth()
 
   const { data: statusData } = useThreadsAccountStatus(
     platform === 'threads' ? createdId : null,
@@ -100,36 +109,39 @@ export function AddAccountDialog() {
     }
   }, [status])
 
+  const handleConnectThreads = async () => {
+    const { authorize_url } = await startThreadsOAuth.mutateAsync()
+    // Full-page redirect — Meta does not allow consent in an iframe.
+    window.location.href = authorize_url
+  }
+
+  const handleConnectInstagram = async () => {
+    const { authorize_url } = await startInstagramOAuth.mutateAsync()
+    window.location.href = authorize_url
+  }
+
+  const handleConnectPages = async () => {
+    const { authorize_url } = await startPagesOAuth.mutateAsync()
+    window.location.href = authorize_url
+  }
+
   const handleSubmit = async () => {
     try {
-      if (platform === 'threads') {
-        if (!form.username || !form.password) return
-        const created = await createThreads.mutateAsync({
-          username: form.username,
-          display_name: form.displayName || undefined,
-          password: form.password,
-        })
-        setCreatedId(created.id)
+      if (
+        platform === 'threads' ||
+        platform === 'instagram' ||
+        platform === 'whatsapp' ||
+        platform === 'pages'
+      ) {
+        // OAuth / Embedded Signup — handled by dedicated buttons.
         return
       }
 
-      if (platform === 'instagram') {
-        await createInstagram.mutateAsync({
-          username: form.username,
-          display_name: form.displayName || undefined,
-          access_token: form.accessToken,
-        })
-      } else if (platform === 'tiktok') {
+      if (platform === 'tiktok') {
         await createTikTok.mutateAsync({
           username: form.username,
           display_name: form.displayName || undefined,
           access_token: form.accessToken,
-        })
-      } else if (platform === 'whatsapp') {
-        await createWhatsApp.mutateAsync({
-          phone: form.phone,
-          display_name: form.displayName || undefined,
-          api_token: form.apiToken,
         })
       } else if (platform === 'telegram') {
         await createTelegram.mutateAsync({
@@ -194,27 +206,52 @@ export function AddAccountDialog() {
             </div>
 
             {platform === 'threads' && (
-              <>
-                <div className="space-y-2">
-                  <Label>Username Instagram</Label>
-                  <Input
-                    value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    placeholder="instagram username"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Пароль</Label>
-                  <Input
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  />
-                </div>
-              </>
+              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+                <p className="font-medium">Подключение через Threads</p>
+                <p className="text-muted-foreground">
+                  Вы будете перенаправлены на threads.net, где разрешите BulBul
+                  Content Manager публиковать посты, читать ответы и собирать
+                  статистику от вашего имени. Мы никогда не запрашиваем ваш
+                  пароль.
+                </p>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={handleConnectThreads}
+                  disabled={startThreadsOAuth.isPending}
+                >
+                  {startThreadsOAuth.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Подключить Threads
+                </Button>
+              </div>
             )}
 
-            {(platform === 'instagram' || platform === 'tiktok') && (
+            {platform === 'instagram' && (
+              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+                <p className="font-medium">Подключение через Instagram</p>
+                <p className="text-muted-foreground">
+                  Используем Instagram Business Login. Аккаунт должен быть
+                  бизнес- или авторским (Business/Creator). Мы запросим
+                  разрешения на публикацию, чтение комментариев, Direct и
+                  статистику.
+                </p>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={handleConnectInstagram}
+                  disabled={startInstagramOAuth.isPending}
+                >
+                  {startInstagramOAuth.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Подключить Instagram
+                </Button>
+              </div>
+            )}
+
+            {platform === 'tiktok' && (
               <>
                 <div className="space-y-2">
                   <Label>Username</Label>
@@ -234,23 +271,39 @@ export function AddAccountDialog() {
             )}
 
             {platform === 'whatsapp' && (
-              <>
-                <div className="space-y-2">
-                  <Label>Номер телефона</Label>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+996..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>API токен</Label>
-                  <Input
-                    value={form.apiToken}
-                    onChange={(e) => setForm({ ...form, apiToken: e.target.value })}
-                  />
-                </div>
-              </>
+              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+                <p className="font-medium">Подключение WhatsApp Business</p>
+                <p className="text-muted-foreground">
+                  Откроется встроенная регистрация Meta (Embedded Signup):
+                  выберите бизнес-аккаунт и номер. Требует пройденной Meta
+                  Business Verification.
+                </p>
+                <WhatsAppEmbeddedSignupButton
+                  onConnected={() => setOpen(false)}
+                />
+              </div>
+            )}
+
+            {platform === 'pages' && (
+              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+                <p className="font-medium">Подключение Facebook Page</p>
+                <p className="text-muted-foreground">
+                  Войдите в Facebook и выберите Страницы, которыми хотите
+                  управлять. Подключим все выбранные сразу. Нужны права
+                  администратора Page.
+                </p>
+                <Button
+                  type="button"
+                  className="w-full bg-[#1877F2] hover:bg-[#1366d6] text-white"
+                  onClick={handleConnectPages}
+                  disabled={startPagesOAuth.isPending}
+                >
+                  {startPagesOAuth.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Подключить через Facebook
+                </Button>
+              </div>
             )}
 
             {platform === 'telegram' && (
@@ -264,12 +317,17 @@ export function AddAccountDialog() {
               </div>
             )}
 
-            <DialogFooter>
-              <Button onClick={handleSubmit} disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Подключить
-              </Button>
-            </DialogFooter>
+            {platform !== 'threads' &&
+              platform !== 'instagram' &&
+              platform !== 'whatsapp' &&
+              platform !== 'pages' && (
+                <DialogFooter>
+                  <Button onClick={handleSubmit} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Подключить
+                  </Button>
+                </DialogFooter>
+              )}
           </div>
         )}
 

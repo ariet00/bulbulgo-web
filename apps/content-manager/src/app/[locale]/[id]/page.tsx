@@ -13,6 +13,9 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 
 import { ThreadsAccountDetail } from '@/components/threads/ThreadsAccountDetail'
 import { GenericAccountDetail } from '@/components/GenericAccountDetail'
+import { InstagramAccountDetail } from '@/components/instagram/InstagramAccountDetail'
+import { WhatsAppAccountDetail } from '@/components/whatsapp/WhatsAppAccountDetail'
+import { PagesAccountDetail } from '@/components/pages/PagesAccountDetail'
 
 export default function AccountDetailPage() {
   const params = useParams()
@@ -38,6 +41,12 @@ export default function AccountDetailPage() {
 
       {account.platform === 'threads' ? (
         <ThreadsAccountDetail account={account as ContentAccount} />
+      ) : account.platform === 'instagram' ? (
+        <InstagramAccountDetail account={account as ContentAccount} />
+      ) : account.platform === 'whatsapp' ? (
+        <WhatsAppAccountDetail account={account as ContentAccount} />
+      ) : account.platform === 'pages' ? (
+        <PagesAccountDetail account={account as ContentAccount} />
       ) : (
         <GenericAccountDetail account={account as ContentAccount} />
       )}

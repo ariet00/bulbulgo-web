@@ -3,10 +3,15 @@
 import { useQuery } from '@tanstack/react-query'
 
 import {
+  getThreadsAccountInsights,
   getThreadsAccountStatus,
+  getThreadConversation,
+  getThreadMediaInsights,
+  getThreadReplies,
   getThreadsLogs,
   getThreadsPosts,
   getThreadsRecommendations,
+  getUserThreads,
 } from '../../apis/threads'
 
 export const useThreadsAccountStatus = (accountId: number | null) => {
@@ -63,3 +68,48 @@ export const useThreadsLogs = (params: {
     refetchInterval: 5000,
   })
 }
+
+export const useUserThreads = (accountId: number | null) =>
+  useQuery({
+    queryKey: ['threads', 'user-threads', accountId],
+    queryFn: () => getUserThreads(accountId!, 25),
+    enabled: !!accountId,
+  })
+
+export const useThreadReplies = (
+  accountId: number | null,
+  mediaId: string | null,
+) =>
+  useQuery({
+    queryKey: ['threads', 'replies', accountId, mediaId],
+    queryFn: () => getThreadReplies(accountId!, mediaId!),
+    enabled: !!accountId && !!mediaId,
+    refetchInterval: 20_000,
+  })
+
+export const useThreadConversation = (
+  accountId: number | null,
+  mediaId: string | null,
+) =>
+  useQuery({
+    queryKey: ['threads', 'conversation', accountId, mediaId],
+    queryFn: () => getThreadConversation(accountId!, mediaId!),
+    enabled: !!accountId && !!mediaId,
+  })
+
+export const useThreadsAccountInsights = (accountId: number | null) =>
+  useQuery({
+    queryKey: ['threads', 'insights', accountId],
+    queryFn: () => getThreadsAccountInsights(accountId!),
+    enabled: !!accountId,
+  })
+
+export const useThreadMediaInsights = (
+  accountId: number | null,
+  mediaId: string | null,
+) =>
+  useQuery({
+    queryKey: ['threads', 'media-insights', accountId, mediaId],
+    queryFn: () => getThreadMediaInsights(accountId!, mediaId!),
+    enabled: !!accountId && !!mediaId,
+  })

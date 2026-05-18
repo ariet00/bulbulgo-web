@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import {
   Badge,
@@ -19,6 +19,8 @@ import {
 } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import { Loader2, Trash2 } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 
 import { AddAccountDialog } from '@/components/AddAccountDialog'
 
@@ -28,6 +30,7 @@ const PLATFORM_LABEL: Record<Platform, string> = {
   threads: 'Threads',
   tiktok: 'TikTok',
   telegram: 'Telegram',
+  pages: 'Facebook Page',
 }
 
 const PLATFORM_COLOR: Record<Platform, string> = {
@@ -36,11 +39,37 @@ const PLATFORM_COLOR: Record<Platform, string> = {
   threads: 'bg-slate-900 text-white',
   tiktok: 'bg-black text-white',
   telegram: 'bg-sky-100 text-sky-700',
+  pages: 'bg-blue-100 text-blue-700',
 }
 
 export default function ContentManagerDashboard() {
-  const { data: accounts, isLoading } = useContentAccounts()
+  const { data: accounts, isLoading, refetch } = useContentAccounts()
   const deleteAccount = useDeleteContentAccount()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Pick up the result of a Meta OAuth round-trip (Threads / Instagram).
+  useEffect(() => {
+    const checks: Array<[string, string]> = [
+      ['threads_oauth', 'Threads'],
+      ['instagram_oauth', 'Instagram'],
+      ['pages_oauth', 'Facebook Pages'],
+    ]
+    for (const [param, label] of checks) {
+      const status = searchParams.get(param)
+      if (!status) continue
+      if (status === 'connected') {
+        toast.success(`${label} подключён`)
+        refetch()
+      } else if (status === 'denied') {
+        toast.error(`Подключение ${label} отменено`)
+      } else {
+        toast.error(`Не удалось подключить ${label}: ${status}`)
+      }
+      router.replace('/')
+      return
+    }
+  }, [searchParams, router, refetch])
 
   const handleDelete = async (account: ContentAccount) => {
     if (confirm(`Удалить аккаунт @${account.username}?`)) {

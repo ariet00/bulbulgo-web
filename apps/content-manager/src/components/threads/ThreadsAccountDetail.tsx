@@ -38,9 +38,12 @@ import {
 } from '@doska/shared'
 import {
   AlertCircle,
+  BarChart3,
   ClipboardList,
   FileText,
   Loader2,
+  MessageSquare,
+  Pencil,
   RefreshCcw,
   Save,
   Settings,
@@ -50,6 +53,9 @@ import {
 
 import { FeedItemCard } from '@/components/threads/FeedItemCard'
 import { PostCard } from '@/components/threads/PostCard'
+import { ThreadsComposerTab } from '@/components/threads/ThreadsComposerTab'
+import { ThreadsRepliesTab } from '@/components/threads/ThreadsRepliesTab'
+import { ThreadsInsightsTab } from '@/components/threads/ThreadsInsightsTab'
 
 interface Props {
   account: ContentAccount
@@ -216,13 +222,22 @@ export function ThreadsAccountDetail({ account }: Props) {
         </div>
       </div>
 
-      <Tabs defaultValue="feed" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-xl mb-8">
+      <Tabs defaultValue="composer" className="w-full">
+        <TabsList className="grid w-full grid-cols-7 max-w-4xl mb-8">
+          <TabsTrigger value="composer" className="flex items-center gap-2">
+            <Pencil className="h-4 w-4" /> Композер
+          </TabsTrigger>
+          <TabsTrigger value="replies" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Ответы
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" /> Аналитика
+          </TabsTrigger>
           <TabsTrigger value="feed" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Тренды
           </TabsTrigger>
           <TabsTrigger value="drafts" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Посты
+            <FileText className="h-4 w-4" /> Драфты
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" /> Настройки
@@ -231,6 +246,18 @@ export function ThreadsAccountDetail({ account }: Props) {
             <ClipboardList className="h-4 w-4" /> Логи
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="composer" className="space-y-4">
+          <ThreadsComposerTab accountId={accountId} />
+        </TabsContent>
+
+        <TabsContent value="replies" className="space-y-4">
+          <ThreadsRepliesTab accountId={accountId} />
+        </TabsContent>
+
+        <TabsContent value="insights" className="space-y-4">
+          <ThreadsInsightsTab accountId={accountId} />
+        </TabsContent>
 
         {/* TRENDS */}
         <TabsContent value="feed" className="space-y-4">

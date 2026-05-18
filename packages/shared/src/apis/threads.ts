@@ -3,6 +3,150 @@ import { requester } from '../lib/requester'
 // Threads-specific operations on a content_manager account where platform = 'threads'.
 const ACCOUNT_BASE = '/content-manager/threads/accounts'
 
+export const startThreadsOAuth = async (): Promise<{
+  authorize_url: string
+  state: string
+}> => {
+  const response = await requester.post('/content-manager/threads/oauth/start')
+  return response.data
+}
+
+// ───── Direct publishing (OAuth-based) ─────────────────────────────────────
+
+export type ThreadsMediaType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'CAROUSEL'
+
+export interface ThreadsCarouselItem {
+  image_url?: string
+  video_url?: string
+}
+
+export interface ThreadsPublishBody {
+  media_type: ThreadsMediaType
+  text?: string
+  image_url?: string
+  video_url?: string
+  reply_to_id?: string
+  carousel_items?: ThreadsCarouselItem[]
+}
+
+export const publishToThreads = async (
+  accountId: number,
+  body: ThreadsPublishBody,
+): Promise<{ status: string; media_id: string }> => {
+  const response = await requester.post(`${ACCOUNT_BASE}/${accountId}/publish`, body)
+  return response.data
+}
+
+export interface ThreadsMedia {
+  id: string
+  media_product_type?: string
+  media_type?: string
+  media_url?: string
+  permalink?: string
+  text?: string
+  timestamp?: string
+  username?: string
+  thumbnail_url?: string
+  is_quote_post?: boolean
+}
+
+export const getUserThreads = async (
+  accountId: number,
+  limit = 25,
+): Promise<{ data: ThreadsMedia[]; paging?: any }> => {
+  const response = await requester.get(`${ACCOUNT_BASE}/${accountId}/threads`, {
+    params: { limit },
+  })
+  return response.data
+}
+
+export const deleteThread = async (
+  accountId: number,
+  threadId: string,
+): Promise<{ status: string }> => {
+  const response = await requester.delete(
+    `${ACCOUNT_BASE}/${accountId}/threads/${encodeURIComponent(threadId)}`,
+  )
+  return response.data
+}
+
+// ───── Replies management ──────────────────────────────────────────────────
+
+export interface ThreadsReply {
+  id: string
+  text?: string
+  username?: string
+  timestamp?: string
+  hide_status?: string
+  is_reply?: boolean
+  permalink?: string
+  replied_to?: { id: string }
+  root_post?: { id: string }
+}
+
+export const getThreadReplies = async (
+  accountId: number,
+  mediaId: string,
+): Promise<{ data: ThreadsReply[]; paging?: any }> => {
+  const response = await requester.get(
+    `${ACCOUNT_BASE}/${accountId}/threads/${encodeURIComponent(mediaId)}/replies`,
+  )
+  return response.data
+}
+
+export const getThreadConversation = async (
+  accountId: number,
+  mediaId: string,
+): Promise<{ data: ThreadsReply[]; paging?: any }> => {
+  const response = await requester.get(
+    `${ACCOUNT_BASE}/${accountId}/threads/${encodeURIComponent(mediaId)}/conversation`,
+  )
+  return response.data
+}
+
+export const hideThreadsReply = async (
+  accountId: number,
+  replyId: string,
+  hide: boolean,
+): Promise<{ status: string }> => {
+  const response = await requester.post(
+    `${ACCOUNT_BASE}/${accountId}/replies/${encodeURIComponent(replyId)}/hide`,
+    { hide },
+  )
+  return response.data
+}
+
+export const replyToThread = async (
+  accountId: number,
+  mediaId: string,
+  text: string,
+): Promise<{ status: string; media_id: string }> => {
+  const response = await requester.post(
+    `${ACCOUNT_BASE}/${accountId}/threads/${encodeURIComponent(mediaId)}/reply`,
+    { text },
+  )
+  return response.data
+}
+
+// ───── Insights ────────────────────────────────────────────────────────────
+
+export const getThreadsAccountInsights = async (
+  accountId: number,
+): Promise<{ data: any[] }> => {
+  const response = await requester.get(`${ACCOUNT_BASE}/${accountId}/insights`)
+  return response.data
+}
+
+export const getThreadMediaInsights = async (
+  accountId: number,
+  mediaId: string,
+): Promise<{ data: any[] }> => {
+  const response = await requester.get(
+    `${ACCOUNT_BASE}/${accountId}/threads/${encodeURIComponent(mediaId)}/insights`,
+  )
+  return response.data
+}
+
 export const getThreadsAccountStatus = async (accountId: number) => {
   const response = await requester.get(`${ACCOUNT_BASE}/${accountId}/status`)
   return response.data

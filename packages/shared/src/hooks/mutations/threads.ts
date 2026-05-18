@@ -5,13 +5,31 @@ import { toast } from 'sonner'
 
 import {
   collectThreadsAccountData,
+  deleteThread,
   deleteThreadsPost,
   deleteThreadsRecommendation,
   generateThreadsDrafts,
+  hideThreadsReply,
   publishThreadsPost,
+  publishToThreads,
+  replyToThread,
+  startThreadsOAuth,
   submitThreadsAccount2FA,
   updateThreadsPost,
+  type ThreadsPublishBody,
 } from '../../apis/threads'
+
+export const useStartThreadsOAuth = () => {
+  return useMutation({
+    mutationFn: () => startThreadsOAuth(),
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          'Не удалось запустить подключение Threads',
+      )
+    },
+  })
+}
 
 export const useSubmitThreads2FA = () => {
   return useMutation({
@@ -87,6 +105,91 @@ export const useDeleteThreadsPost = () => {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Не удалось удалить пост')
+    },
+  })
+}
+
+export const usePublishToThreads = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      accountId,
+      body,
+    }: {
+      accountId: number
+      body: ThreadsPublishBody
+    }) => publishToThreads(accountId, body),
+    onSuccess: (_, vars) => {
+      toast.success('Опубликовано в Threads')
+      queryClient.invalidateQueries({
+        queryKey: ['threads', 'user-threads', vars.accountId],
+      })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Публикация не удалась')
+    },
+  })
+}
+
+export const useDeleteThread = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ accountId, threadId }: { accountId: number; threadId: string }) =>
+      deleteThread(accountId, threadId),
+    onSuccess: (_, vars) => {
+      toast.success('Удалено')
+      queryClient.invalidateQueries({
+        queryKey: ['threads', 'user-threads', vars.accountId],
+      })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Не удалось удалить')
+    },
+  })
+}
+
+export const useHideThreadsReply = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      accountId,
+      replyId,
+      hide,
+    }: {
+      accountId: number
+      replyId: string
+      hide: boolean
+    }) => hideThreadsReply(accountId, replyId, hide),
+    onSuccess: (_, vars) => {
+      toast.success(vars.hide ? 'Ответ скрыт' : 'Ответ снова виден')
+      queryClient.invalidateQueries({ queryKey: ['threads', 'replies'] })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Не удалось изменить видимость')
+    },
+  })
+}
+
+export const useReplyToThread = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      accountId,
+      mediaId,
+      text,
+    }: {
+      accountId: number
+      mediaId: string
+      text: string
+    }) => replyToThread(accountId, mediaId, text),
+    onSuccess: (_, vars) => {
+      toast.success('Ответ отправлен')
+      queryClient.invalidateQueries({
+        queryKey: ['threads', 'replies', vars.accountId, vars.mediaId],
+      })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Не удалось ответить')
     },
   })
 }

@@ -1,6 +1,12 @@
 import { requester } from '../lib/requester'
 
-export type Platform = 'instagram' | 'whatsapp' | 'threads' | 'tiktok' | 'telegram'
+export type Platform =
+  | 'instagram'
+  | 'whatsapp'
+  | 'threads'
+  | 'tiktok'
+  | 'telegram'
+  | 'pages'
 
 export interface ContentAccount {
   id: number

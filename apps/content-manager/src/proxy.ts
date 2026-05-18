@@ -16,9 +16,15 @@ export async function proxy(req: NextRequest) {
     // Remove locale prefix to check path
     const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "") || "/";
 
-    // Check if the path starts with any of the protected prefixes
-    // but skip protection for the login page to avoid redirect loops
-    const isProtected = pathnameWithoutLocale !== "/login" && protectedPathPrefixes.some(prefix =>
+    // Public paths (legal pages required by Meta App Review must be reachable
+    // without authentication). `/data-deletion` and its sub-paths
+    // (e.g. /data-deletion/status) are matched by prefix.
+    const publicPaths = ["/login", "/privacy", "/terms", "/data-deletion"];
+    const isPublic = publicPaths.some(p =>
+        pathnameWithoutLocale === p || pathnameWithoutLocale.startsWith(`${p}/`)
+    );
+
+    const isProtected = !isPublic && protectedPathPrefixes.some(prefix =>
         pathnameWithoutLocale === prefix ||
         (prefix === "/" ? true : pathnameWithoutLocale.startsWith(`${prefix}/`))
     );
