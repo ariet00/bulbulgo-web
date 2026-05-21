@@ -6,8 +6,10 @@ import { log } from "console";
 
 const intlMiddleware = createMiddleware(routing);
 
-const protectedPathPrefixes = [
-    "/admin"
+// This is an admin-only app: every path requires an authenticated admin
+// EXCEPT the login page itself.
+const publicPathPrefixes = [
+    "/login"
 ];
 
 export async function proxy(req: NextRequest) {
@@ -17,24 +19,29 @@ export async function proxy(req: NextRequest) {
     // Remove locale prefix to check path
     const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "");
 
-    // Check if the path starts with any of the protected prefixes
-    const isProtected = protectedPathPrefixes.some(prefix =>
+    const isPublic = publicPathPrefixes.some(prefix =>
         pathnameWithoutLocale === prefix ||
         pathnameWithoutLocale.startsWith(`${prefix}/`)
     );
 
-    if (isProtected) {
-        const token = await getToken({ req, raw: true });
+    if (!isPublic) {
+        const localeMatch = pathname.match(/^\/(en|ru)/);
+        const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
+
+        // Decoded token so we can read the user's role.
+        const token = await getToken({ req });
 
         if (!token) {
-            // Get the current locale to construct the login URL
-            const localeMatch = pathname.match(/^\/(en|ru)/);
-            const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
-
-            // Use absolute URL construction for reliability
             const signInUrl = new URL(`/${locale}/login`, req.url);
             signInUrl.searchParams.set("callbackUrl", req.url);
+            return NextResponse.redirect(signInUrl);
+        }
 
+        // Logged in but not an admin → deny access entirely.
+        const roleSlug = (token.user as { role_slug?: string } | undefined)?.role_slug;
+        if (roleSlug !== "admin") {
+            const signInUrl = new URL(`/${locale}/login`, req.url);
+            signInUrl.searchParams.set("error", "forbidden");
             return NextResponse.redirect(signInUrl);
         }
     }
