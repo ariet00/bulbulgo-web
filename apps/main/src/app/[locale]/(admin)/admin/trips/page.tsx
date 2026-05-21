@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAdminTrips } from '@doska/shared'
+import { useAdminTrips, useDebounce } from '@doska/shared'
 import { useAdminDeleteTrip } from '@doska/shared'
 import {
     Table,
@@ -11,17 +11,36 @@ import {
     TableHeader,
     TableRow,
 } from "@doska/ui"
-import { Button } from "@doska/ui"
+import {
+    Button,
+    Input,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@doska/ui"
 import { Trash2, Eye, MapPin } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 import { format } from 'date-fns'
 
+const ALL = '__all__'
+const TRIP_STATUSES = ['active', 'processing', 'completed', 'cancelled', 'archived']
+
 export default function AdminTripsPage() {
     const [page, setPage] = useState(1)
     const [size, setSize] = useState(40)
-    const { data: trips, isLoading } = useAdminTrips(page, size)
+    const [q, setQ] = useState('')
+    const dq = useDebounce(q, 300)
+    const [status, setStatus] = useState<string>(ALL)
+    const { data: trips, isLoading } = useAdminTrips(
+        page,
+        size,
+        dq || undefined,
+        status === ALL ? undefined : status,
+    )
     const deleteTripMutation = useAdminDeleteTrip()
 
     const handleDelete = (id: number) => {
@@ -30,8 +49,6 @@ export default function AdminTripsPage() {
         }
     }
 
-    if (isLoading) return <div>Loading...</div>
-
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold">Trips</h1>
@@ -39,8 +56,41 @@ export default function AdminTripsPage() {
                 <CardHeader>
                     <CardTitle>Trip Management</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
+                <CardContent className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                        <Input
+                            placeholder="Поиск по телефону/id…"
+                            value={q}
+                            onChange={(e) => {
+                                setQ(e.target.value)
+                                setPage(1)
+                            }}
+                            className="max-w-xs"
+                        />
+                        <Select
+                            value={status}
+                            onValueChange={(v) => {
+                                setStatus(v)
+                                setPage(1)
+                            }}
+                        >
+                            <SelectTrigger className="w-44">
+                                <SelectValue placeholder="Статус" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>Все статусы</SelectItem>
+                                {TRIP_STATUSES.map((s) => (
+                                    <SelectItem key={s} value={s}>
+                                        {s}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : (
+                    <div className="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -101,6 +151,7 @@ export default function AdminTripsPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    )}
                     {trips && (
                         <Pagination
                             page={trips.page}

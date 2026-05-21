@@ -46,14 +46,21 @@ export const adminApi = {
     deleteCompany: (id: number) => requests.delete<any>(`/admin/companies/${id}`),
 
     // Trips
-    getTrips: (page = 1, size = 40) =>
-        requests.get<Page<any>>(`/admin/trips/?page=${page}&size=${size}`),
+    getTrips: (page = 1, size = 40, q?: string, status?: string) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (q) params.set('q', q)
+        if (status) params.set('status', status)
+        return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)
+    },
     getTrip: (id: number) => requests.get<any>(`/admin/trips/${id}`),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
 
     // Vehicles
-    getVehicles: (page = 1, size = 40) =>
-        requests.get<Page<any>>(`/admin/vehicles/?page=${page}&size=${size}`),
+    getVehicles: (page = 1, size = 40, q?: string) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (q) params.set('q', q)
+        return requests.get<Page<any>>(`/admin/vehicles/?${params.toString()}`)
+    },
     getVehicle: (id: number) => requests.get<any>(`/admin/vehicles/${id}`),
     deleteVehicle: (id: number) => requests.delete<any>(`/admin/vehicles/${id}`),
 
@@ -66,8 +73,11 @@ export const adminApi = {
     deleteProperty: (id: number) => requests.delete<any>(`/admin/properties/${id}`),
 
     // Chats
-    getChats: (page = 1, size = 40) =>
-        requests.get<Page<any>>(`/admin/chats/?page=${page}&size=${size}`),
+    getChats: (page = 1, size = 40, q?: string) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (q) params.set('q', q)
+        return requests.get<Page<any>>(`/admin/chats/?${params.toString()}`)
+    },
     getChat: (id: number) => requests.get<any>(`/admin/chats/${id}`),
 
     // Notifications

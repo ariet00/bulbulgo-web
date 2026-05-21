@@ -70,10 +70,18 @@ export const useAdminCompany = (id: number) => {
     })
 }
 
-export const useAdminTrips = (page: number = 1, size: number = 40) => {
+export const useAdminTrips = (
+    page: number = 1,
+    size: number = 40,
+    q?: string,
+    status?: string,
+) => {
     return useQuery({
-        queryKey: [...adminKeys.trips(), { page, size }],
-        queryFn: () => adminApi.getTrips(page, size),
+        queryKey: [
+            ...adminKeys.trips(),
+            { page, size, q: q ?? null, status: status ?? null },
+        ],
+        queryFn: () => adminApi.getTrips(page, size, q, status),
     })
 }
 
@@ -85,10 +93,14 @@ export const useAdminTrip = (id: number) => {
     })
 }
 
-export const useAdminVehicles = (page: number = 1, size: number = 40) => {
+export const useAdminVehicles = (
+    page: number = 1,
+    size: number = 40,
+    q?: string,
+) => {
     return useQuery({
-        queryKey: [...adminKeys.vehicles(), { page, size }],
-        queryFn: () => adminApi.getVehicles(page, size),
+        queryKey: [...adminKeys.vehicles(), { page, size, q: q ?? null }],
+        queryFn: () => adminApi.getVehicles(page, size, q),
     })
 }
 
@@ -115,10 +127,14 @@ export const useAdminProperty = (id: number) => {
     })
 }
 
-export const useAdminChats = (page: number = 1, size: number = 40) => {
+export const useAdminChats = (
+    page: number = 1,
+    size: number = 40,
+    q?: string,
+) => {
     return useQuery({
-        queryKey: [...adminKeys.chats(), { page, size }],
-        queryFn: () => adminApi.getChats(page, size),
+        queryKey: [...adminKeys.chats(), { page, size, q: q ?? null }],
+        queryFn: () => adminApi.getChats(page, size, q),
     })
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAdminChats } from '@doska/shared'
+import { useAdminChats, useDebounce } from '@doska/shared'
 import {
     Table,
     TableBody,
@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@doska/ui"
-import { Button } from "@doska/ui"
+import { Button, Input } from "@doska/ui"
 import { Eye, MessageCircle } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
@@ -20,9 +20,9 @@ import { format } from 'date-fns'
 export default function AdminChatsPage() {
     const [page, setPage] = useState(1)
     const [size, setSize] = useState(40)
-    const { data: chats, isLoading } = useAdminChats(page, size)
-
-    if (isLoading) return <div>Loading...</div>
+    const [q, setQ] = useState('')
+    const dq = useDebounce(q, 300)
+    const { data: chats, isLoading } = useAdminChats(page, size, dq || undefined)
 
     return (
         <div className="space-y-6">
@@ -31,8 +31,20 @@ export default function AdminChatsPage() {
                 <CardHeader>
                     <CardTitle>Chat List</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
+                <CardContent className="space-y-4">
+                    <Input
+                        placeholder="Поиск по id чата или поездки…"
+                        value={q}
+                        onChange={(e) => {
+                            setQ(e.target.value)
+                            setPage(1)
+                        }}
+                        className="max-w-xs"
+                    />
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : (
+                    <div className="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -66,6 +78,7 @@ export default function AdminChatsPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    )}
                     {chats && (
                         <Pagination
                             page={chats.page}

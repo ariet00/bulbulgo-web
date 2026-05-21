@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAdminVehicles } from '@doska/shared'
+import { useAdminVehicles, useDebounce } from '@doska/shared'
 import { useAdminDeleteVehicle } from '@doska/shared'
 import {
     Table,
@@ -11,7 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from "@doska/ui"
-import { Button } from "@doska/ui"
+import { Button, Input } from "@doska/ui"
 import { Trash2, Eye, Car } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
@@ -20,7 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 export default function AdminVehiclesPage() {
     const [page, setPage] = useState(1)
     const [size, setSize] = useState(40)
-    const { data: vehicles, isLoading } = useAdminVehicles(page, size)
+    const [q, setQ] = useState('')
+    const dq = useDebounce(q, 300)
+    const { data: vehicles, isLoading } = useAdminVehicles(page, size, dq || undefined)
     const deleteVehicleMutation = useAdminDeleteVehicle()
 
     const handleDelete = (id: number, model: string) => {
@@ -29,8 +31,6 @@ export default function AdminVehiclesPage() {
         }
     }
 
-    if (isLoading) return <div>Loading...</div>
-
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold">Vehicles</h1>
@@ -38,8 +38,20 @@ export default function AdminVehiclesPage() {
                 <CardHeader>
                     <CardTitle>Vehicle Management</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
+                <CardContent className="space-y-4">
+                    <Input
+                        placeholder="Поиск по марке/модели/номеру/id…"
+                        value={q}
+                        onChange={(e) => {
+                            setQ(e.target.value)
+                            setPage(1)
+                        }}
+                        className="max-w-xs"
+                    />
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : (
+                    <div className="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -84,6 +96,7 @@ export default function AdminVehiclesPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    )}
                     {vehicles && (
                         <Pagination
                             page={vehicles.page}

@@ -188,7 +188,7 @@ export default function AdminNotificationsPage() {
                     {isLoading ? (
                         <div>Загрузка…</div>
                     ) : (
-                        <div className="rounded-md border">
+                        <div className="rounded-md border overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

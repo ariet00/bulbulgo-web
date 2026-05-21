@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminBanUser } from '@doska/shared'
+import { useAdminBanUser, useDebounce } from '@doska/shared'
 import { useState } from 'react'
 import { useAdminUsers } from '@doska/shared'
 import {
@@ -11,7 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from "@doska/ui"
-import { Button } from "@doska/ui"
+import { Button, Input } from "@doska/ui"
 import { Ban, CheckCircle, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { Pagination } from '@doska/ui'
@@ -20,7 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 export default function UsersPage() {
     const [page, setPage] = useState(1)
     const [size, setSize] = useState(40)
-    const { data: users, isLoading } = useAdminUsers(page, size)
+    const [q, setQ] = useState('')
+    const dq = useDebounce(q, 300)
+    const { data: users, isLoading } = useAdminUsers(page, size, dq || undefined)
     const banUserMutation = useAdminBanUser()
 
     const handleBan = (id: number, isActive: boolean) => {
@@ -29,8 +31,6 @@ export default function UsersPage() {
         }
     }
 
-    if (isLoading) return <div>Loading...</div>
-
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold">Users</h1>
@@ -38,8 +38,20 @@ export default function UsersPage() {
                 <CardHeader>
                     <CardTitle>User Management</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
+                <CardContent className="space-y-4">
+                    <Input
+                        placeholder="Поиск по имени/телефону/email/id…"
+                        value={q}
+                        onChange={(e) => {
+                            setQ(e.target.value)
+                            setPage(1)
+                        }}
+                        className="max-w-xs"
+                    />
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : (
+                    <div className="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -88,6 +100,7 @@ export default function UsersPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    )}
                     {users && (
                         <Pagination
                             page={users.page}
