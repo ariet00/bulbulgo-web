@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
     adminApi,
+    AdminBroadcastNotification,
     AdminCompanyCreate,
     AdminCompanyUpdate,
+    AdminSendNotification,
     BookingBotUpdate,
     BookingLinkRequest,
     BookingOnboardRequest,
@@ -219,6 +221,40 @@ export const useAdminDeleteCeleryTask = () => {
         onSuccess: () => {
             invalidateCeleryTasks(qc)
             toast.success('Periodic task deleted')
+        },
+    })
+}
+
+// === Notifications ===
+export const useAdminSendNotification = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminSendNotification) => adminApi.sendNotification(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.notifications() })
+            toast.success('Уведомление поставлено в очередь')
+        },
+    })
+}
+
+export const useAdminBroadcastNotification = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminBroadcastNotification) => adminApi.broadcastNotification(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.notifications() })
+            toast.success('Рассылка поставлена в очередь')
+        },
+    })
+}
+
+export const useAdminDeleteNotification = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteNotification(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.notifications() })
+            toast.success('Уведомление удалено')
         },
     })
 }

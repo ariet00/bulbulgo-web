@@ -70,6 +70,26 @@ export const adminApi = {
         requests.get<Page<any>>(`/admin/chats/?page=${page}&size=${size}`),
     getChat: (id: number) => requests.get<any>(`/admin/chats/${id}`),
 
+    // Notifications
+    getNotifications: (page = 1, size = 40, params?: AdminNotificationListParams) => {
+        const qs = new URLSearchParams({ page: String(page), size: String(size) })
+        if (params?.q) qs.set('q', params.q)
+        if (params?.user_id != null) qs.set('user_id', String(params.user_id))
+        if (params?.is_read != null) qs.set('is_read', String(params.is_read))
+        if (params?.type) qs.set('type', params.type)
+        if (params?.category) qs.set('category', params.category)
+        if (params?.source) qs.set('source', params.source)
+        if (params?.status) qs.set('status', params.status)
+        return requests.get<Page<any>>(`/admin/notifications/?${qs.toString()}`)
+    },
+    getNotification: (id: number) => requests.get<any>(`/admin/notifications/${id}`),
+    sendNotification: (body: AdminSendNotification) =>
+        requests.post<{ queued: boolean }>('/admin/notifications/send', body),
+    broadcastNotification: (body: AdminBroadcastNotification) =>
+        requests.post<{ queued: boolean }>('/admin/notifications/broadcast', body),
+    deleteNotification: (id: number) =>
+        requests.delete<any>(`/admin/notifications/${id}`),
+
     // Analytics
     getAnalytics: () => requests.get<any>('/admin/analytics/'),
 
@@ -106,6 +126,39 @@ export const adminApi = {
         requests.delete<any>(`/admin/celery/periodic-tasks/${id}`),
     refreshCeleryBeat: () =>
         requests.post<{ ok: boolean; reason?: string }>('/admin/celery/refresh-beat', {}),
+}
+
+export interface AdminNotificationListParams {
+    q?: string
+    user_id?: number
+    is_read?: boolean
+    type?: string
+    category?: string
+    source?: string
+    status?: string
+}
+
+export interface AdminSendNotification {
+    user_id: number
+    title: string
+    body: string
+    type?: string
+    category?: string
+    click_action?: string
+    data?: Record<string, any>
+}
+
+export interface AdminBroadcastNotification {
+    title: string
+    body: string
+    type?: string
+    data?: Record<string, any>
+    click_action?: string
+    filters?: {
+        role_id?: number | null
+        is_active?: boolean | null
+        device_type?: string | null
+    }
 }
 
 export interface BookingBotItem {

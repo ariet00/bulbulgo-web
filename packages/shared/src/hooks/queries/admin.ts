@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { adminApi } from '../../apis/admin'
+import { adminApi, AdminNotificationListParams } from '../../apis/admin'
 
 export const adminKeys = {
     all: ['admin'] as const,
@@ -20,6 +20,8 @@ export const adminKeys = {
     bookingBot: (id: number) => [...adminKeys.all, 'booking-bot', id] as const,
     celeryTasks: () => [...adminKeys.all, 'celery-tasks'] as const,
     celeryTask: (id: number) => [...adminKeys.celeryTasks(), id] as const,
+    notifications: () => [...adminKeys.all, 'notifications'] as const,
+    notification: (id: number) => [...adminKeys.notifications(), id] as const,
 }
 
 export const useAdminUsers = (page: number = 1, size: number = 40, q?: string) => {
@@ -161,6 +163,25 @@ export const useAdminCeleryTask = (id: number) => {
     return useQuery({
         queryKey: adminKeys.celeryTask(id),
         queryFn: () => adminApi.getCeleryTask(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminNotifications = (
+    page: number = 1,
+    size: number = 40,
+    params?: AdminNotificationListParams,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.notifications(), { page, size, ...(params ?? {}) }],
+        queryFn: () => adminApi.getNotifications(page, size, params),
+    })
+}
+
+export const useAdminNotification = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.notification(id),
+        queryFn: () => adminApi.getNotification(id),
         enabled: !!id,
     })
 }

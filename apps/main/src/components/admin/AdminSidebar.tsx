@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
     BarChart,
+    Bell,
     CalendarCheck,
     Car,
     Home,
@@ -35,6 +36,7 @@ const sections: NavSection[] = [
         items: [
             { name: 'Users', href: '/admin/users', icon: Users },
             { name: 'Companies', href: '/admin/companies', icon: BarChart },
+            { name: 'Notifications', href: '/admin/notifications', icon: Bell },
         ],
     },
     {
