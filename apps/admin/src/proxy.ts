@@ -7,10 +7,7 @@ import { log } from "console";
 const intlMiddleware = createMiddleware(routing);
 
 const protectedPathPrefixes = [
-    "/admin",
-    "/dashboard",
-    "/account",
-    "/messages"
+    "/admin"
 ];
 
 export async function proxy(req: NextRequest) {

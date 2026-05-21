@@ -5,7 +5,8 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "turbo dev",
-    "dev:web": "turbo dev --filter=@doska/web",
+    "dev:admin": "turbo dev --filter=@doska/admin",
+    "dev:bulbul-go": "turbo dev --filter=@doska/bulbul-go",
     "dev:content-manager": "turbo dev --filter=@doska/content-manager",
     "dev:booking": "turbo dev --filter=@doska/booking-miniapp",
     "build": "turbo build",

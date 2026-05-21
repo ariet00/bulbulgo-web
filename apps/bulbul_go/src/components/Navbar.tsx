@@ -13,7 +13,7 @@ import { Link } from '@doska/i18n'
 import { isDev } from '@doska/shared'
 import { useNotificationStore } from '@doska/shared'
 import { useUserStore } from '@doska/shared'
-import { Bell, LayoutDashboard, User } from 'lucide-react'
+import { Bell, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import RegionSelector from './RegionSelector'
@@ -87,17 +87,6 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {user.role_slug === 'admin' && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/admin"
-                      className="cursor-pointer text-primary font-medium"
-                    >
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Admin Panel
-                    </Link>
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem asChild>
                   <Link href="/account/profile" className="cursor-pointer">{t(
                     'settings')}</Link>
