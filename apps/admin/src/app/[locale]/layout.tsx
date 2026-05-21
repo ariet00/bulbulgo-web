@@ -32,7 +32,14 @@ export default async function RootLayout({
 }) {
   const { locale } = await params
   const messages = await getMessages()
-  const session = await getServerSession(authOptions);
+  let session = null
+  try {
+    session = await getServerSession(authOptions)
+  } catch (error) {
+    // Misconfigured auth (e.g. missing NEXTAUTH_SECRET in the deploy) must not
+    // crash the whole app — render logged-out instead of a Server Components 500.
+    console.error("getServerSession failed in layout:", error)
+  }
   if (session) {
     try {
       const user = await getMe()
