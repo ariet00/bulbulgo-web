@@ -117,6 +117,17 @@ export interface AIDebtVoiceResult {
   parsed: ParsedDebt
 }
 
+export interface ParsedBatch {
+  kind: 'transaction' | 'debt'
+  transactions: ParsedTransaction[]
+  debt: ParsedDebt | null
+}
+
+export interface AIBatchVoiceResult {
+  transcript: string
+  parsed: ParsedBatch
+}
+
 export interface ParsedReceipt {
   amount: number
   merchant: string | null

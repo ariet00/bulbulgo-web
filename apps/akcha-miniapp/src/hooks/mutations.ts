@@ -99,6 +99,12 @@ export const useAIParseVoice = () =>
 export const useAIParseReceipt = () =>
   useMutation({ mutationFn: (file: File) => akchaApi.aiParseReceipt(file) })
 
+export const useAIParseBatchText = () =>
+  useMutation({ mutationFn: (text: string) => akchaApi.aiParseBatchText(text) })
+
+export const useAIParseBatchVoice = () =>
+  useMutation({ mutationFn: (blob: Blob) => akchaApi.aiParseBatchVoice(blob) })
+
 export const useAIParseDebtText = () =>
   useMutation({ mutationFn: (text: string) => akchaApi.aiParseDebtText(text) })
 

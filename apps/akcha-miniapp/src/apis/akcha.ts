@@ -1,10 +1,12 @@
 import { api } from '@/lib/api'
 import type {
+  AIBatchVoiceResult,
   AIDebtVoiceResult,
   AIVoiceResult,
   AkchaMe,
   Debt,
   FinanceCategory,
+  ParsedBatch,
   ParsedDebt,
   ParsedReceipt,
   ParsedTransaction,
@@ -115,6 +117,17 @@ export const akchaApi = {
     fd.append('file', file, file.name || 'receipt.jpg')
     return api
       .post<ParsedReceipt>(`${root}/ai/receipt`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then(r => r.data)
+  },
+  aiParseBatchText: (text: string) =>
+    api.post<ParsedBatch>(`${root}/ai/batch/parse`, { text }).then(r => r.data),
+  aiParseBatchVoice: (blob: Blob) => {
+    const fd = new FormData()
+    fd.append('file', blob, 'voice.webm')
+    return api
+      .post<AIBatchVoiceResult>(`${root}/ai/batch/voice`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then(r => r.data)
