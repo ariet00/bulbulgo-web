@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Link } from '@/i18n/routing'
 import { DailyLine, ExpensesPie, MonthlyNetBar } from '@/components/Charts'
+import { DateRangeFilter } from '@/components/DateRangeFilter'
 import { useCategories, useDebts, useMe, useTransactions, useWallets } from '@/hooks/queries'
 import { dailyIncomeExpense, expensesByCategory, monthlyNet } from '@/lib/aggregate'
-import { formatMoney, startOfMonthIso } from '@/lib/format'
+import { resolveRange, type DateRange } from '@/lib/dateRange'
+import { formatMoney } from '@/lib/format'
 import type { Debt, Transaction, Wallet } from '@/types/akcha'
 
 const WALLET_PALETTE = [
@@ -38,7 +40,11 @@ export default function DashboardPage() {
   const t = useTranslations('dashboard')
   const { data: me } = useMe()
   const { data: wallets = [] } = useWallets()
-  const { data: monthTx = [], isLoading } = useTransactions({ from: startOfMonthIso(), limit: 500 })
+  const [range, setRange] = useState<DateRange>({ preset: 'd30' })
+  const [walletId, setWalletId] = useState<number | 'all'>('all')
+  const resolved = useMemo(() => resolveRange(range), [range])
+  const walletFilter = walletId === 'all' ? {} : { wallet_id: walletId }
+  const { data: rangeTx = [], isLoading } = useTransactions({ ...resolved, ...walletFilter, limit: 1000 })
   const sixMonthsAgo = useMemo(() => {
     const d = new Date()
     d.setMonth(d.getMonth() - 5)
@@ -46,15 +52,18 @@ export default function DashboardPage() {
     d.setHours(0, 0, 0, 0)
     return d.toISOString()
   }, [])
-  const { data: halfYearTx = [] } = useTransactions({ from: sixMonthsAgo, limit: 5000 })
+  const { data: halfYearTx = [] } = useTransactions({ from: sixMonthsAgo, ...walletFilter, limit: 5000 })
   const { data: cats = [] } = useCategories()
   const { data: debts = [] } = useDebts()
 
-  const income = useMemo(() => sum(monthTx, 'income'), [monthTx])
-  const expense = useMemo(() => sum(monthTx, 'expense'), [monthTx])
+  const income = useMemo(() => sum(rangeTx, 'income'), [rangeTx])
+  const expense = useMemo(() => sum(rangeTx, 'expense'), [rangeTx])
   const { iOwe, theyOwe, net } = useMemo(() => debtNet(debts), [debts])
-  const pieData = useMemo(() => expensesByCategory(monthTx, cats), [monthTx, cats])
-  const lineData = useMemo(() => dailyIncomeExpense(monthTx), [monthTx])
+  const pieData = useMemo(() => expensesByCategory(rangeTx, cats), [rangeTx, cats])
+  const lineData = useMemo(
+    () => dailyIncomeExpense(rangeTx, resolved.from, resolved.to),
+    [rangeTx, resolved],
+  )
   const barData = useMemo(() => monthlyNet(halfYearTx, 6), [halfYearTx])
 
   const currency = me?.currency_code ?? 'KGS'
@@ -78,32 +87,59 @@ export default function DashboardPage() {
     })
   }, [wallets, me, currency])
 
-  const [primaryEntry, ...otherEntries] = totalsByCurrency
-  const primaryAmount = primaryEntry?.[1] ?? 0
-  const primaryCode = primaryEntry?.[0] ?? currency
+  const selectedWallet = walletId === 'all' ? null : wallets.find(w => w.id === walletId) ?? null
+
+  const [primaryEntry, ...allOtherEntries] = totalsByCurrency
+  // When a single wallet is selected, the balance card shows just that wallet.
+  const primaryAmount = selectedWallet ? selectedWallet.balance ?? 0 : primaryEntry?.[1] ?? 0
+  const primaryCode = selectedWallet
+    ? (selectedWallet.currency ?? currency).toUpperCase()
+    : primaryEntry?.[0] ?? currency
+  const otherEntries = selectedWallet ? [] : allOtherEntries
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Акча</h1>
-
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
-        <div className="text-sm text-muted-foreground">{t('balance')}</div>
-        <div className="mt-1 text-3xl font-bold">{formatMoney(primaryAmount, primaryCode)}</div>
-        {otherEntries.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {otherEntries.map(([code, total]) => (
-              <span
-                key={code}
-                className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground"
-              >
-                {formatMoney(total, code)}
-              </span>
-            ))}
+    <div className="space-y-3">
+      {/* Compact header: balance + period income/expense in one card */}
+      <section className="rounded-2xl border bg-card p-3 shadow-sm">
+        <div className="flex items-baseline justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-xs text-muted-foreground">{t('balance')}</div>
+            <div className="text-2xl font-bold truncate">{formatMoney(primaryAmount, primaryCode)}</div>
           </div>
-        )}
+          {otherEntries.length > 0 && (
+            <div className="flex flex-wrap justify-end gap-1">
+              {otherEntries.map(([code, total]) => (
+                <span key={code} className="text-[11px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                  {formatMoney(total, code)}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t pt-2 text-sm">
+          <span className="text-emerald-600 font-semibold">↑ {formatMoney(income, currency)}</span>
+          <span className="text-rose-600 font-semibold">↓ {formatMoney(expense, currency)}</span>
+        </div>
       </section>
 
+      <DateRangeFilter value={range} onChange={setRange} />
+
       {wallets.length > 0 && (
+        <select
+          value={walletId}
+          onChange={e => setWalletId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+          className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">{t('allWallets')}</option>
+          {wallets.map(w => (
+            <option key={w.id} value={w.id}>
+              {w.icon ? `${w.icon} ` : ''}{w.name}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {wallets.length > 0 && !selectedWallet && (
         <section className="-mx-4 px-4 overflow-x-auto">
           <div className="flex gap-2 pb-1">
             {wallets.map((w, idx) => {
@@ -112,10 +148,10 @@ export default function DashboardPage() {
                 <Link
                   key={w.id}
                   href="/wallets"
-                  className="shrink-0 w-40 rounded-xl border p-3 bg-card"
+                  className="shrink-0 w-36 rounded-xl border p-3 bg-card"
                   style={{ borderLeft: `4px solid ${color}` }}
                 >
-                  <div className="text-2xl">{w.icon ?? '💵'}</div>
+                  <div className="text-xl">{w.icon ?? '💵'}</div>
                   <div className="mt-1 text-sm font-medium truncate">{w.name}</div>
                   <div className="text-xs font-semibold" style={{ color }}>
                     {formatMoney(w.balance ?? 0, w.currency)}
@@ -127,25 +163,23 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <section className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border p-3">
-          <div className="text-xs text-muted-foreground">{t('month_income')}</div>
-          <div className="mt-1 text-lg font-semibold text-emerald-600">{formatMoney(income, currency)}</div>
-        </div>
-        <div className="rounded-xl border p-3">
-          <div className="text-xs text-muted-foreground">{t('month_expense')}</div>
-          <div className="mt-1 text-lg font-semibold text-rose-600">{formatMoney(expense, currency)}</div>
-        </div>
-      </section>
-
       <section className="rounded-xl border p-3">
-        <div className="text-xs text-muted-foreground">{t('net_debt')}</div>
-        <div className="mt-1 flex justify-between text-sm">
-          <span className="text-rose-600">−{formatMoney(iOwe, currency)}</span>
-          <span className="text-emerald-600">+{formatMoney(theyOwe, currency)}</span>
+        <div className="text-xs text-muted-foreground mb-2">{t('net_debt')}</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-2">
+            <div className="text-[11px] text-muted-foreground">🔺 {t('theyOwe')}</div>
+            <div className="text-base font-semibold text-emerald-600">{formatMoney(theyOwe, currency)}</div>
+          </div>
+          <div className="rounded-lg bg-rose-50 dark:bg-rose-950/30 p-2">
+            <div className="text-[11px] text-muted-foreground">🔻 {t('iOwe')}</div>
+            <div className="text-base font-semibold text-rose-600">{formatMoney(iOwe, currency)}</div>
+          </div>
         </div>
-        <div className={`mt-1 text-lg font-semibold ${net < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-          {net >= 0 ? '+' : ''}{formatMoney(net, currency)}
+        <div className="mt-2 flex items-center justify-between border-t pt-2">
+          <span className="text-xs text-muted-foreground">{t('balanceLabel')}</span>
+          <span className={`text-base font-semibold ${net < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+            {net >= 0 ? '+' : '−'}{formatMoney(Math.abs(net), currency)}
+          </span>
         </div>
       </section>
 
@@ -155,7 +189,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="rounded-xl border p-3">
-        <div className="text-sm font-medium mb-2">Динамика за месяц</div>
+        <div className="text-sm font-medium mb-2">Динамика</div>
         <DailyLine data={lineData} />
       </section>
 
@@ -164,7 +198,7 @@ export default function DashboardPage() {
         <MonthlyNetBar data={barData} />
       </section>
 
-      {!isLoading && monthTx.length === 0 ? (
+      {!isLoading && rangeTx.length === 0 ? (
         <p className="text-center text-sm text-muted-foreground pt-6">{t('no_data')}</p>
       ) : null}
     </div>

@@ -37,7 +37,15 @@ export const useUpdateWallet = () => {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof akchaApi.updateWallet>[1] }) =>
       akchaApi.updateWallet(id, payload),
-    onSuccess: () => invalidate(qc, [['wallets']]),
+    onSuccess: () => invalidate(qc, [['wallets'], ['me']]),
+  })
+}
+
+export const useSetDefaultWallet = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => akchaApi.setDefaultWallet(id),
+    onSuccess: () => invalidate(qc, [['wallets'], ['me']]),
   })
 }
 
@@ -81,3 +89,18 @@ export const useUpdateDebt = () => {
     onSuccess: () => invalidate(qc, [['debts']]),
   })
 }
+
+export const useAIParseText = () =>
+  useMutation({ mutationFn: (text: string) => akchaApi.aiParseText(text) })
+
+export const useAIParseVoice = () =>
+  useMutation({ mutationFn: (blob: Blob) => akchaApi.aiParseVoice(blob) })
+
+export const useAIParseReceipt = () =>
+  useMutation({ mutationFn: (file: File) => akchaApi.aiParseReceipt(file) })
+
+export const useAIParseDebtText = () =>
+  useMutation({ mutationFn: (text: string) => akchaApi.aiParseDebtText(text) })
+
+export const useAIParseDebtVoice = () =>
+  useMutation({ mutationFn: (blob: Blob) => akchaApi.aiParseDebtVoice(blob) })

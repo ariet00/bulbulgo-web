@@ -45,7 +45,9 @@ export interface Debt {
   description: string | null
   counterparty_id: number | null
   counterparty_name: string | null
+  counterparty_phone: string | null
   is_closed: boolean
+  created_at: string
 }
 
 export interface UserSettings {
@@ -79,4 +81,49 @@ export interface TxSummary {
   expense_total: number
   expense_count: number
   net: number
+}
+
+export interface ParsedTransaction {
+  type: 'income' | 'expense'
+  amount: number
+  currency: string | null
+  category_id: number | null
+  category_hint: string | null
+  description: string | null
+  date: string | null
+  confidence: number
+  needs_clarification: boolean
+  clarification_question: string | null
+}
+
+export interface AIVoiceResult {
+  transcript: string
+  parsed: ParsedTransaction
+}
+
+export interface ParsedDebt {
+  type: DebtType
+  amount: number
+  counterparty_name: string | null
+  description: string | null
+  due_date: string | null
+  confidence: number
+  needs_clarification: boolean
+  clarification_question: string | null
+}
+
+export interface AIDebtVoiceResult {
+  transcript: string
+  parsed: ParsedDebt
+}
+
+export interface ParsedReceipt {
+  amount: number
+  merchant: string | null
+  items: string[]
+  category_id: number | null
+  category_hint: string | null
+  description: string | null
+  date: string | null
+  confidence: number
 }

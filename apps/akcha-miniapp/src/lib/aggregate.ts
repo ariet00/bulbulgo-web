@@ -47,23 +47,52 @@ export function expensesByCategory(
 }
 
 
-export function dailyIncomeExpense(txs: Transaction[]): DailyPoint[] {
+const dayKey = (d: Date) =>
+  `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
+
+/**
+ * Daily income/expense buckets across [from, to]. Defaults to the current month
+ * when bounds are omitted. Caps at 120 buckets to keep the chart readable for
+ * long ranges.
+ */
+export function dailyIncomeExpense(txs: Transaction[], from?: string, to?: string): DailyPoint[] {
   const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = to ? new Date(to) : now
+  const start = from ? new Date(from) : new Date(now.getFullYear(), now.getMonth(), 1)
+  start.setHours(0, 0, 0, 0)
+
   const map = new Map<string, DailyPoint>()
-  for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
-    const k = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
+  let guard = 0
+  for (let d = new Date(start); d <= end && guard < 120; d.setDate(d.getDate() + 1), guard++) {
+    const k = dayKey(d)
     map.set(k, { day: k, income: 0, expense: 0 })
   }
   for (const tx of txs) {
-    const d = new Date(tx.date)
-    const k = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
-    const point = map.get(k)
+    const point = map.get(dayKey(new Date(tx.date)))
     if (!point) continue
     if (tx.type === 'income') point.income += tx.amount
     else if (tx.type === 'expense') point.expense += tx.amount
   }
   return [...map.values()]
+}
+
+export interface DateGroup {
+  date: string // ISO 'YYYY-MM-DD'
+  items: Transaction[]
+}
+
+/** Bucket transactions by calendar day (local), newest day first. */
+export function groupByDate(txs: Transaction[]): DateGroup[] {
+  const sorted = [...txs].sort((a, b) => +new Date(b.date) - +new Date(a.date))
+  const groups = new Map<string, Transaction[]>()
+  for (const tx of sorted) {
+    const d = new Date(tx.date)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const bucket = groups.get(key)
+    if (bucket) bucket.push(tx)
+    else groups.set(key, [tx])
+  }
+  return [...groups.entries()].map(([date, items]) => ({ date, items }))
 }
 
 

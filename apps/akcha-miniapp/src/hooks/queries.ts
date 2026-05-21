@@ -31,7 +31,15 @@ export const useTransactions = (filters: TxFilters = {}) =>
     queryFn: () => akchaApi.listTransactions(filters),
   })
 
-export const useDebts = (params: { type?: 'i_owe' | 'they_owe'; is_closed?: boolean } = {}) =>
+export const useDebts = (
+  params: {
+    type?: 'i_owe' | 'they_owe'
+    is_closed?: boolean
+    counterparty_id?: number
+    from?: string
+    to?: string
+  } = {},
+) =>
   useQuery({
     queryKey: [...KEY_ROOT, 'debts', params],
     queryFn: () => akchaApi.listDebts(params),

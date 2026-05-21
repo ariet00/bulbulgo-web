@@ -4,6 +4,7 @@ import { getMessages } from 'next-intl/server'
 import { Toaster } from 'sonner'
 
 import { QueryProvider } from '@/providers/QueryProvider'
+import { TelegramTheme } from '@/components/TelegramTheme'
 
 import '../globals.css'
 
@@ -39,6 +40,7 @@ export default async function LocaleLayout({
       <body className="antialiased min-h-screen bg-background text-foreground">
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
+            <TelegramTheme />
             {children}
             <Toaster richColors position="top-center" />
           </QueryProvider>

@@ -33,6 +33,19 @@ export function formatDateTime(iso: string): string {
   return format(new Date(iso), 'd MMM, HH:mm', { locale: ru })
 }
 
+export function formatDayHeader(iso: string): string {
+  const d = new Date(iso)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const that = new Date(d)
+  that.setHours(0, 0, 0, 0)
+  const diff = Math.round((today.getTime() - that.getTime()) / 86_400_000)
+  if (diff === 0) return 'Сегодня'
+  if (diff === 1) return 'Вчера'
+  const sameYear = d.getFullYear() === new Date().getFullYear()
+  return format(d, sameYear ? 'd MMMM' : 'd MMMM yyyy', { locale: ru })
+}
+
 export function startOfMonthIso(): string {
   const d = new Date()
   d.setDate(1)
