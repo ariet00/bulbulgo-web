@@ -10,6 +10,8 @@ import {
     LayoutDashboard,
     List,
     MessageSquare,
+    Radio,
+    Settings as SettingsIcon,
     Timer,
     Users,
 } from 'lucide-react'
@@ -50,6 +52,13 @@ const sections: NavSection[] = [
         label: 'Booking',
         items: [
             { name: 'Bots', href: '/admin/booking/bots', icon: CalendarCheck },
+        ],
+    },
+    {
+        label: 'Парсер',
+        items: [
+            { name: 'Настройки', href: '/admin/parser/settings', icon: SettingsIcon },
+            { name: 'Каналы', href: '/admin/parser/channels', icon: Radio },
         ],
     },
 ]
