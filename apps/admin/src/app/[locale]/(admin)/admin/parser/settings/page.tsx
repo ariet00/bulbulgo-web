@@ -67,7 +67,7 @@ export default function ParserSettingsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h1 className="text-2xl font-bold">Парсер · Настройки</h1>
                 <Link href="/admin/parser/settings/new">
                     <Button size="sm">
@@ -81,7 +81,7 @@ export default function ParserSettingsPage() {
                     <CardTitle>Универсальный KV-стор</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Input
                             placeholder="Группа (напр. parser.ai)"
                             value={groupFilter}
@@ -89,7 +89,7 @@ export default function ParserSettingsPage() {
                                 setGroupFilter(e.target.value)
                                 setPage(1)
                             }}
-                            className="max-w-xs"
+                            className="w-full sm:max-w-xs"
                         />
                         <Input
                             placeholder="Поиск по key/group/description…"
@@ -98,14 +98,14 @@ export default function ParserSettingsPage() {
                                 setQ(e.target.value)
                                 setPage(1)
                             }}
-                            className="max-w-md"
+                            className="w-full sm:max-w-md"
                         />
                     </div>
 
                     {isLoading ? (
                         <div>Loading…</div>
                     ) : (
-                        <div className="rounded-md border">
+                        <div className="rounded-md border overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

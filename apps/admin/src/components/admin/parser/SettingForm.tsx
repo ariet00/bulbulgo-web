@@ -105,7 +105,7 @@ export function SettingForm({ value: v, onChange, error, onClearError }: Props) 
                     <CardTitle>Метаданные</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <Label>Group</Label>
                             <Input
@@ -153,9 +153,9 @@ export function SettingForm({ value: v, onChange, error, onClearError }: Props) 
             </Card>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
                     <CardTitle>Data (JSON)</CardTitle>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" onClick={prettify}>
                             <AlignLeft className="size-4 mr-1" /> Отформатировать
                         </Button>

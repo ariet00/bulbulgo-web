@@ -24,7 +24,7 @@ export default function ChatDetailPage() {
         <div className="space-y-6">
             <BackButton />
             
-            <div className="flex justify-between items-center">
+            <div className="flex flex-wrap justify-between items-center gap-2">
                 <h1 className="text-2xl font-bold flex items-center">
                     <MessageCircle className="mr-2 h-6 w-6" />
                     Chat Details #{chat.id}

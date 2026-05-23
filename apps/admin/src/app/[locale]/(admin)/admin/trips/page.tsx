@@ -65,7 +65,7 @@ export default function AdminTripsPage() {
                                 setQ(e.target.value)
                                 setPage(1)
                             }}
-                            className="max-w-xs"
+                            className="w-full sm:max-w-xs"
                         />
                         <Select
                             value={status}
@@ -74,7 +74,7 @@ export default function AdminTripsPage() {
                                 setPage(1)
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Статус" />
                             </SelectTrigger>
                             <SelectContent>

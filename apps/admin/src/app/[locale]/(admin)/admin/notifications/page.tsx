@@ -99,7 +99,7 @@ export default function AdminNotificationsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">Уведомления</h1>
                 <SendDialog />
             </div>
@@ -118,9 +118,9 @@ export default function AdminNotificationsPage() {
                                 setQ(e.target.value)
                                 resetPage()
                             }}
-                            className="max-w-xs"
+                            className="w-full sm:max-w-xs"
                         />
-                        <div className="w-64">
+                        <div className="w-full sm:w-64">
                             <UserCombobox
                                 value={userId}
                                 onChange={(id) => {
@@ -138,7 +138,7 @@ export default function AdminNotificationsPage() {
                                 resetPage()
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Прочитано" />
                             </SelectTrigger>
                             <SelectContent>
@@ -154,7 +154,7 @@ export default function AdminNotificationsPage() {
                                 resetPage()
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Источник" />
                             </SelectTrigger>
                             <SelectContent>
@@ -170,7 +170,7 @@ export default function AdminNotificationsPage() {
                                 resetPage()
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Статус" />
                             </SelectTrigger>
                             <SelectContent>
@@ -349,7 +349,7 @@ function SendDialog() {
                     <Send className="size-4 mr-1" /> Отправить
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Отправить уведомление</DialogTitle>
                 </DialogHeader>
@@ -386,7 +386,7 @@ function SendDialog() {
                             <Switch checked={onlyActive} onCheckedChange={setOnlyActive} />
                             <Label>Только активным пользователям</Label>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label>Мин. версия</Label>
                                 <Input

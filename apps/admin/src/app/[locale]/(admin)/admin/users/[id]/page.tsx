@@ -28,8 +28,8 @@ export default function UserDetailPage() {
     return (
         <div className="space-y-6">
             <BackButton />
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">User Details: {user.username}</h1>
+            <div className="flex flex-wrap justify-between items-center gap-2">
+                <h1 className="text-2xl font-bold break-all">User Details: {user.username}</h1>
                 <Button
                     variant={user.is_active ? "destructive" : "default"}
                     onClick={handleBan}
@@ -51,7 +51,7 @@ export default function UserDetailPage() {
                     <CardTitle>User Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">ID</label>
                             <div className="mt-1 text-lg">{user.id}</div>

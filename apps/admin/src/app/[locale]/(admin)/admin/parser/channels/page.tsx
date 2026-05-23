@@ -42,7 +42,7 @@ export default function ParserChannelsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h1 className="text-2xl font-bold">Парсер · Каналы</h1>
                 <Link href="/admin/parser/channels/new">
                     <Button size="sm">
@@ -63,13 +63,13 @@ export default function ParserChannelsPage() {
                             setQ(e.target.value)
                             setPage(1)
                         }}
-                        className="max-w-md"
+                        className="w-full sm:max-w-md"
                     />
 
                     {isLoading ? (
                         <div>Loading…</div>
                     ) : (
-                        <div className="rounded-md border">
+                        <div className="rounded-md border overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

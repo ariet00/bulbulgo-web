@@ -86,7 +86,7 @@ export default function NewCompanyPage() {
                             placeholder="salon-anna"
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <Label>Тип *</Label>
                             <CompanyTypeSelect value={type} onChange={onTypeChange} />
@@ -140,7 +140,7 @@ export default function NewCompanyPage() {
                             Создаются автоматически вместе с компанией. Расписание по умолчанию:
                             пн–сб 09:00–20:00, вс — выходной.
                         </p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label>Таймзона</Label>
                                 <TimezoneSelect value={timezone} onChange={setTimezone} />
