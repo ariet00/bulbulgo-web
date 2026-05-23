@@ -16,6 +16,7 @@ import {
     Users,
 } from 'lucide-react'
 import { cn } from '@doska/shared'
+import {log} from "console";
 
 type NavItem = { name: string; href: string; icon: typeof LayoutDashboard }
 type NavSection = { label?: string; items: NavItem[] }
@@ -70,7 +71,7 @@ export function AdminSidebar() {
         href === '/admin'
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`)
-
+    console.log(sections)
     return (
         <div className="fixed left-0 top-0 flex flex-col w-64 bg-gray-900 dark:bg-gray-950 text-white h-screen border-r dark:border-gray-800 overflow-y-auto z-50">
             <div className="flex items-center justify-center h-16 border-b border-gray-800 dark:border-gray-800">
