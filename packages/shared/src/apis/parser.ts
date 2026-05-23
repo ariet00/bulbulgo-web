@@ -63,13 +63,14 @@ export interface ParserChannelBlock {
     allowed_roles: TripRole[]
 }
 
+export type ChannelType = 'parse' | 'publish' | 'both' | 'none'
+
 export interface ParserChannel {
     id: number
     chat_id: string
     bot_id: number | null
     is_active: boolean
-    is_parse_source: boolean
-    is_publish_target: boolean
+    channel_type: ChannelType
     parser: ParserChannelBlock
     created_at: string
 }
@@ -78,8 +79,7 @@ export interface ParserChannelCreate {
     chat_id: string
     bot_id?: number | null
     is_active?: boolean
-    is_parse_source?: boolean
-    is_publish_target?: boolean
+    channel_type?: ChannelType
     parser?: Partial<ParserChannelBlock>
 }
 
@@ -87,8 +87,7 @@ export interface ParserChannelUpdate {
     chat_id?: string
     bot_id?: number | null
     is_active?: boolean
-    is_parse_source?: boolean
-    is_publish_target?: boolean
+    channel_type?: ChannelType
     parser?: Partial<ParserChannelBlock>
 }
 

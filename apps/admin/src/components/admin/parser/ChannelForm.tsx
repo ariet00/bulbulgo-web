@@ -1,6 +1,6 @@
 'use client'
 
-import type { ParserChannel, TripRole } from '@doska/shared'
+import type { ChannelType, ParserChannel, TripRole } from '@doska/shared'
 import {
     Button,
     Card,
@@ -10,6 +10,11 @@ import {
     Checkbox,
     Input,
     Label,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
     Switch,
     Textarea,
 } from '@doska/ui'
@@ -20,12 +25,18 @@ const ALL_ROLES: { value: TripRole; label: string }[] = [
     { value: 'parcel', label: 'Посылки' },
 ]
 
+const CHANNEL_TYPE_OPTIONS: { value: ChannelType; label: string }[] = [
+    { value: 'parse', label: 'Парсинг' },
+    { value: 'publish', label: 'Публикация' },
+    { value: 'both', label: 'И парсинг и публикация' },
+    { value: 'none', label: 'Не используется' },
+]
+
 export type ChannelFormState = {
     chat_id: string
     bot_id: string // string so empty input → null
     is_active: boolean
-    is_parse_source: boolean
-    is_publish_target: boolean
+    channel_type: ChannelType
     use_parser_ai: boolean
     ai_fallback: boolean
     limit_message: number
@@ -39,8 +50,7 @@ export const emptyChannel: ChannelFormState = {
     chat_id: '',
     bot_id: '',
     is_active: true,
-    is_parse_source: true,
-    is_publish_target: false,
+    channel_type: 'parse',
     use_parser_ai: false,
     ai_fallback: false,
     limit_message: 5,
@@ -55,8 +65,7 @@ export function channelFromRow(row: ParserChannel): ChannelFormState {
         chat_id: row.chat_id,
         bot_id: row.bot_id == null ? '' : String(row.bot_id),
         is_active: row.is_active,
-        is_parse_source: row.is_parse_source,
-        is_publish_target: row.is_publish_target,
+        channel_type: row.channel_type,
         use_parser_ai: row.parser.use_parser_ai,
         ai_fallback: row.parser.ai_fallback,
         limit_message: row.parser.limit_message,
@@ -73,8 +82,7 @@ export function channelToBody(s: ChannelFormState) {
         chat_id: s.chat_id.trim(),
         bot_id: Number.isFinite(bot_id as number) ? (bot_id as number | null) : null,
         is_active: s.is_active,
-        is_parse_source: s.is_parse_source,
-        is_publish_target: s.is_publish_target,
+        channel_type: s.channel_type,
         parser: {
             use_parser_ai: s.use_parser_ai,
             ai_fallback: s.ai_fallback,
@@ -130,19 +138,29 @@ export function ChannelForm({ value: v, onChange }: Props) {
                         />
                         <Label>Активен (парсер читает / публикатор постит)</Label>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Switch
-                            checked={v.is_parse_source}
-                            onCheckedChange={(c) => set({ is_parse_source: c })}
-                        />
-                        <Label>Источник для парсинга (is_parse_source)</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Switch
-                            checked={v.is_publish_target}
-                            onCheckedChange={(c) => set({ is_publish_target: c })}
-                        />
-                        <Label>Цель для публикации трипов (is_publish_target)</Label>
+                    <div>
+                        <Label>Тип канала</Label>
+                        <Select
+                            value={v.channel_type}
+                            onValueChange={(c) => set({ channel_type: c as ChannelType })}
+                        >
+                            <SelectTrigger className="max-w-xs">
+                                <SelectValue placeholder="Выбери тип" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CHANNEL_TYPE_OPTIONS.map((o) => (
+                                    <SelectItem key={o.value} value={o.value}>
+                                        {o.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            <b>Парсинг</b> — парсер читает сообщения из чата.{' '}
+                            <b>Публикация</b> — бот публикует сюда трипы.{' '}
+                            <b>И то, и другое</b> — оба режима.{' '}
+                            <b>Не используется</b> — выключен (parked).
+                        </p>
                     </div>
                 </CardContent>
             </Card>

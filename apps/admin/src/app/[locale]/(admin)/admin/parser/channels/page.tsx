@@ -76,7 +76,8 @@ export default function ParserChannelsPage() {
                                         <TableHead>ID</TableHead>
                                         <TableHead>chat_id</TableHead>
                                         <TableHead>Активен</TableHead>
-                                        <TableHead>Тип</TableHead>
+                                        <TableHead>Роль</TableHead>
+                                        <TableHead>Парсер</TableHead>
                                         <TableHead>Лимит</TableHead>
                                         <TableHead>AI fallback</TableHead>
                                         <TableHead>Bot</TableHead>
@@ -98,6 +99,9 @@ export default function ParserChannelsPage() {
                                                 ) : (
                                                     <Badge variant="secondary">off</Badge>
                                                 )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{row.channel_type}</Badge>
                                             </TableCell>
                                             <TableCell>
                                                 {row.parser.use_parser_ai ? (
