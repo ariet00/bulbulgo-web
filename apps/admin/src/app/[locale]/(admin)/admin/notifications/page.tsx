@@ -294,6 +294,8 @@ function SendDialog() {
     // Broadcast mode
     const [deviceType, setDeviceType] = useState<string>(ALL)
     const [onlyActive, setOnlyActive] = useState(false)
+    const [minVersion, setMinVersion] = useState('')
+    const [maxVersion, setMaxVersion] = useState('')
 
     const sendMutation = useAdminSendNotification()
     const broadcastMutation = useAdminBroadcastNotification()
@@ -305,6 +307,8 @@ function SendDialog() {
         setUserId(null)
         setDeviceType(ALL)
         setOnlyActive(false)
+        setMinVersion('')
+        setMaxVersion('')
     }
 
     const canSubmit =
@@ -327,6 +331,8 @@ function SendDialog() {
                 filters: {
                     device_type: deviceType === ALL ? null : deviceType,
                     is_active: onlyActive ? true : null,
+                    min_version: minVersion.trim() || null,
+                    max_version: maxVersion.trim() || null,
                 },
             })
         }
@@ -380,6 +386,28 @@ function SendDialog() {
                             <Switch checked={onlyActive} onCheckedChange={setOnlyActive} />
                             <Label>Только активным пользователям</Label>
                         </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label>Мин. версия</Label>
+                                <Input
+                                    value={minVersion}
+                                    onChange={(e) => setMinVersion(e.target.value)}
+                                    placeholder="напр. 1.2.0"
+                                />
+                            </div>
+                            <div>
+                                <Label>Макс. версия</Label>
+                                <Input
+                                    value={maxVersion}
+                                    onChange={(e) => setMaxVersion(e.target.value)}
+                                    placeholder="напр. 2.0.0"
+                                />
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Диапазон версий включительный. Устройства без версии считаются самой
+                            ранней версией: они исключаются мин. версией, но проходят макс. версию.
+                        </p>
                         <p className="text-xs text-muted-foreground">
                             Рассылка отправляется асинхронно (через очередь).
                         </p>

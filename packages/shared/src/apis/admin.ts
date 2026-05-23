@@ -168,6 +168,8 @@ export interface AdminBroadcastNotification {
         role_id?: number | null
         is_active?: boolean | null
         device_type?: string | null
+        min_version?: string | null
+        max_version?: string | null
     }
 }
 
