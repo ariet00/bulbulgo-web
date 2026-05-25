@@ -97,6 +97,10 @@ export const adminApi = {
         requests.post<{ queued: boolean }>('/admin/notifications/send', body),
     broadcastNotification: (body: AdminBroadcastNotification) =>
         requests.post<{ queued: boolean }>('/admin/notifications/broadcast', body),
+    previewNotificationAudience: (filters: AdminBroadcastFilters) =>
+        requests.post<AdminAudiencePreview>('/admin/notifications/audience-preview', filters),
+    getNotificationRoles: () =>
+        requests.get<AdminNotificationRole[]>('/admin/notifications/roles'),
     deleteNotification: (id: number) =>
         requests.delete<any>(`/admin/notifications/${id}`),
 
@@ -155,22 +159,40 @@ export interface AdminSendNotification {
     type?: string
     category?: string
     click_action?: string
+    is_data_only?: boolean
     data?: Record<string, any>
+}
+
+export interface AdminBroadcastFilters {
+    role_id?: number | null
+    is_active?: boolean | null
+    device_type?: string | null
+    min_version?: string | null
+    max_version?: string | null
 }
 
 export interface AdminBroadcastNotification {
     title: string
     body: string
     type?: string
+    category?: string
     data?: Record<string, any>
     click_action?: string
-    filters?: {
-        role_id?: number | null
-        is_active?: boolean | null
-        device_type?: string | null
-        min_version?: string | null
-        max_version?: string | null
-    }
+    is_data_only?: boolean
+    filters?: AdminBroadcastFilters
+}
+
+export interface AdminAudiencePreview {
+    users: number
+    devices: number
+    by_device_type: Record<string, number>
+}
+
+export interface AdminNotificationRole {
+    id: number
+    name: string
+    slug: string
+    category: string | null
 }
 
 export interface BookingBotItem {

@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { adminApi, AdminNotificationListParams } from '../../apis/admin'
+import {
+    AdminBroadcastFilters,
+    AdminNotificationListParams,
+    adminApi,
+} from '../../apis/admin'
 
 export const adminKeys = {
     all: ['admin'] as const,
@@ -199,5 +203,25 @@ export const useAdminNotification = (id: number) => {
         queryKey: adminKeys.notification(id),
         queryFn: () => adminApi.getNotification(id),
         enabled: !!id,
+    })
+}
+
+export const useAdminNotificationRoles = () => {
+    return useQuery({
+        queryKey: [...adminKeys.notifications(), 'roles'] as const,
+        queryFn: () => adminApi.getNotificationRoles(),
+        staleTime: 5 * 60 * 1000,
+    })
+}
+
+export const useAdminPreviewAudience = (
+    filters: AdminBroadcastFilters,
+    enabled: boolean = true,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.notifications(), 'audience-preview', filters] as const,
+        queryFn: () => adminApi.previewNotificationAudience(filters),
+        enabled,
+        staleTime: 30 * 1000,
     })
 }
