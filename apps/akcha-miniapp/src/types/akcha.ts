@@ -36,6 +36,16 @@ export interface Transaction {
 
 export type DebtType = 'i_owe' | 'they_owe'
 
+export interface Contractor {
+  id: number
+  user_id: number | null
+  company_id: number | null
+  linked_user_id: number | null
+  name: string
+  phone: string | null
+  created_at: string
+}
+
 export interface Debt {
   id: number
   user_id: number
@@ -43,9 +53,9 @@ export interface Debt {
   type: DebtType
   due_date: string | null
   description: string | null
-  counterparty_id: number | null
-  counterparty_name: string | null
-  counterparty_phone: string | null
+  contractor_id: number | null
+  contractor: Contractor | null
+  remaining_amount: number | null
   is_closed: boolean
   created_at: string
 }
@@ -81,60 +91,4 @@ export interface TxSummary {
   expense_total: number
   expense_count: number
   net: number
-}
-
-export interface ParsedTransaction {
-  type: 'income' | 'expense'
-  amount: number
-  currency: string | null
-  category_id: number | null
-  category_hint: string | null
-  description: string | null
-  date: string | null
-  confidence: number
-  needs_clarification: boolean
-  clarification_question: string | null
-}
-
-export interface AIVoiceResult {
-  transcript: string
-  parsed: ParsedTransaction
-}
-
-export interface ParsedDebt {
-  type: DebtType
-  amount: number
-  counterparty_name: string | null
-  description: string | null
-  due_date: string | null
-  confidence: number
-  needs_clarification: boolean
-  clarification_question: string | null
-}
-
-export interface AIDebtVoiceResult {
-  transcript: string
-  parsed: ParsedDebt
-}
-
-export interface ParsedBatch {
-  kind: 'transaction' | 'debt'
-  transactions: ParsedTransaction[]
-  debt: ParsedDebt | null
-}
-
-export interface AIBatchVoiceResult {
-  transcript: string
-  parsed: ParsedBatch
-}
-
-export interface ParsedReceipt {
-  amount: number
-  merchant: string | null
-  items: string[]
-  category_id: number | null
-  category_hint: string | null
-  description: string | null
-  date: string | null
-  confidence: number
 }

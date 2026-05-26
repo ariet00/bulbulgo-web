@@ -73,40 +73,19 @@ export const useDeleteCategory = () => {
   })
 }
 
-export const useCreateDebt = () => {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: akchaApi.createDebt,
-    onSuccess: () => invalidate(qc, [['debts'], ['wallets']]),
-  })
-}
-
 export const useUpdateDebt = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Partial<Parameters<typeof akchaApi.updateDebt>[1]> }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof akchaApi.updateDebt>[1] }) =>
       akchaApi.updateDebt(id, payload),
     onSuccess: () => invalidate(qc, [['debts']]),
   })
 }
 
-export const useAIParseText = () =>
-  useMutation({ mutationFn: (text: string) => akchaApi.aiParseText(text) })
-
-export const useAIParseVoice = () =>
-  useMutation({ mutationFn: (blob: Blob) => akchaApi.aiParseVoice(blob) })
-
-export const useAIParseReceipt = () =>
-  useMutation({ mutationFn: (file: File) => akchaApi.aiParseReceipt(file) })
-
-export const useAIParseBatchText = () =>
-  useMutation({ mutationFn: (text: string) => akchaApi.aiParseBatchText(text) })
-
-export const useAIParseBatchVoice = () =>
-  useMutation({ mutationFn: (blob: Blob) => akchaApi.aiParseBatchVoice(blob) })
-
-export const useAIParseDebtText = () =>
-  useMutation({ mutationFn: (text: string) => akchaApi.aiParseDebtText(text) })
-
-export const useAIParseDebtVoice = () =>
-  useMutation({ mutationFn: (blob: Blob) => akchaApi.aiParseDebtVoice(blob) })
+export const useDeleteDebt = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => akchaApi.deleteDebt(id),
+    onSuccess: () => invalidate(qc, [['debts']]),
+  })
+}

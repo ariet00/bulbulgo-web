@@ -35,7 +35,7 @@ export const useDebts = (
   params: {
     type?: 'i_owe' | 'they_owe'
     is_closed?: boolean
-    counterparty_id?: number
+    contractor_id?: number
     from?: string
     to?: string
   } = {},
