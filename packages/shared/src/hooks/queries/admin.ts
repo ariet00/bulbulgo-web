@@ -201,6 +201,14 @@ export const useAdminAnalyticsUserEvents = (userId: number, page: number = 1, si
     })
 }
 
+export const useAdminUserDailyActivity = (userId: number, period: string = '30d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'user-daily-activity', userId, period],
+        queryFn: () => adminApi.getUserDailyActivity(userId, period),
+        enabled: !!userId,
+    })
+}
+
 export const useAdminAnalyticsMiddlewareToggle = () => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'middleware-toggle'],

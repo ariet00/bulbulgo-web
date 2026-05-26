@@ -161,6 +161,11 @@ export const adminApi = {
         requests.get<Page<any>>(
             `/admin/analytics/users/${userId}/events?page=${page}&size=${size}`,
         ),
+    getUserDailyActivity: (userId: number, period: string = '30d') =>
+        requests.get<{
+            days: Array<{ day: string; total: number; events: Record<string, number> }>
+            event_types: string[]
+        }>(`/admin/analytics/users/${userId}/daily-activity?period=${period}`),
     getAnalyticsMiddlewareToggle: () =>
         requests.get<{ enabled: boolean }>('/admin/analytics/middleware/toggle'),
     setAnalyticsMiddlewareToggle: (enabled: boolean) =>

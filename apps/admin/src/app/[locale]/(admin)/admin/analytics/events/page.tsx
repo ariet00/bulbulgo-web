@@ -13,6 +13,7 @@ import {
 import { Input } from '@doska/ui'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
+import { Link } from '@doska/i18n'
 
 export default function AnalyticsEventsPage() {
     const [page, setPage] = useState(1)
@@ -96,7 +97,18 @@ export default function AnalyticsEventsPage() {
                                         <TableCell className="font-mono text-sm">
                                             {ev.event_type}
                                         </TableCell>
-                                        <TableCell>{ev.user_id ?? '—'}</TableCell>
+                                        <TableCell>
+                                            {ev.user_id ? (
+                                                <Link
+                                                    href={`/admin/analytics/users/${ev.user_id}`}
+                                                    className="text-primary hover:underline"
+                                                >
+                                                    {ev.user_id}
+                                                </Link>
+                                            ) : (
+                                                '—'
+                                            )}
+                                        </TableCell>
                                         <TableCell>{ev.platform ?? '—'}</TableCell>
                                         <TableCell className="font-mono text-xs whitespace-pre-wrap break-all">
                                             {ev.data ? JSON.stringify(ev.data) : '—'}
