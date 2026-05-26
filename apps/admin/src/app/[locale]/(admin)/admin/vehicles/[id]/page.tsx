@@ -30,7 +30,7 @@ export default function AdminVehicleDetailPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-gray-500 uppercase font-bold">Brand</p>
                                 <p className="font-medium">{vehicle.brand}</p>

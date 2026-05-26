@@ -27,9 +27,9 @@ export default function AdminBookingBotsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h1 className="text-2xl font-bold">Боты</h1>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Button
                         variant={onlyUnlinked ? 'default' : 'outline'}
                         size="sm"
@@ -55,6 +55,7 @@ export default function AdminBookingBotsPage() {
                     ) : (bots?.length ?? 0) === 0 ? (
                         <p className="text-sm text-muted-foreground">Ботов нет.</p>
                     ) : (
+                        <div className="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -150,6 +151,7 @@ export default function AdminBookingBotsPage() {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
                     )}
                 </CardContent>
             </Card>

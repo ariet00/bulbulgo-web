@@ -1,10 +1,8 @@
 'use client'
 
 import {
-    useAdminBroadcastNotification,
     useAdminDeleteNotification,
     useAdminNotifications,
-    useAdminSendNotification,
     useDebounce,
 } from '@doska/shared'
 import {
@@ -14,34 +12,22 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
     Input,
-    Label,
     Pagination,
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-    Switch,
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-    Textarea,
 } from '@doska/ui'
-import { Send, Trash2 } from 'lucide-react'
+import { Link } from '@doska/i18n'
+import { CalendarClock, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 
@@ -99,9 +85,20 @@ export default function AdminNotificationsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">Уведомления</h1>
-                <SendDialog />
+                <div className="flex items-center gap-2">
+                    <Button asChild variant="outline" size="sm">
+                        <Link href="/admin/notifications/scheduled">
+                            <CalendarClock className="size-4 mr-1" /> Запланированные
+                        </Link>
+                    </Button>
+                    <Button asChild size="sm">
+                        <Link href="/admin/notifications/send">
+                            <Send className="size-4 mr-1" /> Отправить
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             <Card>
@@ -118,9 +115,9 @@ export default function AdminNotificationsPage() {
                                 setQ(e.target.value)
                                 resetPage()
                             }}
-                            className="max-w-xs"
+                            className="w-full sm:max-w-xs"
                         />
-                        <div className="w-64">
+                        <div className="w-full sm:w-64">
                             <UserCombobox
                                 value={userId}
                                 onChange={(id) => {
@@ -138,7 +135,7 @@ export default function AdminNotificationsPage() {
                                 resetPage()
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Прочитано" />
                             </SelectTrigger>
                             <SelectContent>
@@ -154,7 +151,7 @@ export default function AdminNotificationsPage() {
                                 resetPage()
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Источник" />
                             </SelectTrigger>
                             <SelectContent>
@@ -170,7 +167,7 @@ export default function AdminNotificationsPage() {
                                 resetPage()
                             }}
                         >
-                            <SelectTrigger className="w-44">
+                            <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Статус" />
                             </SelectTrigger>
                             <SelectContent>
@@ -276,141 +273,5 @@ export default function AdminNotificationsPage() {
                 </CardContent>
             </Card>
         </div>
-    )
-}
-
-function SendDialog() {
-    const [open, setOpen] = useState(false)
-    const [tab, setTab] = useState('user')
-
-    // Common fields
-    const [title, setTitle] = useState('')
-    const [body, setBody] = useState('')
-    const [type, setType] = useState('info')
-
-    // User mode
-    const [userId, setUserId] = useState<number | null>(null)
-
-    // Broadcast mode
-    const [deviceType, setDeviceType] = useState<string>(ALL)
-    const [onlyActive, setOnlyActive] = useState(false)
-
-    const sendMutation = useAdminSendNotification()
-    const broadcastMutation = useAdminBroadcastNotification()
-
-    const reset = () => {
-        setTitle('')
-        setBody('')
-        setType('info')
-        setUserId(null)
-        setDeviceType(ALL)
-        setOnlyActive(false)
-    }
-
-    const canSubmit =
-        title.trim() && body.trim() && (tab === 'broadcast' || userId != null)
-
-    const submit = async () => {
-        if (!canSubmit) return
-        if (tab === 'user') {
-            await sendMutation.mutateAsync({
-                user_id: userId as number,
-                title: title.trim(),
-                body: body.trim(),
-                type,
-            })
-        } else {
-            await broadcastMutation.mutateAsync({
-                title: title.trim(),
-                body: body.trim(),
-                type,
-                filters: {
-                    device_type: deviceType === ALL ? null : deviceType,
-                    is_active: onlyActive ? true : null,
-                },
-            })
-        }
-        reset()
-        setOpen(false)
-    }
-
-    const pending = sendMutation.isPending || broadcastMutation.isPending
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button size="sm">
-                    <Send className="size-4 mr-1" /> Отправить
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Отправить уведомление</DialogTitle>
-                </DialogHeader>
-
-                <Tabs value={tab} onValueChange={setTab}>
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="user">Пользователю</TabsTrigger>
-                        <TabsTrigger value="broadcast">Рассылка</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="user" className="space-y-3 pt-2">
-                        <div>
-                            <Label>Пользователь *</Label>
-                            <UserCombobox value={userId} onChange={setUserId} allowClear />
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="broadcast" className="space-y-3 pt-2">
-                        <div>
-                            <Label>Тип устройства</Label>
-                            <Select value={deviceType} onValueChange={setDeviceType}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Все устройства" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={ALL}>Все устройства</SelectItem>
-                                    <SelectItem value="android">Android</SelectItem>
-                                    <SelectItem value="ios">iOS</SelectItem>
-                                    <SelectItem value="web">Web</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Switch checked={onlyActive} onCheckedChange={setOnlyActive} />
-                            <Label>Только активным пользователям</Label>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            Рассылка отправляется асинхронно (через очередь).
-                        </p>
-                    </TabsContent>
-                </Tabs>
-
-                <div className="space-y-3">
-                    <div>
-                        <Label>Заголовок *</Label>
-                        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-                    </div>
-                    <div>
-                        <Label>Текст *</Label>
-                        <Textarea value={body} onChange={(e) => setBody(e.target.value)} />
-                    </div>
-                    <div>
-                        <Label>Тип</Label>
-                        <Input
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            placeholder="info"
-                        />
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button onClick={submit} disabled={!canSubmit || pending}>
-                        Отправить
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     )
 }

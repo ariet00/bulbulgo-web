@@ -46,7 +46,7 @@ export default function AdminCompaniesPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h1 className="text-2xl font-bold">Companies</h1>
                 <Link href="/admin/companies/new">
                     <Button size="sm">
@@ -60,7 +60,7 @@ export default function AdminCompaniesPage() {
                     <CardTitle>Company Management</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Input
                             placeholder="Поиск по name/slug/id…"
                             value={q}
@@ -68,9 +68,9 @@ export default function AdminCompaniesPage() {
                                 setQ(e.target.value)
                                 setPage(1)
                             }}
-                            className="max-w-md"
+                            className="w-full sm:max-w-md"
                         />
-                        <div className="w-48">
+                        <div className="w-full sm:w-48">
                             <CompanyTypeSelect
                                 value={typeFilter}
                                 onChange={(v) => {
@@ -97,7 +97,7 @@ export default function AdminCompaniesPage() {
                     {isLoading ? (
                         <div>Loading...</div>
                     ) : (
-                        <div className="rounded-md border">
+                        <div className="rounded-md border overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

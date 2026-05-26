@@ -84,13 +84,13 @@ export default function EditCompanyPage() {
 
     return (
         <div className="space-y-6 max-w-2xl">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
                 <Link href="/admin/companies">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="size-4 mr-1" /> К списку
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold">{company.name}</h1>
+                <h1 className="text-2xl font-bold break-all">{company.name}</h1>
             </div>
 
             <Card>
@@ -106,7 +106,7 @@ export default function EditCompanyPage() {
                         <Label>Slug</Label>
                         <Input value={slug} onChange={(e) => setSlug(e.target.value)} />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <Label>Тип</Label>
                             <CompanyTypeSelect value={type} onChange={onTypeChange} />

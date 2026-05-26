@@ -82,13 +82,13 @@ export default function EditBookingBotPage() {
 
     return (
         <div className="space-y-6 max-w-2xl">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
                 <Link href="/admin/booking/bots">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="size-4 mr-1" /> К списку
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold">{bot.bot_slug}</h1>
+                <h1 className="text-2xl font-bold break-all">{bot.bot_slug}</h1>
                 {bot.is_active ? (
                     <Badge variant="default">active</Badge>
                 ) : (
@@ -181,7 +181,7 @@ export default function EditBookingBotPage() {
 
                     {bot.company_id && company && (
                         <div className="rounded-md border p-3 space-y-2 text-sm">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
                                     <div className="font-medium">{company.name}</div>
                                     <div className="text-xs text-muted-foreground font-mono">
@@ -208,7 +208,7 @@ export default function EditBookingBotPage() {
                             {company.description && (
                                 <p className="text-xs text-muted-foreground">{company.description}</p>
                             )}
-                            <div className="flex items-center justify-between pt-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                                 <Link
                                     href={`/admin/companies/${company.id}`}
                                     className="inline-flex items-center text-sm text-primary"

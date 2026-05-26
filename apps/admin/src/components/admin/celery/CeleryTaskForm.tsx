@@ -121,7 +121,7 @@ export function CeleryTaskForm({ open, onOpenChange, task }: Props) {
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="overflow-y-auto sm:max-w-lg">
+            <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
                 <SheetHeader>
                     <SheetTitle>{task ? `Edit: ${task.name}` : 'New periodic task'}</SheetTitle>
                 </SheetHeader>
@@ -142,7 +142,7 @@ export function CeleryTaskForm({ open, onOpenChange, task }: Props) {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
                             <Label>args (JSON)</Label>
                             <Input value={args} onChange={(e) => setArgs(e.target.value)} className="font-mono text-xs" />
@@ -200,7 +200,7 @@ export function CeleryTaskForm({ open, onOpenChange, task }: Props) {
 
                         {scheduleType === 'crontab' ? (
                             <div className="space-y-2">
-                                <div className="grid grid-cols-5 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                                     {(['minute', 'hour', 'day_of_month', 'month_of_year', 'day_of_week'] as const).map((field) => (
                                         <div key={field}>
                                             <Label className="text-[10px]">{field}</Label>
@@ -221,7 +221,7 @@ export function CeleryTaskForm({ open, onOpenChange, task }: Props) {
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div>
                                     <Label>Every</Label>
                                     <Input

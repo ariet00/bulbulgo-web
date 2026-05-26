@@ -113,7 +113,7 @@ export function ChannelForm({ value: v, onChange }: Props) {
                     <CardTitle>Основное</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <Label>chat_id</Label>
                             <Input
@@ -144,7 +144,7 @@ export function ChannelForm({ value: v, onChange }: Props) {
                             value={v.channel_type}
                             onValueChange={(c) => set({ channel_type: c as ChannelType })}
                         >
-                            <SelectTrigger className="max-w-xs">
+                            <SelectTrigger className="w-full sm:max-w-xs">
                                 <SelectValue placeholder="Выбери тип" />
                             </SelectTrigger>
                             <SelectContent>
@@ -190,7 +190,7 @@ export function ChannelForm({ value: v, onChange }: Props) {
                             пробует первым, ИИ подключается когда regex не справился).
                         </Label>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <Label>limit_message</Label>
                             <Input
@@ -231,7 +231,7 @@ export function ChannelForm({ value: v, onChange }: Props) {
                     </div>
                     <div>
                         <Label>Какие роли парсить</Label>
-                        <div className="flex gap-4 mt-2">
+                        <div className="flex flex-wrap gap-3 sm:gap-4 mt-2">
                             {ALL_ROLES.map(({ value, label }) => {
                                 const checked = v.allowed_roles.includes(value)
                                 return (

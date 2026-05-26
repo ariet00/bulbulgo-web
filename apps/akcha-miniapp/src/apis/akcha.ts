@@ -1,15 +1,8 @@
 import { api } from '@/lib/api'
 import type {
-  AIBatchVoiceResult,
-  AIDebtVoiceResult,
-  AIVoiceResult,
   AkchaMe,
   Debt,
   FinanceCategory,
-  ParsedBatch,
-  ParsedDebt,
-  ParsedReceipt,
-  ParsedTransaction,
   Transaction,
   UserSettings,
   Wallet,
@@ -26,6 +19,10 @@ export interface TxFilters {
   skip?: number
   limit?: number
 }
+
+export type DebtUpdatePayload = Partial<
+  Pick<Debt, 'amount' | 'type' | 'due_date' | 'description' | 'is_closed' | 'contractor_id'>
+>
 
 export const akchaApi = {
   me: () => api.get<AkchaMe>(`${root}/me/`).then(r => r.data),
@@ -81,66 +78,13 @@ export const akchaApi = {
     params: {
       type?: 'i_owe' | 'they_owe'
       is_closed?: boolean
-      counterparty_id?: number
+      contractor_id?: number
       from?: string
       to?: string
     } = {},
   ) => api.get<Debt[]>(`${root}/debts/`, { params }).then(r => r.data),
-  createDebt: (payload: {
-    amount: number
-    type: 'i_owe' | 'they_owe'
-    description?: string
-    due_date?: string
-    counterparty_name?: string
-    counterparty_phone?: string
-    wallet_id?: number
-    category_id?: number
-  }) => api.post<Debt>(`${root}/debts/`, payload).then(r => r.data),
-  updateDebt: (id: number, payload: Partial<Debt>) =>
+  updateDebt: (id: number, payload: DebtUpdatePayload) =>
     api.put<Debt>(`${root}/debts/${id}`, payload).then(r => r.data),
   deleteDebt: (id: number) =>
     api.delete<Debt>(`${root}/debts/${id}`).then(r => r.data),
-
-  aiParseText: (text: string) =>
-    api.post<ParsedTransaction>(`${root}/ai/parse`, { text }).then(r => r.data),
-  aiParseVoice: (blob: Blob) => {
-    const fd = new FormData()
-    fd.append('file', blob, 'voice.webm')
-    return api
-      .post<AIVoiceResult>(`${root}/ai/voice`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then(r => r.data)
-  },
-  aiParseReceipt: (file: File) => {
-    const fd = new FormData()
-    fd.append('file', file, file.name || 'receipt.jpg')
-    return api
-      .post<ParsedReceipt>(`${root}/ai/receipt`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then(r => r.data)
-  },
-  aiParseBatchText: (text: string) =>
-    api.post<ParsedBatch>(`${root}/ai/batch/parse`, { text }).then(r => r.data),
-  aiParseBatchVoice: (blob: Blob) => {
-    const fd = new FormData()
-    fd.append('file', blob, 'voice.webm')
-    return api
-      .post<AIBatchVoiceResult>(`${root}/ai/batch/voice`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then(r => r.data)
-  },
-  aiParseDebtText: (text: string) =>
-    api.post<ParsedDebt>(`${root}/ai/debt/parse`, { text }).then(r => r.data),
-  aiParseDebtVoice: (blob: Blob) => {
-    const fd = new FormData()
-    fd.append('file', blob, 'voice.webm')
-    return api
-      .post<AIDebtVoiceResult>(`${root}/ai/debt/voice`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then(r => r.data)
-  },
 }

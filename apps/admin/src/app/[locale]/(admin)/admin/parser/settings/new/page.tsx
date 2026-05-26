@@ -36,7 +36,7 @@ export default function NewParserSettingPage() {
 
     return (
         <div className="space-y-6 max-w-4xl">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
                 <Link href="/admin/parser/settings">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="size-4 mr-1" /> К списку

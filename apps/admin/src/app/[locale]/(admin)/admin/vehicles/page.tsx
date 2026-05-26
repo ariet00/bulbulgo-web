@@ -46,7 +46,7 @@ export default function AdminVehiclesPage() {
                             setQ(e.target.value)
                             setPage(1)
                         }}
-                        className="max-w-xs"
+                        className="w-full sm:max-w-xs"
                     />
                     {isLoading ? (
                         <div>Loading...</div>

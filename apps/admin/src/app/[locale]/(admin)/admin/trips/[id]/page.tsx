@@ -21,7 +21,7 @@ export default function AdminTripDetailPage() {
         <div className="space-y-6">
             <BackButton />
             
-            <div className="flex justify-between items-center">
+            <div className="flex flex-wrap justify-between items-center gap-2">
                 <h1 className="text-2xl font-bold">Trip Details #{trip.id}</h1>
                 <Badge variant={trip.status === 'active' ? 'default' : 'secondary'}>
                     {trip.status}
@@ -66,7 +66,7 @@ export default function AdminTripDetailPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-gray-500 uppercase font-bold">Departure Date</p>
                                 <p className="font-medium">
