@@ -13,7 +13,10 @@ import {
 import { Input } from '@doska/ui'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
+import { Button } from '@doska/ui'
 import { Link } from '@doska/i18n'
+import { RefreshCw } from 'lucide-react'
+import { ProductSelector } from '@/components/admin/ProductSelector'
 
 export default function AnalyticsEventsPage() {
     const [page, setPage] = useState(1)
@@ -21,6 +24,7 @@ export default function AnalyticsEventsPage() {
     const [eventType, setEventType] = useState('')
     const [userId, setUserId] = useState('')
     const [platform, setPlatform] = useState('')
+    const [product, setProduct] = useState('')
 
     const params = {
         page,
@@ -28,12 +32,32 @@ export default function AnalyticsEventsPage() {
         event_type: eventType || undefined,
         user_id: userId ? Number(userId) : undefined,
         platform: platform || undefined,
+        product: product || undefined,
     }
-    const { data, isLoading } = useAdminAnalyticsEvents(params)
+    const { data, isLoading, isFetching, refetch } = useAdminAnalyticsEvents(params)
 
     return (
         <div className="space-y-4 p-6">
-            <h1 className="text-2xl font-semibold">Аналитика — события</h1>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h1 className="text-2xl font-semibold">Аналитика — события</h1>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetch()}
+                    disabled={isFetching}
+                >
+                    <RefreshCw className={`mr-1 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                    Обновить
+                </Button>
+            </div>
+
+            <ProductSelector
+                value={product}
+                onChange={(v) => {
+                    setProduct(v)
+                    setPage(1)
+                }}
+            />
 
             <Card>
                 <CardHeader>

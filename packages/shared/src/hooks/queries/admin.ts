@@ -163,6 +163,7 @@ export const useAdminAnalyticsEvents = (params: {
     event_type?: string
     user_id?: number
     platform?: string
+    product?: string
     from?: string
     to?: string
 }) => {
@@ -172,39 +173,51 @@ export const useAdminAnalyticsEvents = (params: {
     })
 }
 
-export const useAdminAnalyticsTopEvents = (period: string = '7d', limit: number = 20) => {
+export const useAdminAnalyticsTopEvents = (period: string = '7d', limit: number = 20, product?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'top', period, limit],
-        queryFn: () => adminApi.getTopAnalyticsEvents({ period, limit }),
+        queryKey: [...adminKeys.analytics(), 'top', period, limit, product ?? null],
+        queryFn: () => adminApi.getTopAnalyticsEvents({ period, limit, product }),
     })
 }
 
-export const useAdminAnalyticsActiveUsers = (period: string = '30d', granularity: string = 'day') => {
+export const useAdminAnalyticsActiveUsers = (period: string = '30d', granularity: string = 'day', product?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'active-users', period, granularity],
-        queryFn: () => adminApi.getActiveUsers({ period, granularity }),
+        queryKey: [...adminKeys.analytics(), 'active-users', period, granularity, product ?? null],
+        queryFn: () => adminApi.getActiveUsers({ period, granularity, product }),
     })
 }
 
-export const useAdminAnalyticsPlatforms = (period: string = '7d') => {
+export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'platforms', period],
-        queryFn: () => adminApi.getPlatformsBreakdown(period),
+        queryKey: [...adminKeys.analytics(), 'platforms', period, product ?? null],
+        queryFn: () => adminApi.getPlatformsBreakdown(period, product),
     })
 }
 
-export const useAdminAnalyticsUserEvents = (userId: number, page: number = 1, size: number = 100) => {
+export const useAdminAnalyticsProducts = (period: string = '7d') => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'user-events', userId, page, size],
-        queryFn: () => adminApi.getUserAnalyticsEvents(userId, page, size),
+        queryKey: [...adminKeys.analytics(), 'products', period],
+        queryFn: () => adminApi.getProductsBreakdown(period),
+    })
+}
+
+export const useAdminAnalyticsUserEvents = (
+    userId: number,
+    page: number = 1,
+    size: number = 100,
+    product?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'user-events', userId, page, size, product ?? null],
+        queryFn: () => adminApi.getUserAnalyticsEvents(userId, page, size, product),
         enabled: !!userId,
     })
 }
 
-export const useAdminUserDailyActivity = (userId: number, period: string = '30d') => {
+export const useAdminUserDailyActivity = (userId: number, period: string = '30d', product?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'user-daily-activity', userId, period],
-        queryFn: () => adminApi.getUserDailyActivity(userId, period),
+        queryKey: [...adminKeys.analytics(), 'user-daily-activity', userId, period, product ?? null],
+        queryFn: () => adminApi.getUserDailyActivity(userId, period, product),
         enabled: !!userId,
     })
 }

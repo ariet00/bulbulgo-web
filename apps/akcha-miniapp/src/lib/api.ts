@@ -47,21 +47,29 @@ export function loadBotSlug(): string | null {
 }
 
 const ANONYMOUS_ID_KEY = 'analytics_anonymous_id'
+const DEVICE_ID_KEY = 'analytics_device_id'
 
-function getAnonymousId(): string {
+function readOrCreate(key: string): string {
   if (typeof window === 'undefined') return ''
   try {
-    let id = window.localStorage.getItem(ANONYMOUS_ID_KEY)
+    let id = window.localStorage.getItem(key)
     if (!id) {
       id = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
         ? crypto.randomUUID()
         : `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-      window.localStorage.setItem(ANONYMOUS_ID_KEY, id)
+      window.localStorage.setItem(key, id)
     }
     return id
   } catch {
     return ''
   }
+}
+
+function getDeviceInfo(): string {
+  if (typeof navigator === 'undefined') return ''
+  const platform = navigator.platform || ''
+  const ua = navigator.userAgent || ''
+  return `${platform}; ${ua.split(')')[0]})`.slice(0, 200)
 }
 
 api.interceptors.request.use((config) => {
@@ -70,7 +78,12 @@ api.interceptors.request.use((config) => {
   config.headers = config.headers ?? {}
   if (token) config.headers.Authorization = `Bearer ${token}`
   if (slug) config.headers['X-Bot-Slug'] = slug
-  const anon = getAnonymousId()
+  config.headers['X-Product'] = 'akcha'
+  const anon = readOrCreate(ANONYMOUS_ID_KEY)
   if (anon) config.headers['X-Anonymous-Id'] = anon
+  const deviceId = readOrCreate(DEVICE_ID_KEY)
+  if (deviceId) config.headers['X-Device-Id'] = deviceId
+  const deviceInfo = getDeviceInfo()
+  if (deviceInfo) config.headers['X-Device-Info'] = deviceInfo
   return config
 })

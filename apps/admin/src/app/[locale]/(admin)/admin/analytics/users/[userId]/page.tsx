@@ -16,6 +16,9 @@ import {
 } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
+import { RefreshCw } from 'lucide-react'
+import { ProductSelector } from '@/components/admin/ProductSelector'
+import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
 
 const PERIODS = [
     { value: '7d', label: '7d' },
@@ -33,9 +36,10 @@ export default function UserAnalyticsPage({
     const { userId } = use(params)
     const uid = Number(userId)
     const [period, setPeriod] = useState('30d')
+    const [product, setProduct] = useState('')
 
-    const activity = useAdminUserDailyActivity(uid, period)
-    const events = useAdminAnalyticsUserEvents(uid, 1, 100)
+    const activity = useAdminUserDailyActivity(uid, period, product || undefined)
+    const events = useAdminAnalyticsUserEvents(uid, 1, 100, product || undefined)
 
     const { topEventTypes, totalEvents, activeDays } = useMemo(() => {
         if (!activity.data) return { topEventTypes: [] as string[], totalEvents: 0, activeDays: 0 }
@@ -53,6 +57,12 @@ export default function UserAnalyticsPage({
         return { topEventTypes, totalEvents, activeDays: activity.data.days.length }
     }, [activity.data])
 
+    const isFetching = activity.isFetching || events.isFetching
+    const refreshAll = () => {
+        activity.refetch()
+        events.refetch()
+    }
+
     return (
         <div className="space-y-6 p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -68,14 +78,43 @@ export default function UserAnalyticsPage({
                             {p.label}
                         </Button>
                     ))}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={refreshAll}
+                        disabled={isFetching}
+                    >
+                        <RefreshCw className={`mr-1 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        Обновить
+                    </Button>
                 </div>
             </div>
+
+            <ProductSelector value={product} onChange={setProduct} />
 
             <div className="grid gap-3 md:grid-cols-3">
                 <SummaryCard title="Всего событий" value={totalEvents} />
                 <SummaryCard title="Активных дней" value={activeDays} />
                 <SummaryCard title="Различных событий" value={activity.data?.event_types.length ?? 0} />
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>График активности по дням</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {activity.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !activity.data || activity.data.days.length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных за период</div>
+                    ) : (
+                        <DailyStackedBarChart
+                            data={activity.data.days}
+                            eventTypes={topEventTypes}
+                        />
+                    )}
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>

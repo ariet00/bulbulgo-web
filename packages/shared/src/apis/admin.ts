@@ -128,6 +128,7 @@ export const adminApi = {
         event_type?: string
         user_id?: number
         platform?: string
+        product?: string
         from?: string
         to?: string
     }) => {
@@ -137,35 +138,50 @@ export const adminApi = {
         })
         return requests.get<Page<any>>(`/admin/analytics/events?${qs.toString()}`)
     },
-    getTopAnalyticsEvents: (params: { period?: string; limit?: number }) => {
+    getTopAnalyticsEvents: (params: { period?: string; limit?: number; product?: string }) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.limit) qs.set('limit', String(params.limit))
+        if (params.product) qs.set('product', params.product)
         return requests.get<Array<{ event_type: string; count: number }>>(
             `/admin/analytics/events/top?${qs.toString()}`,
         )
     },
-    getActiveUsers: (params: { period?: string; granularity?: string }) => {
+    getActiveUsers: (params: { period?: string; granularity?: string; product?: string }) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.granularity) qs.set('granularity', params.granularity)
+        if (params.product) qs.set('product', params.product)
         return requests.get<Array<{ bucket: string; users: number }>>(
             `/admin/analytics/users/active?${qs.toString()}`,
         )
     },
-    getPlatformsBreakdown: (period: string = '7d') =>
-        requests.get<Array<{ platform: string | null; events: number; users: number }>>(
-            `/admin/analytics/platforms?period=${period}`,
+    getPlatformsBreakdown: (period: string = '7d', product?: string) => {
+        const qs = new URLSearchParams({ period })
+        if (product) qs.set('product', product)
+        return requests.get<Array<{ platform: string | null; events: number; users: number }>>(
+            `/admin/analytics/platforms?${qs.toString()}`,
+        )
+    },
+    getProductsBreakdown: (period: string = '7d') =>
+        requests.get<Array<{ product: string; events: number; users: number }>>(
+            `/admin/analytics/products?period=${period}`,
         ),
-    getUserAnalyticsEvents: (userId: number, page = 1, size = 100) =>
-        requests.get<Page<any>>(
-            `/admin/analytics/users/${userId}/events?page=${page}&size=${size}`,
-        ),
-    getUserDailyActivity: (userId: number, period: string = '30d') =>
-        requests.get<{
+    getUserAnalyticsEvents: (userId: number, page = 1, size = 100, product?: string) => {
+        const qs = new URLSearchParams({ page: String(page), size: String(size) })
+        if (product) qs.set('product', product)
+        return requests.get<Page<any>>(
+            `/admin/analytics/users/${userId}/events?${qs.toString()}`,
+        )
+    },
+    getUserDailyActivity: (userId: number, period: string = '30d', product?: string) => {
+        const qs = new URLSearchParams({ period })
+        if (product) qs.set('product', product)
+        return requests.get<{
             days: Array<{ day: string; total: number; events: Record<string, number> }>
             event_types: string[]
-        }>(`/admin/analytics/users/${userId}/daily-activity?period=${period}`),
+        }>(`/admin/analytics/users/${userId}/daily-activity?${qs.toString()}`)
+    },
     getAnalyticsMiddlewareToggle: () =>
         requests.get<{ enabled: boolean }>('/admin/analytics/middleware/toggle'),
     setAnalyticsMiddlewareToggle: (enabled: boolean) =>
