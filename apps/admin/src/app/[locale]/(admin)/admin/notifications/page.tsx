@@ -27,7 +27,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import { Send, Trash2 } from 'lucide-react'
+import { CalendarClock, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 
@@ -87,11 +87,18 @@ export default function AdminNotificationsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">Уведомления</h1>
-                <Button asChild size="sm">
-                    <Link href="/admin/notifications/send">
-                        <Send className="size-4 mr-1" /> Отправить
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button asChild variant="outline" size="sm">
+                        <Link href="/admin/notifications/scheduled">
+                            <CalendarClock className="size-4 mr-1" /> Запланированные
+                        </Link>
+                    </Button>
+                    <Button asChild size="sm">
+                        <Link href="/admin/notifications/send">
+                            <Send className="size-4 mr-1" /> Отправить
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             <Card>

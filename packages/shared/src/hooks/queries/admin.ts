@@ -225,3 +225,18 @@ export const useAdminPreviewAudience = (
         staleTime: 30 * 1000,
     })
 }
+
+export const useAdminScheduledNotifications = (
+    page: number = 1,
+    size: number = 40,
+    params?: { status?: string; kind?: string },
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.notifications(),
+            'scheduled',
+            { page, size, ...(params ?? {}) },
+        ] as const,
+        queryFn: () => adminApi.getScheduledNotifications(page, size, params),
+    })
+}

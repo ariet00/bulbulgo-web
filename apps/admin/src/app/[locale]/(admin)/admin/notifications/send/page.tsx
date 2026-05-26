@@ -5,6 +5,7 @@ import {
     useAdminBroadcastNotification,
     useAdminNotificationRoles,
     useAdminPreviewAudience,
+    useAdminScheduleNotification,
     useAdminSendNotification,
 } from '@doska/shared'
 import {
@@ -29,8 +30,8 @@ import {
     TabsTrigger,
     Textarea,
 } from '@doska/ui'
-import { Link } from '@doska/i18n'
-import { ArrowLeft, Save, Send, Trash2 } from 'lucide-react'
+import { Link, useRouter } from '@doska/i18n'
+import { ArrowLeft, CalendarClock, Save, Send, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 
@@ -87,7 +88,10 @@ function saveTemplates(templates: Template[]) {
 }
 
 export default function AdminSendNotificationPage() {
+    const router = useRouter()
     const [tab, setTab] = useState<'user' | 'broadcast'>('user')
+    const [mode, setMode] = useState<'now' | 'schedule'>('now')
+    const [scheduledAt, setScheduledAt] = useState('') // datetime-local value
 
     // Common content
     const [title, setTitle] = useState('')
@@ -113,7 +117,9 @@ export default function AdminSendNotificationPage() {
 
     const sendMutation = useAdminSendNotification()
     const broadcastMutation = useAdminBroadcastNotification()
-    const pending = sendMutation.isPending || broadcastMutation.isPending
+    const scheduleMutation = useAdminScheduleNotification()
+    const pending =
+        sendMutation.isPending || broadcastMutation.isPending || scheduleMutation.isPending
 
     const clickAction =
         clickActionPreset === ALL
@@ -204,15 +210,42 @@ export default function AdminSendNotificationPage() {
         saveTemplates(next)
     }
 
+    const scheduleAtFuture = useMemo(() => {
+        if (mode !== 'schedule') return true
+        if (!scheduledAt) return false
+        const t = new Date(scheduledAt).getTime()
+        if (isNaN(t)) return false
+        return t > Date.now() + 30_000
+    }, [mode, scheduledAt])
+
     const canSubmit =
         title.trim().length > 0 &&
         body.trim().length > 0 &&
         dataObj.ok &&
-        (tab === 'broadcast' || userId != null)
+        (tab === 'broadcast' || userId != null) &&
+        scheduleAtFuture
 
     const submit = async () => {
         if (!canSubmit) return
         const data = dataObj.ok ? dataObj.value : undefined
+
+        if (mode === 'schedule') {
+            await scheduleMutation.mutateAsync({
+                kind: tab,
+                scheduled_at: new Date(scheduledAt).toISOString(),
+                title: title.trim(),
+                body: body.trim(),
+                type: type || 'info',
+                category: category.trim() || undefined,
+                click_action: clickAction,
+                is_data_only: isDataOnly || undefined,
+                data,
+                user_id: tab === 'user' ? userId : null,
+                filters: tab === 'broadcast' ? broadcastFilters : null,
+            })
+            router.push('/admin/notifications/scheduled')
+            return
+        }
 
         if (tab === 'user') {
             await sendMutation.mutateAsync({
@@ -443,13 +476,43 @@ export default function AdminSendNotificationPage() {
 
                         <Separator />
 
+                        <div>
+                            <Label>Время отправки</Label>
+                            <Tabs value={mode} onValueChange={(v) => setMode(v as 'now' | 'schedule')}>
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="now">Сейчас</TabsTrigger>
+                                    <TabsTrigger value="schedule">Запланировать</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="schedule" className="pt-3">
+                                    <Input
+                                        type="datetime-local"
+                                        value={scheduledAt}
+                                        onChange={(e) => setScheduledAt(e.target.value)}
+                                    />
+                                    {!scheduleAtFuture && scheduledAt && (
+                                        <p className="text-xs text-destructive mt-1">
+                                            Дата должна быть минимум на 30 секунд в будущем.
+                                        </p>
+                                    )}
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+
                         <div className="flex flex-wrap gap-2 items-center justify-between">
                             <Button variant="outline" size="sm" onClick={saveTemplate}>
                                 <Save className="size-4 mr-1" /> Сохранить как шаблон
                             </Button>
                             <Button onClick={submit} disabled={!canSubmit || pending}>
-                                <Send className="size-4 mr-1" />
-                                {tab === 'broadcast' ? 'Отправить рассылку' : 'Отправить'}
+                                {mode === 'schedule' ? (
+                                    <>
+                                        <CalendarClock className="size-4 mr-1" /> Запланировать
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="size-4 mr-1" />
+                                        {tab === 'broadcast' ? 'Отправить рассылку' : 'Отправить'}
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </CardContent>

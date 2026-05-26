@@ -4,6 +4,7 @@ import {
     AdminBroadcastNotification,
     AdminCompanyCreate,
     AdminCompanyUpdate,
+    AdminScheduleNotification,
     AdminSendNotification,
     BookingBotUpdate,
     BookingLinkRequest,
@@ -255,6 +256,28 @@ export const useAdminDeleteNotification = () => {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.notifications() })
             toast.success('Уведомление удалено')
+        },
+    })
+}
+
+export const useAdminScheduleNotification = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminScheduleNotification) => adminApi.scheduleNotification(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.notifications() })
+            toast.success('Уведомление запланировано')
+        },
+    })
+}
+
+export const useAdminCancelScheduledNotification = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.cancelScheduledNotification(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.notifications() })
+            toast.success('Отменено')
         },
     })
 }
