@@ -222,6 +222,41 @@ export const useAdminUserDailyActivity = (userId: number, period: string = '30d'
     })
 }
 
+export const useAdminRideshareFunnel = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'funnel', period],
+        queryFn: () => adminApi.getRideshareFunnel(period),
+    })
+}
+
+export const useAdminRideshareSummary = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'summary', period],
+        queryFn: () => adminApi.getRideshareSummary(period),
+    })
+}
+
+export const useAdminRideshareTripsByDay = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'trips-by-day', period],
+        queryFn: () => adminApi.getRideshareTripsByDay(period),
+    })
+}
+
+export const useAdminRideshareTopDrivers = (period: string = '7d', limit: number = 20) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'top-drivers', period, limit],
+        queryFn: () => adminApi.getRideshareTopDrivers(period, limit),
+    })
+}
+
+export const useAdminRideshareTopRoutes = (period: string = '7d', limit: number = 20) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'top-routes', period, limit],
+        queryFn: () => adminApi.getRideshareTopRoutes(period, limit),
+    })
+}
+
 export const useAdminAnalyticsMiddlewareToggle = () => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'middleware-toggle'],

@@ -187,6 +187,69 @@ export const adminApi = {
     setAnalyticsMiddlewareToggle: (enabled: boolean) =>
         requests.post<{ enabled: boolean }>('/admin/analytics/middleware/toggle', { enabled }),
 
+    // Rideshare (bulbul go) — product-specific analytics
+    getRideshareFunnel: (period: string = '7d') =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            steps: Array<{
+                key: string
+                label: string
+                event_type: string
+                events: number
+                users: number
+            }>
+        }>(`/admin/rideshare/analytics/funnel?period=${period}`),
+    getRideshareSummary: (period: string = '7d') =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            active_now: number
+            active_by_type: Array<{ trip_type: string | null; count: number }>
+            created_in_period: number
+            completed_in_period: number
+            cancelled_in_period: number
+            completion_rate: number
+        }>(`/admin/rideshare/analytics/summary?period=${period}`),
+    getRideshareTripsByDay: (period: string = '7d') =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            days: Array<{ day: string; total: number; events: Record<string, number> }>
+            trip_types: string[]
+        }>(`/admin/rideshare/analytics/trips-by-day?period=${period}`),
+    getRideshareTopDrivers: (period: string = '7d', limit: number = 20) =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            drivers: Array<{
+                user_id: number
+                name: string | null
+                phone: string | null
+                avatar_url: string | null
+                trips: number
+                completed: number
+            }>
+        }>(`/admin/rideshare/analytics/top-drivers?period=${period}&limit=${limit}`),
+    getRideshareTopRoutes: (period: string = '7d', limit: number = 20) =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            routes: Array<{
+                from_id: number
+                from_name: string | null
+                to_id: number
+                to_name: string | null
+                trips: number
+                completed: number
+            }>
+        }>(`/admin/rideshare/analytics/top-routes?period=${period}&limit=${limit}`),
+
     // Booking — bots & onboarding
     getBookingBots: (onlyUnlinked = false) =>
         requests.get<BookingBotItem[]>(`/admin/booking/bots?only_unlinked=${onlyUnlinked}`),

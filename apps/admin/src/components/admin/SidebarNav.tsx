@@ -46,6 +46,7 @@ const sections: NavSection[] = [
         label: 'Analytics',
         items: [
             { name: 'Обзор', href: '/admin/analytics/overview', icon: LineChart },
+            { name: 'BulBul Go', href: '/admin/analytics/bulbulgo', icon: LineChart },
             { name: 'События', href: '/admin/analytics/events', icon: Activity },
         ],
     },
