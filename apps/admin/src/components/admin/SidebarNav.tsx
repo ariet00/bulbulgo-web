@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+    Activity,
     BarChart,
     Bell,
     CalendarCheck,
     Car,
     LayoutDashboard,
+    LineChart,
     List,
     MessageSquare,
     Radio,
@@ -38,6 +40,13 @@ const sections: NavSection[] = [
             { name: 'Users', href: '/admin/users', icon: Users },
             { name: 'Companies', href: '/admin/companies', icon: BarChart },
             { name: 'Notifications', href: '/admin/notifications', icon: Bell },
+        ],
+    },
+    {
+        label: 'Analytics',
+        items: [
+            { name: 'Обзор', href: '/admin/analytics/overview', icon: LineChart },
+            { name: 'События', href: '/admin/analytics/events', icon: Activity },
         ],
     },
     {

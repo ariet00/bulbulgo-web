@@ -157,6 +157,57 @@ export const useAdminAnalytics = () => {
     })
 }
 
+export const useAdminAnalyticsEvents = (params: {
+    page?: number
+    size?: number
+    event_type?: string
+    user_id?: number
+    platform?: string
+    from?: string
+    to?: string
+}) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'events', params],
+        queryFn: () => adminApi.listAnalyticsEvents(params),
+    })
+}
+
+export const useAdminAnalyticsTopEvents = (period: string = '7d', limit: number = 20) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'top', period, limit],
+        queryFn: () => adminApi.getTopAnalyticsEvents({ period, limit }),
+    })
+}
+
+export const useAdminAnalyticsActiveUsers = (period: string = '30d', granularity: string = 'day') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'active-users', period, granularity],
+        queryFn: () => adminApi.getActiveUsers({ period, granularity }),
+    })
+}
+
+export const useAdminAnalyticsPlatforms = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'platforms', period],
+        queryFn: () => adminApi.getPlatformsBreakdown(period),
+    })
+}
+
+export const useAdminAnalyticsUserEvents = (userId: number, page: number = 1, size: number = 100) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'user-events', userId, page, size],
+        queryFn: () => adminApi.getUserAnalyticsEvents(userId, page, size),
+        enabled: !!userId,
+    })
+}
+
+export const useAdminAnalyticsMiddlewareToggle = () => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'middleware-toggle'],
+        queryFn: () => adminApi.getAnalyticsMiddlewareToggle(),
+    })
+}
+
 export const useAdminBookingBots = (onlyUnlinked = false) => {
     return useQuery({
         queryKey: adminKeys.bookingBots(onlyUnlinked),

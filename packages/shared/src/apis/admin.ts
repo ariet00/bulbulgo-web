@@ -122,6 +122,49 @@ export const adminApi = {
 
     // Analytics
     getAnalytics: () => requests.get<any>('/admin/analytics/'),
+    listAnalyticsEvents: (params: {
+        page?: number
+        size?: number
+        event_type?: string
+        user_id?: number
+        platform?: string
+        from?: string
+        to?: string
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<Page<any>>(`/admin/analytics/events?${qs.toString()}`)
+    },
+    getTopAnalyticsEvents: (params: { period?: string; limit?: number }) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.limit) qs.set('limit', String(params.limit))
+        return requests.get<Array<{ event_type: string; count: number }>>(
+            `/admin/analytics/events/top?${qs.toString()}`,
+        )
+    },
+    getActiveUsers: (params: { period?: string; granularity?: string }) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.granularity) qs.set('granularity', params.granularity)
+        return requests.get<Array<{ bucket: string; users: number }>>(
+            `/admin/analytics/users/active?${qs.toString()}`,
+        )
+    },
+    getPlatformsBreakdown: (period: string = '7d') =>
+        requests.get<Array<{ platform: string | null; events: number; users: number }>>(
+            `/admin/analytics/platforms?period=${period}`,
+        ),
+    getUserAnalyticsEvents: (userId: number, page = 1, size = 100) =>
+        requests.get<Page<any>>(
+            `/admin/analytics/users/${userId}/events?page=${page}&size=${size}`,
+        ),
+    getAnalyticsMiddlewareToggle: () =>
+        requests.get<{ enabled: boolean }>('/admin/analytics/middleware/toggle'),
+    setAnalyticsMiddlewareToggle: (enabled: boolean) =>
+        requests.post<{ enabled: boolean }>('/admin/analytics/middleware/toggle', { enabled }),
 
     // Booking — bots & onboarding
     getBookingBots: (onlyUnlinked = false) =>

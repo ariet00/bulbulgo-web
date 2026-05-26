@@ -3,9 +3,12 @@ import axios from 'axios'
 import { useToastStore } from '../store/useToastStore'
 import { useUserStore } from '../store/useUserStore'
 import { getServerSession } from 'next-auth'
+import { getAnonymousId } from './anonymousId'
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL
 console.log({ baseURL })
+
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || ''
 
 const requester = axios.create({
     baseURL: baseURL,
@@ -21,12 +24,17 @@ requester.interceptors.request.use(
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`
             }
+            config.headers['X-Platform'] = 'web'
+            if (APP_VERSION) config.headers['X-App-Version'] = APP_VERSION
+            config.headers['X-Anonymous-Id'] = getAnonymousId()
         } else {
             const session = await getServerSession(authOptions)
             const authorization = (session as any)?.accessToken
             if (authorization) {
                 config.headers.Authorization = `Bearer ${authorization}`
             }
+            config.headers['X-Platform'] = 'web-ssr'
+            if (APP_VERSION) config.headers['X-App-Version'] = APP_VERSION
         }
         return config
     },

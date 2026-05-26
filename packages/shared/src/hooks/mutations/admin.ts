@@ -291,3 +291,13 @@ export const useAdminRefreshCeleryBeat = () => {
         },
     })
 }
+
+export const useSetAnalyticsMiddlewareToggle = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (enabled: boolean) => adminApi.setAnalyticsMiddlewareToggle(enabled),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.analytics() })
+        },
+    })
+}

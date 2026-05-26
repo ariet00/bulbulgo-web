@@ -46,11 +46,31 @@ export function loadBotSlug(): string | null {
   return memoryBotSlug
 }
 
+const ANONYMOUS_ID_KEY = 'analytics_anonymous_id'
+
+function getAnonymousId(): string {
+  if (typeof window === 'undefined') return ''
+  try {
+    let id = window.localStorage.getItem(ANONYMOUS_ID_KEY)
+    if (!id) {
+      id = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+      window.localStorage.setItem(ANONYMOUS_ID_KEY, id)
+    }
+    return id
+  } catch {
+    return ''
+  }
+}
+
 api.interceptors.request.use((config) => {
   const token = loadAccessToken()
   const slug = loadBotSlug()
   config.headers = config.headers ?? {}
   if (token) config.headers.Authorization = `Bearer ${token}`
   if (slug) config.headers['X-Bot-Slug'] = slug
+  const anon = getAnonymousId()
+  if (anon) config.headers['X-Anonymous-Id'] = anon
   return config
 })
