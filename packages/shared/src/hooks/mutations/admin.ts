@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
     adminApi,
+    AdminAppFeaturesSettings,
     AdminAppVersionSettings,
     AdminBroadcastNotification,
     AdminCompanyCreate,
@@ -308,6 +309,18 @@ export const useUpdateAdminAppVersionSettings = () => {
     return useMutation({
         mutationFn: (body: AdminAppVersionSettings) =>
             adminApi.updateAppVersionSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminAppFeaturesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminAppFeaturesSettings) =>
+            adminApi.updateAppFeaturesSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')

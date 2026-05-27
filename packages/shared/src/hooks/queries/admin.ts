@@ -366,3 +366,10 @@ export const useAdminAppVersionSettings = () => {
         queryFn: () => adminApi.getAppVersionSettings(),
     })
 }
+
+export const useAdminAppFeaturesSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'features'] as const,
+        queryFn: () => adminApi.getAppFeaturesSettings(),
+    })
+}

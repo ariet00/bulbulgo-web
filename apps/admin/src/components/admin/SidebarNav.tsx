@@ -56,7 +56,8 @@ const sections: NavSection[] = [
             { name: 'Trips', href: '/admin/trips', icon: List },
             { name: 'Vehicles', href: '/admin/vehicles', icon: Car },
             { name: 'Chats', href: '/admin/chats', icon: MessageSquare },
-            { name: 'Настройки', href: '/admin/settings/app', icon: SettingsIcon },
+            { name: 'Версии приложения', href: '/admin/settings/app', icon: SettingsIcon },
+            { name: 'Фичи', href: '/admin/settings/features', icon: SettingsIcon },
         ],
     },
     {

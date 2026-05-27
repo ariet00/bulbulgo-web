@@ -299,6 +299,12 @@ export const adminApi = {
         requests.get<AdminAppVersionSettings>('/admin/settings/version'),
     updateAppVersionSettings: (body: AdminAppVersionSettings) =>
         requests.put<AdminAppVersionSettings>('/admin/settings/version', body),
+
+    // App settings (global feature flags — Redis key `app:features`)
+    getAppFeaturesSettings: () =>
+        requests.get<AdminAppFeaturesSettings>('/admin/settings/features'),
+    updateAppFeaturesSettings: (body: AdminAppFeaturesSettings) =>
+        requests.put<AdminAppFeaturesSettings>('/admin/settings/features', body),
 }
 
 export interface AdminAppVersionSettings {
@@ -307,6 +313,13 @@ export interface AdminAppVersionSettings {
     ios_min_version: string
     android_force_update: boolean
     ios_force_update: boolean
+}
+
+export interface AdminAppFeaturesSettings {
+    is_wallet_top_up_enabled: boolean
+    is_wallet_enabled: boolean
+    is_passenger_search_enabled: boolean
+    map_route_preview: boolean
 }
 
 export interface AdminNotificationListParams {
