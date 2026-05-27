@@ -34,20 +34,26 @@ export default function BulbulGoAnalyticsPage() {
     const funnel = useAdminRideshareFunnel(period)
     const summary = useAdminRideshareSummary(period)
     const tripsByDay = useAdminRideshareTripsByDay(period)
-    const topDrivers = useAdminRideshareTopDrivers(period, 20)
+    const topByTrips = useAdminRideshareTopDrivers(period, 20, 'trips_created')
+    const topByPhone = useAdminRideshareTopDrivers(period, 20, 'phone_views')
+    const topByAds = useAdminRideshareTopDrivers(period, 20, 'trip_views')
     const topRoutes = useAdminRideshareTopRoutes(period, 20)
 
     const isFetching =
         funnel.isFetching ||
         summary.isFetching ||
         tripsByDay.isFetching ||
-        topDrivers.isFetching ||
+        topByTrips.isFetching ||
+        topByPhone.isFetching ||
+        topByAds.isFetching ||
         topRoutes.isFetching
     const refetchAll = () => {
         funnel.refetch()
         summary.refetch()
         tripsByDay.refetch()
-        topDrivers.refetch()
+        topByTrips.refetch()
+        topByPhone.refetch()
+        topByAds.refetch()
         topRoutes.refetch()
     }
 
@@ -156,120 +162,21 @@ export default function BulbulGoAnalyticsPage() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Топ водителей ({period})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {topDrivers.isLoading ? (
-                        <div>Загрузка…</div>
-                    ) : !topDrivers.data || topDrivers.data.drivers.length === 0 ? (
-                        <div className="text-muted-foreground">Нет данных</div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-10">#</TableHead>
-                                    <TableHead>Водитель</TableHead>
-                                    <TableHead>Телефон</TableHead>
-                                    <TableHead className="w-24 text-right">Поездки</TableHead>
-                                    <TableHead className="w-28 text-right">Завершено</TableHead>
-                                    <TableHead className="w-24 text-right">%</TableHead>
-                                    <TableHead
-                                        className="w-24 text-right"
-                                        title="Просмотры его номера (чужие смотрели на его телефон)"
-                                    >
-                                        Номер ←
-                                    </TableHead>
-                                    <TableHead
-                                        className="w-24 text-right"
-                                        title="Просмотры им чужих номеров"
-                                    >
-                                        Номер →
-                                    </TableHead>
-                                    <TableHead
-                                        className="w-24 text-right"
-                                        title="Просмотры его объявлений (чужие открывали карточку)"
-                                    >
-                                        Объявл. ←
-                                    </TableHead>
-                                    <TableHead
-                                        className="w-24 text-right"
-                                        title="Просмотры им чужих объявлений"
-                                    >
-                                        Объявл. →
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {topDrivers.data.drivers.map((d, i) => {
-                                    const completionPct =
-                                        d.trips > 0 ? (d.completed / d.trips) * 100 : 0
-                                    return (
-                                        <TableRow key={d.user_id}>
-                                            <TableCell className="text-muted-foreground tabular-nums">
-                                                {i + 1}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Link
-                                                    href={`/admin/analytics/users/${d.user_id}`}
-                                                    className="flex items-center gap-2 hover:underline"
-                                                >
-                                                    {d.avatar_url ? (
-                                                        // eslint-disable-next-line @next/next/no-img-element
-                                                        <img
-                                                            src={d.avatar_url}
-                                                            alt=""
-                                                            className="w-7 h-7 rounded-full object-cover bg-muted"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                                                            {(d.name ?? '?').slice(0, 1).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                    <span>{d.name ?? `user #${d.user_id}`}</span>
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell className="font-mono text-sm text-muted-foreground">
-                                                {d.phone ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums">
-                                                {d.trips}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums">
-                                                {d.completed}
-                                            </TableCell>
-                                            <TableCell
-                                                className={`text-right tabular-nums ${
-                                                    completionPct >= 70
-                                                        ? 'text-green-600 dark:text-green-400'
-                                                        : completionPct >= 40
-                                                        ? 'text-amber-600 dark:text-amber-400'
-                                                        : 'text-red-600 dark:text-red-400'
-                                                }`}
-                                            >
-                                                {completionPct.toFixed(0)}%
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums">
-                                                {d.phone_views_received}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums text-muted-foreground">
-                                                {d.phone_views_made}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums">
-                                                {d.trip_views_received}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums text-muted-foreground">
-                                                {d.trip_views_made}
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+            <TopDriversCard
+                title={`Топ по созданию поездок (${period})`}
+                rankColumn="trips"
+                query={topByTrips}
+            />
+            <TopDriversCard
+                title={`Топ по просмотрам номера (${period})`}
+                rankColumn="phone_views_received"
+                query={topByPhone}
+            />
+            <TopDriversCard
+                title={`Топ по просмотрам объявлений (${period})`}
+                rankColumn="trip_views_received"
+                query={topByAds}
+            />
 
             <Card>
                 <CardHeader>
@@ -313,6 +220,154 @@ export default function BulbulGoAnalyticsPage() {
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+type TopDriverRow = NonNullable<
+    ReturnType<typeof useAdminRideshareTopDrivers>['data']
+>['drivers'][number]
+type TopDriversQuery = ReturnType<typeof useAdminRideshareTopDrivers>
+type RankColumn =
+    | 'trips'
+    | 'phone_views_received'
+    | 'trip_views_received'
+
+function TopDriversCard({
+    title,
+    rankColumn,
+    query,
+}: {
+    title: string
+    rankColumn: RankColumn
+    query: TopDriversQuery
+}) {
+    const rankLabel: Record<RankColumn, string> = {
+        trips: 'Поездки',
+        phone_views_received: 'Просмотры номера',
+        trip_views_received: 'Просмотры объявл.',
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {query.isLoading ? (
+                    <div>Загрузка…</div>
+                ) : !query.data || query.data.drivers.length === 0 ? (
+                    <div className="text-muted-foreground">Нет данных</div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead>Пользователь</TableHead>
+                                <TableHead>Телефон</TableHead>
+                                <TableHead className="w-32 text-right font-semibold">
+                                    {rankLabel[rankColumn]}
+                                </TableHead>
+                                <TableHead className="w-20 text-right">Поездки</TableHead>
+                                <TableHead className="w-20 text-right">Заверш.</TableHead>
+                                <TableHead className="w-16 text-right">%</TableHead>
+                                <TableHead
+                                    className="w-20 text-right"
+                                    title="Просмотры его номера"
+                                >
+                                    Ном. ←
+                                </TableHead>
+                                <TableHead
+                                    className="w-20 text-right"
+                                    title="Просмотры им чужих номеров"
+                                >
+                                    Ном. →
+                                </TableHead>
+                                <TableHead
+                                    className="w-20 text-right"
+                                    title="Просмотры его объявлений"
+                                >
+                                    Объ. ←
+                                </TableHead>
+                                <TableHead
+                                    className="w-20 text-right"
+                                    title="Просмотры им чужих объявлений"
+                                >
+                                    Объ. →
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {query.data.drivers.map((d: TopDriverRow, i: number) => {
+                                const completionPct =
+                                    d.trips > 0 ? (d.completed / d.trips) * 100 : 0
+                                return (
+                                    <TableRow key={d.user_id}>
+                                        <TableCell className="text-muted-foreground tabular-nums">
+                                            {i + 1}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link
+                                                href={`/admin/analytics/users/${d.user_id}`}
+                                                className="flex items-center gap-2 hover:underline"
+                                            >
+                                                {d.avatar_url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={d.avatar_url}
+                                                        alt=""
+                                                        className="w-7 h-7 rounded-full object-cover bg-muted"
+                                                    />
+                                                ) : (
+                                                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                                        {(d.name ?? '?').slice(0, 1).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span>{d.name ?? `user #${d.user_id}`}</span>
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm text-muted-foreground">
+                                            {d.phone ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums font-semibold">
+                                            {d[rankColumn]}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                                            {d.trips}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                                            {d.completed}
+                                        </TableCell>
+                                        <TableCell
+                                            className={`text-right tabular-nums ${
+                                                completionPct >= 70
+                                                    ? 'text-green-600 dark:text-green-400'
+                                                    : completionPct >= 40
+                                                    ? 'text-amber-600 dark:text-amber-400'
+                                                    : 'text-red-600 dark:text-red-400'
+                                            }`}
+                                        >
+                                            {d.trips > 0 ? `${completionPct.toFixed(0)}%` : '—'}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums">
+                                            {d.phone_views_received}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                                            {d.phone_views_made}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums">
+                                            {d.trip_views_received}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                                            {d.trip_views_made}
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            })}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
     )
 }
 

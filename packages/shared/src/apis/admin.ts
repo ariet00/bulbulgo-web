@@ -221,7 +221,11 @@ export const adminApi = {
             days: Array<{ day: string; total: number; events: Record<string, number> }>
             trip_types: string[]
         }>(`/admin/rideshare/analytics/trips-by-day?period=${period}`),
-    getRideshareTopDrivers: (period: string = '7d', limit: number = 20) =>
+    getRideshareTopDrivers: (
+        period: string = '7d',
+        limit: number = 20,
+        sortBy: 'trips_created' | 'phone_views' | 'trip_views' = 'trips_created',
+    ) =>
         requests.get<{
             period: string
             from_: string
@@ -238,7 +242,9 @@ export const adminApi = {
                 trip_views_received: number
                 trip_views_made: number
             }>
-        }>(`/admin/rideshare/analytics/top-drivers?period=${period}&limit=${limit}`),
+        }>(
+            `/admin/rideshare/analytics/top-drivers?period=${period}&limit=${limit}&sort_by=${sortBy}`,
+        ),
     getRideshareTopRoutes: (period: string = '7d', limit: number = 20) =>
         requests.get<{
             period: string

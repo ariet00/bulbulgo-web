@@ -244,10 +244,21 @@ export const useAdminRideshareTripsByDay = (period: string = '7d') => {
     })
 }
 
-export const useAdminRideshareTopDrivers = (period: string = '7d', limit: number = 20) => {
+export const useAdminRideshareTopDrivers = (
+    period: string = '7d',
+    limit: number = 20,
+    sortBy: 'trips_created' | 'phone_views' | 'trip_views' = 'trips_created',
+) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'rideshare', 'top-drivers', period, limit],
-        queryFn: () => adminApi.getRideshareTopDrivers(period, limit),
+        queryKey: [
+            ...adminKeys.analytics(),
+            'rideshare',
+            'top-drivers',
+            period,
+            limit,
+            sortBy,
+        ],
+        queryFn: () => adminApi.getRideshareTopDrivers(period, limit, sortBy),
     })
 }
 
