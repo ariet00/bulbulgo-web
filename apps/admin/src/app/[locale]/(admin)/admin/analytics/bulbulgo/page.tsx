@@ -175,6 +175,30 @@ export default function BulbulGoAnalyticsPage() {
                                     <TableHead className="w-24 text-right">Поездки</TableHead>
                                     <TableHead className="w-28 text-right">Завершено</TableHead>
                                     <TableHead className="w-24 text-right">%</TableHead>
+                                    <TableHead
+                                        className="w-24 text-right"
+                                        title="Просмотры его номера (чужие смотрели на его телефон)"
+                                    >
+                                        Номер ←
+                                    </TableHead>
+                                    <TableHead
+                                        className="w-24 text-right"
+                                        title="Просмотры им чужих номеров"
+                                    >
+                                        Номер →
+                                    </TableHead>
+                                    <TableHead
+                                        className="w-24 text-right"
+                                        title="Просмотры его объявлений (чужие открывали карточку)"
+                                    >
+                                        Объявл. ←
+                                    </TableHead>
+                                    <TableHead
+                                        className="w-24 text-right"
+                                        title="Просмотры им чужих объявлений"
+                                    >
+                                        Объявл. →
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -225,6 +249,18 @@ export default function BulbulGoAnalyticsPage() {
                                                 }`}
                                             >
                                                 {completionPct.toFixed(0)}%
+                                            </TableCell>
+                                            <TableCell className="text-right tabular-nums">
+                                                {d.phone_views_received}
+                                            </TableCell>
+                                            <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                {d.phone_views_made}
+                                            </TableCell>
+                                            <TableCell className="text-right tabular-nums">
+                                                {d.trip_views_received}
+                                            </TableCell>
+                                            <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                {d.trip_views_made}
                                             </TableCell>
                                         </TableRow>
                                     )

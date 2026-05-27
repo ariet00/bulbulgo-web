@@ -233,6 +233,10 @@ export const adminApi = {
                 avatar_url: string | null
                 trips: number
                 completed: number
+                phone_views_received: number
+                phone_views_made: number
+                trip_views_received: number
+                trip_views_made: number
             }>
         }>(`/admin/rideshare/analytics/top-drivers?period=${period}&limit=${limit}`),
     getRideshareTopRoutes: (period: string = '7d', limit: number = 20) =>
@@ -283,6 +287,20 @@ export const adminApi = {
         requests.delete<any>(`/admin/celery/periodic-tasks/${id}`),
     refreshCeleryBeat: () =>
         requests.post<{ ok: boolean; reason?: string }>('/admin/celery/refresh-beat', {}),
+
+    // App settings (mobile-app version gating)
+    getAppVersionSettings: () =>
+        requests.get<AdminAppVersionSettings>('/admin/settings/version'),
+    updateAppVersionSettings: (body: AdminAppVersionSettings) =>
+        requests.put<AdminAppVersionSettings>('/admin/settings/version', body),
+}
+
+export interface AdminAppVersionSettings {
+    set_version_header: boolean
+    android_min_version: string
+    ios_min_version: string
+    android_force_update: boolean
+    ios_force_update: boolean
 }
 
 export interface AdminNotificationListParams {

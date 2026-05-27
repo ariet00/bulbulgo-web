@@ -26,6 +26,7 @@ export const adminKeys = {
     celeryTask: (id: number) => [...adminKeys.celeryTasks(), id] as const,
     notifications: () => [...adminKeys.all, 'notifications'] as const,
     notification: (id: number) => [...adminKeys.notifications(), id] as const,
+    appSettings: () => [...adminKeys.all, 'app-settings'] as const,
 }
 
 export const useAdminUsers = (page: number = 1, size: number = 40, q?: string) => {
@@ -345,5 +346,12 @@ export const useAdminScheduledNotifications = (
             { page, size, ...(params ?? {}) },
         ] as const,
         queryFn: () => adminApi.getScheduledNotifications(page, size, params),
+    })
+}
+
+export const useAdminAppVersionSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'version'] as const,
+        queryFn: () => adminApi.getAppVersionSettings(),
     })
 }
