@@ -312,6 +312,7 @@ export interface AdminBroadcastFilters {
     device_type?: string | null
     min_version?: string | null
     max_version?: string | null
+    guests_only?: boolean | null
 }
 
 export interface AdminBroadcastNotification {
@@ -328,6 +329,7 @@ export interface AdminBroadcastNotification {
 export interface AdminAudiencePreview {
     users: number
     devices: number
+    guests: number
     by_device_type: Record<string, number>
 }
 

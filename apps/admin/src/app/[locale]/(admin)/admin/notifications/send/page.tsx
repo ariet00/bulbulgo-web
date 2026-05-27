@@ -112,6 +112,7 @@ export default function AdminSendNotificationPage() {
     const [isActive, setIsActive] = useState<string>(ALL)
     const [minVersion, setMinVersion] = useState('')
     const [maxVersion, setMaxVersion] = useState('')
+    const [guestsOnly, setGuestsOnly] = useState(false)
 
     const { data: roles } = useAdminNotificationRoles()
 
@@ -142,13 +143,14 @@ export default function AdminSendNotificationPage() {
 
     const broadcastFilters: AdminBroadcastFilters = useMemo(
         () => ({
-            role_id: roleId === ALL ? null : Number(roleId),
-            is_active: isActive === ALL ? null : isActive === 'true',
+            role_id: guestsOnly ? null : roleId === ALL ? null : Number(roleId),
+            is_active: guestsOnly ? null : isActive === ALL ? null : isActive === 'true',
             device_type: deviceType === ALL ? null : deviceType,
             min_version: minVersion.trim() || null,
             max_version: maxVersion.trim() || null,
+            guests_only: guestsOnly || null,
         }),
-        [roleId, isActive, deviceType, minVersion, maxVersion],
+        [roleId, isActive, deviceType, minVersion, maxVersion, guestsOnly],
     )
 
     const {
@@ -181,6 +183,7 @@ export default function AdminSendNotificationPage() {
         )
         setMinVersion(tpl.filters.min_version ?? '')
         setMaxVersion(tpl.filters.max_version ?? '')
+        setGuestsOnly(!!tpl.filters.guests_only)
     }
 
     const saveTemplate = () => {
@@ -312,10 +315,23 @@ export default function AdminSendNotificationPage() {
                             </TabsContent>
 
                             <TabsContent value="broadcast" className="space-y-3 pt-3">
+                                <div className="flex items-center gap-2 rounded border px-3 py-2">
+                                    <Switch
+                                        checked={guestsOnly}
+                                        onCheckedChange={setGuestsOnly}
+                                    />
+                                    <Label className="flex-1 cursor-pointer">
+                                        Только гостям (user_id IS NULL)
+                                    </Label>
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <Label>Роль</Label>
-                                        <Select value={roleId} onValueChange={setRoleId}>
+                                        <Select
+                                            value={roleId}
+                                            onValueChange={setRoleId}
+                                            disabled={guestsOnly}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Любая" />
                                             </SelectTrigger>
@@ -346,7 +362,11 @@ export default function AdminSendNotificationPage() {
                                     </div>
                                     <div>
                                         <Label>Активность</Label>
-                                        <Select value={isActive} onValueChange={setIsActive}>
+                                        <Select
+                                            value={isActive}
+                                            onValueChange={setIsActive}
+                                            disabled={guestsOnly}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Все" />
                                             </SelectTrigger>
@@ -529,6 +549,12 @@ export default function AdminSendNotificationPage() {
                                     <span className="text-muted-foreground">Пользователей</span>
                                     <span className="font-mono">
                                         {audienceLoading ? '…' : (audience?.users ?? 0)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Гости</span>
+                                    <span className="font-mono">
+                                        {audienceLoading ? '…' : (audience?.guests ?? 0)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between">
