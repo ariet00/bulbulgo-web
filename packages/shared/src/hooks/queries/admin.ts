@@ -202,6 +202,23 @@ export const useAdminAnalyticsProducts = (period: string = '7d') => {
     })
 }
 
+export const useAdminAnalyticsAppVersions = (
+    period: string = '7d',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.analytics(),
+            'app-versions',
+            period,
+            product ?? null,
+            platform ?? null,
+        ],
+        queryFn: () => adminApi.getAppVersionsBreakdown(period, product, platform),
+    })
+}
+
 export const useAdminAnalyticsUserEvents = (
     userId: number,
     page: number = 1,

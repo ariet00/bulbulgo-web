@@ -167,6 +167,19 @@ export const adminApi = {
         requests.get<Array<{ product: string; events: number; users: number }>>(
             `/admin/analytics/products?period=${period}`,
         ),
+    getAppVersionsBreakdown: (period: string = '7d', product?: string, platform?: string) => {
+        const qs = new URLSearchParams({ period })
+        if (product) qs.set('product', product)
+        if (platform) qs.set('platform', platform)
+        return requests.get<
+            Array<{
+                platform: string | null
+                app_version: string | null
+                events: number
+                users: number
+            }>
+        >(`/admin/analytics/app-versions?${qs.toString()}`)
+    },
     getUserAnalyticsEvents: (userId: number, page = 1, size = 100, product?: string) => {
         const qs = new URLSearchParams({ page: String(page), size: String(size) })
         if (product) qs.set('product', product)

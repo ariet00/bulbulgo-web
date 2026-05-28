@@ -4,6 +4,7 @@ import {
     useDebounce,
     useDeleteParserChannel,
     useParserChannels,
+    useUpdateParserChannel,
 } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import {
@@ -15,6 +16,7 @@ import {
     CardTitle,
     Input,
     Pagination,
+    Switch,
     Table,
     TableBody,
     TableCell,
@@ -33,6 +35,7 @@ export default function ParserChannelsPage() {
 
     const { data, isLoading } = useParserChannels(page, size, 'parse', dq || undefined)
     const remove = useDeleteParserChannel()
+    const update = useUpdateParserChannel()
 
     const handleDelete = (id: number, chatId: string) => {
         if (confirm(`Удалить канал "${chatId}"?`)) {
@@ -94,11 +97,21 @@ export default function ParserChannelsPage() {
                                                 {row.chat_id}
                                             </TableCell>
                                             <TableCell>
-                                                {row.is_active ? (
-                                                    <Badge variant="default">active</Badge>
-                                                ) : (
-                                                    <Badge variant="secondary">off</Badge>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    <Switch
+                                                        checked={row.is_active}
+                                                        disabled={update.isPending}
+                                                        onCheckedChange={(next) =>
+                                                            update.mutate({
+                                                                id: row.id,
+                                                                body: { is_active: next },
+                                                            })
+                                                        }
+                                                    />
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {row.is_active ? 'active' : 'off'}
+                                                    </span>
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline">{row.channel_type}</Badge>

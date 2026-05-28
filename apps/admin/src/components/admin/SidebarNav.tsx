@@ -47,6 +47,7 @@ const sections: NavSection[] = [
         items: [
             { name: 'Обзор', href: '/admin/analytics/overview', icon: LineChart },
             { name: 'BulBul Go', href: '/admin/analytics/bulbulgo', icon: LineChart },
+            { name: 'Версии', href: '/admin/analytics/versions', icon: LineChart },
             { name: 'События', href: '/admin/analytics/events', icon: Activity },
         ],
     },
@@ -84,7 +85,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             : pathname === href || pathname.startsWith(`${href}/`)
 
     return (
-        <nav className="flex-1 px-2 py-4 space-y-4">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-4 space-y-4">
             {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="space-y-1">
                     {section.label && (
