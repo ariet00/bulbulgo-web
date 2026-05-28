@@ -164,17 +164,17 @@ export default function BulbulGoAnalyticsPage() {
 
             <TopDriversCard
                 title={`Топ по созданию поездок (${period})`}
-                rankColumn="trips"
+                variant="trips"
                 query={topByTrips}
             />
             <TopDriversCard
                 title={`Топ по просмотрам номера (${period})`}
-                rankColumn="phone_views_received"
+                variant="phone"
                 query={topByPhone}
             />
             <TopDriversCard
                 title={`Топ по просмотрам объявлений (${period})`}
-                rankColumn="trip_views_received"
+                variant="ads"
                 query={topByAds}
             />
 
@@ -227,26 +227,40 @@ type TopDriverRow = NonNullable<
     ReturnType<typeof useAdminRideshareTopDrivers>['data']
 >['drivers'][number]
 type TopDriversQuery = ReturnType<typeof useAdminRideshareTopDrivers>
-type RankColumn =
-    | 'trips'
-    | 'phone_views_received'
-    | 'trip_views_received'
+type TopVariant = 'trips' | 'phone' | 'ads'
+
+function UserCell({ d }: { d: TopDriverRow }) {
+    return (
+        <Link
+            href={`/admin/analytics/users/${d.user_id}`}
+            className="flex items-center gap-2 hover:underline"
+        >
+            {d.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={d.avatar_url}
+                    alt=""
+                    className="w-7 h-7 rounded-full object-cover bg-muted"
+                />
+            ) : (
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                    {(d.name ?? '?').slice(0, 1).toUpperCase()}
+                </div>
+            )}
+            <span>{d.name ?? `user #${d.user_id}`}</span>
+        </Link>
+    )
+}
 
 function TopDriversCard({
     title,
-    rankColumn,
+    variant,
     query,
 }: {
     title: string
-    rankColumn: RankColumn
+    variant: TopVariant
     query: TopDriversQuery
 }) {
-    const rankLabel: Record<RankColumn, string> = {
-        trips: 'Поездки',
-        phone_views_received: 'Просмотры номера',
-        trip_views_received: 'Просмотры объявл.',
-    }
-
     return (
         <Card>
             <CardHeader>
@@ -264,36 +278,33 @@ function TopDriversCard({
                                 <TableHead className="w-10">#</TableHead>
                                 <TableHead>Пользователь</TableHead>
                                 <TableHead>Телефон</TableHead>
-                                <TableHead className="w-32 text-right font-semibold">
-                                    {rankLabel[rankColumn]}
-                                </TableHead>
-                                <TableHead className="w-20 text-right">Поездки</TableHead>
-                                <TableHead className="w-20 text-right">Заверш.</TableHead>
-                                <TableHead className="w-16 text-right">%</TableHead>
-                                <TableHead
-                                    className="w-20 text-right"
-                                    title="Просмотры его номера"
-                                >
-                                    Ном. ←
-                                </TableHead>
-                                <TableHead
-                                    className="w-20 text-right"
-                                    title="Просмотры им чужих номеров"
-                                >
-                                    Ном. →
-                                </TableHead>
-                                <TableHead
-                                    className="w-20 text-right"
-                                    title="Просмотры его объявлений"
-                                >
-                                    Объ. ←
-                                </TableHead>
-                                <TableHead
-                                    className="w-20 text-right"
-                                    title="Просмотры им чужих объявлений"
-                                >
-                                    Объ. →
-                                </TableHead>
+                                {variant === 'trips' && (
+                                    <>
+                                        <TableHead className="w-24 text-right font-semibold">
+                                            Поездки
+                                        </TableHead>
+                                        <TableHead className="w-24 text-right">Завершено</TableHead>
+                                        <TableHead className="w-16 text-right">%</TableHead>
+                                    </>
+                                )}
+                                {variant === 'phone' && (
+                                    <>
+                                        <TableHead className="w-40 text-right font-semibold">
+                                            Просмотров номера
+                                        </TableHead>
+                                        <TableHead
+                                            className="w-28 text-right"
+                                            title="Просмотры в первые 10 минут после обновления"
+                                        >
+                                            из них fast
+                                        </TableHead>
+                                    </>
+                                )}
+                                {variant === 'ads' && (
+                                    <TableHead className="w-40 text-right font-semibold">
+                                        Просмотров объявлений
+                                    </TableHead>
+                                )}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -306,60 +317,47 @@ function TopDriversCard({
                                             {i + 1}
                                         </TableCell>
                                         <TableCell>
-                                            <Link
-                                                href={`/admin/analytics/users/${d.user_id}`}
-                                                className="flex items-center gap-2 hover:underline"
-                                            >
-                                                {d.avatar_url ? (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img
-                                                        src={d.avatar_url}
-                                                        alt=""
-                                                        className="w-7 h-7 rounded-full object-cover bg-muted"
-                                                    />
-                                                ) : (
-                                                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                                                        {(d.name ?? '?').slice(0, 1).toUpperCase()}
-                                                    </div>
-                                                )}
-                                                <span>{d.name ?? `user #${d.user_id}`}</span>
-                                            </Link>
+                                            <UserCell d={d} />
                                         </TableCell>
                                         <TableCell className="font-mono text-sm text-muted-foreground">
                                             {d.phone ?? '—'}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums font-semibold">
-                                            {d[rankColumn]}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums text-muted-foreground">
-                                            {d.trips}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums text-muted-foreground">
-                                            {d.completed}
-                                        </TableCell>
-                                        <TableCell
-                                            className={`text-right tabular-nums ${
-                                                completionPct >= 70
-                                                    ? 'text-green-600 dark:text-green-400'
-                                                    : completionPct >= 40
-                                                    ? 'text-amber-600 dark:text-amber-400'
-                                                    : 'text-red-600 dark:text-red-400'
-                                            }`}
-                                        >
-                                            {d.trips > 0 ? `${completionPct.toFixed(0)}%` : '—'}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums">
-                                            {d.phone_views_received}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums text-muted-foreground">
-                                            {d.phone_views_made}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums">
-                                            {d.trip_views_received}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums text-muted-foreground">
-                                            {d.trip_views_made}
-                                        </TableCell>
+                                        {variant === 'trips' && (
+                                            <>
+                                                <TableCell className="text-right tabular-nums font-semibold">
+                                                    {d.trips}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.completed}
+                                                </TableCell>
+                                                <TableCell
+                                                    className={`text-right tabular-nums ${
+                                                        completionPct >= 70
+                                                            ? 'text-green-600 dark:text-green-400'
+                                                            : completionPct >= 40
+                                                            ? 'text-amber-600 dark:text-amber-400'
+                                                            : 'text-red-600 dark:text-red-400'
+                                                    }`}
+                                                >
+                                                    {d.trips > 0 ? `${completionPct.toFixed(0)}%` : '—'}
+                                                </TableCell>
+                                            </>
+                                        )}
+                                        {variant === 'phone' && (
+                                            <>
+                                                <TableCell className="text-right tabular-nums font-semibold">
+                                                    {d.phone_views_made}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.phone_views_fast_made}
+                                                </TableCell>
+                                            </>
+                                        )}
+                                        {variant === 'ads' && (
+                                            <TableCell className="text-right tabular-nums font-semibold">
+                                                {d.trip_views_made}
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 )
                             })}

@@ -252,6 +252,7 @@ export const adminApi = {
                 completed: number
                 phone_views_received: number
                 phone_views_made: number
+                phone_views_fast_made: number
                 trip_views_received: number
                 trip_views_made: number
             }>
