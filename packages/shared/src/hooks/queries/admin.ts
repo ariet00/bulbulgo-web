@@ -261,6 +261,13 @@ export const useAdminRideshareTripsByDay = (period: string = '7d') => {
     })
 }
 
+export const useAdminRideshareUsersByDay = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'users-by-day', period],
+        queryFn: () => adminApi.getRideshareUsersByDay(period),
+    })
+}
+
 export const useAdminRideshareTopDrivers = (
     period: string = '7d',
     limit: number = 20,

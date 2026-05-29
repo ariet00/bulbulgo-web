@@ -7,6 +7,7 @@ import {
     useAdminRideshareTopDrivers,
     useAdminRideshareTopRoutes,
     useAdminRideshareTripsByDay,
+    useAdminRideshareUsersByDay,
 } from '@doska/shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
@@ -34,6 +35,7 @@ export default function BulbulGoAnalyticsPage() {
     const funnel = useAdminRideshareFunnel(period)
     const summary = useAdminRideshareSummary(period)
     const tripsByDay = useAdminRideshareTripsByDay(period)
+    const usersByDay = useAdminRideshareUsersByDay(period)
     const topByTrips = useAdminRideshareTopDrivers(period, 20, 'trips_created')
     const topByPhone = useAdminRideshareTopDrivers(period, 20, 'phone_views')
     const topByAds = useAdminRideshareTopDrivers(period, 20, 'trip_views')
@@ -43,6 +45,7 @@ export default function BulbulGoAnalyticsPage() {
         funnel.isFetching ||
         summary.isFetching ||
         tripsByDay.isFetching ||
+        usersByDay.isFetching ||
         topByTrips.isFetching ||
         topByPhone.isFetching ||
         topByAds.isFetching ||
@@ -51,6 +54,7 @@ export default function BulbulGoAnalyticsPage() {
         funnel.refetch()
         summary.refetch()
         tripsByDay.refetch()
+        usersByDay.refetch()
         topByTrips.refetch()
         topByPhone.refetch()
         topByAds.refetch()
@@ -142,6 +146,24 @@ export default function BulbulGoAnalyticsPage() {
                         <DailyStackedBarChart
                             data={[...tripsByDay.data.days].reverse()}
                             eventTypes={tripsByDay.data.trip_types}
+                        />
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Новые пользователи по дням ({period})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {usersByDay.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !usersByDay.data || usersByDay.data.days.length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных</div>
+                    ) : (
+                        <DailyStackedBarChart
+                            data={[...usersByDay.data.days].reverse()}
+                            eventTypes={usersByDay.data.providers}
                         />
                     )}
                 </CardContent>
