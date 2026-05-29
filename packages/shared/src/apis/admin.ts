@@ -250,11 +250,17 @@ export const adminApi = {
                 avatar_url: string | null
                 trips: number
                 completed: number
+                trips_driver: number
+                trips_passenger: number
                 phone_views_received: number
                 phone_views_made: number
+                phone_views_made_driver: number
+                phone_views_made_passenger: number
                 phone_views_fast_made: number
                 trip_views_received: number
                 trip_views_made: number
+                trip_views_made_driver: number
+                trip_views_made_passenger: number
             }>
         }>(
             `/admin/rideshare/analytics/top-drivers?period=${period}&limit=${limit}&sort_by=${sortBy}`,

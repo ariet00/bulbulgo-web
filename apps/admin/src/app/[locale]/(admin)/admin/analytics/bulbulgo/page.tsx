@@ -283,14 +283,38 @@ function TopDriversCard({
                                         <TableHead className="w-24 text-right font-semibold">
                                             Поездки
                                         </TableHead>
+                                        <TableHead
+                                            className="w-20 text-right"
+                                            title="Водительские объявления"
+                                        >
+                                            Водит.
+                                        </TableHead>
+                                        <TableHead
+                                            className="w-20 text-right"
+                                            title="Пассажирские объявления"
+                                        >
+                                            Пасс.
+                                        </TableHead>
                                         <TableHead className="w-24 text-right">Завершено</TableHead>
                                         <TableHead className="w-16 text-right">%</TableHead>
                                     </>
                                 )}
                                 {variant === 'phone' && (
                                     <>
-                                        <TableHead className="w-40 text-right font-semibold">
+                                        <TableHead className="w-36 text-right font-semibold">
                                             Просмотров номера
+                                        </TableHead>
+                                        <TableHead
+                                            className="w-20 text-right"
+                                            title="Просмотры номеров в водительских объявлениях"
+                                        >
+                                            Водит.
+                                        </TableHead>
+                                        <TableHead
+                                            className="w-20 text-right"
+                                            title="Просмотры номеров в пассажирских объявлениях"
+                                        >
+                                            Пасс.
                                         </TableHead>
                                         <TableHead
                                             className="w-28 text-right"
@@ -301,9 +325,23 @@ function TopDriversCard({
                                     </>
                                 )}
                                 {variant === 'ads' && (
-                                    <TableHead className="w-40 text-right font-semibold">
-                                        Просмотров объявлений
-                                    </TableHead>
+                                    <>
+                                        <TableHead className="w-36 text-right font-semibold">
+                                            Просмотров объявлений
+                                        </TableHead>
+                                        <TableHead
+                                            className="w-20 text-right"
+                                            title="Просмотры водительских объявлений"
+                                        >
+                                            Водит.
+                                        </TableHead>
+                                        <TableHead
+                                            className="w-20 text-right"
+                                            title="Просмотры пассажирских объявлений"
+                                        >
+                                            Пасс.
+                                        </TableHead>
+                                    </>
                                 )}
                             </TableRow>
                         </TableHeader>
@@ -328,6 +366,12 @@ function TopDriversCard({
                                                     {d.trips}
                                                 </TableCell>
                                                 <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.trips_driver}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.trips_passenger}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
                                                     {d.completed}
                                                 </TableCell>
                                                 <TableCell
@@ -349,14 +393,28 @@ function TopDriversCard({
                                                     {d.phone_views_made}
                                                 </TableCell>
                                                 <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.phone_views_made_driver}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.phone_views_made_passenger}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
                                                     {d.phone_views_fast_made}
                                                 </TableCell>
                                             </>
                                         )}
                                         {variant === 'ads' && (
-                                            <TableCell className="text-right tabular-nums font-semibold">
-                                                {d.trip_views_made}
-                                            </TableCell>
+                                            <>
+                                                <TableCell className="text-right tabular-nums font-semibold">
+                                                    {d.trip_views_made}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.trip_views_made_driver}
+                                                </TableCell>
+                                                <TableCell className="text-right tabular-nums text-muted-foreground">
+                                                    {d.trip_views_made_passenger}
+                                                </TableCell>
+                                            </>
                                         )}
                                     </TableRow>
                                 )
