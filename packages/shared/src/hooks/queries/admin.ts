@@ -397,3 +397,10 @@ export const useAdminAppFeaturesSettings = () => {
         queryFn: () => adminApi.getAppFeaturesSettings(),
     })
 }
+
+export const useAdminContactLimitsSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'contact-limits'] as const,
+        queryFn: () => adminApi.getContactLimitsSettings(),
+    })
+}

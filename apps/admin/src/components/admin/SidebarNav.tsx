@@ -59,6 +59,7 @@ const sections: NavSection[] = [
             { name: 'Chats', href: '/admin/chats', icon: MessageSquare },
             { name: 'Версии приложения', href: '/admin/settings/app', icon: SettingsIcon },
             { name: 'Фичи', href: '/admin/settings/features', icon: SettingsIcon },
+            { name: 'Лимиты номеров', href: '/admin/settings/contact-limits', icon: SettingsIcon },
         ],
     },
     {

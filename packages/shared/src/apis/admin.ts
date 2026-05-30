@@ -333,6 +333,12 @@ export const adminApi = {
         requests.get<AdminAppFeaturesSettings>('/admin/settings/features'),
     updateAppFeaturesSettings: (body: AdminAppFeaturesSettings) =>
         requests.put<AdminAppFeaturesSettings>('/admin/settings/features', body),
+
+    // Driver phone-view rate limits (Redis key `app:contact_limits`)
+    getContactLimitsSettings: () =>
+        requests.get<AdminContactLimitsSettings>('/admin/settings/contact-limits'),
+    updateContactLimitsSettings: (body: AdminContactLimitsSettings) =>
+        requests.put<AdminContactLimitsSettings>('/admin/settings/contact-limits', body),
 }
 
 export interface AdminAppVersionSettings {
@@ -348,6 +354,19 @@ export interface AdminAppFeaturesSettings {
     is_wallet_enabled: boolean
     is_passenger_search_enabled: boolean
     map_route_preview: boolean
+}
+
+export interface AdminContactLimitsSettings {
+    enabled: boolean
+    free_daily_limit: number
+    fast_freshness_minutes: number
+    fast_cost: number
+    activity_window_days: number
+    activity_min_views: number
+    activity_min_active_days: number
+    package_views: number
+    package_price: number
+    package_currency: string
 }
 
 export interface AdminNotificationListParams {

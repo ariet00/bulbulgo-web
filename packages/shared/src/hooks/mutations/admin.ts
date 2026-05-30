@@ -3,6 +3,7 @@ import {
     adminApi,
     AdminAppFeaturesSettings,
     AdminAppVersionSettings,
+    AdminContactLimitsSettings,
     AdminBroadcastNotification,
     AdminCompanyCreate,
     AdminCompanyUpdate,
@@ -321,6 +322,18 @@ export const useUpdateAdminAppFeaturesSettings = () => {
     return useMutation({
         mutationFn: (body: AdminAppFeaturesSettings) =>
             adminApi.updateAppFeaturesSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminContactLimitsSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminContactLimitsSettings) =>
+            adminApi.updateContactLimitsSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')
