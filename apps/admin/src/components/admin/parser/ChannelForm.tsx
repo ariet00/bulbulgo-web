@@ -44,6 +44,7 @@ export type ChannelFormState = {
     sort_order: number
     bot_username: string
     allowed_roles: TripRole[]
+    trip_expire_hours: string // string so empty input → null (use global)
 }
 
 export const emptyChannel: ChannelFormState = {
@@ -58,6 +59,7 @@ export const emptyChannel: ChannelFormState = {
     sort_order: 100,
     bot_username: '',
     allowed_roles: [],
+    trip_expire_hours: '',
 }
 
 export function channelFromRow(row: ParserChannel): ChannelFormState {
@@ -73,6 +75,10 @@ export function channelFromRow(row: ParserChannel): ChannelFormState {
         sort_order: row.parser.sort_order,
         bot_username: row.parser.bot_username || '',
         allowed_roles: (row.parser.allowed_roles || []) as TripRole[],
+        trip_expire_hours:
+            row.parser.trip_expire_hours == null
+                ? ''
+                : String(row.parser.trip_expire_hours),
     }
 }
 
@@ -94,6 +100,10 @@ export function channelToBody(s: ChannelFormState) {
             sort_order: Number(s.sort_order) || 100,
             bot_username: s.bot_username.trim(),
             allowed_roles: s.allowed_roles,
+            trip_expire_hours:
+                s.trip_expire_hours.trim() && Number(s.trip_expire_hours) > 0
+                    ? Number(s.trip_expire_hours)
+                    : null,
         },
     }
 }
@@ -218,6 +228,22 @@ export function ChannelForm({ value: v, onChange }: Props) {
                                 onChange={(e) => set({ bot_username: e.target.value })}
                                 placeholder="Poputka_KG_rides_Bot"
                             />
+                        </div>
+                        <div>
+                            <Label>trip_expire_hours (опц.)</Label>
+                            <Input
+                                type="number"
+                                min={1}
+                                value={v.trip_expire_hours}
+                                onChange={(e) =>
+                                    set({ trip_expire_hours: e.target.value })
+                                }
+                                placeholder="по умолчанию — общая настройка"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Сколько часов живёт трип из этого канала. Пусто —
+                                берём общий parser.trip_expire_hours.
+                            </p>
                         </div>
                     </div>
                     <div>
