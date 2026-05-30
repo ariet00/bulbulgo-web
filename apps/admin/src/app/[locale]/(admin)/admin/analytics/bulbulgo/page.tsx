@@ -7,7 +7,7 @@ import {
     useAdminRideshareTopDrivers,
     useAdminRideshareTopRoutes,
     useAdminRideshareTripsByDay,
-    useAdminRideshareUsersByDay,
+    useAdminRideshareInstallsByDay,
 } from '@doska/shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
@@ -30,22 +30,92 @@ const PERIODS: Array<{ value: string; label: string }> = [
     { value: '90d', label: '90d' },
 ]
 
+// Per-card period override. Falls back to the global period and resets itself
+// (back to global) whenever the global period changes — keyed by `resetNonce`,
+// which the top-level selector bumps so even re-picking the same global value
+// clears every card's override.
+function useCardPeriod(globalPeriod: string, resetNonce: number) {
+    const [override, setOverride] = useState<string | null>(null)
+    const [seenNonce, setSeenNonce] = useState(resetNonce)
+    if (seenNonce !== resetNonce) {
+        setSeenNonce(resetNonce)
+        setOverride(null)
+    }
+    return [override ?? globalPeriod, setOverride, override !== null] as const
+}
+
+function PeriodPicker({
+    value,
+    onChange,
+    overridden,
+    size = 'sm',
+}: {
+    value: string
+    onChange: (p: string | null) => void
+    overridden?: boolean
+    size?: 'sm' | 'default'
+}) {
+    return (
+        <div className="flex gap-1 items-center flex-wrap">
+            {PERIODS.map(p => (
+                <Button
+                    key={p.value}
+                    variant={value === p.value ? 'default' : 'outline'}
+                    size={size}
+                    className={size === 'sm' ? 'h-7 px-2 text-xs' : undefined}
+                    onClick={() => onChange(p.value)}
+                >
+                    {p.label}
+                </Button>
+            ))}
+            {overridden && (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-1.5 text-xs text-muted-foreground"
+                    onClick={() => onChange(null)}
+                    title="Сбросить к общему периоду"
+                >
+                    ↺
+                </Button>
+            )}
+        </div>
+    )
+}
+
 export default function BulbulGoAnalyticsPage() {
     const [period, setPeriod] = useState('7d')
-    const funnel = useAdminRideshareFunnel(period)
-    const summary = useAdminRideshareSummary(period)
-    const tripsByDay = useAdminRideshareTripsByDay(period)
-    const usersByDay = useAdminRideshareUsersByDay(period)
-    const topByTrips = useAdminRideshareTopDrivers(period, 20, 'trips_created')
-    const topByPhone = useAdminRideshareTopDrivers(period, 20, 'phone_views')
-    const topByAds = useAdminRideshareTopDrivers(period, 20, 'trip_views')
-    const topRoutes = useAdminRideshareTopRoutes(period, 20)
+    const [resetNonce, setResetNonce] = useState(0)
+    // Picking a global period also resets every card's override (via the nonce).
+    const selectGlobal = (p: string) => {
+        setPeriod(p)
+        setResetNonce(n => n + 1)
+    }
+
+    // Per-card effective period (override ?? global) + its setter + overridden flag.
+    const [summaryP, setSummaryP, summaryOver] = useCardPeriod(period, resetNonce)
+    const [tripsP, setTripsP, tripsOver] = useCardPeriod(period, resetNonce)
+    const [installsP, setInstallsP, installsOver] = useCardPeriod(period, resetNonce)
+    const [funnelP, setFunnelP, funnelOver] = useCardPeriod(period, resetNonce)
+    const [topTripsP, setTopTripsP, topTripsOver] = useCardPeriod(period, resetNonce)
+    const [topPhoneP, setTopPhoneP, topPhoneOver] = useCardPeriod(period, resetNonce)
+    const [topAdsP, setTopAdsP, topAdsOver] = useCardPeriod(period, resetNonce)
+    const [routesP, setRoutesP, routesOver] = useCardPeriod(period, resetNonce)
+
+    const funnel = useAdminRideshareFunnel(funnelP)
+    const summary = useAdminRideshareSummary(summaryP)
+    const tripsByDay = useAdminRideshareTripsByDay(tripsP)
+    const installsByDay = useAdminRideshareInstallsByDay(installsP)
+    const topByTrips = useAdminRideshareTopDrivers(topTripsP, 20, 'trips_created')
+    const topByPhone = useAdminRideshareTopDrivers(topPhoneP, 20, 'phone_views')
+    const topByAds = useAdminRideshareTopDrivers(topAdsP, 20, 'trip_views')
+    const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
 
     const isFetching =
         funnel.isFetching ||
         summary.isFetching ||
         tripsByDay.isFetching ||
-        usersByDay.isFetching ||
+        installsByDay.isFetching ||
         topByTrips.isFetching ||
         topByPhone.isFetching ||
         topByAds.isFetching ||
@@ -54,7 +124,7 @@ export default function BulbulGoAnalyticsPage() {
         funnel.refetch()
         summary.refetch()
         tripsByDay.refetch()
-        usersByDay.refetch()
+        installsByDay.refetch()
         topByTrips.refetch()
         topByPhone.refetch()
         topByAds.refetch()
@@ -71,12 +141,15 @@ export default function BulbulGoAnalyticsPage() {
                     </p>
                 </div>
                 <div className="flex gap-2 items-center flex-wrap">
+                    <span className="text-sm text-muted-foreground mr-1">
+                        Общий период:
+                    </span>
                     {PERIODS.map(p => (
                         <Button
                             key={p.value}
                             variant={period === p.value ? 'default' : 'outline'}
                             size="sm"
-                            onClick={() => setPeriod(p.value)}
+                            onClick={() => selectGlobal(p.value)}
                         >
                             {p.label}
                         </Button>
@@ -93,49 +166,58 @@ export default function BulbulGoAnalyticsPage() {
                 </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard
-                    title="Активных поездок"
-                    value={summary.data?.active_now}
-                    loading={summary.isLoading}
-                    hint={
-                        summary.data && summary.data.active_by_type.length > 0
-                            ? summary.data.active_by_type
-                                  .map(t => `${t.trip_type ?? '—'}: ${t.count}`)
-                                  .join(' · ')
-                            : 'без разбивки'
-                    }
-                />
-                <StatCard
-                    title={`Создано за ${period}`}
-                    value={summary.data?.created_in_period}
-                    loading={summary.isLoading}
-                />
-                <StatCard
-                    title={`Завершено за ${period}`}
-                    value={summary.data?.completed_in_period}
-                    loading={summary.isLoading}
-                    hint={
-                        summary.data && summary.data.cancelled_in_period > 0
-                            ? `отменено: ${summary.data.cancelled_in_period}`
-                            : undefined
-                    }
-                />
-                <StatCard
-                    title="Completion rate"
-                    value={
-                        summary.data
-                            ? `${(summary.data.completion_rate * 100).toFixed(1)}%`
-                            : undefined
-                    }
-                    loading={summary.isLoading}
-                    hint="completed / created в периоде"
-                />
+            <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <h2 className="text-sm font-medium text-muted-foreground">
+                        Сводка ({summaryP})
+                    </h2>
+                    <PeriodPicker value={summaryP} onChange={setSummaryP} overridden={summaryOver} />
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                    <StatCard
+                        title="Активных поездок"
+                        value={summary.data?.active_now}
+                        loading={summary.isLoading}
+                        hint={
+                            summary.data && summary.data.active_by_type.length > 0
+                                ? summary.data.active_by_type
+                                      .map(t => `${t.trip_type ?? '—'}: ${t.count}`)
+                                      .join(' · ')
+                                : 'без разбивки'
+                        }
+                    />
+                    <StatCard
+                        title={`Создано за ${summaryP}`}
+                        value={summary.data?.created_in_period}
+                        loading={summary.isLoading}
+                    />
+                    <StatCard
+                        title={`Завершено за ${summaryP}`}
+                        value={summary.data?.completed_in_period}
+                        loading={summary.isLoading}
+                        hint={
+                            summary.data && summary.data.cancelled_in_period > 0
+                                ? `отменено: ${summary.data.cancelled_in_period}`
+                                : undefined
+                        }
+                    />
+                    <StatCard
+                        title="Completion rate"
+                        value={
+                            summary.data
+                                ? `${(summary.data.completion_rate * 100).toFixed(1)}%`
+                                : undefined
+                        }
+                        loading={summary.isLoading}
+                        hint="completed / created в периоде"
+                    />
+                </div>
             </div>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Поездки по дням ({period})</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                    <CardTitle>Поездки по дням ({tripsP})</CardTitle>
+                    <PeriodPicker value={tripsP} onChange={setTripsP} overridden={tripsOver} />
                 </CardHeader>
                 <CardContent>
                     {tripsByDay.isLoading ? (
@@ -152,26 +234,28 @@ export default function BulbulGoAnalyticsPage() {
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Новые пользователи по дням ({period})</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                    <CardTitle>Установки и регистрации по дням ({installsP})</CardTitle>
+                    <PeriodPicker value={installsP} onChange={setInstallsP} overridden={installsOver} />
                 </CardHeader>
                 <CardContent>
-                    {usersByDay.isLoading ? (
+                    {installsByDay.isLoading ? (
                         <div>Загрузка…</div>
-                    ) : !usersByDay.data || usersByDay.data.days.length === 0 ? (
+                    ) : !installsByDay.data || installsByDay.data.days.length === 0 ? (
                         <div className="text-muted-foreground">Нет данных</div>
                     ) : (
                         <DailyStackedBarChart
-                            data={[...usersByDay.data.days].reverse()}
-                            eventTypes={usersByDay.data.providers}
+                            data={[...installsByDay.data.days].reverse()}
+                            eventTypes={installsByDay.data.event_types}
                         />
                     )}
                 </CardContent>
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Воронка ({period})</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                    <CardTitle>Воронка ({funnelP})</CardTitle>
+                    <PeriodPicker value={funnelP} onChange={setFunnelP} overridden={funnelOver} />
                 </CardHeader>
                 <CardContent>
                     {funnel.isLoading ? (
@@ -185,24 +269,34 @@ export default function BulbulGoAnalyticsPage() {
             </Card>
 
             <TopDriversCard
-                title={`Топ по созданию поездок (${period})`}
+                title="Топ по созданию поездок"
                 variant="trips"
                 query={topByTrips}
+                period={topTripsP}
+                onPeriodChange={setTopTripsP}
+                overridden={topTripsOver}
             />
             <TopDriversCard
-                title={`Топ по просмотрам номера (${period})`}
+                title="Топ по просмотрам номера"
                 variant="phone"
                 query={topByPhone}
+                period={topPhoneP}
+                onPeriodChange={setTopPhoneP}
+                overridden={topPhoneOver}
             />
             <TopDriversCard
-                title={`Топ по просмотрам объявлений (${period})`}
+                title="Топ по просмотрам объявлений"
                 variant="ads"
                 query={topByAds}
+                period={topAdsP}
+                onPeriodChange={setTopAdsP}
+                overridden={topAdsOver}
             />
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Топ маршрутов ({period})</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                    <CardTitle>Топ маршрутов ({routesP})</CardTitle>
+                    <PeriodPicker value={routesP} onChange={setRoutesP} overridden={routesOver} />
                 </CardHeader>
                 <CardContent>
                     {topRoutes.isLoading ? (
@@ -278,15 +372,24 @@ function TopDriversCard({
     title,
     variant,
     query,
+    period,
+    onPeriodChange,
+    overridden,
 }: {
     title: string
     variant: TopVariant
     query: TopDriversQuery
+    period: string
+    onPeriodChange: (p: string | null) => void
+    overridden?: boolean
 }) {
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                <CardTitle>
+                    {title} ({period})
+                </CardTitle>
+                <PeriodPicker value={period} onChange={onPeriodChange} overridden={overridden} />
             </CardHeader>
             <CardContent>
                 {query.isLoading ? (

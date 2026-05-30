@@ -234,14 +234,14 @@ export const adminApi = {
             days: Array<{ day: string; total: number; events: Record<string, number> }>
             trip_types: string[]
         }>(`/admin/rideshare/analytics/trips-by-day?period=${period}`),
-    getRideshareUsersByDay: (period: string = '7d') =>
+    getRideshareInstallsByDay: (period: string = '7d') =>
         requests.get<{
             period: string
             from_: string
             to: string
             days: Array<{ day: string; total: number; events: Record<string, number> }>
-            providers: string[]
-        }>(`/admin/rideshare/analytics/users-by-day?period=${period}`),
+            event_types: string[]
+        }>(`/admin/rideshare/analytics/installs-by-day?period=${period}`),
     getRideshareTopDrivers: (
         period: string = '7d',
         limit: number = 20,

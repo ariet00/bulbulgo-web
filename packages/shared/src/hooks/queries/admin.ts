@@ -261,10 +261,10 @@ export const useAdminRideshareTripsByDay = (period: string = '7d') => {
     })
 }
 
-export const useAdminRideshareUsersByDay = (period: string = '7d') => {
+export const useAdminRideshareInstallsByDay = (period: string = '7d') => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'rideshare', 'users-by-day', period],
-        queryFn: () => adminApi.getRideshareUsersByDay(period),
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'installs-by-day', period],
+        queryFn: () => adminApi.getRideshareInstallsByDay(period),
     })
 }
 
