@@ -20,9 +20,25 @@ const requests = {
 
 export const adminApi = {
     // Users
-    getUsers: (page = 1, size = 40, q?: string) => {
+    getUsers: (
+        page = 1,
+        size = 40,
+        q?: string,
+        filters?: {
+            is_active?: boolean
+            gender?: string
+            provider?: string
+            date_from?: string
+            date_to?: string
+        },
+    ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (q) params.set('q', q)
+        if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
+        if (filters?.gender) params.set('gender', filters.gender)
+        if (filters?.provider) params.set('provider', filters.provider)
+        if (filters?.date_from) params.set('date_from', filters.date_from)
+        if (filters?.date_to) params.set('date_to', filters.date_to)
         return requests.get<Page<any>>(`/admin/users/?${params.toString()}`)
     },
     getUser: (id: number) => requests.get<any>(`/admin/users/${id}`),
@@ -46,19 +62,48 @@ export const adminApi = {
     deleteCompany: (id: number) => requests.delete<any>(`/admin/companies/${id}`),
 
     // Trips
-    getTrips: (page = 1, size = 40, q?: string, status?: string) => {
+    getTrips: (
+        page = 1,
+        size = 40,
+        q?: string,
+        status?: string,
+        filters?: {
+            trip_type?: string
+            role?: string
+            user_id?: number
+            date_from?: string
+            date_to?: string
+        },
+    ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (q) params.set('q', q)
         if (status) params.set('status', status)
+        if (filters?.trip_type) params.set('trip_type', filters.trip_type)
+        if (filters?.role) params.set('role', filters.role)
+        if (filters?.user_id) params.set('user_id', String(filters.user_id))
+        if (filters?.date_from) params.set('date_from', filters.date_from)
+        if (filters?.date_to) params.set('date_to', filters.date_to)
         return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)
     },
     getTrip: (id: number) => requests.get<any>(`/admin/trips/${id}`),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
 
     // Vehicles
-    getVehicles: (page = 1, size = 40, q?: string) => {
+    getVehicles: (
+        page = 1,
+        size = 40,
+        q?: string,
+        filters?: {
+            vehicle_type?: string
+            year?: number
+            user_id?: number
+        },
+    ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (q) params.set('q', q)
+        if (filters?.vehicle_type) params.set('vehicle_type', filters.vehicle_type)
+        if (filters?.year) params.set('year', String(filters.year))
+        if (filters?.user_id) params.set('user_id', String(filters.user_id))
         return requests.get<Page<any>>(`/admin/vehicles/?${params.toString()}`)
     },
     getVehicle: (id: number) => requests.get<any>(`/admin/vehicles/${id}`),

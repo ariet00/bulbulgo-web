@@ -50,15 +50,25 @@ export function UserCombobox({ value, onChange, placeholder = 'Выберите 
                         {value && current ? userLabel(current) : placeholder}
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
-                        {allowClear && value && (
-                            <X
-                                className="h-4 w-4 opacity-60 hover:opacity-100"
+                        {allowClear && value ? (
+                            <span
+                                role="button"
+                                tabIndex={-1}
+                                aria-label="Очистить"
+                                className="inline-flex items-center justify-center rounded-sm p-0.5 opacity-60 hover:opacity-100"
+                                onPointerDown={(e) => {
+                                    e.stopPropagation()
+                                    e.preventDefault()
+                                }}
                                 onClick={(e) => {
                                     e.stopPropagation()
+                                    e.preventDefault()
                                     onChange(null)
                                 }}
-                            />
-                        )}
+                            >
+                                <X className="h-4 w-4" />
+                            </span>
+                        ) : null}
                         <ChevronsUpDown className="h-4 w-4 opacity-50" />
                     </div>
                 </Button>

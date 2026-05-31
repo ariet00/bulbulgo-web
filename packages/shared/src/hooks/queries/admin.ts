@@ -29,10 +29,33 @@ export const adminKeys = {
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
 }
 
-export const useAdminUsers = (page: number = 1, size: number = 40, q?: string) => {
+export const useAdminUsers = (
+    page: number = 1,
+    size: number = 40,
+    q?: string,
+    filters?: {
+        is_active?: boolean
+        gender?: string
+        provider?: string
+        date_from?: string
+        date_to?: string
+    },
+) => {
     return useQuery({
-        queryKey: [...adminKeys.users(), { page, size, q: q ?? null }],
-        queryFn: () => adminApi.getUsers(page, size, q),
+        queryKey: [
+            ...adminKeys.users(),
+            {
+                page,
+                size,
+                q: q ?? null,
+                is_active: filters?.is_active ?? null,
+                gender: filters?.gender ?? null,
+                provider: filters?.provider ?? null,
+                date_from: filters?.date_from ?? null,
+                date_to: filters?.date_to ?? null,
+            },
+        ],
+        queryFn: () => adminApi.getUsers(page, size, q, filters),
     })
 }
 
@@ -80,13 +103,30 @@ export const useAdminTrips = (
     size: number = 40,
     q?: string,
     status?: string,
+    filters?: {
+        trip_type?: string
+        role?: string
+        user_id?: number
+        date_from?: string
+        date_to?: string
+    },
 ) => {
     return useQuery({
         queryKey: [
             ...adminKeys.trips(),
-            { page, size, q: q ?? null, status: status ?? null },
+            {
+                page,
+                size,
+                q: q ?? null,
+                status: status ?? null,
+                trip_type: filters?.trip_type ?? null,
+                role: filters?.role ?? null,
+                user_id: filters?.user_id ?? null,
+                date_from: filters?.date_from ?? null,
+                date_to: filters?.date_to ?? null,
+            },
         ],
-        queryFn: () => adminApi.getTrips(page, size, q, status),
+        queryFn: () => adminApi.getTrips(page, size, q, status, filters),
     })
 }
 
@@ -102,10 +142,25 @@ export const useAdminVehicles = (
     page: number = 1,
     size: number = 40,
     q?: string,
+    filters?: {
+        vehicle_type?: string
+        year?: number
+        user_id?: number
+    },
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.vehicles(), { page, size, q: q ?? null }],
-        queryFn: () => adminApi.getVehicles(page, size, q),
+        queryKey: [
+            ...adminKeys.vehicles(),
+            {
+                page,
+                size,
+                q: q ?? null,
+                vehicle_type: filters?.vehicle_type ?? null,
+                year: filters?.year ?? null,
+                user_id: filters?.user_id ?? null,
+            },
+        ],
+        queryFn: () => adminApi.getVehicles(page, size, q, filters),
     })
 }
 
