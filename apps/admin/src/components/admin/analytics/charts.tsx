@@ -155,19 +155,38 @@ export function CountPieChart({
     )
 }
 
+// Bucket label formatting keyed by the backend's date_trunc unit: sub-day
+// granularity shows the time, day shows the date.
+function formatBucket(iso: string, granularity: 'minute' | 'hour' | 'day') {
+    const d = new Date(iso)
+    if (granularity === 'minute') {
+        return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+    }
+    if (granularity === 'hour') {
+        return d.toLocaleString(undefined, {
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        })
+    }
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
 export function DailyStackedBarChart({
     data,
     eventTypes,
+    granularity = 'day',
 }: {
     data: Array<{ day: string; events: Record<string, number>; total: number }>
     eventTypes: string[]
+    granularity?: 'minute' | 'hour' | 'day'
 }) {
     const t = useChartTheme()
     // Convert {day, events: {type: n}} → flat rows {day, type1: n, type2: m}
     const series = [...data]
         .reverse() // chronological (oldest left)
         .map(d => ({
-            day: new Date(d.day).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            day: formatBucket(d.day, granularity),
             ...d.events,
         }))
 

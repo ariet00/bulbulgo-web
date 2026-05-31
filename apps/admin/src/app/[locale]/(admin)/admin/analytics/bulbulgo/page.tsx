@@ -230,6 +230,7 @@ export default function BulbulGoAnalyticsPage() {
                         <DailyStackedBarChart
                             data={[...tripsByDay.data.days].reverse()}
                             eventTypes={tripsByDay.data.trip_types}
+                            granularity={tripsByDay.data.granularity}
                         />
                     )}
                 </CardContent>
@@ -249,6 +250,7 @@ export default function BulbulGoAnalyticsPage() {
                         <DailyStackedBarChart
                             data={[...installsByDay.data.days].reverse()}
                             eventTypes={installsByDay.data.event_types}
+                            granularity={installsByDay.data.granularity}
                         />
                     )}
                 </CardContent>

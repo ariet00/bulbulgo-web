@@ -276,6 +276,7 @@ export const adminApi = {
             period: string
             from_: string
             to: string
+            granularity: 'minute' | 'hour' | 'day'
             days: Array<{ day: string; total: number; events: Record<string, number> }>
             trip_types: string[]
         }>(`/admin/rideshare/analytics/trips-by-day?period=${period}`),
@@ -284,6 +285,7 @@ export const adminApi = {
             period: string
             from_: string
             to: string
+            granularity: 'minute' | 'hour' | 'day'
             days: Array<{ day: string; total: number; events: Record<string, number> }>
             event_types: string[]
         }>(`/admin/rideshare/analytics/installs-by-day?period=${period}`),
