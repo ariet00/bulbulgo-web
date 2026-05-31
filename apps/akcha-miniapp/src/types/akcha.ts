@@ -8,7 +8,7 @@ export interface Wallet {
   balance: number | null
   color: string | null
   icon: string | null
-  source: string
+  product: string
 }
 
 export interface FinanceCategory {
@@ -31,7 +31,7 @@ export interface Transaction {
   type: TxType
   description: string | null
   date: string
-  source: string
+  product: string
 }
 
 export type DebtType = 'i_owe' | 'they_owe'
