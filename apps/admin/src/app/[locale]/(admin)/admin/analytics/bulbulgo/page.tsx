@@ -84,7 +84,7 @@ function PeriodPicker({
 }
 
 export default function BulbulGoAnalyticsPage() {
-    const [period, setPeriod] = useState('7d')
+    const [period, setPeriod] = useState('24h')
     const [resetNonce, setResetNonce] = useState(0)
     // Picking a global period also resets every card's override (via the nonce).
     const selectGlobal = (p: string) => {
