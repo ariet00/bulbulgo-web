@@ -298,6 +298,25 @@ export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: stri
     })
 }
 
+export const useAdminAnalyticsErrorsSummary = (period: string = '7d', product?: string) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'errors-summary', period, product ?? null],
+        queryFn: () => adminApi.getErrorsSummary(period, product),
+    })
+}
+
+export const useAdminAnalyticsTopErrors = (
+    period: string = '7d',
+    product?: string,
+    statusClass?: string,
+    limit: number = 30,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'errors', period, product ?? null, statusClass ?? null, limit],
+        queryFn: () => adminApi.getTopErrors({ period, product, status_class: statusClass, limit }),
+    })
+}
+
 export const useAdminAnalyticsProducts = (period: string = '7d') => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'products', period],
