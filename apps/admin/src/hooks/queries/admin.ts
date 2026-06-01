@@ -3,7 +3,7 @@ import {
     AdminBroadcastFilters,
     AdminNotificationListParams,
     adminApi,
-} from '../../apis/admin'
+} from '@/apis/admin'
 
 export const adminKeys = {
     all: ['admin'] as const,
@@ -71,6 +71,54 @@ export const useAdminUser = (id: number) => {
     return useQuery({
         queryKey: adminKeys.user(id),
         queryFn: () => adminApi.getUser(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminUserDevices = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.user(id), 'devices'] as const,
+        queryFn: () => adminApi.getUserDevices(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminUserSessions = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.user(id), 'sessions'] as const,
+        queryFn: () => adminApi.getUserSessions(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminUserTripsSummary = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.user(id), 'trips-summary'] as const,
+        queryFn: () => adminApi.getUserTripsSummary(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminUserEngagement = (
+    id: number,
+    period: string = '30d',
+    product?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'user-engagement', id, period, product ?? null],
+        queryFn: () => adminApi.getUserEngagement(id, period, product),
+        enabled: !!id,
+    })
+}
+
+export const useAdminUserPlatforms = (
+    id: number,
+    period: string = '30d',
+    product?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'user-platforms', id, period, product ?? null],
+        queryFn: () => adminApi.getUserPlatforms(id, period, product),
         enabled: !!id,
     })
 }
@@ -338,6 +386,16 @@ export const useAdminRideshareTopDrivers = (
             sortBy,
         ],
         queryFn: () => adminApi.getRideshareTopDrivers(period, limit, sortBy),
+    })
+}
+
+export const useAdminRideshareTopActiveUsers = (
+    period: string = '7d',
+    limit: number = 20,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'top-active-users', period, limit],
+        queryFn: () => adminApi.getRideshareTopActiveUsers(period, limit),
     })
 }
 

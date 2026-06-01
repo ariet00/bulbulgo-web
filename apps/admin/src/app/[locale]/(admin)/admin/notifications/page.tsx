@@ -1,10 +1,8 @@
 'use client'
 
-import {
-    useAdminDeleteNotification,
-    useAdminNotifications,
-    useDebounce,
-} from '@doska/shared'
+import { useAdminDeleteNotification } from '@/hooks/mutations/admin'
+import { useAdminNotifications } from '@/hooks/queries/admin'
+import { useDebounce } from '@doska/shared'
 import {
     Badge,
     Button,

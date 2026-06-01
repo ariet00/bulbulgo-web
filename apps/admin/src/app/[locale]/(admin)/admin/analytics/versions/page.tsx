@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useAdminAnalyticsAppVersions } from '@doska/shared'
+import { useAdminAnalyticsAppVersions } from '@/hooks/queries/admin'
 import {
     Card,
     CardContent,

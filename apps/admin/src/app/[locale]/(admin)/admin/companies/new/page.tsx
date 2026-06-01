@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminCreateCompany } from '@doska/shared'
+import { useAdminCreateCompany } from '@/hooks/mutations/admin'
 import {
     Button,
     Card,

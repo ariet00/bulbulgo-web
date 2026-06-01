@@ -1,7 +1,7 @@
 'use client'
 
-import { useAdminBanUser } from '@doska/shared'
-import { useAdminUser } from '@doska/shared'
+import { useAdminBanUser } from '@/hooks/mutations/admin'
+import { useAdminUser } from '@/hooks/queries/admin'
 import { useParams } from 'next/navigation'
 import { Button } from "@doska/ui"
 import { Ban, CheckCircle } from 'lucide-react'

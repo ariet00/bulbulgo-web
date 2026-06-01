@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useAdminTrips, useDebounce } from '@doska/shared'
-import { useAdminDeleteTrip } from '@doska/shared'
+import { useAdminTrips } from '@/hooks/queries/admin'
+import { useDebounce } from '@doska/shared'
+import { useAdminDeleteTrip } from '@/hooks/mutations/admin'
 import {
     Table,
     TableBody,

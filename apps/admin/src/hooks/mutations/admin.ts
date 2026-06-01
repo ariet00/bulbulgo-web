@@ -14,8 +14,8 @@ import {
     BookingOnboardRequest,
     CeleryPeriodicTaskCreate,
     CeleryPeriodicTaskUpdate,
-} from '../../apis/admin'
-import { adminKeys } from '../queries/admin'
+} from '@/apis/admin'
+import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
 export const useAdminBanUser = () => {

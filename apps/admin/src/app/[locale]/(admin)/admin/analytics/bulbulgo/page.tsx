@@ -5,10 +5,11 @@ import {
     useAdminRideshareFunnel,
     useAdminRideshareSummary,
     useAdminRideshareTopDrivers,
+    useAdminRideshareTopActiveUsers,
     useAdminRideshareTopRoutes,
     useAdminRideshareTripsByDay,
     useAdminRideshareInstallsByDay,
-} from '@doska/shared'
+} from '@/hooks/queries/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
 import {
@@ -102,6 +103,7 @@ export default function BulbulGoAnalyticsPage() {
     const [topTripsP, setTopTripsP, topTripsOver] = useCardPeriod(period, resetNonce)
     const [topPhoneP, setTopPhoneP, topPhoneOver] = useCardPeriod(period, resetNonce)
     const [topAdsP, setTopAdsP, topAdsOver] = useCardPeriod(period, resetNonce)
+    const [topActiveP, setTopActiveP, topActiveOver] = useCardPeriod(period, resetNonce)
     const [routesP, setRoutesP, routesOver] = useCardPeriod(period, resetNonce)
 
     const funnel = useAdminRideshareFunnel(funnelP)
@@ -111,6 +113,7 @@ export default function BulbulGoAnalyticsPage() {
     const topByTrips = useAdminRideshareTopDrivers(topTripsP, 20, 'trips_created')
     const topByPhone = useAdminRideshareTopDrivers(topPhoneP, 20, 'phone_views')
     const topByAds = useAdminRideshareTopDrivers(topAdsP, 20, 'trip_views')
+    const topActive = useAdminRideshareTopActiveUsers(topActiveP, 20)
     const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
 
     const isFetching =
@@ -121,6 +124,7 @@ export default function BulbulGoAnalyticsPage() {
         topByTrips.isFetching ||
         topByPhone.isFetching ||
         topByAds.isFetching ||
+        topActive.isFetching ||
         topRoutes.isFetching
     const refetchAll = () => {
         funnel.refetch()
@@ -130,6 +134,7 @@ export default function BulbulGoAnalyticsPage() {
         topByTrips.refetch()
         topByPhone.refetch()
         topByAds.refetch()
+        topActive.refetch()
         topRoutes.refetch()
     }
 
@@ -296,6 +301,81 @@ export default function BulbulGoAnalyticsPage() {
                 onPeriodChange={setTopAdsP}
                 overridden={topAdsOver}
             />
+
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                    <CardTitle>Топ активных пользователей ({topActiveP})</CardTitle>
+                    <PeriodPicker
+                        value={topActiveP}
+                        onChange={setTopActiveP}
+                        overridden={topActiveOver}
+                    />
+                </CardHeader>
+                <CardContent>
+                    {topActive.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !topActive.data || topActive.data.users.length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных</div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-10">#</TableHead>
+                                    <TableHead>Пользователь</TableHead>
+                                    <TableHead>Телефон</TableHead>
+                                    <TableHead className="w-32 text-right font-semibold">
+                                        Событий
+                                    </TableHead>
+                                    <TableHead
+                                        className="w-28 text-right"
+                                        title="Дней с хотя бы одним событием в периоде"
+                                    >
+                                        Активных дней
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {topActive.data.users.map((u, i) => (
+                                    <TableRow key={u.user_id}>
+                                        <TableCell className="text-muted-foreground tabular-nums">
+                                            {i + 1}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link
+                                                href={`/admin/analytics/users/${u.user_id}`}
+                                                className="flex items-center gap-2 hover:underline"
+                                            >
+                                                {u.avatar_url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={u.avatar_url}
+                                                        alt=""
+                                                        className="w-7 h-7 rounded-full object-cover bg-muted"
+                                                    />
+                                                ) : (
+                                                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                                        {(u.name ?? '?').slice(0, 1).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span>{u.name ?? `user #${u.user_id}`}</span>
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm text-muted-foreground">
+                                            {u.phone ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums font-semibold">
+                                            {u.events.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                                            {u.active_days}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">

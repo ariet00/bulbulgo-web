@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminAnalytics } from '@doska/shared'
+import { useAdminAnalytics } from '@/hooks/queries/admin'
 import { Users, FileText, MessageSquare, CheckCircle, Building2, Smartphone, Monitor, Globe, Info } from 'lucide-react'
 import { Card, CardContent } from "@doska/ui"
 import { Link } from '@doska/i18n'

@@ -2,7 +2,7 @@ import { AxiosResponse } from 'axios'
 
 import { requester } from '../lib/requester'
 
-import type { Page } from './admin'
+import type { Page } from '../types'
 
 const responseBody = <T>(response: AxiosResponse<T>) => response.data
 

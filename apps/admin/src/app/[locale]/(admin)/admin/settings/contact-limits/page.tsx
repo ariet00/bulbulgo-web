@@ -1,10 +1,8 @@
 'use client'
 
-import {
-    type AdminContactLimitsSettings,
-    useAdminContactLimitsSettings,
-    useUpdateAdminContactLimitsSettings,
-} from '@doska/shared'
+import { type AdminContactLimitsSettings } from '@/apis/admin'
+import { useAdminContactLimitsSettings } from '@/hooks/queries/admin'
+import { useUpdateAdminContactLimitsSettings } from '@/hooks/mutations/admin'
 import {
     Button,
     Card,

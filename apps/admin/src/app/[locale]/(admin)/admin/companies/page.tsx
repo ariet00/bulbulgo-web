@@ -1,6 +1,8 @@
 'use client'
 
-import { useAdminCompanies, useAdminDeleteCompany, useDebounce } from '@doska/shared'
+import { useAdminCompanies } from '@/hooks/queries/admin'
+import { useAdminDeleteCompany } from '@/hooks/mutations/admin'
+import { useDebounce } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import {
     Badge,

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useAdminChats, useDebounce } from '@doska/shared'
+import { useAdminChats } from '@/hooks/queries/admin'
+import { useDebounce } from '@doska/shared'
 import {
     Table,
     TableBody,

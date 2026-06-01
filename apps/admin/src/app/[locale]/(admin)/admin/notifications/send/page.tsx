@@ -1,13 +1,15 @@
 'use client'
 
+import { AdminBroadcastFilters } from '@/apis/admin'
 import {
-    AdminBroadcastFilters,
-    useAdminBroadcastNotification,
     useAdminNotificationRoles,
     useAdminPreviewAudience,
+} from '@/hooks/queries/admin'
+import {
+    useAdminBroadcastNotification,
     useAdminScheduleNotification,
     useAdminSendNotification,
-} from '@doska/shared'
+} from '@/hooks/mutations/admin'
 import {
     Badge,
     Button,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminBookingBots } from '@doska/shared'
+import { useAdminBookingBots } from '@/hooks/queries/admin'
 import {
     Badge,
     Button,

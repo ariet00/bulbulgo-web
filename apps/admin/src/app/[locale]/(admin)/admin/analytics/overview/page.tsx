@@ -8,8 +8,8 @@ import {
     useAdminAnalyticsPlatforms,
     useAdminAnalyticsProducts,
     useAdminAnalyticsTopEvents,
-    useSetAnalyticsMiddlewareToggle,
-} from '@doska/shared'
+} from '@/hooks/queries/admin'
+import { useSetAnalyticsMiddlewareToggle } from '@/hooks/mutations/admin'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import {

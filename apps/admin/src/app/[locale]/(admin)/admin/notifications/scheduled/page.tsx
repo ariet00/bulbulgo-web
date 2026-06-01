@@ -1,10 +1,8 @@
 'use client'
 
-import {
-    AdminScheduledNotification,
-    useAdminCancelScheduledNotification,
-    useAdminScheduledNotifications,
-} from '@doska/shared'
+import { AdminScheduledNotification } from '@/apis/admin'
+import { useAdminCancelScheduledNotification } from '@/hooks/mutations/admin'
+import { useAdminScheduledNotifications } from '@/hooks/queries/admin'
 import {
     Badge,
     Button,

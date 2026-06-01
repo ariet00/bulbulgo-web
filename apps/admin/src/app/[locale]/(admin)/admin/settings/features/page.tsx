@@ -1,10 +1,8 @@
 'use client'
 
-import {
-    type AdminAppFeaturesSettings,
-    useAdminAppFeaturesSettings,
-    useUpdateAdminAppFeaturesSettings,
-} from '@doska/shared'
+import { type AdminAppFeaturesSettings } from '@/apis/admin'
+import { useAdminAppFeaturesSettings } from '@/hooks/queries/admin'
+import { useUpdateAdminAppFeaturesSettings } from '@/hooks/mutations/admin'
 import {
     Button,
     Card,

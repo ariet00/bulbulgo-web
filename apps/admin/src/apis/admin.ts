@@ -1,12 +1,6 @@
-import { requester } from '../lib/requester'
+import { requester } from '@doska/shared'
+import type { Page } from '@doska/shared'
 import { AxiosResponse } from 'axios'
-
-export interface Page<T> {
-    items: T[]
-    total: number
-    page: number
-    size: number
-}
 
 const responseBody = <T>(response: AxiosResponse<T>) => response.data
 
@@ -46,6 +40,12 @@ export const adminApi = {
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     banUser: (id: number, isActive: boolean) =>
         requests.put<any>(`/admin/users/${id}/ban?is_active=${isActive}`, {}),
+    getUserDevices: (id: number) =>
+        requests.get<AdminDeviceToken[]>(`/admin/users/${id}/devices`),
+    getUserSessions: (id: number) =>
+        requests.get<AdminUserSession[]>(`/admin/users/${id}/sessions`),
+    getUserTripsSummary: (id: number) =>
+        requests.get<AdminUserTripsSummary>(`/admin/users/${id}/trips-summary`),
 
     // Companies
     getCompanies: (page = 1, size = 40, q?: string, type?: string) => {
@@ -240,6 +240,20 @@ export const adminApi = {
             event_types: string[]
         }>(`/admin/analytics/users/${userId}/daily-activity?${qs.toString()}`)
     },
+    getUserEngagement: (userId: number, period: string = '30d', product?: string) => {
+        const qs = new URLSearchParams({ period })
+        if (product) qs.set('product', product)
+        return requests.get<AdminUserEngagement>(
+            `/admin/analytics/users/${userId}/engagement?${qs.toString()}`,
+        )
+    },
+    getUserPlatforms: (userId: number, period: string = '30d', product?: string) => {
+        const qs = new URLSearchParams({ period })
+        if (product) qs.set('product', product)
+        return requests.get<AdminUserPlatformRow[]>(
+            `/admin/analytics/users/${userId}/platforms?${qs.toString()}`,
+        )
+    },
     getAnalyticsMiddlewareToggle: () =>
         requests.get<{ enabled: boolean }>('/admin/analytics/middleware/toggle'),
     setAnalyticsMiddlewareToggle: (enabled: boolean) =>
@@ -320,6 +334,20 @@ export const adminApi = {
         }>(
             `/admin/rideshare/analytics/top-drivers?period=${period}&limit=${limit}&sort_by=${sortBy}`,
         ),
+    getRideshareTopActiveUsers: (period: string = '7d', limit: number = 20) =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            users: Array<{
+                user_id: number
+                name: string | null
+                phone: string | null
+                avatar_url: string | null
+                events: number
+                active_days: number
+            }>
+        }>(`/admin/rideshare/analytics/top-active-users?period=${period}&limit=${limit}`),
     getRideshareTopRoutes: (period: string = '7d', limit: number = 20) =>
         requests.get<{
             period: string
@@ -386,6 +414,55 @@ export const adminApi = {
         requests.get<AdminContactLimitsSettings>('/admin/settings/contact-limits'),
     updateContactLimitsSettings: (body: AdminContactLimitsSettings) =>
         requests.put<AdminContactLimitsSettings>('/admin/settings/contact-limits', body),
+}
+
+export interface AdminDeviceToken {
+    id: number
+    device_id: string | null
+    device_type: string
+    device_info: string | null
+    app_version: string | null
+    token: string
+    created_at: string
+}
+
+export interface AdminUserSession {
+    id: number
+    device_id: string | null
+    device_info: string | null
+    ip_address: string | null
+    app_version: string | null
+    last_used_at: string | null
+    is_active: boolean
+    created_at: string
+}
+
+export interface AdminUserTripsSummary {
+    total: number
+    driver: number
+    passenger: number
+    active: number
+    completed: number
+    cancelled: number
+    by_type: Array<{ trip_type: string | null; count: number }>
+}
+
+export interface AdminUserEngagement {
+    searches: number
+    bookings: number
+    completed: number
+    phone_views_made: number
+    phone_views_received: number
+    phone_views_fast_made: number
+    trip_views_made: number
+    trip_views_received: number
+}
+
+export interface AdminUserPlatformRow {
+    platform: string | null
+    app_version: string | null
+    events: number
+    last_seen: string
 }
 
 export interface AdminAppVersionSettings {

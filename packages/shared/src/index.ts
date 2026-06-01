@@ -1,4 +1,3 @@
-export * from './apis/admin'
 export * from './apis/analytics'
 export * from './apis/auth'
 export * from './apis/chat'
@@ -17,7 +16,6 @@ export * from './apis/users'
 export * from './apis/trips'
 export * from './apis/parser'
 
-export * from './hooks/queries/admin'
 export * from './hooks/queries/parser'
 export * from './hooks/queries/contentManager'
 export * from './hooks/queries/instagram'
@@ -37,7 +35,6 @@ export * from './hooks/useDebounce'
 
 export { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
-export * from './hooks/mutations/admin'
 export * from './hooks/mutations/parser'
 export * from './hooks/mutations/contentManager'
 export * from './hooks/mutations/instagram'

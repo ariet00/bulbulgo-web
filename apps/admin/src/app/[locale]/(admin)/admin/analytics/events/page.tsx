@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAdminAnalyticsEvents } from '@doska/shared'
+import { useAdminAnalyticsEvents } from '@/hooks/queries/admin'
 import {
     Table,
     TableBody,

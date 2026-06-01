@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminTrip } from '@doska/shared'
+import { useAdminTrip } from '@/hooks/queries/admin'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 import { BackButton } from '@doska/ui'

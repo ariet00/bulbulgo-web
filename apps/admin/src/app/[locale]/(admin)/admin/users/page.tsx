@@ -1,8 +1,9 @@
 'use client'
 
-import { useAdminBanUser, useDebounce } from '@doska/shared'
+import { useAdminBanUser } from '@/hooks/mutations/admin'
+import { useDebounce } from '@doska/shared'
 import { useState } from 'react'
-import { useAdminUsers } from '@doska/shared'
+import { useAdminUsers } from '@/hooks/queries/admin'
 import {
     Table,
     TableBody,
