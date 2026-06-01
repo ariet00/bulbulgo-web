@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react'
 import { use } from 'react'
 import {
+    useAdminAnalyticsErrorsSummary,
+    useAdminAnalyticsTopErrors,
     useAdminAnalyticsUserEvents,
     useAdminUser,
     useAdminUserDailyActivity,
@@ -28,6 +30,7 @@ import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
+import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
 
 const PERIODS = [
     { value: '7d', label: '7d' },
@@ -55,6 +58,8 @@ export default function UserAnalyticsPage({
     const tripsSummary = useAdminUserTripsSummary(uid)
     const engagement = useAdminUserEngagement(uid, period, product || undefined)
     const platforms = useAdminUserPlatforms(uid, period, product || undefined)
+    const userErrorsSummary = useAdminAnalyticsErrorsSummary(period, product || undefined, uid)
+    const userErrors = useAdminAnalyticsTopErrors(period, product || undefined, undefined, uid)
     const vehicles = useAdminVehicles(1, 40, undefined, { user_id: uid })
     const notifications = useAdminNotifications(1, 20, { user_id: uid })
 
@@ -286,6 +291,31 @@ export default function UserAnalyticsPage({
                     </CardContent>
                 </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Ошибки <span className="text-sm font-normal text-muted-foreground">({period})</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {userErrorsSummary.data && (
+                        <div className="grid gap-3 md:grid-cols-4">
+                            <Metric label="Всего" value={userErrorsSummary.data.total} />
+                            <Metric label="5xx" value={userErrorsSummary.data.server} accent="red" />
+                            <Metric label="4xx" value={userErrorsSummary.data.client} />
+                            <Metric label="422" value={userErrorsSummary.data.validation} />
+                        </div>
+                    )}
+                    {userErrors.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !userErrors.data || userErrors.data.length === 0 ? (
+                        <div className="text-muted-foreground">Нет ошибок за период</div>
+                    ) : (
+                        <ErrorSignaturesTable data={userErrors.data} />
+                    )}
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>

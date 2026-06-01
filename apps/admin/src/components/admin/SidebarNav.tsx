@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
     Activity,
+    AlertTriangle,
     BarChart,
     Bell,
     CalendarCheck,
@@ -48,6 +49,7 @@ const sections: NavSection[] = [
             { name: 'Обзор', href: '/admin/analytics/overview', icon: LineChart },
             { name: 'BulBul Go', href: '/admin/analytics/bulbulgo', icon: LineChart },
             { name: 'Версии', href: '/admin/analytics/versions', icon: LineChart },
+            { name: 'Ошибки', href: '/admin/analytics/errors', icon: AlertTriangle },
             { name: 'События', href: '/admin/analytics/events', icon: Activity },
         ],
     },

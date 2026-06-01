@@ -254,17 +254,64 @@ export const adminApi = {
             `/admin/analytics/users/${userId}/platforms?${qs.toString()}`,
         )
     },
-    getErrorsSummary: (period: string = '7d', product?: string) => {
-        const qs = new URLSearchParams({ period })
-        if (product) qs.set('product', product)
+    getErrorsSummary: (params: { period?: string; product?: string; user_id?: number }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
         return requests.get<{
             total: number
             server: number
             client: number
             validation: number
+            users: number
         }>(`/admin/analytics/errors/summary?${qs.toString()}`)
     },
     getTopErrors: (params: {
+        period?: string
+        product?: string
+        status_class?: string
+        user_id?: number
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminErrorGroup[]>(`/admin/analytics/errors?${qs.toString()}`)
+    },
+    getErrorsTimeseries: (params: {
+        period?: string
+        granularity?: string
+        product?: string
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<
+            Array<{
+                bucket: string
+                server: number
+                client: number
+                validation: number
+                total: number
+            }>
+        >(`/admin/analytics/errors/timeseries?${qs.toString()}`)
+    },
+    getErrorsByUser: (params: {
+        period?: string
+        product?: string
+        status_class?: string
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminErrorUser[]>(`/admin/analytics/errors/by-user?${qs.toString()}`)
+    },
+    getErrorsByPath: (params: {
         period?: string
         product?: string
         status_class?: string
@@ -275,18 +322,22 @@ export const adminApi = {
             if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
         })
         return requests.get<
-            Array<{
-                kind: string | null
-                status: string | null
-                error_type: string | null
-                error_code: string | null
-                count: number
-                paths: number
-                sample_path: string | null
-                sample_message: string | null
-                last_seen: string
-            }>
-        >(`/admin/analytics/errors?${qs.toString()}`)
+            Array<{ path: string | null; count: number; users: number }>
+        >(`/admin/analytics/errors/by-path?${qs.toString()}`)
+    },
+    getErrorSignatureUsers: (params: {
+        period?: string
+        product?: string
+        kind?: string | null
+        status?: string | null
+        error_type?: string | null
+        error_code?: string | null
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminErrorUser[]>(`/admin/analytics/errors/users?${qs.toString()}`)
     },
     getAnalyticsMiddlewareToggle: () =>
         requests.get<{ enabled: boolean }>('/admin/analytics/middleware/toggle'),
@@ -496,6 +547,28 @@ export interface AdminUserPlatformRow {
     platform: string | null
     app_version: string | null
     events: number
+    last_seen: string
+}
+
+export interface AdminErrorGroup {
+    kind: string | null
+    status: string | null
+    error_type: string | null
+    error_code: string | null
+    count: number
+    users: number
+    paths: number
+    sample_path: string | null
+    sample_message: string | null
+    first_seen: string
+    last_seen: string
+}
+
+export interface AdminErrorUser {
+    user_id: number
+    name: string | null
+    avatar_url: string | null
+    count: number
     last_seen: string
 }
 

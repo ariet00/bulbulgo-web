@@ -298,10 +298,14 @@ export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: stri
     })
 }
 
-export const useAdminAnalyticsErrorsSummary = (period: string = '7d', product?: string) => {
+export const useAdminAnalyticsErrorsSummary = (
+    period: string = '7d',
+    product?: string,
+    userId?: number,
+) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'errors-summary', period, product ?? null],
-        queryFn: () => adminApi.getErrorsSummary(period, product),
+        queryKey: [...adminKeys.analytics(), 'errors-summary', period, product ?? null, userId ?? null],
+        queryFn: () => adminApi.getErrorsSummary({ period, product, user_id: userId }),
     })
 }
 
@@ -309,11 +313,65 @@ export const useAdminAnalyticsTopErrors = (
     period: string = '7d',
     product?: string,
     statusClass?: string,
+    userId?: number,
     limit: number = 30,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'errors', period, product ?? null, statusClass ?? null, limit],
-        queryFn: () => adminApi.getTopErrors({ period, product, status_class: statusClass, limit }),
+        queryKey: [...adminKeys.analytics(), 'errors', period, product ?? null, statusClass ?? null, userId ?? null, limit],
+        queryFn: () =>
+            adminApi.getTopErrors({ period, product, status_class: statusClass, user_id: userId, limit }),
+    })
+}
+
+export const useAdminAnalyticsErrorsTimeseries = (
+    period: string = '7d',
+    granularity: string = 'day',
+    product?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'errors-timeseries', period, granularity, product ?? null],
+        queryFn: () => adminApi.getErrorsTimeseries({ period, granularity, product }),
+    })
+}
+
+export const useAdminAnalyticsErrorsByUser = (
+    period: string = '7d',
+    product?: string,
+    statusClass?: string,
+    limit: number = 30,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'errors-by-user', period, product ?? null, statusClass ?? null, limit],
+        queryFn: () => adminApi.getErrorsByUser({ period, product, status_class: statusClass, limit }),
+    })
+}
+
+export const useAdminAnalyticsErrorsByPath = (
+    period: string = '7d',
+    product?: string,
+    statusClass?: string,
+    limit: number = 30,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'errors-by-path', period, product ?? null, statusClass ?? null, limit],
+        queryFn: () => adminApi.getErrorsByPath({ period, product, status_class: statusClass, limit }),
+    })
+}
+
+export const useAdminAnalyticsErrorSignatureUsers = (
+    signature: {
+        kind: string | null
+        status: string | null
+        error_type: string | null
+        error_code: string | null
+    } | null,
+    period: string = '7d',
+    product?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'error-signature-users', signature, period, product ?? null],
+        queryFn: () => adminApi.getErrorSignatureUsers({ ...signature!, period, product }),
+        enabled: !!signature,
     })
 }
 
