@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { use } from 'react'
+import { useDebounce } from '@doska/shared'
 import {
     useAdminAnalyticsErrorsSummary,
     useAdminAnalyticsTopErrors,
@@ -25,7 +26,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
-import { Button, Input } from '@doska/ui'
+import { Button, Input, Pagination } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
@@ -52,10 +53,32 @@ export default function UserAnalyticsPage({
     const [eventSearch, setEventSearch] = useState('')
     const [eventFrom, setEventFrom] = useState('')
     const [eventTo, setEventTo] = useState('')
+    const [eventPage, setEventPage] = useState(1)
+    const [eventSize, setEventSize] = useState(50)
 
     const profile = useAdminUser(uid)
     const activity = useAdminUserDailyActivity(uid, period, product || undefined)
-    const events = useAdminAnalyticsUserEvents(uid, 1, 100, product || undefined)
+    const debouncedEventSearch = useDebounce(eventSearch, 300)
+    const eventFilters = useMemo(
+        () => ({
+            event_type: debouncedEventSearch.trim() || undefined,
+            from_date: eventFrom ? new Date(eventFrom).toISOString() : undefined,
+            to_date: eventTo ? new Date(eventTo).toISOString() : undefined,
+        }),
+        [debouncedEventSearch, eventFrom, eventTo],
+    )
+    const events = useAdminAnalyticsUserEvents(
+        uid,
+        eventPage,
+        eventSize,
+        product || undefined,
+        eventFilters,
+    )
+
+    // сбрасываем на первую страницу при изменении фильтров/продукта
+    useEffect(() => {
+        setEventPage(1)
+    }, [eventFilters, product])
     const devices = useAdminUserDevices(uid)
     const sessions = useAdminUserSessions(uid)
     const tripsSummary = useAdminUserTripsSummary(uid)
@@ -82,19 +105,8 @@ export default function UserAnalyticsPage({
         return { topEventTypes, totalEvents, activeDays: activity.data.days.length }
     }, [activity.data])
 
-    const filteredEvents = useMemo(() => {
-        const items = events.data?.items ?? []
-        const q = eventSearch.trim().toLowerCase()
-        const fromTs = eventFrom ? new Date(eventFrom).getTime() : null
-        const toTs = eventTo ? new Date(eventTo).getTime() : null
-        return items.filter((ev: any) => {
-            if (q && !String(ev.event_type ?? '').toLowerCase().includes(q)) return false
-            const ts = new Date(ev.created_at).getTime()
-            if (fromTs != null && ts < fromTs) return false
-            if (toTs != null && ts > toTs) return false
-            return true
-        })
-    }, [events.data, eventSearch, eventFrom, eventTo])
+    const eventItems = events.data?.items ?? []
+    const hasEventFilter = !!(eventSearch || eventFrom || eventTo)
 
     const isFetching =
         activity.isFetching ||
@@ -664,7 +676,9 @@ export default function UserAnalyticsPage({
                     <CardTitle>
                         Лента событий{' '}
                         <span className="text-sm font-normal text-muted-foreground">
-                            (показано {filteredEvents.length} из {events.data?.items.length ?? 0})
+                            {hasEventFilter
+                                ? `(найдено ${events.data?.total ?? 0})`
+                                : `(всего ${events.data?.total ?? 0})`}
                         </span>
                     </CardTitle>
                     <div className="flex flex-wrap items-end gap-3">
@@ -713,8 +727,10 @@ export default function UserAnalyticsPage({
                 <CardContent>
                     {events.isLoading ? (
                         <div>Загрузка…</div>
-                    ) : filteredEvents.length === 0 ? (
-                        <div className="text-muted-foreground">Нет событий по фильтру</div>
+                    ) : eventItems.length === 0 ? (
+                        <div className="text-muted-foreground">
+                            {hasEventFilter ? 'Нет событий по фильтру' : 'Нет событий'}
+                        </div>
                     ) : (
                         <Table>
                             <TableHeader>
@@ -726,7 +742,7 @@ export default function UserAnalyticsPage({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredEvents.map((ev: any) => (
+                                {eventItems.map((ev: any) => (
                                     <TableRow key={ev.id}>
                                         <TableCell className="text-xs whitespace-nowrap">
                                             {new Date(ev.created_at).toLocaleString()}
@@ -740,6 +756,18 @@ export default function UserAnalyticsPage({
                                 ))}
                             </TableBody>
                         </Table>
+                    )}
+                    {events.data && events.data.total > 0 && (
+                        <Pagination
+                            page={events.data.page}
+                            total={events.data.total}
+                            size={events.data.size}
+                            onPageChange={setEventPage}
+                            onSizeChange={s => {
+                                setEventSize(s)
+                                setEventPage(1)
+                            }}
+                        />
                     )}
                 </CardContent>
             </Card>

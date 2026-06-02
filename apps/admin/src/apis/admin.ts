@@ -225,9 +225,18 @@ export const adminApi = {
             }>
         >(`/admin/analytics/app-versions?${qs.toString()}`)
     },
-    getUserAnalyticsEvents: (userId: number, page = 1, size = 100, product?: string) => {
+    getUserAnalyticsEvents: (
+        userId: number,
+        page = 1,
+        size = 100,
+        product?: string,
+        filters?: { event_type?: string; from_date?: string; to_date?: string },
+    ) => {
         const qs = new URLSearchParams({ page: String(page), size: String(size) })
         if (product) qs.set('product', product)
+        if (filters?.event_type) qs.set('event_type', filters.event_type)
+        if (filters?.from_date) qs.set('from_date', filters.from_date)
+        if (filters?.to_date) qs.set('to_date', filters.to_date)
         return requests.get<Page<any>>(
             `/admin/analytics/users/${userId}/events?${qs.toString()}`,
         )

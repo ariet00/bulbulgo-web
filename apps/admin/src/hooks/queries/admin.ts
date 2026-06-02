@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
     AdminBroadcastFilters,
     AdminNotificationListParams,
@@ -416,11 +416,23 @@ export const useAdminAnalyticsUserEvents = (
     page: number = 1,
     size: number = 100,
     product?: string,
+    filters?: { event_type?: string; from_date?: string; to_date?: string },
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'user-events', userId, page, size, product ?? null],
-        queryFn: () => adminApi.getUserAnalyticsEvents(userId, page, size, product),
+        queryKey: [
+            ...adminKeys.analytics(),
+            'user-events',
+            userId,
+            page,
+            size,
+            product ?? null,
+            filters?.event_type ?? null,
+            filters?.from_date ?? null,
+            filters?.to_date ?? null,
+        ],
+        queryFn: () => adminApi.getUserAnalyticsEvents(userId, page, size, product, filters),
         enabled: !!userId,
+        placeholderData: keepPreviousData,
     })
 }
 
