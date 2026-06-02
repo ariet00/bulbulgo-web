@@ -358,6 +358,18 @@ export const useAdminAnalyticsErrorsByPath = (
     })
 }
 
+export const useAdminAnalyticsErrorsByVersion = (
+    period: string = '7d',
+    product?: string,
+    statusClass?: string,
+    limit: number = 30,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'errors-by-version', period, product ?? null, statusClass ?? null, limit],
+        queryFn: () => adminApi.getErrorsByVersion({ period, product, status_class: statusClass, limit }),
+    })
+}
+
 export const useAdminAnalyticsErrorSignatureUsers = (
     signature: {
         kind: string | null

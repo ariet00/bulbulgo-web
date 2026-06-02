@@ -325,6 +325,25 @@ export const adminApi = {
             Array<{ path: string | null; count: number; users: number }>
         >(`/admin/analytics/errors/by-path?${qs.toString()}`)
     },
+    getErrorsByVersion: (params: {
+        period?: string
+        product?: string
+        status_class?: string
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<
+            Array<{
+                platform: string | null
+                app_version: string | null
+                count: number
+                users: number
+            }>
+        >(`/admin/analytics/errors/by-version?${qs.toString()}`)
+    },
     getErrorSignatureUsers: (params: {
         period?: string
         product?: string

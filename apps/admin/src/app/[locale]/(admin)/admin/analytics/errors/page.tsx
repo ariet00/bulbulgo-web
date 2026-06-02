@@ -4,6 +4,7 @@ import { useState } from 'react'
 import {
     useAdminAnalyticsErrorsByPath,
     useAdminAnalyticsErrorsByUser,
+    useAdminAnalyticsErrorsByVersion,
     useAdminAnalyticsErrorsSummary,
     useAdminAnalyticsErrorsTimeseries,
     useAdminAnalyticsErrorSignatureUsers,
@@ -50,6 +51,7 @@ export default function AnalyticsErrorsPage() {
     const errors = useAdminAnalyticsTopErrors(period, prod, cls)
     const byUser = useAdminAnalyticsErrorsByUser(period, prod, cls)
     const byPath = useAdminAnalyticsErrorsByPath(period, prod, cls)
+    const byVersion = useAdminAnalyticsErrorsByVersion(period, prod, cls)
     const signatureUsers = useAdminAnalyticsErrorSignatureUsers(selected, period, prod)
 
     const isFetching =
@@ -57,13 +59,15 @@ export default function AnalyticsErrorsPage() {
         timeseries.isFetching ||
         errors.isFetching ||
         byUser.isFetching ||
-        byPath.isFetching
+        byPath.isFetching ||
+        byVersion.isFetching
     const refreshAll = () => {
         summary.refetch()
         timeseries.refetch()
         errors.refetch()
         byUser.refetch()
         byPath.refetch()
+        byVersion.refetch()
         if (selected) signatureUsers.refetch()
     }
 
@@ -231,6 +235,46 @@ export default function AnalyticsErrorsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ошибки по версиям приложения ({period})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {byVersion.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !byVersion.data || byVersion.data.length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных</div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Платформа</TableHead>
+                                    <TableHead>Версия</TableHead>
+                                    <TableHead className="w-24 text-right">Ошибок</TableHead>
+                                    <TableHead className="w-24 text-right">Юзеров</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {byVersion.data.map((row, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell className="font-mono text-sm">
+                                            {row.platform ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm">
+                                            {row.app_version ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-right font-semibold">
+                                            {row.count}
+                                        </TableCell>
+                                        <TableCell className="text-right">{row.users}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     )
 }
