@@ -33,6 +33,14 @@ const PERIODS: Array<{ value: string; label: string }> = [
     { value: '90d', label: '90d' },
 ]
 
+// Russian labels for the driver/passenger role dimension.
+const ROLE_LABELS: Record<string, string> = {
+    driver: 'водители',
+    passenger: 'пассажиры',
+    unknown: '—',
+}
+const roleLabel = (role: string | null) => (role ? ROLE_LABELS[role] ?? role : '—')
+
 // Per-card period override. Falls back to the global period and resets itself
 // (back to global) whenever the global period changes — keyed by `resetNonce`,
 // which the top-level selector bumps so even re-picking the same global value
@@ -108,7 +116,9 @@ export default function BulbulGoAnalyticsPage() {
 
     const funnel = useAdminRideshareFunnel(funnelP)
     const summary = useAdminRideshareSummary(summaryP)
-    const tripsByDay = useAdminRideshareTripsByDay(tripsP)
+    // Same period, two stackings shown side by side: by trip type and by role.
+    const tripsByType = useAdminRideshareTripsByDay(tripsP, 'type')
+    const tripsByRole = useAdminRideshareTripsByDay(tripsP, 'role')
     const installsByDay = useAdminRideshareInstallsByDay(installsP)
     const topByTrips = useAdminRideshareTopDrivers(topTripsP, 20, 'trips_created')
     const topByPhone = useAdminRideshareTopDrivers(topPhoneP, 20, 'phone_views')
@@ -119,7 +129,8 @@ export default function BulbulGoAnalyticsPage() {
     const isFetching =
         funnel.isFetching ||
         summary.isFetching ||
-        tripsByDay.isFetching ||
+        tripsByType.isFetching ||
+        tripsByRole.isFetching ||
         installsByDay.isFetching ||
         topByTrips.isFetching ||
         topByPhone.isFetching ||
@@ -129,7 +140,8 @@ export default function BulbulGoAnalyticsPage() {
     const refetchAll = () => {
         funnel.refetch()
         summary.refetch()
-        tripsByDay.refetch()
+        tripsByType.refetch()
+        tripsByRole.refetch()
         installsByDay.refetch()
         topByTrips.refetch()
         topByPhone.refetch()
@@ -186,11 +198,20 @@ export default function BulbulGoAnalyticsPage() {
                         value={summary.data?.active_now}
                         loading={summary.isLoading}
                         hint={
-                            summary.data && summary.data.active_by_type.length > 0
-                                ? summary.data.active_by_type
-                                      .map(t => `${t.trip_type ?? '—'}: ${t.count}`)
-                                      .join(' · ')
-                                : 'без разбивки'
+                            summary.data
+                                ? [
+                                      summary.data.active_by_type.length > 0
+                                          ? `тип — ${summary.data.active_by_type
+                                                .map(t => `${t.trip_type ?? '—'}: ${t.count}`)
+                                                .join(' · ')}`
+                                          : 'тип — без разбивки',
+                                      summary.data.active_by_role.length > 0
+                                          ? `роль — ${summary.data.active_by_role
+                                                .map(r => `${roleLabel(r.role)}: ${r.count}`)
+                                                .join(' · ')}`
+                                          : 'роль — без разбивки',
+                                  ]
+                                : undefined
                         }
                     />
                     <StatCard
@@ -226,18 +247,13 @@ export default function BulbulGoAnalyticsPage() {
                     <CardTitle>Поездки по дням ({tripsP})</CardTitle>
                     <PeriodPicker value={tripsP} onChange={setTripsP} overridden={tripsOver} />
                 </CardHeader>
-                <CardContent>
-                    {tripsByDay.isLoading ? (
-                        <div>Загрузка…</div>
-                    ) : !tripsByDay.data || tripsByDay.data.days.length === 0 ? (
-                        <div className="text-muted-foreground">Нет данных</div>
-                    ) : (
-                        <DailyStackedBarChart
-                            data={[...tripsByDay.data.days].reverse()}
-                            eventTypes={tripsByDay.data.trip_types}
-                            granularity={tripsByDay.data.granularity}
-                        />
-                    )}
+                <CardContent className="grid gap-6 lg:grid-cols-2">
+                    <TripsByDayBlock title="По типам" query={tripsByType} />
+                    <TripsByDayBlock
+                        title="По ролям"
+                        query={tripsByRole}
+                        seriesLabels={ROLE_LABELS}
+                    />
                 </CardContent>
             </Card>
 
@@ -636,6 +652,34 @@ function TopDriversCard({
     )
 }
 
+function TripsByDayBlock({
+    title,
+    query,
+    seriesLabels,
+}: {
+    title: string
+    query: ReturnType<typeof useAdminRideshareTripsByDay>
+    seriesLabels?: Record<string, string>
+}) {
+    return (
+        <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">{title}</div>
+            {query.isLoading ? (
+                <div>Загрузка…</div>
+            ) : !query.data || query.data.days.length === 0 ? (
+                <div className="text-muted-foreground">Нет данных</div>
+            ) : (
+                <DailyStackedBarChart
+                    data={[...query.data.days].reverse()}
+                    eventTypes={query.data.trip_types}
+                    granularity={query.data.granularity}
+                    seriesLabels={seriesLabels}
+                />
+            )}
+        </div>
+    )
+}
+
 function StatCard({
     title,
     value,
@@ -645,8 +689,9 @@ function StatCard({
     title: string
     value: number | string | undefined
     loading?: boolean
-    hint?: string
+    hint?: string | string[]
 }) {
+    const hints = hint === undefined ? [] : Array.isArray(hint) ? hint : [hint]
     return (
         <Card>
             <CardHeader className="pb-2">
@@ -664,9 +709,13 @@ function StatCard({
                         ? value.toLocaleString()
                         : value}
                 </div>
-                {hint && (
-                    <div className="text-xs text-muted-foreground mt-1 truncate" title={hint}>
-                        {hint}
+                {hints.length > 0 && (
+                    <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                        {hints.map((h, i) => (
+                            <div key={i} className="truncate" title={h}>
+                                {h}
+                            </div>
+                        ))}
                     </div>
                 )}
             </CardContent>

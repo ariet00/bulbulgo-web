@@ -434,10 +434,13 @@ export const useAdminRideshareSummary = (period: string = '7d') => {
     })
 }
 
-export const useAdminRideshareTripsByDay = (period: string = '7d') => {
+export const useAdminRideshareTripsByDay = (
+    period: string = '7d',
+    groupBy: 'type' | 'role' = 'type',
+) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'rideshare', 'trips-by-day', period],
-        queryFn: () => adminApi.getRideshareTripsByDay(period),
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'trips-by-day', period, groupBy],
+        queryFn: () => adminApi.getRideshareTripsByDay(period, groupBy),
     })
 }
 

@@ -176,10 +176,12 @@ export function DailyStackedBarChart({
     data,
     eventTypes,
     granularity = 'day',
+    seriesLabels,
 }: {
     data: Array<{ day: string; events: Record<string, number>; total: number }>
     eventTypes: string[]
     granularity?: 'minute' | 'hour' | 'day'
+    seriesLabels?: Record<string, string> // dataKey -> display name (legend/tooltip)
 }) {
     const t = useChartTheme()
     // Convert {day, events: {type: n}} → flat rows {day, type1: n, type2: m}
@@ -189,6 +191,7 @@ export function DailyStackedBarChart({
             day: formatBucket(d.day, granularity),
             ...d.events,
         }))
+    const labelFor = (ev: string) => seriesLabels?.[ev] ?? ev
 
     return (
         <ResponsiveContainer width="100%" height={300}>
@@ -199,7 +202,7 @@ export function DailyStackedBarChart({
                 <Tooltip {...tooltipProps(t)} />
                 <Legend wrapperStyle={{ color: t.axis }} />
                 {eventTypes.map((ev, i) => (
-                    <Bar key={ev} dataKey={ev} stackId="events" fill={pickColor(i)} />
+                    <Bar key={ev} dataKey={ev} name={labelFor(ev)} stackId="events" fill={pickColor(i)} />
                 ))}
             </BarChart>
         </ResponsiveContainer>

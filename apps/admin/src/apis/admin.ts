@@ -365,20 +365,22 @@ export const adminApi = {
             to: string
             active_now: number
             active_by_type: Array<{ trip_type: string | null; count: number }>
+            active_by_role: Array<{ role: string | null; count: number }>
             created_in_period: number
             completed_in_period: number
             cancelled_in_period: number
             completion_rate: number
         }>(`/admin/rideshare/analytics/summary?period=${period}`),
-    getRideshareTripsByDay: (period: string = '7d') =>
+    getRideshareTripsByDay: (period: string = '7d', groupBy: 'type' | 'role' = 'type') =>
         requests.get<{
             period: string
             from_: string
             to: string
             granularity: 'minute' | 'hour' | 'day'
+            group_by: 'type' | 'role'
             days: Array<{ day: string; total: number; events: Record<string, number> }>
             trip_types: string[]
-        }>(`/admin/rideshare/analytics/trips-by-day?period=${period}`),
+        }>(`/admin/rideshare/analytics/trips-by-day?period=${period}&group_by=${groupBy}`),
     getRideshareInstallsByDay: (period: string = '7d') =>
         requests.get<{
             period: string
