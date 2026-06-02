@@ -25,7 +25,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
-import { Button } from '@doska/ui'
+import { Button, Input } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
@@ -49,6 +49,9 @@ export default function UserAnalyticsPage({
     const uid = Number(userId)
     const [period, setPeriod] = useState('30d')
     const [product, setProduct] = useState('')
+    const [eventSearch, setEventSearch] = useState('')
+    const [eventFrom, setEventFrom] = useState('')
+    const [eventTo, setEventTo] = useState('')
 
     const profile = useAdminUser(uid)
     const activity = useAdminUserDailyActivity(uid, period, product || undefined)
@@ -78,6 +81,20 @@ export default function UserAnalyticsPage({
         const totalEvents = activity.data.days.reduce((sum, d) => sum + d.total, 0)
         return { topEventTypes, totalEvents, activeDays: activity.data.days.length }
     }, [activity.data])
+
+    const filteredEvents = useMemo(() => {
+        const items = events.data?.items ?? []
+        const q = eventSearch.trim().toLowerCase()
+        const fromTs = eventFrom ? new Date(eventFrom).getTime() : null
+        const toTs = eventTo ? new Date(eventTo).getTime() : null
+        return items.filter((ev: any) => {
+            if (q && !String(ev.event_type ?? '').toLowerCase().includes(q)) return false
+            const ts = new Date(ev.created_at).getTime()
+            if (fromTs != null && ts < fromTs) return false
+            if (toTs != null && ts > toTs) return false
+            return true
+        })
+    }, [events.data, eventSearch, eventFrom, eventTo])
 
     const isFetching =
         activity.isFetching ||
@@ -643,12 +660,61 @@ export default function UserAnalyticsPage({
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Лента событий (последние 100)</CardTitle>
+                <CardHeader className="space-y-3">
+                    <CardTitle>
+                        Лента событий{' '}
+                        <span className="text-sm font-normal text-muted-foreground">
+                            (показано {filteredEvents.length} из {events.data?.items.length ?? 0})
+                        </span>
+                    </CardTitle>
+                    <div className="flex flex-wrap items-end gap-3">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs text-muted-foreground">Тип события</label>
+                            <Input
+                                value={eventSearch}
+                                onChange={e => setEventSearch(e.target.value)}
+                                placeholder="поиск по типу…"
+                                className="h-9 w-56"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs text-muted-foreground">С</label>
+                            <Input
+                                type="datetime-local"
+                                value={eventFrom}
+                                onChange={e => setEventFrom(e.target.value)}
+                                className="h-9 w-52"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs text-muted-foreground">По</label>
+                            <Input
+                                type="datetime-local"
+                                value={eventTo}
+                                onChange={e => setEventTo(e.target.value)}
+                                className="h-9 w-52"
+                            />
+                        </div>
+                        {(eventSearch || eventFrom || eventTo) && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setEventSearch('')
+                                    setEventFrom('')
+                                    setEventTo('')
+                                }}
+                            >
+                                Сбросить
+                            </Button>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {events.isLoading ? (
                         <div>Загрузка…</div>
+                    ) : filteredEvents.length === 0 ? (
+                        <div className="text-muted-foreground">Нет событий по фильтру</div>
                     ) : (
                         <Table>
                             <TableHeader>
@@ -660,7 +726,7 @@ export default function UserAnalyticsPage({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {(events.data?.items ?? []).map((ev: any) => (
+                                {filteredEvents.map((ev: any) => (
                                     <TableRow key={ev.id}>
                                         <TableCell className="text-xs whitespace-nowrap">
                                             {new Date(ev.created_at).toLocaleString()}
