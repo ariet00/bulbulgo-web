@@ -270,7 +270,7 @@ export default function UsersPage() {
                                         </TableCell>
                                         <TableCell className="capitalize">{user.provider || '—'}</TableCell>
                                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                            {user.created_at ? format(new Date(user.created_at), 'dd.MM.yyyy') : '—'}
+                                            {user.created_at ? format(new Date(user.created_at), 'dd.MM.yyyy HH:mm') : '—'}
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                                             {user.last_online_at ? format(new Date(user.last_online_at), 'dd.MM.yyyy HH:mm') : '—'}

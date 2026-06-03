@@ -23,6 +23,7 @@ export interface CompanyCreate {
     name: string;
     slug: string;
     type: string;
+    legal_form?: string; // 'ip' | 'legal'
     category?: string;
     description?: string;
     settings?: Record<string, any>;

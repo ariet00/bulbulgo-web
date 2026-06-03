@@ -9,7 +9,9 @@ const intlMiddleware = createMiddleware(routing);
 const protectedPathPrefixes = [
     "/dashboard",
     "/account",
-    "/messages"
+    "/messages",
+    "/my-companies",
+    "/company",
 ];
 
 export async function proxy(req: NextRequest) {
