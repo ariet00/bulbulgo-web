@@ -115,6 +115,9 @@ export default function AdminSendNotificationPage() {
     const [minVersion, setMinVersion] = useState('')
     const [maxVersion, setMaxVersion] = useState('')
     const [guestsOnly, setGuestsOnly] = useState(false)
+    // Explicit targeting (allowlists), comma/space/newline separated
+    const [userIdsRaw, setUserIdsRaw] = useState('')
+    const [deviceIdsRaw, setDeviceIdsRaw] = useState('')
 
     const { data: roles } = useAdminNotificationRoles()
 
@@ -143,6 +146,26 @@ export default function AdminSendNotificationPage() {
         }
     }, [dataJson])
 
+    const userIds = useMemo(
+        () =>
+            userIdsRaw
+                .split(/[\s,]+/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .map(Number)
+                .filter((n) => Number.isInteger(n) && n > 0),
+        [userIdsRaw],
+    )
+    const deviceIds = useMemo(
+        () =>
+            deviceIdsRaw
+                .split(/[\s,\n]+/)
+                .map((s) => s.trim())
+                .filter(Boolean),
+        [deviceIdsRaw],
+    )
+    const explicitTargeting = userIds.length > 0 || deviceIds.length > 0
+
     const broadcastFilters: AdminBroadcastFilters = useMemo(
         () => ({
             role_id: guestsOnly ? null : roleId === ALL ? null : Number(roleId),
@@ -151,8 +174,10 @@ export default function AdminSendNotificationPage() {
             min_version: minVersion.trim() || null,
             max_version: maxVersion.trim() || null,
             guests_only: guestsOnly || null,
+            user_ids: userIds.length > 0 ? userIds : null,
+            device_ids: deviceIds.length > 0 ? deviceIds : null,
         }),
-        [roleId, isActive, deviceType, minVersion, maxVersion, guestsOnly],
+        [roleId, isActive, deviceType, minVersion, maxVersion, guestsOnly, userIds, deviceIds],
     )
 
     const {
@@ -186,6 +211,8 @@ export default function AdminSendNotificationPage() {
         setMinVersion(tpl.filters.min_version ?? '')
         setMaxVersion(tpl.filters.max_version ?? '')
         setGuestsOnly(!!tpl.filters.guests_only)
+        setUserIdsRaw((tpl.filters.user_ids ?? []).join(', '))
+        setDeviceIdsRaw((tpl.filters.device_ids ?? []).join('\n'))
     }
 
     const saveTemplate = () => {
@@ -403,6 +430,51 @@ export default function AdminSendNotificationPage() {
                                     мин-фильтром, но проходят макс-фильтр. Рассылка отправляется
                                     асинхронно через очередь.
                                 </p>
+
+                                <Separator />
+
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-semibold">
+                                        Точечная отправка (необязательно)
+                                    </Label>
+                                    <div>
+                                        <Label>ID пользователей</Label>
+                                        <Textarea
+                                            value={userIdsRaw}
+                                            onChange={(e) => setUserIdsRaw(e.target.value)}
+                                            rows={2}
+                                            placeholder="12, 345, 6789"
+                                            className="font-mono text-xs"
+                                        />
+                                        {userIds.length > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Распознано пользователей: {userIds.length}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label>Device ID</Label>
+                                        <Textarea
+                                            value={deviceIdsRaw}
+                                            onChange={(e) => setDeviceIdsRaw(e.target.value)}
+                                            rows={2}
+                                            placeholder={'device-id-1\ndevice-id-2'}
+                                            className="font-mono text-xs"
+                                        />
+                                        {deviceIds.length > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Распознано устройств: {deviceIds.length}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {explicitTargeting && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-500">
+                                            {deviceIds.length > 0
+                                                ? 'Указаны Device ID — остальные фильтры (роль, тип, версия, пользователи) игнорируются, отправка строго на эти устройства.'
+                                                : 'Указаны ID пользователей — фильтры роли/активности/гостей игнорируются. Тип устройства и версия, если заданы, всё ещё сужают список.'}
+                                        </p>
+                                    )}
+                                </div>
                             </TabsContent>
                         </Tabs>
 

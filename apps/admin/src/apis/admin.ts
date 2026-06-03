@@ -658,6 +658,8 @@ export interface AdminBroadcastFilters {
     min_version?: string | null
     max_version?: string | null
     guests_only?: boolean | null
+    user_ids?: number[] | null
+    device_ids?: string[] | null
 }
 
 export interface AdminBroadcastNotification {
