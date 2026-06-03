@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
+    AdminAdListParams,
     AdminBroadcastFilters,
     AdminNotificationListParams,
     adminApi,
@@ -26,6 +27,9 @@ export const adminKeys = {
     celeryTask: (id: number) => [...adminKeys.celeryTasks(), id] as const,
     notifications: () => [...adminKeys.all, 'notifications'] as const,
     notification: (id: number) => [...adminKeys.notifications(), id] as const,
+    ads: () => [...adminKeys.all, 'ads'] as const,
+    ad: (id: number) => [...adminKeys.ads(), id] as const,
+    adStats: (id: number) => [...adminKeys.ad(id), 'stats'] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
 }
 
@@ -571,6 +575,32 @@ export const useAdminNotificationRoles = () => {
         queryKey: [...adminKeys.notifications(), 'roles'] as const,
         queryFn: () => adminApi.getNotificationRoles(),
         staleTime: 5 * 60 * 1000,
+    })
+}
+
+// === Promotions (in-app custom ads) ===
+
+export const useAdminAds = (page = 1, size = 40, params?: AdminAdListParams) => {
+    return useQuery({
+        queryKey: [...adminKeys.ads(), { page, size, ...(params ?? {}) }],
+        queryFn: () => adminApi.getAds(page, size, params),
+        placeholderData: keepPreviousData,
+    })
+}
+
+export const useAdminAd = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.ad(id),
+        queryFn: () => adminApi.getAd(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminAdStats = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.adStats(id),
+        queryFn: () => adminApi.getAdStats(id),
+        enabled: !!id,
     })
 }
 

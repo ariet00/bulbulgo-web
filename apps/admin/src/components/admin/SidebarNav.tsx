@@ -12,6 +12,7 @@ import {
     LayoutDashboard,
     LineChart,
     List,
+    Megaphone,
     MessageSquare,
     Radio,
     Settings as SettingsIcon,
@@ -41,6 +42,7 @@ const sections: NavSection[] = [
             { name: 'Users', href: '/admin/users', icon: Users },
             { name: 'Companies', href: '/admin/companies', icon: BarChart },
             { name: 'Notifications', href: '/admin/notifications', icon: Bell },
+            { name: 'Ads', href: '/admin/ads', icon: Megaphone },
         ],
     },
     {
