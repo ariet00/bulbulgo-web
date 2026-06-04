@@ -382,6 +382,9 @@ export default function BulbulGoAnalyticsPage() {
                                                     </div>
                                                 )}
                                                 <span>{u.name ?? `user #${u.user_id}`}</span>
+                                                <span className="text-xs text-muted-foreground tabular-nums">
+                                                    #{u.user_id}
+                                                </span>
                                             </Link>
                                         </TableCell>
                                         <TableCell className="font-mono text-sm text-muted-foreground">
@@ -479,6 +482,9 @@ function UserCell({ d }: { d: TopDriverRow }) {
                 </div>
             )}
             <span>{d.name ?? `user #${d.user_id}`}</span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+                #{d.user_id}
+            </span>
         </Link>
     )
 }
