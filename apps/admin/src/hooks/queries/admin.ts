@@ -526,10 +526,10 @@ export const useAdminRideshareTopRoutes = (period: string = '7d', limit: number 
     })
 }
 
-export const useAdminRideshareLimitedDrivers = (limit: number = 100) => {
+export const useAdminRideshareLimitedDrivers = (page: number = 1, size: number = 20) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers', limit],
-        queryFn: () => adminApi.getRideshareLimitedDrivers(limit),
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers', page, size],
+        queryFn: () => adminApi.getRideshareLimitedDrivers(page, size),
     })
 }
 

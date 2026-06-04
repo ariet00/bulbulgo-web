@@ -510,7 +510,7 @@ export const adminApi = {
                 completed: number
             }>
         }>(`/admin/rideshare/analytics/top-routes?period=${period}&limit=${limit}`),
-    getRideshareLimitedDrivers: (limit: number = 100) =>
+    getRideshareLimitedDrivers: (page: number = 1, size: number = 20) =>
         requests.get<{
             config: {
                 enabled: boolean
@@ -533,7 +533,10 @@ export const adminApi = {
                 free_remaining: number
                 credits_balance: number
             }>
-        }>(`/admin/rideshare/analytics/limited-drivers?limit=${limit}`),
+            total: number
+            page: number
+            size: number
+        }>(`/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}`),
 
     // Booking — bots & onboarding
     getBookingBots: (onlyUnlinked = false) =>

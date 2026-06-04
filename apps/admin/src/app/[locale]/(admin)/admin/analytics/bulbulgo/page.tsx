@@ -21,9 +21,12 @@ import {
     TableHeader,
     TableRow,
 } from '@doska/ui'
+import { Pagination } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
+
+const LIMITED_SIZE = 20
 
 const PERIODS: Array<{ value: string; label: string }> = [
     { value: '15m', label: '15m' },
@@ -126,7 +129,8 @@ export default function BulbulGoAnalyticsPage() {
     const topByAds = useAdminRideshareTopDrivers(topAdsP, 20, 'trip_views')
     const topActive = useAdminRideshareTopActiveUsers(topActiveP, 20)
     const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
-    const limitedDrivers = useAdminRideshareLimitedDrivers(100)
+    const [limitedPage, setLimitedPage] = useState(1)
+    const limitedDrivers = useAdminRideshareLimitedDrivers(limitedPage, LIMITED_SIZE)
 
     const isFetching =
         funnel.isFetching ||
@@ -440,7 +444,12 @@ export default function BulbulGoAnalyticsPage() {
                 </CardContent>
             </Card>
 
-            <LimitedDriversCard query={limitedDrivers} />
+            <LimitedDriversCard
+                query={limitedDrivers}
+                page={limitedPage}
+                size={LIMITED_SIZE}
+                onPageChange={setLimitedPage}
+            />
         </div>
     )
 }
@@ -661,14 +670,25 @@ function TopDriversCard({
 type LimitedDriversQuery = ReturnType<typeof useAdminRideshareLimitedDrivers>
 type LimitedDriverRow = NonNullable<LimitedDriversQuery['data']>['drivers'][number]
 
-function LimitedDriversCard({ query }: { query: LimitedDriversQuery }) {
+function LimitedDriversCard({
+    query,
+    page,
+    size,
+    onPageChange,
+}: {
+    query: LimitedDriversQuery
+    page: number
+    size: number
+    onPageChange: (p: number) => void
+}) {
     const cfg = query.data?.config
     const drivers = query.data?.drivers ?? []
+    const total = query.data?.total ?? 0
 
     return (
         <Card>
             <CardHeader className="space-y-1">
-                <CardTitle>Под лимитами просмотра номеров</CardTitle>
+                <CardTitle>Под лимитами просмотра номеров ({total})</CardTitle>
                 {cfg && (
                     <p className="text-xs text-muted-foreground">
                         {cfg.enabled ? 'Лимиты включены' : 'Лимиты выключены'} · окно{' '}
@@ -710,7 +730,7 @@ function LimitedDriversCard({ query }: { query: LimitedDriversQuery }) {
                                     className={d.is_limited ? 'bg-red-50 dark:bg-red-950/30' : undefined}
                                 >
                                     <TableCell className="text-muted-foreground tabular-nums">
-                                        {i + 1}
+                                        {(page - 1) * size + i + 1}
                                     </TableCell>
                                     <TableCell>
                                         <Link
@@ -730,6 +750,9 @@ function LimitedDriversCard({ query }: { query: LimitedDriversQuery }) {
                                                 </div>
                                             )}
                                             <span>{d.name ?? `user #${d.user_id}`}</span>
+                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                #{d.user_id}
+                                            </span>
                                         </Link>
                                     </TableCell>
                                     <TableCell className="font-mono text-sm text-muted-foreground">
@@ -767,6 +790,17 @@ function LimitedDriversCard({ query }: { query: LimitedDriversQuery }) {
                             ))}
                         </TableBody>
                     </Table>
+                )}
+
+                {total > size && (
+                    <div className="mt-4">
+                        <Pagination
+                            page={page}
+                            total={total}
+                            size={size}
+                            onPageChange={onPageChange}
+                        />
+                    </div>
                 )}
             </CardContent>
         </Card>
