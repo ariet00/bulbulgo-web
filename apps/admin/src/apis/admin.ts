@@ -528,7 +528,7 @@ export const adminApi = {
                 window_views: number
                 active_days: number
                 is_limited: boolean
-                cached_limited: boolean | null
+                limit_override: boolean | null
                 free_used: number
                 free_limit: number
                 free_remaining: number
@@ -551,7 +551,7 @@ export const adminApi = {
             free_remaining: number
         }>(`/admin/rideshare/analytics/users/${userId}/free-used`, body),
     setDriverLimited: (userId: number, value: number | null) =>
-        requests.put<{ user_id: number; cached_limited: boolean | null }>(
+        requests.put<{ user_id: number; limit_override: boolean | null }>(
             `/admin/rideshare/analytics/users/${userId}/limited`,
             { value },
         ),

@@ -814,9 +814,9 @@ function StatusCell({
     onSet: (value: number | null) => void
 }) {
     const [open, setOpen] = useState(false)
-    const effective = d.cached_limited ?? d.is_limited
-    const forced = d.cached_limited !== null
-    const diverges = forced && d.cached_limited !== d.is_limited
+    const effective = d.limit_override ?? d.is_limited
+    const forced = d.limit_override !== null
+    const diverges = forced && d.limit_override !== d.is_limited
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -834,7 +834,7 @@ function StatusCell({
                     {forced && (
                         <span
                             className="text-xs"
-                            title={`Зафиксировано на сегодня${
+                            title={`Ручная фиксация${
                                 diverges
                                     ? ` · расчёт: ${d.is_limited ? 'под лимитом' : 'без лимита'}`
                                     : ''
@@ -852,7 +852,7 @@ function StatusCell({
                     / {d.active_days} дн.)
                     {forced && (
                         <div className="mt-0.5">
-                            Зафиксировано: {d.cached_limited ? 'под лимитом' : 'без лимита'}
+                            Зафиксировано: {d.limit_override ? 'под лимитом' : 'без лимита'}
                         </div>
                     )}
                 </div>
@@ -867,7 +867,7 @@ function StatusCell({
                         setOpen(false)
                     }}
                 >
-                    Под лимитом (сегодня)
+                    Всегда под лимитом
                 </Button>
                 <Button
                     type="button"
@@ -880,7 +880,7 @@ function StatusCell({
                         setOpen(false)
                     }}
                 >
-                    Без лимита (сегодня)
+                    Без лимита
                 </Button>
                 <Button
                     type="button"
@@ -972,7 +972,7 @@ function LimitedDriversCard({
                         </TableHeader>
                         <TableBody>
                             {drivers.map((d: LimitedDriverRow, i: number) => {
-                                const effectiveLimited = d.cached_limited ?? d.is_limited
+                                const effectiveLimited = d.limit_override ?? d.is_limited
                                 return (
                                 <TableRow
                                     key={d.user_id}
