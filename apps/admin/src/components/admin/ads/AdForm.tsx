@@ -21,12 +21,12 @@ import {
     TabsList,
     TabsTrigger,
 } from '@doska/ui'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { AdminAd, AdminAdColors, AdminAdCreate } from '@/apis/admin'
 
 /** Слоты приложения — должны совпадать с apps/promotions/constants.py:Placement */
 export const PLACEMENTS = [
-    { value: 'contacts', label: 'Контакты — лист (маленький)' },
+    { value: 'contacts', label: 'Контакты — лист (квадрат)' },
     { value: 'feed', label: 'Лента — поиск поездок (большой)' },
 ]
 
@@ -88,13 +88,13 @@ function resolveInherit(c: AdminAdColors, dark: boolean): AdminAdColors {
 /** Рекомендованный формат картинки под слот (размеры — под реальный рендер). */
 const IMAGE_SPEC: Record<string, { ratio: string; size: string; note: string }> = {
     contacts: {
-        ratio: '3:1 (горизонтальная)',
-        size: '1080×360 px',
-        note: 'Маленький слот в листе контактов.',
+        ratio: '≈ 3:2 (горизонтальная)',
+        size: '1080×720 px',
+        note: 'Квадратная карточка (как Google): фото заполняет верх над текстом, его высота плавает от длины текста. Важное — по центру (обрезка cover сверху/снизу).',
     },
     feed: {
-        ratio: '2:1 (горизонтальная)',
-        size: '1080×540 px',
+        ratio: '≈ 16:9 (горизонтальная)',
+        size: '1080×600 px',
         note: 'Большой слот в ленте поиска поездок.',
     },
 }
@@ -550,34 +550,68 @@ function AdPreview({
     buttonLabel: string
     colors: AdminAdColors
 }) {
-    const imgHeight = useMemo(() => (placement === 'feed' ? 'h-44' : 'h-40'), [placement])
+    const textBlock = (
+        <div className="space-y-2 p-3">
+            <div
+                className="text-sm font-semibold leading-snug line-clamp-2"
+                style={{ color: colors.text }}
+            >
+                {title || 'Заголовок'}
+            </div>
+            <button
+                type="button"
+                className="w-full rounded-xl px-3 py-2 text-sm font-medium"
+                style={{ backgroundColor: colors.button, color: colors.button_text }}
+            >
+                {buttonLabel || 'Кнопка'}
+            </button>
+        </div>
+    )
+
+    // Лента: картинка фиксированной высоты, текст снизу (как карточка поездки).
+    if (placement === 'feed') {
+        return (
+            <div
+                className="overflow-hidden rounded-2xl border"
+                style={{ backgroundColor: colors.background }}
+            >
+                {imageUrl ? (
+                    <img src={imageUrl} alt="" className="h-44 w-full object-cover" />
+                ) : (
+                    <div
+                        className="flex h-44 w-full items-center justify-center text-xs opacity-50"
+                        style={{ color: colors.text }}
+                    >
+                        нет фото
+                    </div>
+                )}
+                {textBlock}
+            </div>
+        )
+    }
+
+    // Контакты: квадратная карточка (как Google-слот) — фото тянется на всё место
+    // над текстом, заголовок и кнопка снизу. Квадрат = фото + текст вместе.
     return (
         <div
-            className="overflow-hidden rounded-xl border"
-            style={{ backgroundColor: colors.background }}
+            className="mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border"
+            style={{ aspectRatio: '380 / 370', backgroundColor: colors.background }}
         >
             {imageUrl ? (
-                <img src={imageUrl} alt="" className={`w-full object-cover ${imgHeight}`} />
+                <img
+                    src={imageUrl}
+                    alt=""
+                    className="min-h-0 w-full flex-1 object-cover"
+                />
             ) : (
                 <div
-                    className={`flex w-full items-center justify-center text-xs opacity-50 ${imgHeight}`}
+                    className="flex min-h-0 w-full flex-1 items-center justify-center text-xs opacity-50"
                     style={{ color: colors.text }}
                 >
                     нет фото
                 </div>
             )}
-            <div className="space-y-2 p-3">
-                <div className="text-sm font-semibold" style={{ color: colors.text }}>
-                    {title || 'Заголовок'}
-                </div>
-                <button
-                    type="button"
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium"
-                    style={{ backgroundColor: colors.button, color: colors.button_text }}
-                >
-                    {buttonLabel || 'Кнопка'}
-                </button>
-            </div>
+            <div className="shrink-0">{textBlock}</div>
         </div>
     )
 }

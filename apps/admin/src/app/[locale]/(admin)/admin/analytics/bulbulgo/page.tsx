@@ -998,12 +998,17 @@ function TopViewedTripsCard({
                                         {t.phone_view_count}
                                     </TableCell>
                                     <TableCell>
-                                        <span className="text-sm">
-                                            {t.from_name ?? '—'} → {t.to_name ?? '—'}
-                                        </span>
-                                        <span className="ml-2 text-xs text-muted-foreground tabular-nums">
-                                            #{t.trip_id}
-                                        </span>
+                                        <Link
+                                            href={`/admin/trips/${t.trip_id}`}
+                                            className="hover:underline"
+                                        >
+                                            <span className="text-sm">
+                                                {t.from_name ?? '—'} → {t.to_name ?? '—'}
+                                            </span>
+                                            <span className="ml-2 text-xs text-muted-foreground tabular-nums">
+                                                #{t.trip_id}
+                                            </span>
+                                        </Link>
                                     </TableCell>
                                     <TableCell className="text-xs text-muted-foreground">
                                         {t.trip_type ?? '—'} / {roleLabel(t.role)}
