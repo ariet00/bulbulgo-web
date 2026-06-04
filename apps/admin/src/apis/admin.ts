@@ -568,6 +568,26 @@ export const adminApi = {
         }>(
             `/admin/rideshare/analytics/multi-account-devices?period=${period}&page=${page}&size=${size}`,
         ),
+    getRideshareTopViewedTrips: (page: number = 1, size: number = 20) =>
+        requests.get<{
+            total: number
+            page: number
+            size: number
+            trips: Array<{
+                trip_id: number
+                trip_type: string | null
+                role: string
+                status: string
+                from_name: string | null
+                to_name: string | null
+                phone_view_count: number
+                last_phone_view_at: string | null
+                created_at: string
+                owner_user_id: number | null
+                owner_name: string | null
+                owner_phone: string | null
+            }>
+        }>(`/admin/rideshare/analytics/top-viewed-trips?page=${page}&size=${size}`),
     setDriverCredits: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
         requests.put<{ user_id: number; credits_balance: number }>(
             `/admin/rideshare/analytics/users/${userId}/credits`,

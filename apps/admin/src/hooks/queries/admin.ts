@@ -546,6 +546,14 @@ export const useAdminRideshareMultiAccountDevices = (
     })
 }
 
+export const useAdminRideshareTopViewedTrips = (page: number = 1, size: number = 20) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'top-viewed-trips', page, size],
+        queryFn: () => adminApi.getRideshareTopViewedTrips(page, size),
+        placeholderData: keepPreviousData,
+    })
+}
+
 export const useAdminAnalyticsMiddlewareToggle = () => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'middleware-toggle'],

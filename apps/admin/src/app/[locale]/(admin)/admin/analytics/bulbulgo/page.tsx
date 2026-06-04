@@ -11,6 +11,7 @@ import {
     useAdminRideshareInstallsByDay,
     useAdminRideshareLimitedDrivers,
     useAdminRideshareMultiAccountDevices,
+    useAdminRideshareTopViewedTrips,
 } from '@/hooks/queries/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
@@ -142,6 +143,8 @@ export default function BulbulGoAnalyticsPage() {
     const [multiPeriod, setMultiPeriod] = useState('30d')
     const [multiPage, setMultiPage] = useState(1)
     const multiDevices = useAdminRideshareMultiAccountDevices(multiPeriod, multiPage, LIMITED_SIZE)
+    const [viewedPage, setViewedPage] = useState(1)
+    const topViewedTrips = useAdminRideshareTopViewedTrips(viewedPage, LIMITED_SIZE)
 
     const isFetching =
         funnel.isFetching ||
@@ -155,7 +158,8 @@ export default function BulbulGoAnalyticsPage() {
         topActive.isFetching ||
         topRoutes.isFetching ||
         limitedDrivers.isFetching ||
-        multiDevices.isFetching
+        multiDevices.isFetching ||
+        topViewedTrips.isFetching
     const refetchAll = () => {
         funnel.refetch()
         summary.refetch()
@@ -169,6 +173,7 @@ export default function BulbulGoAnalyticsPage() {
         topRoutes.refetch()
         limitedDrivers.refetch()
         multiDevices.refetch()
+        topViewedTrips.refetch()
     }
 
     return (
@@ -477,6 +482,13 @@ export default function BulbulGoAnalyticsPage() {
                 page={multiPage}
                 size={LIMITED_SIZE}
                 onPageChange={setMultiPage}
+            />
+
+            <TopViewedTripsCard
+                query={topViewedTrips}
+                page={viewedPage}
+                size={LIMITED_SIZE}
+                onPageChange={setViewedPage}
             />
         </div>
     )
@@ -915,6 +927,125 @@ function StatusCell({
                 </Button>
             </PopoverContent>
         </Popover>
+    )
+}
+
+type TopViewedQuery = ReturnType<typeof useAdminRideshareTopViewedTrips>
+type TopViewedRow = NonNullable<TopViewedQuery['data']>['trips'][number]
+
+// Currently active trips ranked by phone-view count (data.phone_view_count).
+function TopViewedTripsCard({
+    query,
+    page,
+    size,
+    onPageChange,
+}: {
+    query: TopViewedQuery
+    page: number
+    size: number
+    onPageChange: (p: number) => void
+}) {
+    const trips = query.data?.trips ?? []
+    const total = query.data?.total ?? 0
+
+    return (
+        <Card>
+            <CardHeader className="space-y-1">
+                <div className="flex items-center justify-between gap-3">
+                    <CardTitle>Самые просматриваемые поездки ({total})</CardTitle>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => query.refetch()}
+                        disabled={query.isFetching}
+                    >
+                        <RefreshCw
+                            className={`mr-1 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
+                        />
+                        Обновить
+                    </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                    Активные объявления по числу просмотров номера (data.phone_view_count)
+                </p>
+            </CardHeader>
+            <CardContent>
+                {query.isLoading ? (
+                    <div>Загрузка…</div>
+                ) : trips.length === 0 ? (
+                    <div className="text-muted-foreground">Нет данных</div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead className="w-32 text-right font-semibold">
+                                    Просмотров
+                                </TableHead>
+                                <TableHead>Маршрут</TableHead>
+                                <TableHead className="w-28">Тип / роль</TableHead>
+                                <TableHead>Владелец</TableHead>
+                                <TableHead className="w-40">Последний просмотр</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {trips.map((t: TopViewedRow, i: number) => (
+                                <TableRow key={t.trip_id}>
+                                    <TableCell className="text-muted-foreground tabular-nums">
+                                        {(page - 1) * size + i + 1}
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums font-semibold">
+                                        {t.phone_view_count}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="text-sm">
+                                            {t.from_name ?? '—'} → {t.to_name ?? '—'}
+                                        </span>
+                                        <span className="ml-2 text-xs text-muted-foreground tabular-nums">
+                                            #{t.trip_id}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">
+                                        {t.trip_type ?? '—'} / {roleLabel(t.role)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {t.owner_user_id ? (
+                                            <Link
+                                                href={`/admin/analytics/users/${t.owner_user_id}`}
+                                                className="hover:underline text-sm"
+                                            >
+                                                {t.owner_name ?? `user #${t.owner_user_id}`}
+                                                <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                                                    #{t.owner_user_id}
+                                                </span>
+                                            </Link>
+                                        ) : (
+                                            '—'
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                        {t.last_phone_view_at
+                                            ? new Date(t.last_phone_view_at).toLocaleString()
+                                            : '—'}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+
+                {total > size && (
+                    <div className="mt-4">
+                        <Pagination
+                            page={page}
+                            total={total}
+                            size={size}
+                            onPageChange={onPageChange}
+                        />
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     )
 }
 
