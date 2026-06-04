@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react'
 const DEFAULT_FORM: AdminContactLimitsSettings = {
     enabled: true,
     free_daily_limit: 15,
+    global_free_daily_limit: 50,
     fast_freshness_minutes: 10,
     fast_cost: 2,
     activity_window_days: 7,
@@ -34,8 +35,13 @@ type NumKey = Exclude<keyof AdminContactLimitsSettings, 'enabled' | 'package_cur
 const NUM_FIELDS: { key: NumKey; label: string; hint: string; step?: number }[] = [
     {
         key: 'free_daily_limit',
-        label: 'Дневной лимит (очки)',
-        hint: 'free_daily_limit — бесплатных очков просмотра в сутки. Обычный просмотр стоит 1 очко.',
+        label: 'Строгий free/день (таксисты)',
+        hint: 'free_daily_limit — бесплатных очков в сутки для классифицированных таксистов. Обычный просмотр стоит 1 очко.',
+    },
+    {
+        key: 'global_free_daily_limit',
+        label: 'Общий free/день (остальные)',
+        hint: 'global_free_daily_limit — щедрый дневной лимит для тех, кто не прошёл классификацию (анти-абьюз/скрейпинг).',
     },
     {
         key: 'fast_cost',
@@ -96,9 +102,10 @@ export default function AdminContactLimitsPage() {
             <div>
                 <h1 className="text-2xl font-semibold">Лимиты просмотра номеров</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Ограничения на просмотр контактов для активных водителей
-                    (таксистов). Применяются только к просмотру пассажирских
-                    объявлений. Хранятся в Redis под ключом{' '}
+                    Ограничения на просмотр контактов в пассажирских объявлениях.
+                    Два тарифа free/день: строгий для классифицированных таксистов
+                    и щедрый общий для остальных (анти-абьюз). Сверх лимита —
+                    списание из купленных очков. Хранятся в Redis под ключом{' '}
                     <code className="text-xs">app:contact_limits</code>.
                 </p>
             </div>

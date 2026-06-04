@@ -515,6 +515,7 @@ export const adminApi = {
             config: {
                 enabled: boolean
                 free_daily_limit: number
+                global_free_daily_limit: number
                 fast_cost: number
                 activity_window_days: number
                 activity_min_views: number
@@ -698,6 +699,7 @@ export interface AdminAppFeaturesSettings {
 export interface AdminContactLimitsSettings {
     enabled: boolean
     free_daily_limit: number
+    global_free_daily_limit: number
     fast_freshness_minutes: number
     fast_cost: number
     activity_window_days: number

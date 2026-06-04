@@ -824,19 +824,19 @@ function StatusCell({
                 <button type="button" className="inline-flex items-center gap-1">
                     {effective ? (
                         <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                            под лимитом
+                            строгий
                         </span>
                     ) : (
                         <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            без лимита
+                            общий
                         </span>
                     )}
                     {forced && (
                         <span
                             className="text-xs"
-                            title={`Ручная фиксация${
+                            title={`Ручная фиксация тарифа${
                                 diverges
-                                    ? ` · расчёт: ${d.is_limited ? 'под лимитом' : 'без лимита'}`
+                                    ? ` · расчёт: ${d.is_limited ? 'строгий' : 'общий'}`
                                     : ''
                             }`}
                         >
@@ -848,11 +848,11 @@ function StatusCell({
             </PopoverTrigger>
             <PopoverContent className="w-60 space-y-2" align="start">
                 <div className="text-xs text-muted-foreground">
-                    Расчёт: {d.is_limited ? 'под лимитом' : 'без лимита'} ({d.window_views} просм.
+                    Расчёт: {d.is_limited ? 'строгий' : 'общий'} тариф ({d.window_views} просм.
                     / {d.active_days} дн.)
                     {forced && (
                         <div className="mt-0.5">
-                            Зафиксировано: {d.limit_override ? 'под лимитом' : 'без лимита'}
+                            Зафиксировано: {d.limit_override ? 'строгий' : 'общий'} тариф
                         </div>
                     )}
                 </div>
@@ -867,7 +867,7 @@ function StatusCell({
                         setOpen(false)
                     }}
                 >
-                    Всегда под лимитом
+                    Строгий тариф
                 </Button>
                 <Button
                     type="button"
@@ -880,7 +880,7 @@ function StatusCell({
                         setOpen(false)
                     }}
                 >
-                    Без лимита
+                    Общий тариф
                 </Button>
                 <Button
                     type="button"
@@ -940,8 +940,9 @@ function LimitedDriversCard({
                     <p className="text-xs text-muted-foreground">
                         {cfg.enabled ? 'Лимиты включены' : 'Лимиты выключены'} · окно{' '}
                         {cfg.activity_window_days}д · порог: ≥{cfg.activity_min_views} просмотров
-                        на ≥{cfg.activity_min_active_days} днях · free/день{' '}
-                        {cfg.free_daily_limit} · fast ×{cfg.fast_cost}
+                        на ≥{cfg.activity_min_active_days} днях · free/день: строгий{' '}
+                        {cfg.free_daily_limit} / общий {cfg.global_free_daily_limit} · fast ×
+                        {cfg.fast_cost}
                     </p>
                 )}
             </CardHeader>
@@ -961,8 +962,10 @@ function LimitedDriversCard({
                                     Просмотров
                                 </TableHead>
                                 <TableHead className="w-28 text-right">Активных дней</TableHead>
-                                <TableHead className="w-32">Статус</TableHead>
-                                <TableHead className="w-32 text-right" title="Использовано free-лимита сегодня">
+                                <TableHead className="w-32" title="Тариф free-лимита: строгий (таксисты) / общий (остальные)">
+                                    Тариф
+                                </TableHead>
+                                <TableHead className="w-32 text-right" title="Использовано free-лимита сегодня (по тарифу)">
                                     Free сегодня
                                 </TableHead>
                                 <TableHead className="w-28 text-right" title="Купленные лимиты (carry-over)">
