@@ -694,7 +694,20 @@ function LimitedDriversCard({
     return (
         <Card>
             <CardHeader className="space-y-1">
-                <CardTitle>Под лимитами просмотра номеров ({total})</CardTitle>
+                <div className="flex items-center justify-between gap-3">
+                    <CardTitle>Под лимитами просмотра номеров ({total})</CardTitle>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => query.refetch()}
+                        disabled={query.isFetching}
+                    >
+                        <RefreshCw
+                            className={`mr-1 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
+                        />
+                        Обновить
+                    </Button>
+                </div>
                 {cfg && (
                     <p className="text-xs text-muted-foreground">
                         {cfg.enabled ? 'Лимиты включены' : 'Лимиты выключены'} · окно{' '}
