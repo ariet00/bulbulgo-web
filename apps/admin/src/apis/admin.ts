@@ -539,6 +539,35 @@ export const adminApi = {
             page: number
             size: number
         }>(`/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}`),
+    getRideshareMultiAccountDevices: (
+        period: string = '30d',
+        page: number = 1,
+        size: number = 20,
+    ) =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            devices: Array<{
+                device_id: string
+                account_count: number
+                events: number
+                last_seen: string
+                accounts: Array<{
+                    user_id: number
+                    name: string | null
+                    phone: string | null
+                    avatar_url: string | null
+                    events: number
+                    last_seen: string
+                }>
+            }>
+            total: number
+            page: number
+            size: number
+        }>(
+            `/admin/rideshare/analytics/multi-account-devices?period=${period}&page=${page}&size=${size}`,
+        ),
     setDriverCredits: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
         requests.put<{ user_id: number; credits_balance: number }>(
             `/admin/rideshare/analytics/users/${userId}/credits`,

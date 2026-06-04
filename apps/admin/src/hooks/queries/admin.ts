@@ -534,6 +534,18 @@ export const useAdminRideshareLimitedDrivers = (page: number = 1, size: number =
     })
 }
 
+export const useAdminRideshareMultiAccountDevices = (
+    period: string = '30d',
+    page: number = 1,
+    size: number = 20,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'multi-account-devices', period, page, size],
+        queryFn: () => adminApi.getRideshareMultiAccountDevices(period, page, size),
+        placeholderData: keepPreviousData,
+    })
+}
+
 export const useAdminAnalyticsMiddlewareToggle = () => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'middleware-toggle'],

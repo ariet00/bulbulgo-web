@@ -10,6 +10,7 @@ import {
     useAdminRideshareTripsByDay,
     useAdminRideshareInstallsByDay,
     useAdminRideshareLimitedDrivers,
+    useAdminRideshareMultiAccountDevices,
 } from '@/hooks/queries/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
@@ -138,6 +139,9 @@ export default function BulbulGoAnalyticsPage() {
     const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
     const [limitedPage, setLimitedPage] = useState(1)
     const limitedDrivers = useAdminRideshareLimitedDrivers(limitedPage, LIMITED_SIZE)
+    const [multiPeriod, setMultiPeriod] = useState('30d')
+    const [multiPage, setMultiPage] = useState(1)
+    const multiDevices = useAdminRideshareMultiAccountDevices(multiPeriod, multiPage, LIMITED_SIZE)
 
     const isFetching =
         funnel.isFetching ||
@@ -150,7 +154,8 @@ export default function BulbulGoAnalyticsPage() {
         topByAds.isFetching ||
         topActive.isFetching ||
         topRoutes.isFetching ||
-        limitedDrivers.isFetching
+        limitedDrivers.isFetching ||
+        multiDevices.isFetching
     const refetchAll = () => {
         funnel.refetch()
         summary.refetch()
@@ -163,6 +168,7 @@ export default function BulbulGoAnalyticsPage() {
         topActive.refetch()
         topRoutes.refetch()
         limitedDrivers.refetch()
+        multiDevices.refetch()
     }
 
     return (
@@ -459,6 +465,18 @@ export default function BulbulGoAnalyticsPage() {
                 page={limitedPage}
                 size={LIMITED_SIZE}
                 onPageChange={setLimitedPage}
+            />
+
+            <MultiAccountDevicesCard
+                query={multiDevices}
+                period={multiPeriod}
+                onPeriodChange={(p) => {
+                    setMultiPeriod(p)
+                    setMultiPage(1)
+                }}
+                page={multiPage}
+                size={LIMITED_SIZE}
+                onPageChange={setMultiPage}
             />
         </div>
     )
@@ -897,6 +915,152 @@ function StatusCell({
                 </Button>
             </PopoverContent>
         </Popover>
+    )
+}
+
+type MultiDevicesQuery = ReturnType<typeof useAdminRideshareMultiAccountDevices>
+type MultiDeviceRow = NonNullable<MultiDevicesQuery['data']>['devices'][number]
+
+const MULTI_PERIODS = ['7d', '30d', '90d']
+
+// Devices used to sign in from 2+ different accounts in the period — a
+// multi-account-per-device signal (grouped by analytics event device_id).
+function MultiAccountDevicesCard({
+    query,
+    period,
+    onPeriodChange,
+    page,
+    size,
+    onPageChange,
+}: {
+    query: MultiDevicesQuery
+    period: string
+    onPeriodChange: (p: string) => void
+    page: number
+    size: number
+    onPageChange: (p: number) => void
+}) {
+    const devices = query.data?.devices ?? []
+    const total = query.data?.total ?? 0
+
+    return (
+        <Card>
+            <CardHeader className="space-y-1">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <CardTitle>Несколько аккаунтов с одного устройства ({total})</CardTitle>
+                    <div className="flex items-center gap-1 flex-wrap">
+                        {MULTI_PERIODS.map(p => (
+                            <Button
+                                key={p}
+                                variant={period === p ? 'default' : 'outline'}
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => onPeriodChange(p)}
+                            >
+                                {p}
+                            </Button>
+                        ))}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => query.refetch()}
+                            disabled={query.isFetching}
+                        >
+                            <RefreshCw
+                                className={`mr-1 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
+                            />
+                            Обновить
+                        </Button>
+                    </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                    Устройства, с которых за период заходили под 2+ разными аккаунтами (по
+                    device_id событий)
+                </p>
+            </CardHeader>
+            <CardContent>
+                {query.isLoading ? (
+                    <div>Загрузка…</div>
+                ) : devices.length === 0 ? (
+                    <div className="text-muted-foreground">Нет данных</div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead className="w-40">Устройство</TableHead>
+                                <TableHead className="w-24 text-right">Аккаунтов</TableHead>
+                                <TableHead>Аккаунты</TableHead>
+                                <TableHead className="w-24 text-right">Событий</TableHead>
+                                <TableHead className="w-40">Последняя активность</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {devices.map((d: MultiDeviceRow, i: number) => (
+                                <TableRow key={d.device_id}>
+                                    <TableCell className="text-muted-foreground tabular-nums align-top">
+                                        {(page - 1) * size + i + 1}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-xs break-all align-top">
+                                        {d.device_id}
+                                    </TableCell>
+                                    <TableCell className="text-right align-top">
+                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                            {d.account_count}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="align-top">
+                                        <div className="space-y-1">
+                                            {d.accounts.map(a => (
+                                                <div
+                                                    key={a.user_id}
+                                                    className="flex items-center gap-2 text-sm flex-wrap"
+                                                >
+                                                    <Link
+                                                        href={`/admin/analytics/users/${a.user_id}`}
+                                                        className="hover:underline"
+                                                    >
+                                                        {a.name ?? `user #${a.user_id}`}
+                                                    </Link>
+                                                    <span className="text-xs text-muted-foreground tabular-nums">
+                                                        #{a.user_id}
+                                                    </span>
+                                                    {a.phone && (
+                                                        <span className="font-mono text-xs text-muted-foreground">
+                                                            {a.phone}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-muted-foreground">
+                                                        · {a.events} соб.
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums align-top">
+                                        {d.events}
+                                    </TableCell>
+                                    <TableCell className="text-xs whitespace-nowrap align-top">
+                                        {new Date(d.last_seen).toLocaleString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+
+                {total > size && (
+                    <div className="mt-4">
+                        <Pagination
+                            page={page}
+                            total={total}
+                            size={size}
+                            onPageChange={onPageChange}
+                        />
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     )
 }
 
