@@ -1,5 +1,4 @@
-const ANONYMOUS_ID_KEY = 'analytics_anonymous_id'
-const DEVICE_ID_KEY = 'analytics_device_id'
+const DEVICE_ID_KEY = 'device_id'
 
 function generateId(): string {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -20,10 +19,6 @@ function readOrCreate(key: string): string {
     } catch {
         return ''
     }
-}
-
-export function getAnonymousId(): string {
-    return readOrCreate(ANONYMOUS_ID_KEY)
 }
 
 export function getDeviceId(): string {

@@ -43,8 +43,7 @@ export function loadBotSlug(): string | null {
   return memoryBotSlug
 }
 
-const ANONYMOUS_ID_KEY = 'analytics_anonymous_id'
-const DEVICE_ID_KEY = 'analytics_device_id'
+const DEVICE_ID_KEY = 'device_id'
 
 function readOrCreate(key: string): string {
   if (typeof window === 'undefined') return ''
@@ -76,8 +75,6 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   if (slug) config.headers['X-Bot-Slug'] = slug
   config.headers['X-Product'] = 'staff'
-  const anon = readOrCreate(ANONYMOUS_ID_KEY)
-  if (anon) config.headers['X-Anonymous-Id'] = anon
   const deviceId = readOrCreate(DEVICE_ID_KEY)
   if (deviceId) config.headers['X-Device-Id'] = deviceId
   const deviceInfo = getDeviceInfo()

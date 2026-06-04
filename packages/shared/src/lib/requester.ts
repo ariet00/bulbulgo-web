@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useToastStore } from '../store/useToastStore'
 import { useUserStore } from '../store/useUserStore'
 import { getServerSession } from 'next-auth'
-import { getAnonymousId, getDeviceId, getDeviceInfo } from './anonymousId'
+import { getDeviceId, getDeviceInfo } from './anonymousId'
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL
 console.log({ baseURL })
@@ -28,7 +28,6 @@ requester.interceptors.request.use(
             config.headers['X-Platform'] = 'web'
             if (APP_VERSION) config.headers['X-App-Version'] = APP_VERSION
             if (PRODUCT) config.headers['X-Product'] = PRODUCT
-            config.headers['X-Anonymous-Id'] = getAnonymousId()
             const deviceId = getDeviceId()
             if (deviceId) config.headers['X-Device-Id'] = deviceId
             const deviceInfo = getDeviceInfo()
