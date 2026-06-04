@@ -32,6 +32,7 @@ import { RefreshCw } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
 import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
+import { DataCell } from '@/components/admin/analytics/DataCell'
 
 const PERIODS = [
     { value: '7d', label: '7d' },
@@ -757,8 +758,8 @@ export default function UserAnalyticsPage({
                                         <TableCell className="font-mono text-xs break-all">
                                             {ev.device_id ?? '—'}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs whitespace-pre-wrap break-all">
-                                            {ev.data ? JSON.stringify(ev.data) : '—'}
+                                        <TableCell>
+                                            <DataCell data={ev.data} eventType={ev.event_type} />
                                         </TableCell>
                                     </TableRow>
                                 ))}

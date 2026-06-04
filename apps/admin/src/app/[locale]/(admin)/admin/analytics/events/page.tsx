@@ -19,6 +19,7 @@ import { Button } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
+import { DataCell } from '@/components/admin/analytics/DataCell'
 
 const SIZE = 50
 
@@ -154,8 +155,8 @@ export default function AnalyticsEventsPage() {
                                         <TableCell className="font-mono text-xs break-all">
                                             {ev.device_id ?? '—'}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs whitespace-pre-wrap break-all">
-                                            {ev.data ? JSON.stringify(ev.data) : '—'}
+                                        <TableCell>
+                                            <DataCell data={ev.data} eventType={ev.event_type} />
                                         </TableCell>
                                     </TableRow>
                                 ))}
