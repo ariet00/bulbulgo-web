@@ -379,3 +379,43 @@ export const useUpdateAdminContactLimitsSettings = () => {
         },
     })
 }
+
+// Per-driver limit overrides (from the BulBul Go "limited drivers" card).
+const invalidateLimitedDrivers = (qc: ReturnType<typeof useQueryClient>) =>
+    qc.invalidateQueries({ queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers'] })
+
+export const useSetDriverCredits = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ userId, mode, value }: { userId: number; mode: 'set' | 'delta'; value: number }) =>
+            adminApi.setDriverCredits(userId, { mode, value }),
+        onSuccess: () => {
+            invalidateLimitedDrivers(qc)
+            toast.success('Кредиты обновлены')
+        },
+    })
+}
+
+export const useSetDriverFreeUsed = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ userId, mode, value }: { userId: number; mode: 'set' | 'delta'; value: number }) =>
+            adminApi.setDriverFreeUsed(userId, { mode, value }),
+        onSuccess: () => {
+            invalidateLimitedDrivers(qc)
+            toast.success('Free-лимит обновлён')
+        },
+    })
+}
+
+export const useSetDriverLimited = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ userId, value }: { userId: number; value: number | null }) =>
+            adminApi.setDriverLimited(userId, value),
+        onSuccess: () => {
+            invalidateLimitedDrivers(qc)
+            toast.success('Статус лимита обновлён')
+        },
+    })
+}

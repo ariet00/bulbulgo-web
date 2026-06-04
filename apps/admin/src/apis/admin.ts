@@ -528,6 +528,7 @@ export const adminApi = {
                 window_views: number
                 active_days: number
                 is_limited: boolean
+                cached_limited: boolean | null
                 free_used: number
                 free_limit: number
                 free_remaining: number
@@ -537,6 +538,23 @@ export const adminApi = {
             page: number
             size: number
         }>(`/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}`),
+    setDriverCredits: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
+        requests.put<{ user_id: number; credits_balance: number }>(
+            `/admin/rideshare/analytics/users/${userId}/credits`,
+            body,
+        ),
+    setDriverFreeUsed: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
+        requests.put<{
+            user_id: number
+            free_used: number
+            free_limit: number
+            free_remaining: number
+        }>(`/admin/rideshare/analytics/users/${userId}/free-used`, body),
+    setDriverLimited: (userId: number, value: number | null) =>
+        requests.put<{ user_id: number; cached_limited: boolean | null }>(
+            `/admin/rideshare/analytics/users/${userId}/limited`,
+            { value },
+        ),
 
     // Booking — bots & onboarding
     getBookingBots: (onlyUnlinked = false) =>

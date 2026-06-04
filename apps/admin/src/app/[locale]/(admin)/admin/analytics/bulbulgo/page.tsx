@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
     useAdminRideshareFunnel,
     useAdminRideshareSummary,
@@ -22,9 +22,16 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Pagination } from '@doska/ui'
+import { Input } from '@doska/ui'
+import { Popover, PopoverContent, PopoverTrigger } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Pencil } from 'lucide-react'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
+import {
+    useSetDriverCredits,
+    useSetDriverFreeUsed,
+    useSetDriverLimited,
+} from '@/hooks/mutations/admin'
 
 const LIMITED_SIZE = 20
 
@@ -676,6 +683,223 @@ function TopDriversCard({
 type LimitedDriversQuery = ReturnType<typeof useAdminRideshareLimitedDrivers>
 type LimitedDriverRow = NonNullable<LimitedDriversQuery['data']>['drivers'][number]
 
+// Inline editor for a numeric limit value (credits / free-used) with a "set"
+// (absolute) and "+/−" (delta) mode, plus an optional quick-reset button.
+function AdjustPopover({
+    title,
+    current,
+    display,
+    pending,
+    onSubmit,
+    quickResetTo,
+    quickResetLabel,
+}: {
+    title: string
+    current: number
+    display: ReactNode
+    pending: boolean
+    onSubmit: (mode: 'set' | 'delta', value: number) => void
+    quickResetTo?: number
+    quickResetLabel?: string
+}) {
+    const [open, setOpen] = useState(false)
+    const [mode, setMode] = useState<'set' | 'delta'>('set')
+    const [val, setVal] = useState('')
+
+    const handleOpenChange = (o: boolean) => {
+        setOpen(o)
+        if (o) {
+            setMode('set')
+            setVal(String(current))
+        }
+    }
+
+    const submit = () => {
+        const n = Number(val)
+        if (!Number.isFinite(n) || val === '') return
+        onSubmit(mode, Math.trunc(n))
+        setOpen(false)
+    }
+
+    return (
+        <Popover open={open} onOpenChange={handleOpenChange}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className="inline-flex items-center gap-1 tabular-nums hover:underline"
+                >
+                    {display}
+                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60 space-y-3" align="end">
+                <div className="text-sm font-medium">{title}</div>
+                <div className="flex gap-1">
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant={mode === 'set' ? 'default' : 'outline'}
+                        className="h-7 flex-1 text-xs"
+                        onClick={() => {
+                            setMode('set')
+                            setVal(String(current))
+                        }}
+                    >
+                        Точно
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant={mode === 'delta' ? 'default' : 'outline'}
+                        className="h-7 flex-1 text-xs"
+                        onClick={() => {
+                            setMode('delta')
+                            setVal('')
+                        }}
+                    >
+                        +/−
+                    </Button>
+                </div>
+                <Input
+                    type="number"
+                    autoFocus
+                    value={val}
+                    onChange={e => setVal(e.target.value)}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter') submit()
+                    }}
+                    placeholder={mode === 'delta' ? 'напр. -5 или 10' : 'значение'}
+                />
+                <div className="flex items-center gap-2">
+                    <Button
+                        type="button"
+                        size="sm"
+                        className="flex-1"
+                        disabled={pending || val === ''}
+                        onClick={submit}
+                    >
+                        Сохранить
+                    </Button>
+                    {quickResetTo !== undefined && (
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={pending}
+                            onClick={() => {
+                                onSubmit('set', quickResetTo)
+                                setOpen(false)
+                            }}
+                        >
+                            {quickResetLabel ?? 'Сброс'}
+                        </Button>
+                    )}
+                </div>
+                <p className="text-xs text-muted-foreground">Текущее: {current}</p>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
+// Status cell: shows the *effective* limited state (cached day-flag ?? live
+// compute) and lets an admin force/clear today's flag — the gate the live
+// limiter reads.
+function StatusCell({
+    d,
+    pending,
+    onSet,
+}: {
+    d: LimitedDriverRow
+    pending: boolean
+    onSet: (value: number | null) => void
+}) {
+    const [open, setOpen] = useState(false)
+    const effective = d.cached_limited ?? d.is_limited
+    const forced = d.cached_limited !== null
+    const diverges = forced && d.cached_limited !== d.is_limited
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button type="button" className="inline-flex items-center gap-1">
+                    {effective ? (
+                        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                            под лимитом
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            без лимита
+                        </span>
+                    )}
+                    {forced && (
+                        <span
+                            className="text-xs"
+                            title={`Зафиксировано на сегодня${
+                                diverges
+                                    ? ` · расчёт: ${d.is_limited ? 'под лимитом' : 'без лимита'}`
+                                    : ''
+                            }`}
+                        >
+                            📌
+                        </span>
+                    )}
+                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60 space-y-2" align="start">
+                <div className="text-xs text-muted-foreground">
+                    Расчёт: {d.is_limited ? 'под лимитом' : 'без лимита'} ({d.window_views} просм.
+                    / {d.active_days} дн.)
+                    {forced && (
+                        <div className="mt-0.5">
+                            Зафиксировано: {d.cached_limited ? 'под лимитом' : 'без лимита'}
+                        </div>
+                    )}
+                </div>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full justify-start"
+                    disabled={pending}
+                    onClick={() => {
+                        onSet(1)
+                        setOpen(false)
+                    }}
+                >
+                    Под лимитом (сегодня)
+                </Button>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full justify-start"
+                    disabled={pending}
+                    onClick={() => {
+                        onSet(0)
+                        setOpen(false)
+                    }}
+                >
+                    Без лимита (сегодня)
+                </Button>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-muted-foreground"
+                    disabled={pending}
+                    onClick={() => {
+                        onSet(null)
+                        setOpen(false)
+                    }}
+                >
+                    Авто (сбросить)
+                </Button>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
 function LimitedDriversCard({
     query,
     page,
@@ -690,6 +914,10 @@ function LimitedDriversCard({
     const cfg = query.data?.config
     const drivers = query.data?.drivers ?? []
     const total = query.data?.total ?? 0
+
+    const creditsM = useSetDriverCredits()
+    const freeM = useSetDriverFreeUsed()
+    const limitedM = useSetDriverLimited()
 
     return (
         <Card>
@@ -743,10 +971,12 @@ function LimitedDriversCard({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {drivers.map((d: LimitedDriverRow, i: number) => (
+                            {drivers.map((d: LimitedDriverRow, i: number) => {
+                                const effectiveLimited = d.cached_limited ?? d.is_limited
+                                return (
                                 <TableRow
                                     key={d.user_id}
-                                    className={d.is_limited ? 'bg-red-50 dark:bg-red-950/30' : undefined}
+                                    className={effectiveLimited ? 'bg-red-50 dark:bg-red-950/30' : undefined}
                                 >
                                     <TableCell className="text-muted-foreground tabular-nums">
                                         {(page - 1) * size + i + 1}
@@ -784,29 +1014,52 @@ function LimitedDriversCard({
                                         {d.active_days}
                                     </TableCell>
                                     <TableCell>
-                                        {d.is_limited ? (
-                                            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                                                под лимитом
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                                                кандидат
-                                            </span>
-                                        )}
+                                        <StatusCell
+                                            d={d}
+                                            pending={limitedM.isPending}
+                                            onSet={(value) =>
+                                                limitedM.mutate({ userId: d.user_id, value })
+                                            }
+                                        />
                                     </TableCell>
-                                    <TableCell className="text-right tabular-nums">
-                                        <span className={d.free_remaining === 0 ? 'text-red-600 dark:text-red-400 font-semibold' : undefined}>
-                                            {d.free_used}
-                                        </span>
-                                        <span className="text-muted-foreground"> / {d.free_limit}</span>
+                                    <TableCell className="text-right">
+                                        <AdjustPopover
+                                            title="Free сегодня"
+                                            current={d.free_used}
+                                            pending={freeM.isPending}
+                                            quickResetTo={0}
+                                            quickResetLabel="Сброс (0)"
+                                            onSubmit={(mode, value) =>
+                                                freeM.mutate({ userId: d.user_id, mode, value })
+                                            }
+                                            display={
+                                                <>
+                                                    <span className={d.free_remaining === 0 ? 'text-red-600 dark:text-red-400 font-semibold' : undefined}>
+                                                        {d.free_used}
+                                                    </span>
+                                                    <span className="text-muted-foreground"> / {d.free_limit}</span>
+                                                </>
+                                            }
+                                        />
                                     </TableCell>
-                                    <TableCell className="text-right tabular-nums">
-                                        <span className={d.credits_balance > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-muted-foreground'}>
-                                            {d.credits_balance}
-                                        </span>
+                                    <TableCell className="text-right">
+                                        <AdjustPopover
+                                            title="Купленные лимиты"
+                                            current={d.credits_balance}
+                                            pending={creditsM.isPending}
+                                            onSubmit={(mode, value) =>
+                                                creditsM.mutate({ userId: d.user_id, mode, value })
+                                            }
+                                            display={
+                                                <span className={d.credits_balance > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-muted-foreground'}>
+                                                    {d.credits_balance}
+                                                </span>
+                                            }
+                                        />
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                                )
+                            })}
                         </TableBody>
                     </Table>
                 )}
