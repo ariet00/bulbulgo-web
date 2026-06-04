@@ -530,6 +530,7 @@ export const useAdminRideshareLimitedDrivers = (page: number = 1, size: number =
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers', page, size],
         queryFn: () => adminApi.getRideshareLimitedDrivers(page, size),
+        placeholderData: keepPreviousData,
     })
 }
 
