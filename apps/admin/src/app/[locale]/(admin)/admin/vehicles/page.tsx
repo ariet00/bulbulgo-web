@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useAdminVehicles } from '@/hooks/queries/admin'
 import { useDebounce } from '@doska/shared'
+import { useFilterParams } from '@/hooks/useFilterParams'
 import { useAdminDeleteVehicle } from '@/hooks/mutations/admin'
 import {
     Table,
@@ -31,26 +31,38 @@ import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 const ALL = '__all__'
 const VEHICLE_TYPES = ['passenger', 'cargo']
 
-export default function AdminVehiclesPage() {
-    const searchParams = useSearchParams()
-    const userIdParam = searchParams.get('user_id')
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+    vehicle_type: ALL,
+    year: 0,
+    user_id: 0,
+}
 
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
-    const [vehicleType, setVehicleType] = useState<string>(ALL)
-    const [year, setYear] = useState('')
-    const [userId, setUserId] = useState<number | null>(userIdParam ? Number(userIdParam) : null)
+export default function AdminVehiclesPage() {
+    const { values, setValues, reset } = useFilterParams(FILTER_DEFAULTS)
+
+    const [qInput, setQInput] = useState(values.q)
+    const [yearInput, setYearInput] = useState(values.year ? String(values.year) : '')
+    const dq = useDebounce(qInput, 300)
+    const dYear = useDebounce(yearInput, 400)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
+    useEffect(() => {
+        const n = dYear === '' ? 0 : Number(dYear)
+        if (n !== values.year) setValues({ year: n })
+    }, [dYear, values.year, setValues])
 
     const { data: vehicles, isLoading, isFetching, refetch } = useAdminVehicles(
-        page,
-        size,
-        dq || undefined,
+        values.page,
+        values.size,
+        values.q || undefined,
         {
-            vehicle_type: vehicleType === ALL ? undefined : vehicleType,
-            year: year ? Number(year) : undefined,
-            user_id: userId ?? undefined,
+            vehicle_type: values.vehicle_type === ALL ? undefined : values.vehicle_type,
+            year: values.year || undefined,
+            user_id: values.user_id || undefined,
         },
     )
     const deleteVehicleMutation = useAdminDeleteVehicle()
@@ -62,14 +74,13 @@ export default function AdminVehiclesPage() {
     }
 
     const resetFilters = () => {
-        setQ('')
-        setVehicleType(ALL)
-        setYear('')
-        setUserId(null)
-        setPage(1)
+        setQInput('')
+        setYearInput('')
+        reset()
     }
 
-    const hasActiveFilters = !!q || vehicleType !== ALL || !!year || userId !== null
+    const hasActiveFilters =
+        !!values.q || values.vehicle_type !== ALL || !!values.year || !!values.user_id
 
     return (
         <div className="space-y-6">
@@ -91,30 +102,21 @@ export default function AdminVehiclesPage() {
                     <div className="flex flex-wrap items-end gap-2">
                         <div className="w-full sm:w-64">
                             <UserCombobox
-                                value={userId}
-                                onChange={(id) => {
-                                    setUserId(id)
-                                    setPage(1)
-                                }}
+                                value={values.user_id || null}
+                                onChange={(id) => setValues({ user_id: id ?? 0 })}
                                 placeholder="Все владельцы"
                                 allowClear
                             />
                         </div>
                         <Input
                             placeholder="Поиск по марке/модели/номеру/id…"
-                            value={q}
-                            onChange={(e) => {
-                                setQ(e.target.value)
-                                setPage(1)
-                            }}
+                            value={qInput}
+                            onChange={(e) => setQInput(e.target.value)}
                             className="w-full sm:max-w-xs"
                         />
                         <Select
-                            value={vehicleType}
-                            onValueChange={(v) => {
-                                setVehicleType(v)
-                                setPage(1)
-                            }}
+                            value={values.vehicle_type}
+                            onValueChange={(v) => setValues({ vehicle_type: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Тип" />
@@ -131,11 +133,8 @@ export default function AdminVehiclesPage() {
                         <Input
                             type="number"
                             placeholder="Год"
-                            value={year}
-                            onChange={(e) => {
-                                setYear(e.target.value)
-                                setPage(1)
-                            }}
+                            value={yearInput}
+                            onChange={(e) => setYearInput(e.target.value)}
                             className="w-full sm:w-28"
                         />
                         {hasActiveFilters && (
@@ -224,8 +223,8 @@ export default function AdminVehiclesPage() {
                             page={vehicles.page}
                             total={vehicles.total}
                             size={vehicles.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>

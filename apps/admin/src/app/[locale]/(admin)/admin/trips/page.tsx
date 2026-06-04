@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useAdminTrips } from '@/hooks/queries/admin'
 import { useDebounce } from '@doska/shared'
+import { useFilterParams } from '@/hooks/useFilterParams'
 import { useAdminDeleteTrip } from '@/hooks/mutations/admin'
 import {
     Table,
@@ -35,6 +35,24 @@ const TRIP_STATUSES = ['active', 'processing', 'completed', 'cancelled', 'archiv
 const TRIP_TYPES = ['rideshare', 'rideshare_city', 'taxi', 'shuttle', 'bus', 'freight', 'freight_city', 'delivery']
 const TRIP_ROLES = ['driver', 'passenger', 'cargo_owner']
 
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+    status: ALL,
+    trip_type: ALL,
+    role: ALL,
+    user_id: 0,
+    from_location_id: 0,
+    to_location_id: 0,
+    price_min: 0,
+    price_max: 0,
+    seats_min: 0,
+    seats_max: 0,
+    date_from: '',
+    date_to: '',
+}
+
 const statusClass = (status: string) => {
     switch (status) {
         case 'active':
@@ -51,47 +69,59 @@ const statusClass = (status: string) => {
 }
 
 export default function AdminTripsPage() {
-    const searchParams = useSearchParams()
-    const userIdParam = searchParams.get('user_id')
+    const { values, setValues, reset } = useFilterParams(FILTER_DEFAULTS)
 
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
-    const [status, setStatus] = useState<string>(ALL)
-    const [tripType, setTripType] = useState<string>(ALL)
-    const [role, setRole] = useState<string>(ALL)
-    const [userId, setUserId] = useState<number | null>(userIdParam ? Number(userIdParam) : null)
-    const [fromLocationId, setFromLocationId] = useState<number | null>(null)
-    const [toLocationId, setToLocationId] = useState<number | null>(null)
-    const [priceMin, setPriceMin] = useState('')
-    const [priceMax, setPriceMax] = useState('')
-    const [seatsMin, setSeatsMin] = useState('')
-    const [seatsMax, setSeatsMax] = useState('')
-    const dPriceMin = useDebounce(priceMin, 400)
-    const dPriceMax = useDebounce(priceMax, 400)
-    const dSeatsMin = useDebounce(seatsMin, 400)
-    const dSeatsMax = useDebounce(seatsMax, 400)
-    const [dateFrom, setDateFrom] = useState('')
-    const [dateTo, setDateTo] = useState('')
+    // Debounced text/number inputs keep a local mirror for snappy typing;
+    // the URL (via setValues) is updated only after the debounce settles.
+    const [qInput, setQInput] = useState(values.q)
+    const [priceMinInput, setPriceMinInput] = useState(values.price_min ? String(values.price_min) : '')
+    const [priceMaxInput, setPriceMaxInput] = useState(values.price_max ? String(values.price_max) : '')
+    const [seatsMinInput, setSeatsMinInput] = useState(values.seats_min ? String(values.seats_min) : '')
+    const [seatsMaxInput, setSeatsMaxInput] = useState(values.seats_max ? String(values.seats_max) : '')
+
+    const dq = useDebounce(qInput, 300)
+    const dPriceMin = useDebounce(priceMinInput, 400)
+    const dPriceMax = useDebounce(priceMaxInput, 400)
+    const dSeatsMin = useDebounce(seatsMinInput, 400)
+    const dSeatsMax = useDebounce(seatsMaxInput, 400)
+
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
+    useEffect(() => {
+        const n = dPriceMin === '' ? 0 : Number(dPriceMin)
+        if (n !== values.price_min) setValues({ price_min: n })
+    }, [dPriceMin, values.price_min, setValues])
+    useEffect(() => {
+        const n = dPriceMax === '' ? 0 : Number(dPriceMax)
+        if (n !== values.price_max) setValues({ price_max: n })
+    }, [dPriceMax, values.price_max, setValues])
+    useEffect(() => {
+        const n = dSeatsMin === '' ? 0 : Number(dSeatsMin)
+        if (n !== values.seats_min) setValues({ seats_min: n })
+    }, [dSeatsMin, values.seats_min, setValues])
+    useEffect(() => {
+        const n = dSeatsMax === '' ? 0 : Number(dSeatsMax)
+        if (n !== values.seats_max) setValues({ seats_max: n })
+    }, [dSeatsMax, values.seats_max, setValues])
 
     const { data: trips, isLoading, isFetching, refetch } = useAdminTrips(
-        page,
-        size,
-        dq || undefined,
-        status === ALL ? undefined : status,
+        values.page,
+        values.size,
+        values.q || undefined,
+        values.status === ALL ? undefined : values.status,
         {
-            trip_type: tripType === ALL ? undefined : tripType,
-            role: role === ALL ? undefined : role,
-            user_id: userId ?? undefined,
-            from_location_id: fromLocationId ?? undefined,
-            to_location_id: toLocationId ?? undefined,
-            price_min: dPriceMin !== '' ? Number(dPriceMin) : undefined,
-            price_max: dPriceMax !== '' ? Number(dPriceMax) : undefined,
-            seats_min: dSeatsMin !== '' ? Number(dSeatsMin) : undefined,
-            seats_max: dSeatsMax !== '' ? Number(dSeatsMax) : undefined,
-            date_from: dateFrom || undefined,
-            date_to: dateTo || undefined,
+            trip_type: values.trip_type === ALL ? undefined : values.trip_type,
+            role: values.role === ALL ? undefined : values.role,
+            user_id: values.user_id || undefined,
+            from_location_id: values.from_location_id || undefined,
+            to_location_id: values.to_location_id || undefined,
+            price_min: values.price_min || undefined,
+            price_max: values.price_max || undefined,
+            seats_min: values.seats_min || undefined,
+            seats_max: values.seats_max || undefined,
+            date_from: values.date_from || undefined,
+            date_to: values.date_to || undefined,
         },
     )
     const deleteTripMutation = useAdminDeleteTrip()
@@ -103,36 +133,28 @@ export default function AdminTripsPage() {
     }
 
     const resetFilters = () => {
-        setQ('')
-        setStatus(ALL)
-        setTripType(ALL)
-        setRole(ALL)
-        setUserId(null)
-        setFromLocationId(null)
-        setToLocationId(null)
-        setPriceMin('')
-        setPriceMax('')
-        setSeatsMin('')
-        setSeatsMax('')
-        setDateFrom('')
-        setDateTo('')
-        setPage(1)
+        setQInput('')
+        setPriceMinInput('')
+        setPriceMaxInput('')
+        setSeatsMinInput('')
+        setSeatsMaxInput('')
+        reset()
     }
 
     const hasActiveFilters =
-        !!q ||
-        status !== ALL ||
-        tripType !== ALL ||
-        role !== ALL ||
-        userId !== null ||
-        fromLocationId !== null ||
-        toLocationId !== null ||
-        !!priceMin ||
-        !!priceMax ||
-        !!seatsMin ||
-        !!seatsMax ||
-        !!dateFrom ||
-        !!dateTo
+        !!values.q ||
+        values.status !== ALL ||
+        values.trip_type !== ALL ||
+        values.role !== ALL ||
+        !!values.user_id ||
+        !!values.from_location_id ||
+        !!values.to_location_id ||
+        !!values.price_min ||
+        !!values.price_max ||
+        !!values.seats_min ||
+        !!values.seats_max ||
+        !!values.date_from ||
+        !!values.date_to
 
     return (
         <div className="space-y-6">
@@ -154,30 +176,21 @@ export default function AdminTripsPage() {
                     <div className="flex flex-wrap items-end gap-2">
                         <div className="w-full sm:w-64">
                             <UserCombobox
-                                value={userId}
-                                onChange={(id) => {
-                                    setUserId(id)
-                                    setPage(1)
-                                }}
+                                value={values.user_id || null}
+                                onChange={(id) => setValues({ user_id: id ?? 0 })}
                                 placeholder="Все пользователи"
                                 allowClear
                             />
                         </div>
                         <Input
                             placeholder="Поиск по телефону/id…"
-                            value={q}
-                            onChange={(e) => {
-                                setQ(e.target.value)
-                                setPage(1)
-                            }}
+                            value={qInput}
+                            onChange={(e) => setQInput(e.target.value)}
                             className="w-full sm:max-w-xs"
                         />
                         <Select
-                            value={status}
-                            onValueChange={(v) => {
-                                setStatus(v)
-                                setPage(1)
-                            }}
+                            value={values.status}
+                            onValueChange={(v) => setValues({ status: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Статус" />
@@ -192,11 +205,8 @@ export default function AdminTripsPage() {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={tripType}
-                            onValueChange={(v) => {
-                                setTripType(v)
-                                setPage(1)
-                            }}
+                            value={values.trip_type}
+                            onValueChange={(v) => setValues({ trip_type: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Тип" />
@@ -211,11 +221,8 @@ export default function AdminTripsPage() {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={role}
-                            onValueChange={(v) => {
-                                setRole(v)
-                                setPage(1)
-                            }}
+                            value={values.role}
+                            onValueChange={(v) => setValues({ role: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Роль" />
@@ -233,11 +240,8 @@ export default function AdminTripsPage() {
                             <span className="text-xs text-muted-foreground mb-1">Откуда</span>
                             <div className="w-full sm:w-44">
                                 <RegionCombobox
-                                    value={fromLocationId}
-                                    onChange={(id) => {
-                                        setFromLocationId(id)
-                                        setPage(1)
-                                    }}
+                                    value={values.from_location_id || null}
+                                    onChange={(id) => setValues({ from_location_id: id ?? 0 })}
                                     placeholder="Откуда"
                                 />
                             </div>
@@ -246,11 +250,8 @@ export default function AdminTripsPage() {
                             <span className="text-xs text-muted-foreground mb-1">Куда</span>
                             <div className="w-full sm:w-44">
                                 <RegionCombobox
-                                    value={toLocationId}
-                                    onChange={(id) => {
-                                        setToLocationId(id)
-                                        setPage(1)
-                                    }}
+                                    value={values.to_location_id || null}
+                                    onChange={(id) => setValues({ to_location_id: id ?? 0 })}
                                     placeholder="Куда"
                                 />
                             </div>
@@ -262,11 +263,8 @@ export default function AdminTripsPage() {
                                     type="number"
                                     min={0}
                                     placeholder="от"
-                                    value={priceMin}
-                                    onChange={(e) => {
-                                        setPriceMin(e.target.value)
-                                        setPage(1)
-                                    }}
+                                    value={priceMinInput}
+                                    onChange={(e) => setPriceMinInput(e.target.value)}
                                     className="w-24"
                                 />
                                 <span className="text-muted-foreground">—</span>
@@ -274,11 +272,8 @@ export default function AdminTripsPage() {
                                     type="number"
                                     min={0}
                                     placeholder="до"
-                                    value={priceMax}
-                                    onChange={(e) => {
-                                        setPriceMax(e.target.value)
-                                        setPage(1)
-                                    }}
+                                    value={priceMaxInput}
+                                    onChange={(e) => setPriceMaxInput(e.target.value)}
                                     className="w-24"
                                 />
                             </div>
@@ -290,11 +285,8 @@ export default function AdminTripsPage() {
                                     type="number"
                                     min={0}
                                     placeholder="от"
-                                    value={seatsMin}
-                                    onChange={(e) => {
-                                        setSeatsMin(e.target.value)
-                                        setPage(1)
-                                    }}
+                                    value={seatsMinInput}
+                                    onChange={(e) => setSeatsMinInput(e.target.value)}
                                     className="w-20"
                                 />
                                 <span className="text-muted-foreground">—</span>
@@ -302,11 +294,8 @@ export default function AdminTripsPage() {
                                     type="number"
                                     min={0}
                                     placeholder="до"
-                                    value={seatsMax}
-                                    onChange={(e) => {
-                                        setSeatsMax(e.target.value)
-                                        setPage(1)
-                                    }}
+                                    value={seatsMaxInput}
+                                    onChange={(e) => setSeatsMaxInput(e.target.value)}
                                     className="w-20"
                                 />
                             </div>
@@ -315,11 +304,8 @@ export default function AdminTripsPage() {
                             <span className="text-xs text-muted-foreground mb-1">Дата от</span>
                             <Input
                                 type="date"
-                                value={dateFrom}
-                                onChange={(e) => {
-                                    setDateFrom(e.target.value)
-                                    setPage(1)
-                                }}
+                                value={values.date_from}
+                                onChange={(e) => setValues({ date_from: e.target.value })}
                                 className="w-full sm:w-40"
                             />
                         </div>
@@ -327,11 +313,8 @@ export default function AdminTripsPage() {
                             <span className="text-xs text-muted-foreground mb-1">Дата до</span>
                             <Input
                                 type="date"
-                                value={dateTo}
-                                onChange={(e) => {
-                                    setDateTo(e.target.value)
-                                    setPage(1)
-                                }}
+                                value={values.date_to}
+                                onChange={(e) => setValues({ date_to: e.target.value })}
                                 className="w-full sm:w-40"
                             />
                         </div>
@@ -488,8 +471,8 @@ export default function AdminTripsPage() {
                             page={trips.page}
                             total={trips.total}
                             size={trips.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>

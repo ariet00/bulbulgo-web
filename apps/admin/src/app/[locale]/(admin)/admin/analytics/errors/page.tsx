@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useFilterParams } from '@/hooks/useFilterParams'
 import {
     useAdminAnalyticsErrorsByPath,
     useAdminAnalyticsErrorsByUser,
@@ -36,10 +37,17 @@ const PERIODS: Array<{ value: string; label: string }> = [
     { value: '90d', label: '90d' },
 ]
 
+const FILTER_DEFAULTS = {
+    period: '7d',
+    product: '',
+    error_class: '',
+}
+
 export default function AnalyticsErrorsPage() {
-    const [period, setPeriod] = useState('7d')
-    const [product, setProduct] = useState('')
-    const [errorClass, setErrorClass] = useState('')
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+    const period = values.period
+    const product = values.product
+    const errorClass = values.error_class
     const [selected, setSelected] = useState<AdminErrorGroup | null>(null)
 
     const granularity = period === '24h' ? 'hour' : 'day'
@@ -81,7 +89,7 @@ export default function AnalyticsErrorsPage() {
                             key={p.value}
                             variant={period === p.value ? 'default' : 'outline'}
                             size="sm"
-                            onClick={() => setPeriod(p.value)}
+                            onClick={() => setValues({ period: p.value })}
                         >
                             {p.label}
                         </Button>
@@ -94,14 +102,14 @@ export default function AnalyticsErrorsPage() {
             </div>
 
             <div className="flex items-center justify-between gap-3 flex-wrap">
-                <ProductSelector value={product} onChange={setProduct} />
+                <ProductSelector value={product} onChange={(v) => setValues({ product: v })} />
                 <div className="flex gap-2 items-center flex-wrap">
                     {ERROR_CLASSES.map(c => (
                         <Button
                             key={c.value}
                             variant={errorClass === c.value ? 'default' : 'outline'}
                             size="sm"
-                            onClick={() => setErrorClass(c.value)}
+                            onClick={() => setValues({ error_class: c.value })}
                         >
                             {c.label}
                         </Button>

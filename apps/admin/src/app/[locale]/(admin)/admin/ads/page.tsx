@@ -27,35 +27,42 @@ import {
 } from '@doska/ui'
 import { Link, useRouter } from '@doska/i18n'
 import { Plus, Trash2 } from 'lucide-react'
-import { useState, type MouseEvent } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import type { AdminAd } from '@/apis/admin'
 import { PLACEMENTS } from '@/components/admin/ads/AdForm'
+import { useFilterParams } from '@/hooks/useFilterParams'
 
 const ALL = '__all__'
+
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+    placement: ALL,
+    is_active: ALL,
+}
 
 function placementLabel(value: string) {
     return PLACEMENTS.find((p) => p.value === value)?.label ?? value
 }
 
 export default function AdminAdsPage() {
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
-    const [placement, setPlacement] = useState<string>(ALL)
-    const [isActive, setIsActive] = useState<string>(ALL)
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+    const [qInput, setQInput] = useState(values.q)
+    const dq = useDebounce(qInput, 300)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
 
-    const { data, isLoading } = useAdminAds(page, size, {
-        q: dq || undefined,
-        placement: placement === ALL ? undefined : placement,
-        is_active: isActive === ALL ? undefined : isActive === 'true',
+    const { data, isLoading } = useAdminAds(values.page, values.size, {
+        q: values.q || undefined,
+        placement: values.placement === ALL ? undefined : values.placement,
+        is_active: values.is_active === ALL ? undefined : values.is_active === 'true',
     })
 
     const deleteMutation = useAdminDeleteAd()
     const updateMutation = useAdminUpdateAd()
     const router = useRouter()
-
-    const resetPage = () => setPage(1)
 
     const handleDelete = (e: MouseEvent, id: number) => {
         e.stopPropagation()
@@ -83,19 +90,13 @@ export default function AdminAdsPage() {
                     <div className="flex flex-wrap gap-2">
                         <Input
                             placeholder="Поиск по заголовку…"
-                            value={q}
-                            onChange={(e) => {
-                                setQ(e.target.value)
-                                resetPage()
-                            }}
+                            value={qInput}
+                            onChange={(e) => setQInput(e.target.value)}
                             className="w-full sm:max-w-xs"
                         />
                         <Select
-                            value={placement}
-                            onValueChange={(v) => {
-                                setPlacement(v)
-                                resetPage()
-                            }}
+                            value={values.placement}
+                            onValueChange={(v) => setValues({ placement: v })}
                         >
                             <SelectTrigger className="w-full sm:w-64">
                                 <SelectValue placeholder="Слот" />
@@ -110,11 +111,8 @@ export default function AdminAdsPage() {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={isActive}
-                            onValueChange={(v) => {
-                                setIsActive(v)
-                                resetPage()
-                            }}
+                            value={values.is_active}
+                            onValueChange={(v) => setValues({ is_active: v })}
                         >
                             <SelectTrigger className="w-full sm:w-44">
                                 <SelectValue placeholder="Статус" />
@@ -219,8 +217,8 @@ export default function AdminAdsPage() {
                             page={data.page}
                             total={data.total}
                             size={data.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>

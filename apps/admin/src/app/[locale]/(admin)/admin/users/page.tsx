@@ -2,8 +2,9 @@
 
 import { useAdminBanUser } from '@/hooks/mutations/admin'
 import { useDebounce } from '@doska/shared'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAdminUsers } from '@/hooks/queries/admin'
+import { useFilterParams } from '@/hooks/useFilterParams'
 import {
     Table,
     TableBody,
@@ -35,25 +36,38 @@ const STATUS_OPTIONS = [
 const GENDERS = ['male', 'female']
 const PROVIDERS = ['google', 'apple', 'telegram', 'phone']
 
-export default function UsersPage() {
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
-    const [statusFilter, setStatusFilter] = useState<string>(ALL)
-    const [gender, setGender] = useState<string>(ALL)
-    const [provider, setProvider] = useState<string>(ALL)
-    const [dateFrom, setDateFrom] = useState('')
-    const [dateTo, setDateTo] = useState('')
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+    status: ALL,
+    gender: ALL,
+    provider: ALL,
+    date_from: '',
+    date_to: '',
+}
 
-    const { data: users, isLoading, isFetching, refetch } = useAdminUsers(page, size, dq || undefined, {
-        is_active:
-            statusFilter === ALL ? undefined : statusFilter === 'active',
-        gender: gender === ALL ? undefined : gender,
-        provider: provider === ALL ? undefined : provider,
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
-    })
+export default function UsersPage() {
+    const { values, setValues, reset } = useFilterParams(FILTER_DEFAULTS)
+
+    const [qInput, setQInput] = useState(values.q)
+    const dq = useDebounce(qInput, 300)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
+
+    const { data: users, isLoading, isFetching, refetch } = useAdminUsers(
+        values.page,
+        values.size,
+        values.q || undefined,
+        {
+            is_active: values.status === ALL ? undefined : values.status === 'active',
+            gender: values.gender === ALL ? undefined : values.gender,
+            provider: values.provider === ALL ? undefined : values.provider,
+            date_from: values.date_from || undefined,
+            date_to: values.date_to || undefined,
+        },
+    )
     const banUserMutation = useAdminBanUser()
 
     const handleBan = (id: number, isActive: boolean) => {
@@ -63,22 +77,17 @@ export default function UsersPage() {
     }
 
     const resetFilters = () => {
-        setQ('')
-        setStatusFilter(ALL)
-        setGender(ALL)
-        setProvider(ALL)
-        setDateFrom('')
-        setDateTo('')
-        setPage(1)
+        setQInput('')
+        reset()
     }
 
     const hasActiveFilters =
-        !!q ||
-        statusFilter !== ALL ||
-        gender !== ALL ||
-        provider !== ALL ||
-        !!dateFrom ||
-        !!dateTo
+        !!values.q ||
+        values.status !== ALL ||
+        values.gender !== ALL ||
+        values.provider !== ALL ||
+        !!values.date_from ||
+        !!values.date_to
 
     return (
         <div className="space-y-6">
@@ -100,19 +109,13 @@ export default function UsersPage() {
                     <div className="flex flex-wrap items-end gap-2">
                         <Input
                             placeholder="Поиск по имени/телефону/email/id…"
-                            value={q}
-                            onChange={(e) => {
-                                setQ(e.target.value)
-                                setPage(1)
-                            }}
+                            value={qInput}
+                            onChange={(e) => setQInput(e.target.value)}
                             className="w-full sm:max-w-xs"
                         />
                         <Select
-                            value={statusFilter}
-                            onValueChange={(v) => {
-                                setStatusFilter(v)
-                                setPage(1)
-                            }}
+                            value={values.status}
+                            onValueChange={(v) => setValues({ status: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Статус" />
@@ -127,11 +130,8 @@ export default function UsersPage() {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={gender}
-                            onValueChange={(v) => {
-                                setGender(v)
-                                setPage(1)
-                            }}
+                            value={values.gender}
+                            onValueChange={(v) => setValues({ gender: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Пол" />
@@ -146,11 +146,8 @@ export default function UsersPage() {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={provider}
-                            onValueChange={(v) => {
-                                setProvider(v)
-                                setPage(1)
-                            }}
+                            value={values.provider}
+                            onValueChange={(v) => setValues({ provider: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Провайдер" />
@@ -168,11 +165,8 @@ export default function UsersPage() {
                             <span className="text-xs text-muted-foreground mb-1">Регистрация от</span>
                             <Input
                                 type="date"
-                                value={dateFrom}
-                                onChange={(e) => {
-                                    setDateFrom(e.target.value)
-                                    setPage(1)
-                                }}
+                                value={values.date_from}
+                                onChange={(e) => setValues({ date_from: e.target.value })}
                                 className="w-full sm:w-40"
                             />
                         </div>
@@ -180,11 +174,8 @@ export default function UsersPage() {
                             <span className="text-xs text-muted-foreground mb-1">до</span>
                             <Input
                                 type="date"
-                                value={dateTo}
-                                onChange={(e) => {
-                                    setDateTo(e.target.value)
-                                    setPage(1)
-                                }}
+                                value={values.date_to}
+                                onChange={(e) => setValues({ date_to: e.target.value })}
                                 className="w-full sm:w-40"
                             />
                         </div>
@@ -319,8 +310,8 @@ export default function UsersPage() {
                             page={users.page}
                             total={users.total}
                             size={users.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>

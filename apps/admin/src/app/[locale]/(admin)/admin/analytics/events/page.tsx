@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAdminAnalyticsEvents } from '@/hooks/queries/admin'
+import { useDebounce } from '@doska/shared'
+import { useFilterParams } from '@/hooks/useFilterParams'
 import {
     Table,
     TableBody,
@@ -18,21 +20,43 @@ import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 
+const SIZE = 50
+
+const FILTER_DEFAULTS = {
+    page: 1,
+    event_type: '',
+    user_id: 0,
+    platform: '',
+    product: '',
+}
+
 export default function AnalyticsEventsPage() {
-    const [page, setPage] = useState(1)
-    const size = 50
-    const [eventType, setEventType] = useState('')
-    const [userId, setUserId] = useState('')
-    const [platform, setPlatform] = useState('')
-    const [product, setProduct] = useState('')
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+
+    const [eventTypeInput, setEventTypeInput] = useState(values.event_type)
+    const [userIdInput, setUserIdInput] = useState(values.user_id ? String(values.user_id) : '')
+    const [platformInput, setPlatformInput] = useState(values.platform)
+    const dEventType = useDebounce(eventTypeInput, 400)
+    const dUserId = useDebounce(userIdInput, 400)
+    const dPlatform = useDebounce(platformInput, 400)
+    useEffect(() => {
+        if (dEventType !== values.event_type) setValues({ event_type: dEventType })
+    }, [dEventType, values.event_type, setValues])
+    useEffect(() => {
+        const n = dUserId === '' ? 0 : Number(dUserId)
+        if (n !== values.user_id) setValues({ user_id: n })
+    }, [dUserId, values.user_id, setValues])
+    useEffect(() => {
+        if (dPlatform !== values.platform) setValues({ platform: dPlatform })
+    }, [dPlatform, values.platform, setValues])
 
     const params = {
-        page,
-        size,
-        event_type: eventType || undefined,
-        user_id: userId ? Number(userId) : undefined,
-        platform: platform || undefined,
-        product: product || undefined,
+        page: values.page,
+        size: SIZE,
+        event_type: values.event_type || undefined,
+        user_id: values.user_id || undefined,
+        platform: values.platform || undefined,
+        product: values.product || undefined,
     }
     const { data, isLoading, isFetching, refetch } = useAdminAnalyticsEvents(params)
 
@@ -52,11 +76,8 @@ export default function AnalyticsEventsPage() {
             </div>
 
             <ProductSelector
-                value={product}
-                onChange={(v) => {
-                    setProduct(v)
-                    setPage(1)
-                }}
+                value={values.product}
+                onChange={(v) => setValues({ product: v })}
             />
 
             <Card>
@@ -67,28 +88,19 @@ export default function AnalyticsEventsPage() {
                     <div className="grid gap-3 md:grid-cols-3">
                         <Input
                             placeholder="event_type (напр. trip_created)"
-                            value={eventType}
-                            onChange={e => {
-                                setEventType(e.target.value)
-                                setPage(1)
-                            }}
+                            value={eventTypeInput}
+                            onChange={e => setEventTypeInput(e.target.value)}
                         />
                         <Input
                             placeholder="user_id"
                             type="number"
-                            value={userId}
-                            onChange={e => {
-                                setUserId(e.target.value)
-                                setPage(1)
-                            }}
+                            value={userIdInput}
+                            onChange={e => setUserIdInput(e.target.value)}
                         />
                         <Input
                             placeholder="platform (web / ios / android / popytka / booking …)"
-                            value={platform}
-                            onChange={e => {
-                                setPlatform(e.target.value)
-                                setPage(1)
-                            }}
+                            value={platformInput}
+                            onChange={e => setPlatformInput(e.target.value)}
                         />
                     </div>
                 </CardContent>
@@ -143,13 +155,13 @@ export default function AnalyticsEventsPage() {
                         </Table>
                     )}
 
-                    {data && data.total > size && (
+                    {data && data.total > SIZE && (
                         <div className="mt-4">
                             <Pagination
-                                page={page}
+                                page={values.page}
                                 total={data.total}
-                                size={size}
-                                onPageChange={setPage}
+                                size={SIZE}
+                                onPageChange={(p) => setValues({ page: p })}
                             />
                         </div>
                     )}

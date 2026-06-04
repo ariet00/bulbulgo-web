@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAdminChats } from '@/hooks/queries/admin'
 import { useDebounce } from '@doska/shared'
+import { useFilterParams } from '@/hooks/useFilterParams'
 import {
     Table,
     TableBody,
@@ -18,12 +19,21 @@ import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 import { format } from 'date-fns'
 
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+}
+
 export default function AdminChatsPage() {
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
-    const { data: chats, isLoading } = useAdminChats(page, size, dq || undefined)
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+    const [qInput, setQInput] = useState(values.q)
+    const dq = useDebounce(qInput, 300)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
+
+    const { data: chats, isLoading } = useAdminChats(values.page, values.size, values.q || undefined)
 
     return (
         <div className="space-y-6">
@@ -35,11 +45,8 @@ export default function AdminChatsPage() {
                 <CardContent className="space-y-4">
                     <Input
                         placeholder="Поиск по id чата или поездки…"
-                        value={q}
-                        onChange={(e) => {
-                            setQ(e.target.value)
-                            setPage(1)
-                        }}
+                        value={qInput}
+                        onChange={(e) => setQInput(e.target.value)}
                         className="w-full sm:max-w-xs"
                     />
                     {isLoading ? (
@@ -85,8 +92,8 @@ export default function AdminChatsPage() {
                             page={chats.page}
                             total={chats.total}
                             size={chats.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>
