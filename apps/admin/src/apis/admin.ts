@@ -510,6 +510,30 @@ export const adminApi = {
                 completed: number
             }>
         }>(`/admin/rideshare/analytics/top-routes?period=${period}&limit=${limit}`),
+    getRideshareLimitedDrivers: (limit: number = 100) =>
+        requests.get<{
+            config: {
+                enabled: boolean
+                free_daily_limit: number
+                fast_cost: number
+                activity_window_days: number
+                activity_min_views: number
+                activity_min_active_days: number
+            }
+            drivers: Array<{
+                user_id: number
+                name: string | null
+                phone: string | null
+                avatar_url: string | null
+                window_views: number
+                active_days: number
+                is_limited: boolean
+                free_used: number
+                free_limit: number
+                free_remaining: number
+                credits_balance: number
+            }>
+        }>(`/admin/rideshare/analytics/limited-drivers?limit=${limit}`),
 
     // Booking — bots & onboarding
     getBookingBots: (onlyUnlinked = false) =>

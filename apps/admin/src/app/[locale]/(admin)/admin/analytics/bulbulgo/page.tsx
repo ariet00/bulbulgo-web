@@ -9,6 +9,7 @@ import {
     useAdminRideshareTopRoutes,
     useAdminRideshareTripsByDay,
     useAdminRideshareInstallsByDay,
+    useAdminRideshareLimitedDrivers,
 } from '@/hooks/queries/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
@@ -125,6 +126,7 @@ export default function BulbulGoAnalyticsPage() {
     const topByAds = useAdminRideshareTopDrivers(topAdsP, 20, 'trip_views')
     const topActive = useAdminRideshareTopActiveUsers(topActiveP, 20)
     const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
+    const limitedDrivers = useAdminRideshareLimitedDrivers(100)
 
     const isFetching =
         funnel.isFetching ||
@@ -136,7 +138,8 @@ export default function BulbulGoAnalyticsPage() {
         topByPhone.isFetching ||
         topByAds.isFetching ||
         topActive.isFetching ||
-        topRoutes.isFetching
+        topRoutes.isFetching ||
+        limitedDrivers.isFetching
     const refetchAll = () => {
         funnel.refetch()
         summary.refetch()
@@ -148,6 +151,7 @@ export default function BulbulGoAnalyticsPage() {
         topByAds.refetch()
         topActive.refetch()
         topRoutes.refetch()
+        limitedDrivers.refetch()
     }
 
     return (
@@ -435,6 +439,8 @@ export default function BulbulGoAnalyticsPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <LimitedDriversCard query={limitedDrivers} />
         </div>
     )
 }
@@ -644,6 +650,121 @@ function TopDriversCard({
                                     </TableRow>
                                 )
                             })}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
+type LimitedDriversQuery = ReturnType<typeof useAdminRideshareLimitedDrivers>
+type LimitedDriverRow = NonNullable<LimitedDriversQuery['data']>['drivers'][number]
+
+function LimitedDriversCard({ query }: { query: LimitedDriversQuery }) {
+    const cfg = query.data?.config
+    const drivers = query.data?.drivers ?? []
+
+    return (
+        <Card>
+            <CardHeader className="space-y-1">
+                <CardTitle>Под лимитами просмотра номеров</CardTitle>
+                {cfg && (
+                    <p className="text-xs text-muted-foreground">
+                        {cfg.enabled ? 'Лимиты включены' : 'Лимиты выключены'} · окно{' '}
+                        {cfg.activity_window_days}д · порог: ≥{cfg.activity_min_views} просмотров
+                        на ≥{cfg.activity_min_active_days} днях · free/день{' '}
+                        {cfg.free_daily_limit} · fast ×{cfg.fast_cost}
+                    </p>
+                )}
+            </CardHeader>
+            <CardContent>
+                {query.isLoading ? (
+                    <div>Загрузка…</div>
+                ) : drivers.length === 0 ? (
+                    <div className="text-muted-foreground">Нет данных</div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead>Пользователь</TableHead>
+                                <TableHead>Телефон</TableHead>
+                                <TableHead className="w-28 text-right" title="Просмотры пассажирских объявлений в окне активности">
+                                    Просмотров
+                                </TableHead>
+                                <TableHead className="w-28 text-right">Активных дней</TableHead>
+                                <TableHead className="w-32">Статус</TableHead>
+                                <TableHead className="w-32 text-right" title="Использовано free-лимита сегодня">
+                                    Free сегодня
+                                </TableHead>
+                                <TableHead className="w-28 text-right" title="Купленные лимиты (carry-over)">
+                                    Куплено
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {drivers.map((d: LimitedDriverRow, i: number) => (
+                                <TableRow
+                                    key={d.user_id}
+                                    className={d.is_limited ? 'bg-red-50 dark:bg-red-950/30' : undefined}
+                                >
+                                    <TableCell className="text-muted-foreground tabular-nums">
+                                        {i + 1}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Link
+                                            href={`/admin/analytics/users/${d.user_id}`}
+                                            className="flex items-center gap-2 hover:underline"
+                                        >
+                                            {d.avatar_url ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={d.avatar_url}
+                                                    alt=""
+                                                    className="w-7 h-7 rounded-full object-cover bg-muted"
+                                                />
+                                            ) : (
+                                                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                                    {(d.name ?? '?').slice(0, 1).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <span>{d.name ?? `user #${d.user_id}`}</span>
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="font-mono text-sm text-muted-foreground">
+                                        {d.phone ?? '—'}
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums font-semibold">
+                                        {d.window_views}
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                                        {d.active_days}
+                                    </TableCell>
+                                    <TableCell>
+                                        {d.is_limited ? (
+                                            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                                                под лимитом
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                                кандидат
+                                            </span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums">
+                                        <span className={d.free_remaining === 0 ? 'text-red-600 dark:text-red-400 font-semibold' : undefined}>
+                                            {d.free_used}
+                                        </span>
+                                        <span className="text-muted-foreground"> / {d.free_limit}</span>
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums">
+                                        <span className={d.credits_balance > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-muted-foreground'}>
+                                            {d.credits_balance}
+                                        </span>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 )}
