@@ -1034,7 +1034,7 @@ function TopViewedTripsCard({
                     </Table>
                 )}
 
-                {total > size && (
+                {(total > size || page > 1) && (
                     <div className="mt-4">
                         <Pagination
                             page={page}
@@ -1180,7 +1180,7 @@ function MultiAccountDevicesCard({
                     </Table>
                 )}
 
-                {total > size && (
+                {(total > size || page > 1) && (
                     <div className="mt-4">
                         <Pagination
                             page={page}
@@ -1362,7 +1362,7 @@ function LimitedDriversCard({
                     </Table>
                 )}
 
-                {total > size && (
+                {(total > size || page > 1) && (
                     <div className="mt-4">
                         <Pagination
                             page={page}
