@@ -71,6 +71,12 @@ export const adminApi = {
             trip_type?: string
             role?: string
             user_id?: number
+            from_location_id?: number
+            to_location_id?: number
+            price_min?: number
+            price_max?: number
+            seats_min?: number
+            seats_max?: number
             date_from?: string
             date_to?: string
         },
@@ -81,6 +87,12 @@ export const adminApi = {
         if (filters?.trip_type) params.set('trip_type', filters.trip_type)
         if (filters?.role) params.set('role', filters.role)
         if (filters?.user_id) params.set('user_id', String(filters.user_id))
+        if (filters?.from_location_id) params.set('from_location_id', String(filters.from_location_id))
+        if (filters?.to_location_id) params.set('to_location_id', String(filters.to_location_id))
+        if (filters?.price_min != null) params.set('price_min', String(filters.price_min))
+        if (filters?.price_max != null) params.set('price_max', String(filters.price_max))
+        if (filters?.seats_min != null) params.set('seats_min', String(filters.seats_min))
+        if (filters?.seats_max != null) params.set('seats_max', String(filters.seats_max))
         if (filters?.date_from) params.set('date_from', filters.date_from)
         if (filters?.date_to) params.set('date_to', filters.date_to)
         return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)

@@ -28,6 +28,7 @@ import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 import { format } from 'date-fns'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
+import { RegionCombobox } from '@/components/admin/selectors/RegionCombobox'
 
 const ALL = '__all__'
 const TRIP_STATUSES = ['active', 'processing', 'completed', 'cancelled', 'archived']
@@ -61,6 +62,16 @@ export default function AdminTripsPage() {
     const [tripType, setTripType] = useState<string>(ALL)
     const [role, setRole] = useState<string>(ALL)
     const [userId, setUserId] = useState<number | null>(userIdParam ? Number(userIdParam) : null)
+    const [fromLocationId, setFromLocationId] = useState<number | null>(null)
+    const [toLocationId, setToLocationId] = useState<number | null>(null)
+    const [priceMin, setPriceMin] = useState('')
+    const [priceMax, setPriceMax] = useState('')
+    const [seatsMin, setSeatsMin] = useState('')
+    const [seatsMax, setSeatsMax] = useState('')
+    const dPriceMin = useDebounce(priceMin, 400)
+    const dPriceMax = useDebounce(priceMax, 400)
+    const dSeatsMin = useDebounce(seatsMin, 400)
+    const dSeatsMax = useDebounce(seatsMax, 400)
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
 
@@ -73,6 +84,12 @@ export default function AdminTripsPage() {
             trip_type: tripType === ALL ? undefined : tripType,
             role: role === ALL ? undefined : role,
             user_id: userId ?? undefined,
+            from_location_id: fromLocationId ?? undefined,
+            to_location_id: toLocationId ?? undefined,
+            price_min: dPriceMin !== '' ? Number(dPriceMin) : undefined,
+            price_max: dPriceMax !== '' ? Number(dPriceMax) : undefined,
+            seats_min: dSeatsMin !== '' ? Number(dSeatsMin) : undefined,
+            seats_max: dSeatsMax !== '' ? Number(dSeatsMax) : undefined,
             date_from: dateFrom || undefined,
             date_to: dateTo || undefined,
         },
@@ -91,6 +108,12 @@ export default function AdminTripsPage() {
         setTripType(ALL)
         setRole(ALL)
         setUserId(null)
+        setFromLocationId(null)
+        setToLocationId(null)
+        setPriceMin('')
+        setPriceMax('')
+        setSeatsMin('')
+        setSeatsMax('')
         setDateFrom('')
         setDateTo('')
         setPage(1)
@@ -102,6 +125,12 @@ export default function AdminTripsPage() {
         tripType !== ALL ||
         role !== ALL ||
         userId !== null ||
+        fromLocationId !== null ||
+        toLocationId !== null ||
+        !!priceMin ||
+        !!priceMax ||
+        !!seatsMin ||
+        !!seatsMax ||
         !!dateFrom ||
         !!dateTo
 
@@ -200,6 +229,88 @@ export default function AdminTripsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground mb-1">Откуда</span>
+                            <div className="w-full sm:w-44">
+                                <RegionCombobox
+                                    value={fromLocationId}
+                                    onChange={(id) => {
+                                        setFromLocationId(id)
+                                        setPage(1)
+                                    }}
+                                    placeholder="Откуда"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground mb-1">Куда</span>
+                            <div className="w-full sm:w-44">
+                                <RegionCombobox
+                                    value={toLocationId}
+                                    onChange={(id) => {
+                                        setToLocationId(id)
+                                        setPage(1)
+                                    }}
+                                    placeholder="Куда"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground mb-1">Цена</span>
+                            <div className="flex items-center gap-1">
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    placeholder="от"
+                                    value={priceMin}
+                                    onChange={(e) => {
+                                        setPriceMin(e.target.value)
+                                        setPage(1)
+                                    }}
+                                    className="w-24"
+                                />
+                                <span className="text-muted-foreground">—</span>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    placeholder="до"
+                                    value={priceMax}
+                                    onChange={(e) => {
+                                        setPriceMax(e.target.value)
+                                        setPage(1)
+                                    }}
+                                    className="w-24"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground mb-1">Места</span>
+                            <div className="flex items-center gap-1">
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    placeholder="от"
+                                    value={seatsMin}
+                                    onChange={(e) => {
+                                        setSeatsMin(e.target.value)
+                                        setPage(1)
+                                    }}
+                                    className="w-20"
+                                />
+                                <span className="text-muted-foreground">—</span>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    placeholder="до"
+                                    value={seatsMax}
+                                    onChange={(e) => {
+                                        setSeatsMax(e.target.value)
+                                        setPage(1)
+                                    }}
+                                    className="w-20"
+                                />
+                            </div>
+                        </div>
                         <div className="flex flex-col">
                             <span className="text-xs text-muted-foreground mb-1">Дата от</span>
                             <Input

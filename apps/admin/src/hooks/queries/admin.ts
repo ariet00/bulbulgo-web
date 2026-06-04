@@ -159,6 +159,12 @@ export const useAdminTrips = (
         trip_type?: string
         role?: string
         user_id?: number
+        from_location_id?: number
+        to_location_id?: number
+        price_min?: number
+        price_max?: number
+        seats_min?: number
+        seats_max?: number
         date_from?: string
         date_to?: string
     },
@@ -174,6 +180,12 @@ export const useAdminTrips = (
                 trip_type: filters?.trip_type ?? null,
                 role: filters?.role ?? null,
                 user_id: filters?.user_id ?? null,
+                from_location_id: filters?.from_location_id ?? null,
+                to_location_id: filters?.to_location_id ?? null,
+                price_min: filters?.price_min ?? null,
+                price_max: filters?.price_max ?? null,
+                seats_min: filters?.seats_min ?? null,
+                seats_max: filters?.seats_max ?? null,
                 date_from: filters?.date_from ?? null,
                 date_to: filters?.date_to ?? null,
             },
