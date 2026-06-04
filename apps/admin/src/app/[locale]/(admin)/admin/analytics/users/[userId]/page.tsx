@@ -738,6 +738,8 @@ export default function UserAnalyticsPage({
                                     <TableHead className="w-44">Когда</TableHead>
                                     <TableHead>Событие</TableHead>
                                     <TableHead className="w-32">platform</TableHead>
+                                    <TableHead className="w-24">app_version</TableHead>
+                                    <TableHead className="w-40">device_id</TableHead>
                                     <TableHead>data</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -749,6 +751,12 @@ export default function UserAnalyticsPage({
                                         </TableCell>
                                         <TableCell className="font-mono text-sm">{ev.event_type}</TableCell>
                                         <TableCell>{ev.platform ?? '—'}</TableCell>
+                                        <TableCell className="text-xs whitespace-nowrap">
+                                            {ev.app_version ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-xs break-all">
+                                            {ev.device_id ?? '—'}
+                                        </TableCell>
                                         <TableCell className="font-mono text-xs whitespace-pre-wrap break-all">
                                             {ev.data ? JSON.stringify(ev.data) : '—'}
                                         </TableCell>
