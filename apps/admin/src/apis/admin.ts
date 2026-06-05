@@ -578,6 +578,35 @@ export const adminApi = {
         }>(
             `/admin/rideshare/analytics/multi-account-devices?period=${period}&page=${page}&size=${size}`,
         ),
+    getRideshareMultiAccountIps: (
+        period: string = '30d',
+        page: number = 1,
+        size: number = 20,
+    ) =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            ips: Array<{
+                ip_address: string
+                account_count: number
+                events: number
+                last_seen: string
+                accounts: Array<{
+                    user_id: number
+                    name: string | null
+                    phone: string | null
+                    avatar_url: string | null
+                    events: number
+                    last_seen: string
+                }>
+            }>
+            total: number
+            page: number
+            size: number
+        }>(
+            `/admin/rideshare/analytics/multi-account-ips?period=${period}&page=${page}&size=${size}`,
+        ),
     getRideshareTopViewedTrips: (page: number = 1, size: number = 20) =>
         requests.get<{
             total: number

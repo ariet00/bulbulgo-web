@@ -11,6 +11,7 @@ import {
     useAdminRideshareInstallsByDay,
     useAdminRideshareLimitedDrivers,
     useAdminRideshareMultiAccountDevices,
+    useAdminRideshareMultiAccountIps,
     useAdminRideshareTopViewedTrips,
 } from '@/hooks/queries/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
@@ -147,6 +148,9 @@ export default function BulbulGoAnalyticsPage() {
     const [multiPeriod, setMultiPeriod] = useState('30d')
     const [multiPage, setMultiPage] = useState(1)
     const multiDevices = useAdminRideshareMultiAccountDevices(multiPeriod, multiPage, LIMITED_SIZE)
+    const [ipPeriod, setIpPeriod] = useState('30d')
+    const [ipPage, setIpPage] = useState(1)
+    const multiIps = useAdminRideshareMultiAccountIps(ipPeriod, ipPage, LIMITED_SIZE)
     const [viewedPage, setViewedPage] = useState(1)
     const topViewedTrips = useAdminRideshareTopViewedTrips(viewedPage, LIMITED_SIZE)
 
@@ -163,6 +167,7 @@ export default function BulbulGoAnalyticsPage() {
         topRoutes.isFetching ||
         limitedDrivers.isFetching ||
         multiDevices.isFetching ||
+        multiIps.isFetching ||
         topViewedTrips.isFetching
     const refetchAll = () => {
         funnel.refetch()
@@ -177,6 +182,7 @@ export default function BulbulGoAnalyticsPage() {
         topRoutes.refetch()
         limitedDrivers.refetch()
         multiDevices.refetch()
+        multiIps.refetch()
         topViewedTrips.refetch()
     }
 
@@ -496,6 +502,18 @@ export default function BulbulGoAnalyticsPage() {
                 page={multiPage}
                 size={LIMITED_SIZE}
                 onPageChange={setMultiPage}
+            />
+
+            <MultiAccountIpsCard
+                query={multiIps}
+                period={ipPeriod}
+                onPeriodChange={(p) => {
+                    setIpPeriod(p)
+                    setIpPage(1)
+                }}
+                page={ipPage}
+                size={LIMITED_SIZE}
+                onPageChange={setIpPage}
             />
 
             <TopViewedTripsCard
@@ -937,6 +955,150 @@ function MultiAccountDevicesCard({
                                     </TableCell>
                                     <TableCell className="font-mono text-xs break-all align-top">
                                         {d.device_id}
+                                    </TableCell>
+                                    <TableCell className="text-right align-top">
+                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                            {d.account_count}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="align-top">
+                                        <div className="space-y-1">
+                                            {d.accounts.map(a => (
+                                                <div
+                                                    key={a.user_id}
+                                                    className="flex items-center gap-2 text-sm flex-wrap"
+                                                >
+                                                    <Link
+                                                        href={`/admin/analytics/users/${a.user_id}`}
+                                                        className="hover:underline"
+                                                    >
+                                                        {a.name ?? `user #${a.user_id}`}
+                                                    </Link>
+                                                    <span className="text-xs text-muted-foreground tabular-nums">
+                                                        #{a.user_id}
+                                                    </span>
+                                                    {a.phone && (
+                                                        <span className="font-mono text-xs text-muted-foreground">
+                                                            {a.phone}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-muted-foreground">
+                                                        · {a.events} соб.
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums align-top">
+                                        {d.events}
+                                    </TableCell>
+                                    <TableCell className="text-xs whitespace-nowrap align-top">
+                                        {new Date(d.last_seen).toLocaleString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+
+                {(total > size || page > 1) && (
+                    <div className="mt-4">
+                        <Pagination
+                            page={page}
+                            total={total}
+                            size={size}
+                            onPageChange={onPageChange}
+                        />
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
+type MultiIpsQuery = ReturnType<typeof useAdminRideshareMultiAccountIps>
+type MultiIpRow = NonNullable<MultiIpsQuery['data']>['ips'][number]
+
+// IP addresses used to sign in from 2+ different accounts in the period — a
+// multi-account-per-IP signal (grouped by analytics event ip_address).
+function MultiAccountIpsCard({
+    query,
+    period,
+    onPeriodChange,
+    page,
+    size,
+    onPageChange,
+}: {
+    query: MultiIpsQuery
+    period: string
+    onPeriodChange: (p: string) => void
+    page: number
+    size: number
+    onPageChange: (p: number) => void
+}) {
+    const ips = query.data?.ips ?? []
+    const total = query.data?.total ?? 0
+
+    return (
+        <Card>
+            <CardHeader className="space-y-1">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <CardTitle>Несколько аккаунтов с одного IP ({total})</CardTitle>
+                    <div className="flex items-center gap-1 flex-wrap">
+                        {MULTI_PERIODS.map(p => (
+                            <Button
+                                key={p}
+                                variant={period === p ? 'default' : 'outline'}
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => onPeriodChange(p)}
+                            >
+                                {p}
+                            </Button>
+                        ))}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => query.refetch()}
+                            disabled={query.isFetching}
+                        >
+                            <RefreshCw
+                                className={`mr-1 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
+                            />
+                            Обновить
+                        </Button>
+                    </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                    IP-адреса, с которых за период заходили под 2+ разными аккаунтами (по
+                    ip_address событий)
+                </p>
+            </CardHeader>
+            <CardContent>
+                {query.isLoading ? (
+                    <div>Загрузка…</div>
+                ) : ips.length === 0 ? (
+                    <div className="text-muted-foreground">Нет данных</div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead className="w-40">IP</TableHead>
+                                <TableHead className="w-24 text-right">Аккаунтов</TableHead>
+                                <TableHead>Аккаунты</TableHead>
+                                <TableHead className="w-24 text-right">Событий</TableHead>
+                                <TableHead className="w-40">Последняя активность</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {ips.map((d: MultiIpRow, i: number) => (
+                                <TableRow key={d.ip_address}>
+                                    <TableCell className="text-muted-foreground tabular-nums align-top">
+                                        {(page - 1) * size + i + 1}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-xs break-all align-top">
+                                        {d.ip_address}
                                     </TableCell>
                                     <TableCell className="text-right align-top">
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">

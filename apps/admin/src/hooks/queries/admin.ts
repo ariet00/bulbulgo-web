@@ -566,6 +566,18 @@ export const useAdminRideshareMultiAccountDevices = (
     })
 }
 
+export const useAdminRideshareMultiAccountIps = (
+    period: string = '30d',
+    page: number = 1,
+    size: number = 20,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'rideshare', 'multi-account-ips', period, page, size],
+        queryFn: () => adminApi.getRideshareMultiAccountIps(period, page, size),
+        placeholderData: keepPreviousData,
+    })
+}
+
 export const useAdminRideshareTopViewedTrips = (page: number = 1, size: number = 20) => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'rideshare', 'top-viewed-trips', page, size],
