@@ -69,11 +69,16 @@ import { format } from 'date-fns'
 /* ────────────────────────────── helpers ────────────────────────────── */
 
 const STATUS_STYLES: Record<string, string> = {
-    active: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-    processing: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-    completed: 'bg-blue-50 text-blue-700 ring-blue-600/20',
-    cancelled: 'bg-rose-50 text-rose-700 ring-rose-600/20',
-    archived: 'bg-zinc-100 text-zinc-600 ring-zinc-500/20',
+    active:
+        'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-400 dark:ring-emerald-400/20',
+    processing:
+        'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-400 dark:ring-amber-400/20',
+    completed:
+        'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-950/40 dark:text-blue-400 dark:ring-blue-400/20',
+    cancelled:
+        'bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-950/40 dark:text-rose-400 dark:ring-rose-400/20',
+    archived:
+        'bg-zinc-100 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-400/20',
 }
 
 const STATUS_OPTIONS = [
@@ -83,6 +88,12 @@ const STATUS_OPTIONS = [
     { value: 'cancelled', label: 'Отменить', icon: XCircle },
     { value: 'archived', label: 'В архив', icon: Archive },
 ]
+
+const ACCENT = {
+    emerald: 'text-emerald-600 dark:text-emerald-400',
+    blue: 'text-blue-600 dark:text-blue-400',
+    amber: 'text-amber-600 dark:text-amber-400',
+}
 
 function StatusPill({ status }: { status?: string }) {
     const s = status || 'active'
@@ -118,11 +129,11 @@ function InfoRow({
 }) {
     return (
         <div className="flex items-start justify-between gap-4 py-2.5">
-            <span className="flex items-center gap-2 text-sm text-zinc-500">
+            <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 {Icon && <Icon className="h-4 w-4 shrink-0" />}
                 {label}
             </span>
-            <span className="text-right text-sm font-medium text-zinc-900">{children}</span>
+            <span className="text-right text-sm font-medium text-foreground">{children}</span>
         </div>
     )
 }
@@ -141,10 +152,10 @@ function SectionCard({
     className?: string
 }) {
     return (
-        <Card className={`overflow-hidden border-zinc-200/80 shadow-sm ${className}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-zinc-100 bg-zinc-50/60 py-4">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold text-zinc-800">
-                    <Icon className="h-[18px] w-[18px] text-zinc-500" />
+        <Card className={`overflow-hidden shadow-sm ${className}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border bg-muted/40 py-4">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                    <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                     {title}
                 </CardTitle>
                 {action}
@@ -157,7 +168,7 @@ function SectionCard({
 function StatTile({
     label,
     value,
-    accent = 'text-zinc-900',
+    accent = 'text-foreground',
     icon: Icon,
 }: {
     label: string
@@ -166,8 +177,8 @@ function StatTile({
     icon: React.ElementType
 }) {
     return (
-        <div className="rounded-xl border border-zinc-200/80 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 <Icon className="h-3.5 w-3.5" />
                 {label}
             </div>
@@ -181,11 +192,11 @@ function FlagBadge({ on, label }: { on?: boolean; label: string }) {
         <span
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${
                 on
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'bg-zinc-100 text-zinc-400 line-through decoration-zinc-300'
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                    : 'bg-muted text-muted-foreground line-through decoration-muted-foreground/40'
             }`}
         >
-            <span className={`h-1.5 w-1.5 rounded-full ${on ? 'bg-emerald-500' : 'bg-zinc-300'}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${on ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
             {label}
         </span>
     )
@@ -221,7 +232,7 @@ export default function AdminTripDetailPage() {
         return (
             <div className="space-y-6">
                 <BackButton />
-                <div className="rounded-2xl border border-dashed border-zinc-300 p-12 text-center text-zinc-400">
+                <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
                     Поездка не найдена
                 </div>
             </div>
@@ -272,8 +283,8 @@ export default function AdminTripDetailPage() {
         <div className="space-y-6 pb-10">
             <BackButton />
 
-            {/* ── Hero header ── */}
-            <div className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-6 text-white shadow-lg">
+            {/* ── Hero header (intentionally dark in both themes) ── */}
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-6 text-white shadow-lg">
                 <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/5 blur-2xl" />
                 <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-emerald-500/10 blur-2xl" />
 
@@ -347,13 +358,15 @@ export default function AdminTripDetailPage() {
                                         <o.icon className="mr-2 h-4 w-4" />
                                         {o.label}
                                         {o.value === trip.status && (
-                                            <span className="ml-auto text-xs text-zinc-400">текущий</span>
+                                            <span className="ml-auto text-xs text-muted-foreground">
+                                                текущий
+                                            </span>
                                         )}
                                     </DropdownMenuItem>
                                 ))}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    className="text-rose-600 focus:text-rose-600"
+                                    className="text-rose-600 focus:text-rose-600 dark:text-rose-400 dark:focus:text-rose-400"
                                     onClick={() => setConfirmDelete(true)}
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />
@@ -370,26 +383,26 @@ export default function AdminTripDetailPage() {
                 <StatTile
                     label="Цена"
                     icon={Banknote}
-                    accent="text-emerald-600"
+                    accent={ACCENT.emerald}
                     value={trip.price ? `${trip.price} ${currencySymbol}` : '—'}
                 />
                 <StatTile label="Всего мест" icon={Users} value={trip.seats ?? '—'} />
                 <StatTile
                     label="Свободно"
                     icon={Users}
-                    accent="text-blue-600"
+                    accent={ACCENT.blue}
                     value={stats ? stats.seats_left : '—'}
                 />
                 <StatTile
                     label="Брони"
                     icon={CheckCircle2}
-                    accent="text-emerald-600"
+                    accent={ACCENT.emerald}
                     value={stats ? stats.accepted : '—'}
                 />
                 <StatTile
                     label="Ожидают"
                     icon={Clock}
-                    accent="text-amber-600"
+                    accent={ACCENT.amber}
                     value={stats ? stats.pending : '—'}
                 />
             </div>
@@ -403,7 +416,7 @@ export default function AdminTripDetailPage() {
                     action={
                         mapsHref ? (
                             <a href={mapsHref} target="_blank" rel="noreferrer">
-                                <Button variant="ghost" size="sm" className="gap-1.5 text-zinc-500">
+                                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
                                     <ExternalLink className="h-4 w-4" /> На карте
                                 </Button>
                             </a>
@@ -453,7 +466,7 @@ export default function AdminTripDetailPage() {
 
                 {/* ── Schedule & meta ── */}
                 <SectionCard title="Расписание и сроки" icon={Calendar}>
-                    <div className="divide-y divide-zinc-100">
+                    <div className="divide-y divide-border">
                         <InfoRow icon={Calendar} label="Дата выезда">
                             {fmtDate(trip.departure_date)}
                         </InfoRow>
@@ -489,7 +502,7 @@ export default function AdminTripDetailPage() {
                     action={
                         driver ? (
                             <Link href={`/admin/users/${driver.id}`}>
-                                <Button variant="ghost" size="sm" className="gap-1.5 text-zinc-500">
+                                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
                                     <ExternalLink className="h-4 w-4" /> Профиль
                                 </Button>
                             </Link>
@@ -499,7 +512,7 @@ export default function AdminTripDetailPage() {
                     {driver ? (
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <Avatar className="h-14 w-14 ring-2 ring-zinc-100">
+                                <Avatar className="h-14 w-14 ring-2 ring-border">
                                     <AvatarImage src={driver.avatar_thumbnail_url || driver.avatar_url} />
                                     <AvatarFallback className="bg-zinc-900 text-white">
                                         {(driver.full_name || driver.username || '?')
@@ -508,10 +521,10 @@ export default function AdminTripDetailPage() {
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0">
-                                    <p className="truncate text-lg font-semibold text-zinc-900">
+                                    <p className="truncate text-lg font-semibold text-foreground">
                                         {driver.full_name || driver.username}
                                     </p>
-                                    <p className="flex items-center gap-1.5 text-sm text-zinc-500">
+                                    <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                         @{driver.username}
                                         {!!driver.rating && (
                                             <span className="ml-1 inline-flex items-center gap-0.5 text-amber-500">
@@ -523,7 +536,7 @@ export default function AdminTripDetailPage() {
                                 </div>
                             </div>
                             <Separator />
-                            <div className="divide-y divide-zinc-100">
+                            <div className="divide-y divide-border">
                                 <InfoRow icon={Phone} label="Телефон">
                                     {driver.phone || trip.phone || '—'}
                                 </InfoRow>
@@ -542,7 +555,9 @@ export default function AdminTripDetailPage() {
                             </div>
                         </div>
                     ) : (
-                        <p className="py-6 text-center text-sm italic text-zinc-400">Нет данных о водителе</p>
+                        <p className="py-6 text-center text-sm italic text-muted-foreground">
+                            Нет данных о водителе
+                        </p>
                     )}
                 </SectionCard>
 
@@ -553,7 +568,7 @@ export default function AdminTripDetailPage() {
                     action={
                         vehicle ? (
                             <Link href={`/admin/vehicles/${vehicle.id}`}>
-                                <Button variant="ghost" size="sm" className="gap-1.5 text-zinc-500">
+                                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
                                     <ExternalLink className="h-4 w-4" /> Открыть
                                 </Button>
                             </Link>
@@ -563,23 +578,24 @@ export default function AdminTripDetailPage() {
                     {vehicle ? (
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-zinc-900 text-white">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-zinc-900 text-white dark:bg-zinc-700">
                                     <Car className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <p className="text-lg font-semibold text-zinc-900">
+                                    <p className="text-lg font-semibold text-foreground">
                                         {vehicle.brand} {vehicle.model}
                                     </p>
-                                    <p className="text-sm text-zinc-500">
-                                        {vehicle.year || '—'} · <span className="capitalize">{vehicle.vehicle_type || '—'}</span>
+                                    <p className="text-sm text-muted-foreground">
+                                        {vehicle.year || '—'} ·{' '}
+                                        <span className="capitalize">{vehicle.vehicle_type || '—'}</span>
                                     </p>
                                 </div>
                             </div>
                             <Separator />
-                            <div className="divide-y divide-zinc-100">
+                            <div className="divide-y divide-border">
                                 <InfoRow label="Гос. номер">
                                     {vehicle.plate_number ? (
-                                        <span className="rounded-md border border-zinc-300 bg-zinc-50 px-2 py-0.5 font-mono tracking-wider">
+                                        <span className="rounded-md border border-border bg-muted px-2 py-0.5 font-mono tracking-wider">
                                             {vehicle.plate_number}
                                         </span>
                                     ) : (
@@ -592,7 +608,9 @@ export default function AdminTripDetailPage() {
                             </div>
                         </div>
                     ) : (
-                        <p className="py-6 text-center text-sm italic text-zinc-400">Нет данных о транспорте</p>
+                        <p className="py-6 text-center text-sm italic text-muted-foreground">
+                            Нет данных о транспорте
+                        </p>
                     )}
                 </SectionCard>
             </div>
@@ -613,13 +631,13 @@ export default function AdminTripDetailPage() {
                         {trip.schedules.map((s: any) => (
                             <div
                                 key={s.id}
-                                className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-sm"
+                                className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-1.5 text-sm"
                             >
-                                <Calendar className="h-3.5 w-3.5 text-zinc-400" />
-                                <span className="font-medium text-zinc-800">{fmtDate(s.date)}</span>
-                                {s.time && <span className="text-zinc-500">· {s.time}</span>}
+                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="font-medium text-foreground">{fmtDate(s.date)}</span>
+                                {s.time && <span className="text-muted-foreground">· {s.time}</span>}
                                 {s.seats != null && (
-                                    <span className="text-zinc-400">· {s.seats} мест</span>
+                                    <span className="text-muted-foreground">· {s.seats} мест</span>
                                 )}
                             </div>
                         ))}
@@ -630,7 +648,7 @@ export default function AdminTripDetailPage() {
             {/* ── Comment ── */}
             {trip.comment && (
                 <SectionCard title="Комментарий" icon={MessageSquare}>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                         {trip.comment}
                     </p>
                 </SectionCard>
@@ -694,18 +712,18 @@ function RoutePoint({
     return (
         <div className="relative flex gap-4 pb-6 last:pb-0">
             {connector && (
-                <span className="absolute left-[7px] top-5 h-full w-px bg-gradient-to-b from-zinc-300 to-zinc-200" />
+                <span className="absolute left-[7px] top-5 h-full w-px bg-border" />
             )}
-            <span className={`relative z-10 mt-1 h-4 w-4 shrink-0 rounded-full ${color} ring-4 ring-white`} />
+            <span className={`relative z-10 mt-1 h-4 w-4 shrink-0 rounded-full ${color} ring-4 ring-card`} />
             <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold uppercase tracking-wide text-zinc-400">{label}</p>
-                <p className="text-lg font-semibold text-zinc-900">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</p>
+                <p className="text-lg font-semibold text-foreground">
                     {name || address || 'Неизвестно'}
-                    {sub && <span className="ml-2 text-sm font-normal text-zinc-400">{sub}</span>}
+                    {sub && <span className="ml-2 text-sm font-normal text-muted-foreground">{sub}</span>}
                 </p>
-                {address && name && <p className="text-sm text-zinc-500">{address}</p>}
+                {address && name && <p className="text-sm text-muted-foreground">{address}</p>}
                 {lat != null && lng != null && (
-                    <p className="mt-0.5 flex items-center gap-1 font-mono text-xs text-zinc-400">
+                    <p className="mt-0.5 flex items-center gap-1 font-mono text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         {Number(lat).toFixed(5)}, {Number(lng).toFixed(5)}
                     </p>
