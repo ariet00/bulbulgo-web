@@ -394,9 +394,12 @@ export const useUpdateAdminContactLimitsSettings = () => {
     })
 }
 
-// Per-driver limit overrides (from the BulBul Go "limited drivers" card).
-const invalidateLimitedDrivers = (qc: ReturnType<typeof useQueryClient>) =>
+// Per-driver limit overrides (from the BulBul Go "limited drivers" card and the
+// per-user analytics page). Refresh both the list and the single-user summary.
+const invalidateLimitedDrivers = (qc: ReturnType<typeof useQueryClient>) => {
     qc.invalidateQueries({ queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers'] })
+    qc.invalidateQueries({ queryKey: [...adminKeys.analytics(), 'user-limit'] })
+}
 
 export const useSetDriverCredits = () => {
     const qc = useQueryClient()

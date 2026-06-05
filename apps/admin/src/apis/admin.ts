@@ -590,6 +590,8 @@ export const adminApi = {
                 owner_phone: string | null
             }>
         }>(`/admin/rideshare/analytics/top-viewed-trips?page=${page}&size=${size}`),
+    getUserLimit: (userId: number) =>
+        requests.get<AdminUserLimit>(`/admin/rideshare/analytics/users/${userId}/limit`),
     setDriverCredits: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
         requests.put<{ user_id: number; credits_balance: number }>(
             `/admin/rideshare/analytics/users/${userId}/credits`,
@@ -690,6 +692,26 @@ export interface AdminUserTripsSummary {
     completed: number
     cancelled: number
     by_type: Array<{ trip_type: string | null; count: number }>
+}
+
+export interface AdminUserLimit {
+    user_id: number
+    enabled: boolean
+    window_views: number
+    active_days: number
+    is_limited: boolean
+    limit_override: boolean | null
+    effective_limited: boolean
+    free_used: number
+    free_limit: number
+    free_remaining: number
+    credits_balance: number
+    fast_cost: number
+    free_daily_limit: number
+    global_free_daily_limit: number
+    activity_window_days: number
+    activity_min_views: number
+    activity_min_active_days: number
 }
 
 export interface AdminUserEngagement {

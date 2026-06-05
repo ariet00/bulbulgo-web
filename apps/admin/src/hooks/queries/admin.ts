@@ -115,6 +115,14 @@ export const useAdminUserEngagement = (
     })
 }
 
+export const useAdminUserLimit = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'user-limit', id],
+        queryFn: () => adminApi.getUserLimit(id),
+        enabled: !!id,
+    })
+}
+
 export const useAdminUserPlatforms = (
     id: number,
     period: string = '30d',

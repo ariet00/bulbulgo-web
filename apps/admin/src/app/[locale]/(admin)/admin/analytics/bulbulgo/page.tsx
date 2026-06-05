@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import {
     useAdminRideshareFunnel,
     useAdminRideshareSummary,
@@ -24,11 +24,10 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Pagination } from '@doska/ui'
-import { Input } from '@doska/ui'
-import { Popover, PopoverContent, PopoverTrigger } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import { RefreshCw, Pencil } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
+import { AdjustPopover, LimitStatusControl } from '@/components/admin/analytics/limit-controls'
 import {
     useSetDriverCredits,
     useSetDriverFreeUsed,
@@ -713,222 +712,6 @@ function TopDriversCard({
 type LimitedDriversQuery = ReturnType<typeof useAdminRideshareLimitedDrivers>
 type LimitedDriverRow = NonNullable<LimitedDriversQuery['data']>['drivers'][number]
 
-// Inline editor for a numeric limit value (credits / free-used) with a "set"
-// (absolute) and "+/−" (delta) mode, plus an optional quick-reset button.
-function AdjustPopover({
-    title,
-    current,
-    display,
-    pending,
-    onSubmit,
-    quickResetTo,
-    quickResetLabel,
-}: {
-    title: string
-    current: number
-    display: ReactNode
-    pending: boolean
-    onSubmit: (mode: 'set' | 'delta', value: number) => void
-    quickResetTo?: number
-    quickResetLabel?: string
-}) {
-    const [open, setOpen] = useState(false)
-    const [mode, setMode] = useState<'set' | 'delta'>('set')
-    const [val, setVal] = useState('')
-
-    const handleOpenChange = (o: boolean) => {
-        setOpen(o)
-        if (o) {
-            setMode('set')
-            setVal(String(current))
-        }
-    }
-
-    const submit = () => {
-        const n = Number(val)
-        if (!Number.isFinite(n) || val === '') return
-        onSubmit(mode, Math.trunc(n))
-        setOpen(false)
-    }
-
-    return (
-        <Popover open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
-                <button
-                    type="button"
-                    className="inline-flex items-center gap-1 tabular-nums hover:underline"
-                >
-                    {display}
-                    <Pencil className="h-3 w-3 text-muted-foreground" />
-                </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-60 space-y-3" align="end">
-                <div className="text-sm font-medium">{title}</div>
-                <div className="flex gap-1">
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={mode === 'set' ? 'default' : 'outline'}
-                        className="h-7 flex-1 text-xs"
-                        onClick={() => {
-                            setMode('set')
-                            setVal(String(current))
-                        }}
-                    >
-                        Точно
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={mode === 'delta' ? 'default' : 'outline'}
-                        className="h-7 flex-1 text-xs"
-                        onClick={() => {
-                            setMode('delta')
-                            setVal('')
-                        }}
-                    >
-                        +/−
-                    </Button>
-                </div>
-                <Input
-                    type="number"
-                    autoFocus
-                    value={val}
-                    onChange={e => setVal(e.target.value)}
-                    onKeyDown={e => {
-                        if (e.key === 'Enter') submit()
-                    }}
-                    placeholder={mode === 'delta' ? 'напр. -5 или 10' : 'значение'}
-                />
-                <div className="flex items-center gap-2">
-                    <Button
-                        type="button"
-                        size="sm"
-                        className="flex-1"
-                        disabled={pending || val === ''}
-                        onClick={submit}
-                    >
-                        Сохранить
-                    </Button>
-                    {quickResetTo !== undefined && (
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={pending}
-                            onClick={() => {
-                                onSubmit('set', quickResetTo)
-                                setOpen(false)
-                            }}
-                        >
-                            {quickResetLabel ?? 'Сброс'}
-                        </Button>
-                    )}
-                </div>
-                <p className="text-xs text-muted-foreground">Текущее: {current}</p>
-            </PopoverContent>
-        </Popover>
-    )
-}
-
-// Status cell: shows the *effective* limited state (cached day-flag ?? live
-// compute) and lets an admin force/clear today's flag — the gate the live
-// limiter reads.
-function StatusCell({
-    d,
-    pending,
-    onSet,
-}: {
-    d: LimitedDriverRow
-    pending: boolean
-    onSet: (value: number | null) => void
-}) {
-    const [open, setOpen] = useState(false)
-    const effective = d.limit_override ?? d.is_limited
-    const forced = d.limit_override !== null
-    const diverges = forced && d.limit_override !== d.is_limited
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <button type="button" className="inline-flex items-center gap-1">
-                    {effective ? (
-                        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                            строгий
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            общий
-                        </span>
-                    )}
-                    {forced && (
-                        <span
-                            className="text-xs"
-                            title={`Ручная фиксация тарифа${
-                                diverges
-                                    ? ` · расчёт: ${d.is_limited ? 'строгий' : 'общий'}`
-                                    : ''
-                            }`}
-                        >
-                            📌
-                        </span>
-                    )}
-                    <Pencil className="h-3 w-3 text-muted-foreground" />
-                </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-60 space-y-2" align="start">
-                <div className="text-xs text-muted-foreground">
-                    Расчёт: {d.is_limited ? 'строгий' : 'общий'} тариф ({d.window_views} просм.
-                    / {d.active_days} дн.)
-                    {forced && (
-                        <div className="mt-0.5">
-                            Зафиксировано: {d.limit_override ? 'строгий' : 'общий'} тариф
-                        </div>
-                    )}
-                </div>
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-full justify-start"
-                    disabled={pending}
-                    onClick={() => {
-                        onSet(1)
-                        setOpen(false)
-                    }}
-                >
-                    Строгий тариф
-                </Button>
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-full justify-start"
-                    disabled={pending}
-                    onClick={() => {
-                        onSet(0)
-                        setOpen(false)
-                    }}
-                >
-                    Общий тариф
-                </Button>
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="w-full justify-start text-muted-foreground"
-                    disabled={pending}
-                    onClick={() => {
-                        onSet(null)
-                        setOpen(false)
-                    }}
-                >
-                    Авто (сбросить)
-                </Button>
-            </PopoverContent>
-        </Popover>
-    )
-}
 
 type TopViewedQuery = ReturnType<typeof useAdminRideshareTopViewedTrips>
 type TopViewedRow = NonNullable<TopViewedQuery['data']>['trips'][number]
@@ -1317,7 +1100,7 @@ function LimitedDriversCard({
                                         {d.active_days}
                                     </TableCell>
                                     <TableCell>
-                                        <StatusCell
+                                        <LimitStatusControl
                                             d={d}
                                             pending={limitedM.isPending}
                                             onSet={(value) =>
