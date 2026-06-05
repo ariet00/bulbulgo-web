@@ -138,7 +138,12 @@ export default function BulbulGoAnalyticsPage() {
     const topActive = useAdminRideshareTopActiveUsers(topActiveP, 20)
     const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
     const [limitedPage, setLimitedPage] = useState(1)
-    const limitedDrivers = useAdminRideshareLimitedDrivers(limitedPage, LIMITED_SIZE)
+    const [limitedTier, setLimitedTier] = useState<'all' | 'strict' | 'general'>('all')
+    const [limitedHasCredits, setLimitedHasCredits] = useState(false)
+    const limitedDrivers = useAdminRideshareLimitedDrivers(limitedPage, LIMITED_SIZE, {
+        tier: limitedTier === 'all' ? undefined : limitedTier,
+        hasCredits: limitedHasCredits,
+    })
     const [multiPeriod, setMultiPeriod] = useState('30d')
     const [multiPage, setMultiPage] = useState(1)
     const multiDevices = useAdminRideshareMultiAccountDevices(multiPeriod, multiPage, LIMITED_SIZE)
@@ -469,6 +474,16 @@ export default function BulbulGoAnalyticsPage() {
                 page={limitedPage}
                 size={LIMITED_SIZE}
                 onPageChange={setLimitedPage}
+                tier={limitedTier}
+                onTierChange={(t) => {
+                    setLimitedTier(t)
+                    setLimitedPage(1)
+                }}
+                hasCredits={limitedHasCredits}
+                onHasCreditsChange={(v) => {
+                    setLimitedHasCredits(v)
+                    setLimitedPage(1)
+                }}
             />
 
             <MultiAccountDevicesCard
@@ -983,16 +998,30 @@ function MultiAccountDevicesCard({
     )
 }
 
+const LIMITED_TIERS: Array<{ value: 'all' | 'strict' | 'general'; label: string }> = [
+    { value: 'all', label: 'Все тарифы' },
+    { value: 'strict', label: 'Строгий' },
+    { value: 'general', label: 'Общий' },
+]
+
 function LimitedDriversCard({
     query,
     page,
     size,
     onPageChange,
+    tier,
+    onTierChange,
+    hasCredits,
+    onHasCreditsChange,
 }: {
     query: LimitedDriversQuery
     page: number
     size: number
     onPageChange: (p: number) => void
+    tier: 'all' | 'strict' | 'general'
+    onTierChange: (t: 'all' | 'strict' | 'general') => void
+    hasCredits: boolean
+    onHasCreditsChange: (v: boolean) => void
 }) {
     const cfg = query.data?.config
     const drivers = query.data?.drivers ?? []
@@ -1004,7 +1033,7 @@ function LimitedDriversCard({
 
     return (
         <Card>
-            <CardHeader className="space-y-1">
+            <CardHeader className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                     <CardTitle>Под лимитами просмотра номеров ({total})</CardTitle>
                     <Button
@@ -1017,6 +1046,29 @@ function LimitedDriversCard({
                             className={`mr-1 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
                         />
                         Обновить
+                    </Button>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                    {LIMITED_TIERS.map(t => (
+                        <Button
+                            key={t.value}
+                            variant={tier === t.value ? 'default' : 'outline'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => onTierChange(t.value)}
+                        >
+                            {t.label}
+                        </Button>
+                    ))}
+                    <span className="mx-1 h-4 w-px bg-border" />
+                    <Button
+                        variant={hasCredits ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => onHasCreditsChange(!hasCredits)}
+                        title="Только с купленными (carry-over) лимитами"
+                    >
+                        С купленными
                     </Button>
                 </div>
                 {cfg && (

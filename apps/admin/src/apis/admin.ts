@@ -512,7 +512,11 @@ export const adminApi = {
                 completed: number
             }>
         }>(`/admin/rideshare/analytics/top-routes?period=${period}&limit=${limit}`),
-    getRideshareLimitedDrivers: (page: number = 1, size: number = 20) =>
+    getRideshareLimitedDrivers: (
+        page: number = 1,
+        size: number = 20,
+        opts?: { tier?: 'strict' | 'general'; hasCredits?: boolean },
+    ) =>
         requests.get<{
             config: {
                 enabled: boolean
@@ -540,7 +544,11 @@ export const adminApi = {
             total: number
             page: number
             size: number
-        }>(`/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}`),
+        }>(
+            `/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}` +
+                (opts?.tier ? `&tier=${opts.tier}` : '') +
+                (opts?.hasCredits ? `&has_credits=true` : ''),
+        ),
     getRideshareMultiAccountDevices: (
         period: string = '30d',
         page: number = 1,

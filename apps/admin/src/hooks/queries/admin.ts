@@ -534,10 +534,22 @@ export const useAdminRideshareTopRoutes = (period: string = '7d', limit: number 
     })
 }
 
-export const useAdminRideshareLimitedDrivers = (page: number = 1, size: number = 20) => {
+export const useAdminRideshareLimitedDrivers = (
+    page: number = 1,
+    size: number = 20,
+    opts?: { tier?: 'strict' | 'general'; hasCredits?: boolean },
+) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers', page, size],
-        queryFn: () => adminApi.getRideshareLimitedDrivers(page, size),
+        queryKey: [
+            ...adminKeys.analytics(),
+            'rideshare',
+            'limited-drivers',
+            page,
+            size,
+            opts?.tier ?? null,
+            opts?.hasCredits ?? false,
+        ],
+        queryFn: () => adminApi.getRideshareLimitedDrivers(page, size, opts),
         placeholderData: keepPreviousData,
     })
 }
