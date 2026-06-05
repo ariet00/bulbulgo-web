@@ -98,6 +98,8 @@ export const adminApi = {
         return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)
     },
     getTrip: (id: number) => requests.get<any>(`/admin/trips/${id}`),
+    updateTripStatus: (id: number, status: string) =>
+        requests.patch<any>(`/admin/trips/${id}/status`, { status }),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
 
     // Vehicles

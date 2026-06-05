@@ -81,6 +81,20 @@ export const useAdminDeleteTrip = () => {
     })
 }
 
+export const useAdminUpdateTripStatus = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, status }: { id: number; status: string }) =>
+            adminApi.updateTripStatus(id, status),
+        onSuccess: (_data, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.trips() })
+            queryClient.invalidateQueries({ queryKey: adminKeys.trip(id) })
+            queryClient.invalidateQueries({ queryKey: adminKeys.analytics() })
+            toast.success('Статус поездки обновлён')
+        },
+    })
+}
+
 export const useAdminDeleteVehicle = () => {
     const queryClient = useQueryClient()
     return useMutation({
