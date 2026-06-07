@@ -40,7 +40,16 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button, Input, Pagination } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import { RefreshCw } from 'lucide-react'
+import {
+    RefreshCw,
+    Wallet as WalletIcon,
+    ArrowDownLeft,
+    ArrowUpRight,
+    ArrowLeftRight,
+    Activity,
+    CalendarDays,
+    Layers,
+} from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
 import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
@@ -146,28 +155,41 @@ export default function UserAnalyticsPage({
     }
 
     return (
-        <div className="space-y-6 p-6">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-                <h1 className="text-2xl font-semibold">Активность пользователя #{uid}</h1>
-                <div className="flex gap-2">
-                    {PERIODS.map(p => (
-                        <Button
-                            key={p.value}
-                            variant={period === p.value ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setPeriod(p.value)}
-                        >
-                            {p.label}
-                        </Button>
-                    ))}
+        <div className="mx-auto max-w-[1400px] space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground">Аналитика пользователя</div>
+                    <h1 className="truncate text-xl font-semibold sm:text-2xl">
+                        {profile.data?.full_name ||
+                            profile.data?.username ||
+                            `Пользователь #${uid}`}
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                            #{uid}
+                        </span>
+                    </h1>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
+                        {PERIODS.map(p => (
+                            <Button
+                                key={p.value}
+                                variant={period === p.value ? 'default' : 'ghost'}
+                                size="sm"
+                                className="h-7 px-2.5"
+                                onClick={() => setPeriod(p.value)}
+                            >
+                                {p.label}
+                            </Button>
+                        ))}
+                    </div>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={refreshAll}
                         disabled={isFetching}
                     >
-                        <RefreshCw className={`mr-1 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
+                        <RefreshCw className={`h-4 w-4 sm:mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">Обновить</span>
                     </Button>
                 </div>
             </div>
@@ -179,23 +201,23 @@ export default function UserAnalyticsPage({
                     ) : !profile.data ? (
                         <div className="text-muted-foreground">Профиль не найден</div>
                     ) : (
-                        <div className="flex items-start gap-4 flex-wrap">
+                        <div className="flex items-start gap-4">
                             {profile.data.avatar_url ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={profile.data.avatar_url}
                                     alt=""
-                                    className="w-16 h-16 rounded-full object-cover bg-muted"
+                                    className="h-14 w-14 shrink-0 rounded-full bg-muted object-cover ring-2 ring-border sm:h-16 sm:w-16"
                                 />
                             ) : (
-                                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-xl text-muted-foreground">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-medium text-muted-foreground ring-2 ring-border sm:h-16 sm:w-16">
                                     {(profile.data.full_name ?? profile.data.username ?? '?')
                                         .slice(0, 1)
                                         .toUpperCase()}
                                 </div>
                             )}
-                            <div className="flex-1 min-w-[240px]">
-                                <div className="flex items-center gap-2 flex-wrap">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <span className="text-lg font-semibold">
                                         {profile.data.full_name ||
                                             [profile.data.name, profile.data.surname]
@@ -205,16 +227,21 @@ export default function UserAnalyticsPage({
                                             `#${uid}`}
                                     </span>
                                     <span
-                                        className={
+                                        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
                                             profile.data.is_active
-                                                ? 'text-xs font-medium text-green-600 dark:text-green-400'
-                                                : 'text-xs font-medium text-red-600 dark:text-red-400'
-                                        }
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400'
+                                                : 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400'
+                                        }`}
                                     >
+                                        <span
+                                            className={`h-1.5 w-1.5 rounded-full ${
+                                                profile.data.is_active ? 'bg-green-500' : 'bg-red-500'
+                                            }`}
+                                        />
                                         {profile.data.is_active ? 'активен' : 'забанен'}
                                     </span>
                                 </div>
-                                <div className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
                                     <Field label="username" value={profile.data.username} />
                                     <Field label="Телефон" value={profile.data.phone} mono />
                                     <Field label="Email" value={profile.data.email} />
@@ -254,10 +281,14 @@ export default function UserAnalyticsPage({
 
             <ProductSelector value={product} onChange={setProduct} />
 
-            <div className="grid gap-3 md:grid-cols-3">
-                <SummaryCard title="Всего событий" value={totalEvents} />
-                <SummaryCard title="Активных дней" value={activeDays} />
-                <SummaryCard title="Различных событий" value={activity.data?.event_types.length ?? 0} />
+            <div className="grid gap-3 sm:grid-cols-3">
+                <SummaryCard title="Всего событий" value={totalEvents} icon={Activity} />
+                <SummaryCard title="Активных дней" value={activeDays} icon={CalendarDays} />
+                <SummaryCard
+                    title="Различных событий"
+                    value={activity.data?.event_types.length ?? 0}
+                    icon={Layers}
+                />
             </div>
 
             <div className="grid gap-3 lg:grid-cols-2">
@@ -810,6 +841,35 @@ const TX_TYPES = [
 const fmtAmount = (n: number) =>
     n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 
+const txTypeLabel = (type: string) =>
+    TX_TYPES.find(x => x.value === type)?.label ?? type
+
+// Signed amount string + color/icon driven by transaction type.
+function txMeta(type: string, amount: number) {
+    if (type === 'expense') {
+        return {
+            signed: `−${fmtAmount(Math.abs(amount))}`,
+            cls: 'text-red-600 dark:text-red-400',
+            Icon: ArrowUpRight,
+            iconCls: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40',
+        }
+    }
+    if (type === 'income') {
+        return {
+            signed: `+${fmtAmount(Math.abs(amount))}`,
+            cls: 'text-green-600 dark:text-green-400',
+            Icon: ArrowDownLeft,
+            iconCls: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40',
+        }
+    }
+    return {
+        signed: fmtAmount(amount),
+        cls: 'text-foreground',
+        Icon: ArrowLeftRight,
+        iconCls: 'text-muted-foreground bg-muted',
+    }
+}
+
 function WalletsCard({ uid }: { uid: number }) {
     const [walletFilter, setWalletFilter] = useState<number | null>(null)
     const [txType, setTxType] = useState('')
@@ -829,86 +889,106 @@ function WalletsCard({ uid }: { uid: number }) {
     const walletItems = wallets.data?.wallets ?? []
     const balances = wallets.data?.total_balance_by_currency ?? {}
     const txItems = txs.data?.items ?? []
+    const activeWallet = walletItems.find(w => w.id === walletFilter)
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             <Card>
-                <CardHeader>
-                    <CardTitle>
-                        Кошельки{' '}
-                        <span className="text-sm font-normal text-muted-foreground">
-                            ({walletItems.length})
-                        </span>
-                    </CardTitle>
-                    {Object.keys(balances).length > 0 && (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                            {Object.entries(balances).map(([cur, total]) => (
-                                <span
-                                    key={cur}
-                                    className="rounded bg-muted px-2 py-0.5 text-xs"
-                                >
-                                    Σ {cur}: <strong>{fmtAmount(total)}</strong>
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                <CardHeader className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <CardTitle className="flex items-center gap-2">
+                            <WalletIcon className="h-5 w-5 text-muted-foreground" />
+                            Кошельки
+                            <span className="text-sm font-normal text-muted-foreground">
+                                ({walletItems.length})
+                            </span>
+                        </CardTitle>
+                        {Object.keys(balances).length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {Object.entries(balances).map(([cur, total]) => (
+                                    <span
+                                        key={cur}
+                                        className="inline-flex items-baseline gap-1.5 rounded-full border bg-muted/40 px-3 py-1 text-sm"
+                                    >
+                                        <span className="text-xs text-muted-foreground">{cur}</span>
+                                        <span className="font-semibold tabular-nums">
+                                            {fmtAmount(total)}
+                                        </span>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {wallets.isLoading ? (
-                        <div>Загрузка…</div>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {[0, 1, 2].map(i => (
+                                <div
+                                    key={i}
+                                    className="h-28 animate-pulse rounded-xl border bg-muted/40"
+                                />
+                            ))}
+                        </div>
                     ) : walletItems.length === 0 ? (
                         <div className="text-muted-foreground">Нет кошельков</div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Название</TableHead>
-                                    <TableHead className="w-28">Продукт</TableHead>
-                                    <TableHead className="w-24">Валюта</TableHead>
-                                    <TableHead className="w-36 text-right">Баланс</TableHead>
-                                    <TableHead className="w-28 text-right">Транзакций</TableHead>
-                                    <TableHead className="w-40">Создан</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {walletItems.map(w => (
-                                    <TableRow
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {walletItems.map(w => {
+                                const selected = walletFilter === w.id
+                                const accent = w.color || 'hsl(var(--primary))'
+                                return (
+                                    <button
                                         key={w.id}
-                                        className={
-                                            walletFilter === w.id ? 'bg-muted/50' : 'cursor-pointer'
-                                        }
+                                        type="button"
                                         onClick={() =>
-                                            setWalletFilter(walletFilter === w.id ? null : w.id)
+                                            setWalletFilter(selected ? null : w.id)
                                         }
+                                        className={`group relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-all hover:shadow-md ${
+                                            selected
+                                                ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                                                : 'hover:border-foreground/20'
+                                        }`}
                                     >
-                                        <TableCell>
-                                            <span className="flex items-center gap-2">
-                                                {w.color && (
-                                                    <span
-                                                        className="inline-block h-3 w-3 rounded-full"
-                                                        style={{ backgroundColor: w.color }}
-                                                    />
-                                                )}
-                                                {w.name}
+                                        <span
+                                            className="absolute inset-y-0 left-0 w-1.5"
+                                            style={{ backgroundColor: accent }}
+                                        />
+                                        <div className="flex items-start justify-between gap-2 pl-2">
+                                            <div className="min-w-0">
+                                                <div className="truncate font-medium">
+                                                    {w.name}
+                                                </div>
+                                                <div className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                                                    {w.product}
+                                                </div>
+                                            </div>
+                                            {selected && (
+                                                <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                                                    фильтр
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="mt-3 flex items-baseline gap-1 pl-2">
+                                            <span className="text-2xl font-semibold tabular-nums">
+                                                {fmtAmount(w.balance)}
                                             </span>
-                                        </TableCell>
-                                        <TableCell className="text-xs text-muted-foreground">
-                                            {w.product}
-                                        </TableCell>
-                                        <TableCell className="text-xs">{w.currency}</TableCell>
-                                        <TableCell className="text-right tabular-nums font-medium">
-                                            {fmtAmount(w.balance)}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums text-muted-foreground">
-                                            {w.tx_count}
-                                        </TableCell>
-                                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                                            {new Date(w.created_at).toLocaleDateString()}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                            <span className="text-sm text-muted-foreground">
+                                                {w.currency}
+                                            </span>
+                                        </div>
+                                        <div className="mt-2 flex items-center gap-2 pl-2 text-xs text-muted-foreground">
+                                            <span>{w.tx_count} транз.</span>
+                                            <span>·</span>
+                                            <span>
+                                                с{' '}
+                                                {new Date(w.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -922,91 +1002,150 @@ function WalletsCard({ uid }: { uid: number }) {
                         </span>
                     </CardTitle>
                     <div className="flex flex-wrap items-center gap-2">
-                        {walletFilter != null && (
-                            <Button
-                                variant="outline"
-                                size="sm"
+                        {activeWallet && (
+                            <button
+                                type="button"
                                 onClick={() => setWalletFilter(null)}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
                             >
-                                Кошелёк: {walletItems.find(w => w.id === walletFilter)?.name ?? walletFilter} ✕
-                            </Button>
+                                {activeWallet.name}
+                                <span className="text-primary/60">✕</span>
+                            </button>
                         )}
-                        {TX_TYPES.map(t => (
-                            <Button
-                                key={t.value || 'all'}
-                                variant={txType === t.value ? 'default' : 'outline'}
-                                size="sm"
-                                className="h-8"
-                                onClick={() => setTxType(t.value)}
-                            >
-                                {t.label}
-                            </Button>
-                        ))}
+                        <div className="flex flex-wrap gap-1.5">
+                            {TX_TYPES.map(t => (
+                                <Button
+                                    key={t.value || 'all'}
+                                    variant={txType === t.value ? 'default' : 'outline'}
+                                    size="sm"
+                                    className="h-8"
+                                    onClick={() => setTxType(t.value)}
+                                >
+                                    {t.label}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
                     {txs.isLoading ? (
                         <div>Загрузка…</div>
                     ) : txItems.length === 0 ? (
-                        <div className="text-muted-foreground">Нет транзакций</div>
+                        <div className="py-8 text-center text-muted-foreground">
+                            Нет транзакций
+                        </div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-44">Когда</TableHead>
-                                    <TableHead className="w-24">Тип</TableHead>
-                                    <TableHead className="text-right w-36">Сумма</TableHead>
-                                    <TableHead>Кошелёк</TableHead>
-                                    <TableHead>Категория</TableHead>
-                                    <TableHead>Описание</TableHead>
-                                    <TableHead className="w-24">Продукт</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <>
+                            {/* Mobile: stacked list — readable without horizontal scroll */}
+                            <ul className="divide-y md:hidden">
                                 {txItems.map(t => {
-                                    const signed =
-                                        t.type === 'expense'
-                                            ? `-${fmtAmount(Math.abs(t.amount))}`
-                                            : t.type === 'income'
-                                            ? `+${fmtAmount(Math.abs(t.amount))}`
-                                            : fmtAmount(t.amount)
-                                    const amountCls =
-                                        t.type === 'expense'
-                                            ? 'text-red-600 dark:text-red-400'
-                                            : t.type === 'income'
-                                            ? 'text-green-600 dark:text-green-400'
-                                            : ''
+                                    const m = txMeta(t.type, t.amount)
                                     return (
-                                        <TableRow key={t.id}>
-                                            <TableCell className="text-xs whitespace-nowrap">
-                                                {new Date(t.date ?? t.created_at).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-xs">
-                                                {TX_TYPES.find(x => x.value === t.type)?.label ??
-                                                    t.type}
-                                            </TableCell>
-                                            <TableCell
-                                                className={`text-right tabular-nums font-medium ${amountCls}`}
+                                        <li
+                                            key={t.id}
+                                            className="flex items-center gap-3 py-3"
+                                        >
+                                            <span
+                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${m.iconCls}`}
                                             >
-                                                {signed}
-                                            </TableCell>
-                                            <TableCell className="text-sm">
-                                                {t.wallet_name ?? `#${t.wallet_id}`}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-muted-foreground">
-                                                {t.category_name ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground max-w-[280px] truncate" title={t.description ?? undefined}>
-                                                {t.description ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground">
-                                                {t.product}
-                                            </TableCell>
-                                        </TableRow>
+                                                <m.Icon className="h-4 w-4" />
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-baseline justify-between gap-2">
+                                                    <span className="truncate text-sm font-medium">
+                                                        {t.category_name ?? txTypeLabel(t.type)}
+                                                    </span>
+                                                    <span
+                                                        className={`shrink-0 text-sm font-semibold tabular-nums ${m.cls}`}
+                                                    >
+                                                        {m.signed}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                    <span className="truncate">
+                                                        {t.wallet_name ?? `#${t.wallet_id}`}
+                                                    </span>
+                                                    <span>·</span>
+                                                    <span className="whitespace-nowrap">
+                                                        {new Date(
+                                                            t.date ?? t.created_at,
+                                                        ).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                {t.description && (
+                                                    <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                        {t.description}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </li>
                                     )
                                 })}
-                            </TableBody>
-                        </Table>
+                            </ul>
+
+                            {/* Desktop: full table */}
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-44">Когда</TableHead>
+                                            <TableHead className="w-28">Тип</TableHead>
+                                            <TableHead className="w-36 text-right">
+                                                Сумма
+                                            </TableHead>
+                                            <TableHead>Кошелёк</TableHead>
+                                            <TableHead>Категория</TableHead>
+                                            <TableHead>Описание</TableHead>
+                                            <TableHead className="w-24">Продукт</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {txItems.map(t => {
+                                            const m = txMeta(t.type, t.amount)
+                                            return (
+                                                <TableRow key={t.id}>
+                                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                                        {new Date(
+                                                            t.date ?? t.created_at,
+                                                        ).toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="inline-flex items-center gap-1.5 text-xs">
+                                                            <span
+                                                                className={`flex h-6 w-6 items-center justify-center rounded-full ${m.iconCls}`}
+                                                            >
+                                                                <m.Icon className="h-3.5 w-3.5" />
+                                                            </span>
+                                                            {txTypeLabel(t.type)}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell
+                                                        className={`text-right tabular-nums font-semibold ${m.cls}`}
+                                                    >
+                                                        {m.signed}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm">
+                                                        {t.wallet_name ?? `#${t.wallet_id}`}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">
+                                                        {t.category_name ?? '—'}
+                                                    </TableCell>
+                                                    <TableCell
+                                                        className="max-w-[280px] truncate text-xs text-muted-foreground"
+                                                        title={t.description ?? undefined}
+                                                    >
+                                                        {t.description ?? '—'}
+                                                    </TableCell>
+                                                    <TableCell className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                                                        {t.product}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </>
                     )}
                     {txs.data && txs.data.total > 0 && (
                         <Pagination
@@ -1170,9 +1309,13 @@ function Field({
     mono?: boolean
 }) {
     return (
-        <div className="flex gap-2">
-            <span className="text-muted-foreground">{label}:</span>
-            <span className={mono ? 'font-mono break-all' : 'break-all'}>{value || '—'}</span>
+        <div className="flex flex-col">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {label}
+            </span>
+            <span className={mono ? 'font-mono text-sm break-all' : 'break-all'}>
+                {value || '—'}
+            </span>
         </div>
     )
 }
@@ -1195,9 +1338,11 @@ function Metric({
             ? 'text-red-600 dark:text-red-400'
             : ''
     return (
-        <div className="rounded border bg-muted/30 px-3 py-2">
-            <div className="text-xs text-muted-foreground">{label}</div>
-            <div className={`text-lg font-semibold tabular-nums ${valueCls}`}>{value}</div>
+        <div className="rounded-lg border bg-muted/30 px-3 py-2.5 transition-colors hover:bg-muted/50">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {label}
+            </div>
+            <div className={`mt-0.5 text-xl font-semibold tabular-nums ${valueCls}`}>{value}</div>
             {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}
         </div>
     )
@@ -1220,14 +1365,31 @@ function DeviceTypeBadge({ type }: { type: string }) {
     )
 }
 
-function SummaryCard({ title, value }: { title: string; value: number | undefined }) {
+function SummaryCard({
+    title,
+    value,
+    icon: Icon,
+}: {
+    title: string
+    value: number | undefined
+    icon?: typeof Activity
+}) {
     return (
-        <Card>
-            <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-normal text-muted-foreground">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-semibold">{value ?? '—'}</div>
+        <Card className="overflow-hidden">
+            <CardContent className="flex items-center gap-4 p-4">
+                {Icon && (
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Icon className="h-5 w-5" />
+                    </div>
+                )}
+                <div className="min-w-0">
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        {title}
+                    </div>
+                    <div className="text-2xl font-semibold tabular-nums">
+                        {value?.toLocaleString() ?? '—'}
+                    </div>
+                </div>
             </CardContent>
         </Card>
     )
