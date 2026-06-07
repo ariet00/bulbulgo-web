@@ -15,6 +15,8 @@ import {
     useAdminUserEngagement,
     useAdminUserPlatforms,
     useAdminUserLimit,
+    useAdminUserWallets,
+    useAdminUserTransactions,
     useAdminVehicles,
     useAdminNotifications,
 } from '@/hooks/queries/admin'
@@ -571,6 +573,8 @@ export default function UserAnalyticsPage({
                 </CardContent>
             </Card>
 
+            <WalletsCard uid={uid} />
+
             <Card>
                 <CardHeader>
                     <CardTitle>График активности по дням</CardTitle>
@@ -788,6 +792,228 @@ export default function UserAnalyticsPage({
                                 setEventSize(s)
                                 setEventPage(1)
                             }}
+                        />
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+const TX_TYPES = [
+    { value: '', label: 'Все' },
+    { value: 'income', label: 'Доход' },
+    { value: 'expense', label: 'Расход' },
+    { value: 'transfer', label: 'Перевод' },
+]
+
+const fmtAmount = (n: number) =>
+    n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+
+function WalletsCard({ uid }: { uid: number }) {
+    const [walletFilter, setWalletFilter] = useState<number | null>(null)
+    const [txType, setTxType] = useState('')
+    const [txPage, setTxPage] = useState(1)
+    const txSize = 50
+
+    const wallets = useAdminUserWallets(uid)
+    const txs = useAdminUserTransactions(uid, txPage, txSize, {
+        walletId: walletFilter ?? undefined,
+        type: txType || undefined,
+    })
+
+    useEffect(() => {
+        setTxPage(1)
+    }, [walletFilter, txType])
+
+    const walletItems = wallets.data?.wallets ?? []
+    const balances = wallets.data?.total_balance_by_currency ?? {}
+    const txItems = txs.data?.items ?? []
+
+    return (
+        <div className="space-y-3">
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Кошельки{' '}
+                        <span className="text-sm font-normal text-muted-foreground">
+                            ({walletItems.length})
+                        </span>
+                    </CardTitle>
+                    {Object.keys(balances).length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            {Object.entries(balances).map(([cur, total]) => (
+                                <span
+                                    key={cur}
+                                    className="rounded bg-muted px-2 py-0.5 text-xs"
+                                >
+                                    Σ {cur}: <strong>{fmtAmount(total)}</strong>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </CardHeader>
+                <CardContent>
+                    {wallets.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : walletItems.length === 0 ? (
+                        <div className="text-muted-foreground">Нет кошельков</div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Название</TableHead>
+                                    <TableHead className="w-28">Продукт</TableHead>
+                                    <TableHead className="w-24">Валюта</TableHead>
+                                    <TableHead className="w-36 text-right">Баланс</TableHead>
+                                    <TableHead className="w-28 text-right">Транзакций</TableHead>
+                                    <TableHead className="w-40">Создан</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {walletItems.map(w => (
+                                    <TableRow
+                                        key={w.id}
+                                        className={
+                                            walletFilter === w.id ? 'bg-muted/50' : 'cursor-pointer'
+                                        }
+                                        onClick={() =>
+                                            setWalletFilter(walletFilter === w.id ? null : w.id)
+                                        }
+                                    >
+                                        <TableCell>
+                                            <span className="flex items-center gap-2">
+                                                {w.color && (
+                                                    <span
+                                                        className="inline-block h-3 w-3 rounded-full"
+                                                        style={{ backgroundColor: w.color }}
+                                                    />
+                                                )}
+                                                {w.name}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">
+                                            {w.product}
+                                        </TableCell>
+                                        <TableCell className="text-xs">{w.currency}</TableCell>
+                                        <TableCell className="text-right tabular-nums font-medium">
+                                            {fmtAmount(w.balance)}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                                            {w.tx_count}
+                                        </TableCell>
+                                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                            {new Date(w.created_at).toLocaleDateString()}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader className="space-y-3">
+                    <CardTitle>
+                        История транзакций{' '}
+                        <span className="text-sm font-normal text-muted-foreground">
+                            (всего {txs.data?.total ?? 0})
+                        </span>
+                    </CardTitle>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {walletFilter != null && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setWalletFilter(null)}
+                            >
+                                Кошелёк: {walletItems.find(w => w.id === walletFilter)?.name ?? walletFilter} ✕
+                            </Button>
+                        )}
+                        {TX_TYPES.map(t => (
+                            <Button
+                                key={t.value || 'all'}
+                                variant={txType === t.value ? 'default' : 'outline'}
+                                size="sm"
+                                className="h-8"
+                                onClick={() => setTxType(t.value)}
+                            >
+                                {t.label}
+                            </Button>
+                        ))}
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {txs.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : txItems.length === 0 ? (
+                        <div className="text-muted-foreground">Нет транзакций</div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-44">Когда</TableHead>
+                                    <TableHead className="w-24">Тип</TableHead>
+                                    <TableHead className="text-right w-36">Сумма</TableHead>
+                                    <TableHead>Кошелёк</TableHead>
+                                    <TableHead>Категория</TableHead>
+                                    <TableHead>Описание</TableHead>
+                                    <TableHead className="w-24">Продукт</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {txItems.map(t => {
+                                    const signed =
+                                        t.type === 'expense'
+                                            ? `-${fmtAmount(Math.abs(t.amount))}`
+                                            : t.type === 'income'
+                                            ? `+${fmtAmount(Math.abs(t.amount))}`
+                                            : fmtAmount(t.amount)
+                                    const amountCls =
+                                        t.type === 'expense'
+                                            ? 'text-red-600 dark:text-red-400'
+                                            : t.type === 'income'
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : ''
+                                    return (
+                                        <TableRow key={t.id}>
+                                            <TableCell className="text-xs whitespace-nowrap">
+                                                {new Date(t.date ?? t.created_at).toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="text-xs">
+                                                {TX_TYPES.find(x => x.value === t.type)?.label ??
+                                                    t.type}
+                                            </TableCell>
+                                            <TableCell
+                                                className={`text-right tabular-nums font-medium ${amountCls}`}
+                                            >
+                                                {signed}
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                                {t.wallet_name ?? `#${t.wallet_id}`}
+                                            </TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">
+                                                {t.category_name ?? '—'}
+                                            </TableCell>
+                                            <TableCell className="text-xs text-muted-foreground max-w-[280px] truncate" title={t.description ?? undefined}>
+                                                {t.description ?? '—'}
+                                            </TableCell>
+                                            <TableCell className="text-xs text-muted-foreground">
+                                                {t.product}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
+                            </TableBody>
+                        </Table>
+                    )}
+                    {txs.data && txs.data.total > 0 && (
+                        <Pagination
+                            page={txs.data.page}
+                            total={txs.data.total}
+                            size={txs.data.size}
+                            onPageChange={setTxPage}
                         />
                     )}
                 </CardContent>

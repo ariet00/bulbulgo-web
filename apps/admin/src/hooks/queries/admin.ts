@@ -103,6 +103,35 @@ export const useAdminUserTripsSummary = (id: number) => {
     })
 }
 
+export const useAdminUserWallets = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.user(id), 'wallets'] as const,
+        queryFn: () => adminApi.getUserWallets(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminUserTransactions = (
+    id: number,
+    page: number = 1,
+    size: number = 50,
+    opts?: { walletId?: number; type?: string },
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.user(id),
+            'transactions',
+            page,
+            size,
+            opts?.walletId ?? null,
+            opts?.type ?? null,
+        ] as const,
+        queryFn: () => adminApi.getUserTransactions(id, page, size, opts),
+        enabled: !!id,
+        placeholderData: keepPreviousData,
+    })
+}
+
 export const useAdminUserEngagement = (
     id: number,
     period: string = '30d',

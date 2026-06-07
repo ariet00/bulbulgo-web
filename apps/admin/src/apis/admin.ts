@@ -46,6 +46,46 @@ export const adminApi = {
         requests.get<AdminUserSession[]>(`/admin/users/${id}/sessions`),
     getUserTripsSummary: (id: number) =>
         requests.get<AdminUserTripsSummary>(`/admin/users/${id}/trips-summary`),
+    getUserWallets: (id: number) =>
+        requests.get<{
+            wallets: Array<{
+                id: number
+                name: string
+                currency: string
+                balance: number
+                color: string | null
+                icon: string | null
+                product: string
+                created_at: string
+                tx_count: number
+            }>
+            total_balance_by_currency: Record<string, number>
+        }>(`/admin/akcha/users/${id}/wallets`),
+    getUserTransactions: (
+        id: number,
+        page: number = 1,
+        size: number = 50,
+        opts?: { walletId?: number; type?: string },
+    ) => {
+        const qs = new URLSearchParams({ page: String(page), size: String(size) })
+        if (opts?.walletId != null) qs.set('wallet_id', String(opts.walletId))
+        if (opts?.type) qs.set('type', opts.type)
+        return requests.get<
+            Page<{
+                id: number
+                wallet_id: number
+                wallet_name: string | null
+                category_id: number | null
+                category_name: string | null
+                amount: number
+                type: string
+                description: string | null
+                product: string
+                date: string | null
+                created_at: string
+            }>
+        >(`/admin/akcha/users/${id}/transactions?${qs.toString()}`)
+    },
 
     // Companies
     getCompanies: (page = 1, size = 40, q?: string, type?: string) => {
