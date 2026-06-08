@@ -407,6 +407,8 @@ export default function BulbulGoAnalyticsPage() {
                     ) : !topActive.data || topActive.data.users.length === 0 ? (
                         <div className="text-muted-foreground">Нет данных</div>
                     ) : (
+                        <>
+                        <div className="hidden md:block">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -466,6 +468,56 @@ export default function BulbulGoAnalyticsPage() {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
+
+                        <div className="space-y-2 md:hidden">
+                            {topActive.data.users.map((u, i) => (
+                                <div
+                                    key={u.user_id}
+                                    className="flex items-start justify-between gap-3 rounded-lg border p-3"
+                                >
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        <span className="w-5 shrink-0 pt-1 text-xs tabular-nums text-muted-foreground">
+                                            {i + 1}
+                                        </span>
+                                        <div className="min-w-0">
+                                            <Link
+                                                href={`/admin/analytics/users/${u.user_id}`}
+                                                className="flex items-center gap-2 hover:underline"
+                                            >
+                                                {u.avatar_url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={u.avatar_url}
+                                                        alt=""
+                                                        className="h-7 w-7 shrink-0 rounded-full bg-muted object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+                                                        {(u.name ?? '?').slice(0, 1).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span className="truncate text-sm font-medium">
+                                                    {u.name ?? `user #${u.user_id}`}
+                                                </span>
+                                            </Link>
+                                            <div className="mt-0.5 font-mono text-xs text-muted-foreground">
+                                                #{u.user_id} · {u.phone ?? '—'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <div className="text-lg font-semibold tabular-nums">
+                                            {u.events.toLocaleString()}
+                                        </div>
+                                        <div className="text-[11px] tabular-nums text-muted-foreground">
+                                            событий · {u.active_days} дн.
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
@@ -483,6 +535,8 @@ export default function BulbulGoAnalyticsPage() {
                     ) : !topRoutes.data || topRoutes.data.routes.length === 0 ? (
                         <div className="text-muted-foreground">Нет данных</div>
                     ) : (
+                        <>
+                        <div className="hidden md:block">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -511,6 +565,34 @@ export default function BulbulGoAnalyticsPage() {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
+
+                        <div className="space-y-2 md:hidden">
+                            {topRoutes.data.routes.map((r, i) => (
+                                <div
+                                    key={`${r.from_id}-${r.to_id}`}
+                                    className="flex items-start justify-between gap-3 rounded-lg border p-3"
+                                >
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        <span className="w-5 shrink-0 pt-0.5 text-xs tabular-nums text-muted-foreground">
+                                            {i + 1}
+                                        </span>
+                                        <div className="min-w-0 text-sm font-medium">
+                                            {r.from_name ?? `#${r.from_id}`} → {r.to_name ?? `#${r.to_id}`}
+                                        </div>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <div className="text-base font-semibold tabular-nums">
+                                            {r.trips}
+                                        </div>
+                                        <div className="text-[11px] tabular-nums text-muted-foreground">
+                                            поездок · заверш. {r.completed}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
@@ -625,7 +707,7 @@ function TopDriversCard({
 }) {
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
                 <CardTitle>
                     {title} ({period})
                 </CardTitle>
@@ -637,6 +719,8 @@ function TopDriversCard({
                 ) : !query.data || query.data.drivers.length === 0 ? (
                     <div className="text-muted-foreground">Нет данных</div>
                 ) : (
+                    <>
+                    <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -786,6 +870,70 @@ function TopDriversCard({
                             })}
                         </TableBody>
                     </Table>
+                    </div>
+
+                    <div className="space-y-2 md:hidden">
+                        {query.data.drivers.map((d: TopDriverRow, i: number) => {
+                            const completionPct = d.trips > 0 ? (d.completed / d.trips) * 100 : 0
+                            const main =
+                                variant === 'trips'
+                                    ? { value: d.trips, label: 'Поездки' }
+                                    : variant === 'phone'
+                                    ? { value: d.phone_views_made, label: 'Просмотров номера' }
+                                    : { value: d.trip_views_made, label: 'Просмотров объявл.' }
+                            return (
+                                <div key={d.user_id} className="rounded-lg border p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex min-w-0 items-start gap-2">
+                                            <span className="w-5 shrink-0 pt-1 text-xs tabular-nums text-muted-foreground">
+                                                {i + 1}
+                                            </span>
+                                            <div className="min-w-0">
+                                                <UserCell d={d} />
+                                                <div className="mt-0.5 font-mono text-xs text-muted-foreground">
+                                                    {d.phone ?? '—'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <div className="text-lg font-semibold tabular-nums">
+                                                {main.value}
+                                            </div>
+                                            <div className="text-[11px] text-muted-foreground">
+                                                {main.label}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
+                                        {variant === 'trips' && (
+                                            <>
+                                                <span>Водит. <span className="tabular-nums text-foreground">{d.trips_driver}</span></span>
+                                                <span>Пасс. <span className="tabular-nums text-foreground">{d.trips_passenger}</span></span>
+                                                <span>Заверш. <span className="tabular-nums text-foreground">{d.completed}</span></span>
+                                                <span className={completionPct >= 70 ? 'text-green-600 dark:text-green-400' : completionPct >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}>
+                                                    {d.trips > 0 ? `${completionPct.toFixed(0)}%` : '—'}
+                                                </span>
+                                            </>
+                                        )}
+                                        {variant === 'phone' && (
+                                            <>
+                                                <span>Водит. <span className="tabular-nums text-foreground">{d.phone_views_made_driver}</span></span>
+                                                <span>Пасс. <span className="tabular-nums text-foreground">{d.phone_views_made_passenger}</span></span>
+                                                <span>fast <span className="tabular-nums text-foreground">{d.phone_views_fast_made}</span></span>
+                                            </>
+                                        )}
+                                        {variant === 'ads' && (
+                                            <>
+                                                <span>Водит. <span className="tabular-nums text-foreground">{d.trip_views_made_driver}</span></span>
+                                                <span>Пасс. <span className="tabular-nums text-foreground">{d.trip_views_made_passenger}</span></span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    </>
                 )}
             </CardContent>
         </Card>
@@ -841,6 +989,8 @@ function TopViewedTripsCard({
                 ) : trips.length === 0 ? (
                     <div className="text-muted-foreground">Нет данных</div>
                 ) : (
+                    <>
+                    <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -903,6 +1053,59 @@ function TopViewedTripsCard({
                             ))}
                         </TableBody>
                     </Table>
+                    </div>
+
+                    <div className="space-y-2 md:hidden">
+                        {trips.map((t: TopViewedRow, i: number) => (
+                            <div key={t.trip_id} className="rounded-lg border p-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        <span className="w-5 shrink-0 pt-0.5 text-xs tabular-nums text-muted-foreground">
+                                            {(page - 1) * size + i + 1}
+                                        </span>
+                                        <Link
+                                            href={`/admin/trips/${t.trip_id}`}
+                                            className="min-w-0 hover:underline"
+                                        >
+                                            <div className="text-sm font-medium">
+                                                {t.from_name ?? '—'} → {t.to_name ?? '—'}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground tabular-nums">
+                                                #{t.trip_id} · {t.trip_type ?? '—'} / {roleLabel(t.role)}
+                                            </div>
+                                        </Link>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <div className="text-lg font-semibold tabular-nums">
+                                            {t.phone_view_count}
+                                        </div>
+                                        <div className="text-[11px] text-muted-foreground">просмотров</div>
+                                    </div>
+                                </div>
+                                <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
+                                    <span>
+                                        {t.owner_user_id ? (
+                                            <Link
+                                                href={`/admin/analytics/users/${t.owner_user_id}`}
+                                                className="hover:underline"
+                                            >
+                                                {t.owner_name ?? `user #${t.owner_user_id}`}
+                                                <span className="ml-1 tabular-nums">#{t.owner_user_id}</span>
+                                            </Link>
+                                        ) : (
+                                            '—'
+                                        )}
+                                    </span>
+                                    <span className="whitespace-nowrap">
+                                        {t.last_phone_view_at
+                                            ? new Date(t.last_phone_view_at).toLocaleString()
+                                            : '—'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
 
                 {(total > size || page > 1) && (
@@ -986,6 +1189,8 @@ function MultiAccountDevicesCard({
                 ) : devices.length === 0 ? (
                     <div className="text-muted-foreground">Нет данных</div>
                 ) : (
+                    <>
+                    <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -1049,6 +1254,60 @@ function MultiAccountDevicesCard({
                             ))}
                         </TableBody>
                     </Table>
+                    </div>
+
+                    <div className="space-y-3 md:hidden">
+                        {devices.map((d: MultiDeviceRow, i: number) => (
+                            <div key={d.device_id} className="space-y-2 rounded-lg border p-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        <span className="w-5 shrink-0 text-xs tabular-nums text-muted-foreground">
+                                            {(page - 1) * size + i + 1}
+                                        </span>
+                                        <span className="min-w-0 break-all font-mono text-xs">
+                                            {d.device_id}
+                                        </span>
+                                    </div>
+                                    <span className="inline-flex shrink-0 items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                        {d.account_count} акк.
+                                    </span>
+                                </div>
+                                <div className="space-y-1 border-t pt-2">
+                                    {d.accounts.map(a => (
+                                        <div
+                                            key={a.user_id}
+                                            className="flex flex-wrap items-center gap-2 text-sm"
+                                        >
+                                            <Link
+                                                href={`/admin/analytics/users/${a.user_id}`}
+                                                className="hover:underline"
+                                            >
+                                                {a.name ?? `user #${a.user_id}`}
+                                            </Link>
+                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                #{a.user_id}
+                                            </span>
+                                            {a.phone && (
+                                                <span className="font-mono text-xs text-muted-foreground">
+                                                    {a.phone}
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-muted-foreground">
+                                                · {a.events} соб.
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                    <span className="tabular-nums">{d.events} событий</span>
+                                    <span className="whitespace-nowrap">
+                                        {new Date(d.last_seen).toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
 
                 {(total > size || page > 1) && (
@@ -1130,6 +1389,8 @@ function MultiAccountIpsCard({
                 ) : ips.length === 0 ? (
                     <div className="text-muted-foreground">Нет данных</div>
                 ) : (
+                    <>
+                    <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -1193,6 +1454,60 @@ function MultiAccountIpsCard({
                             ))}
                         </TableBody>
                     </Table>
+                    </div>
+
+                    <div className="space-y-3 md:hidden">
+                        {ips.map((d: MultiIpRow, i: number) => (
+                            <div key={d.ip_address} className="space-y-2 rounded-lg border p-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        <span className="w-5 shrink-0 text-xs tabular-nums text-muted-foreground">
+                                            {(page - 1) * size + i + 1}
+                                        </span>
+                                        <span className="min-w-0 break-all font-mono text-xs">
+                                            {d.ip_address}
+                                        </span>
+                                    </div>
+                                    <span className="inline-flex shrink-0 items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                        {d.account_count} акк.
+                                    </span>
+                                </div>
+                                <div className="space-y-1 border-t pt-2">
+                                    {d.accounts.map(a => (
+                                        <div
+                                            key={a.user_id}
+                                            className="flex flex-wrap items-center gap-2 text-sm"
+                                        >
+                                            <Link
+                                                href={`/admin/analytics/users/${a.user_id}`}
+                                                className="hover:underline"
+                                            >
+                                                {a.name ?? `user #${a.user_id}`}
+                                            </Link>
+                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                #{a.user_id}
+                                            </span>
+                                            {a.phone && (
+                                                <span className="font-mono text-xs text-muted-foreground">
+                                                    {a.phone}
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-muted-foreground">
+                                                · {a.events} соб.
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                    <span className="tabular-nums">{d.events} событий</span>
+                                    <span className="whitespace-nowrap">
+                                        {new Date(d.last_seen).toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </>
                 )}
 
                 {(total > size || page > 1) && (
