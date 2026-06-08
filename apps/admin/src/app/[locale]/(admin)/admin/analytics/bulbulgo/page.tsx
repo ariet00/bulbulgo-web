@@ -1696,8 +1696,8 @@ function LimitedDriversCard({
                                             pending={freeM.isPending}
                                             quickResetTo={0}
                                             quickResetLabel="Сброс (0)"
-                                            onSubmit={(mode, value) =>
-                                                freeM.mutate({ userId: d.user_id, mode, value })
+                                            onSubmit={(value) =>
+                                                freeM.mutate({ userId: d.user_id, value })
                                             }
                                             display={
                                                 <>
@@ -1714,8 +1714,8 @@ function LimitedDriversCard({
                                             title="Купленные лимиты"
                                             current={d.credits_balance}
                                             pending={creditsM.isPending}
-                                            onSubmit={(mode, value) =>
-                                                creditsM.mutate({ userId: d.user_id, mode, value })
+                                            onSubmit={(value) =>
+                                                creditsM.mutate({ userId: d.user_id, value })
                                             }
                                             display={
                                                 <span className={d.credits_balance > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-muted-foreground'}>
@@ -1804,8 +1804,8 @@ function LimitedDriversCard({
                                                 pending={freeM.isPending}
                                                 quickResetTo={0}
                                                 quickResetLabel="Сброс (0)"
-                                                onSubmit={(mode, value) =>
-                                                    freeM.mutate({ userId: d.user_id, mode, value })
+                                                onSubmit={(value) =>
+                                                    freeM.mutate({ userId: d.user_id, value })
                                                 }
                                                 display={
                                                     <>
@@ -1823,8 +1823,8 @@ function LimitedDriversCard({
                                                 title="Купленные лимиты"
                                                 current={d.credits_balance}
                                                 pending={creditsM.isPending}
-                                                onSubmit={(mode, value) =>
-                                                    creditsM.mutate({ userId: d.user_id, mode, value })
+                                                onSubmit={(value) =>
+                                                    creditsM.mutate({ userId: d.user_id, value })
                                                 }
                                                 display={
                                                     <span className={d.credits_balance > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-muted-foreground'}>

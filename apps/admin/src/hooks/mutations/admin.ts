@@ -404,8 +404,8 @@ const invalidateLimitedDrivers = (qc: ReturnType<typeof useQueryClient>) => {
 export const useSetDriverCredits = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ userId, mode, value }: { userId: number; mode: 'set' | 'delta'; value: number }) =>
-            adminApi.setDriverCredits(userId, { mode, value }),
+        mutationFn: ({ userId, value }: { userId: number; value: number }) =>
+            adminApi.setDriverCredits(userId, { value }),
         onSuccess: () => {
             invalidateLimitedDrivers(qc)
             toast.success('Кредиты обновлены')
@@ -416,8 +416,8 @@ export const useSetDriverCredits = () => {
 export const useSetDriverFreeUsed = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ userId, mode, value }: { userId: number; mode: 'set' | 'delta'; value: number }) =>
-            adminApi.setDriverFreeUsed(userId, { mode, value }),
+        mutationFn: ({ userId, value }: { userId: number; value: number }) =>
+            adminApi.setDriverFreeUsed(userId, { value }),
         onSuccess: () => {
             invalidateLimitedDrivers(qc)
             toast.success('Free-лимит обновлён')

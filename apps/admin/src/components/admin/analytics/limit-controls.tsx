@@ -4,8 +4,8 @@ import { ReactNode, useState } from 'react'
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@doska/ui'
 import { Pencil } from 'lucide-react'
 
-// Inline editor for a numeric limit value (credits / free-used) with a "set"
-// (absolute) and "+/−" (delta) mode, plus an optional quick-reset button.
+// Inline editor for a numeric limit value (credits / free-used): set an
+// absolute value, plus an optional quick-reset button.
 export function AdjustPopover({
     title,
     current,
@@ -20,19 +20,17 @@ export function AdjustPopover({
     current: number
     display: ReactNode
     pending: boolean
-    onSubmit: (mode: 'set' | 'delta', value: number) => void
+    onSubmit: (value: number) => void
     quickResetTo?: number
     quickResetLabel?: string
     align?: 'start' | 'center' | 'end'
 }) {
     const [open, setOpen] = useState(false)
-    const [mode, setMode] = useState<'set' | 'delta'>('set')
     const [val, setVal] = useState('')
 
     const handleOpenChange = (o: boolean) => {
         setOpen(o)
         if (o) {
-            setMode('set')
             setVal(String(current))
         }
     }
@@ -40,7 +38,7 @@ export function AdjustPopover({
     const submit = () => {
         const n = Number(val)
         if (!Number.isFinite(n) || val === '') return
-        onSubmit(mode, Math.trunc(n))
+        onSubmit(Math.trunc(n))
         setOpen(false)
     }
 
@@ -57,32 +55,6 @@ export function AdjustPopover({
             </PopoverTrigger>
             <PopoverContent className="w-60 space-y-3" align={align}>
                 <div className="text-sm font-medium">{title}</div>
-                <div className="flex gap-1">
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={mode === 'set' ? 'default' : 'outline'}
-                        className="h-7 flex-1 text-xs"
-                        onClick={() => {
-                            setMode('set')
-                            setVal(String(current))
-                        }}
-                    >
-                        Точно
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant={mode === 'delta' ? 'default' : 'outline'}
-                        className="h-7 flex-1 text-xs"
-                        onClick={() => {
-                            setMode('delta')
-                            setVal('')
-                        }}
-                    >
-                        +/−
-                    </Button>
-                </div>
                 <Input
                     type="number"
                     autoFocus
@@ -91,7 +63,7 @@ export function AdjustPopover({
                     onKeyDown={e => {
                         if (e.key === 'Enter') submit()
                     }}
-                    placeholder={mode === 'delta' ? 'напр. -5 или 10' : 'значение'}
+                    placeholder="значение"
                 />
                 <div className="flex items-center gap-2">
                     <Button
@@ -110,7 +82,7 @@ export function AdjustPopover({
                             variant="outline"
                             disabled={pending}
                             onClick={() => {
-                                onSubmit('set', quickResetTo)
+                                onSubmit(quickResetTo)
                                 setOpen(false)
                             }}
                         >

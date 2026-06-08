@@ -1230,7 +1230,7 @@ function UserLimitCard({ uid }: { uid: number }) {
                                 quickResetTo={0}
                                 quickResetLabel="Сброс (0)"
                                 title="Free сегодня"
-                                onSubmit={(mode, value) => freeM.mutate({ userId: uid, mode, value })}
+                                onSubmit={(value) => freeM.mutate({ userId: uid, value })}
                             />
                             <Metric label="Осталось free" value={d.free_remaining} />
                             <EditableMetric
@@ -1249,7 +1249,7 @@ function UserLimitCard({ uid }: { uid: number }) {
                                 current={d.credits_balance}
                                 pending={creditsM.isPending}
                                 title="Купленные лимиты"
-                                onSubmit={(mode, value) => creditsM.mutate({ userId: uid, mode, value })}
+                                onSubmit={(value) => creditsM.mutate({ userId: uid, value })}
                             />
                             <Metric label="Просмотров за окно" value={d.window_views} />
                             <Metric label="Активных дней" value={d.active_days} />
@@ -1276,7 +1276,7 @@ function EditableMetric({
     current: number
     pending: boolean
     title: string
-    onSubmit: (mode: 'set' | 'delta', value: number) => void
+    onSubmit: (value: number) => void
     quickResetTo?: number
     quickResetLabel?: string
 }) {

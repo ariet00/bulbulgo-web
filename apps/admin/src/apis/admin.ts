@@ -669,12 +669,12 @@ export const adminApi = {
         }>(`/admin/rideshare/analytics/top-viewed-trips?page=${page}&size=${size}`),
     getUserLimit: (userId: number) =>
         requests.get<AdminUserLimit>(`/admin/rideshare/analytics/users/${userId}/limit`),
-    setDriverCredits: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
+    setDriverCredits: (userId: number, body: { value: number }) =>
         requests.put<{ user_id: number; credits_balance: number }>(
             `/admin/rideshare/analytics/users/${userId}/credits`,
             body,
         ),
-    setDriverFreeUsed: (userId: number, body: { mode: 'set' | 'delta'; value: number }) =>
+    setDriverFreeUsed: (userId: number, body: { value: number }) =>
         requests.put<{
             user_id: number
             free_used: number
