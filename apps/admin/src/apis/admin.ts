@@ -555,7 +555,11 @@ export const adminApi = {
     getRideshareLimitedDrivers: (
         page: number = 1,
         size: number = 20,
-        opts?: { tier?: 'strict' | 'general'; hasCredits?: boolean },
+        opts?: {
+            tier?: 'strict' | 'general'
+            hasCredits?: boolean
+            sortBy?: 'window_views' | 'free_used' | 'credits_balance' | 'active_days'
+        },
     ) =>
         requests.get<{
             config: {
@@ -587,7 +591,8 @@ export const adminApi = {
         }>(
             `/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}` +
                 (opts?.tier ? `&tier=${opts.tier}` : '') +
-                (opts?.hasCredits ? `&has_credits=true` : ''),
+                (opts?.hasCredits ? `&has_credits=true` : '') +
+                (opts?.sortBy ? `&sort_by=${opts.sortBy}` : ''),
         ),
     getRideshareMultiAccountDevices: (
         period: string = '30d',

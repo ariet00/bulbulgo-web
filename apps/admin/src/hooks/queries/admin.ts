@@ -566,7 +566,11 @@ export const useAdminRideshareTopRoutes = (period: string = '7d', limit: number 
 export const useAdminRideshareLimitedDrivers = (
     page: number = 1,
     size: number = 20,
-    opts?: { tier?: 'strict' | 'general'; hasCredits?: boolean },
+    opts?: {
+        tier?: 'strict' | 'general'
+        hasCredits?: boolean
+        sortBy?: 'window_views' | 'free_used' | 'credits_balance' | 'active_days'
+    },
 ) => {
     return useQuery({
         queryKey: [
@@ -577,6 +581,7 @@ export const useAdminRideshareLimitedDrivers = (
             size,
             opts?.tier ?? null,
             opts?.hasCredits ?? false,
+            opts?.sortBy ?? 'window_views',
         ],
         queryFn: () => adminApi.getRideshareLimitedDrivers(page, size, opts),
         placeholderData: keepPreviousData,

@@ -142,9 +142,11 @@ export default function BulbulGoAnalyticsPage() {
     const [limitedPage, setLimitedPage] = useState(1)
     const [limitedTier, setLimitedTier] = useState<'all' | 'strict' | 'general'>('all')
     const [limitedHasCredits, setLimitedHasCredits] = useState(false)
+    const [limitedSort, setLimitedSort] = useState<LimitedSort>('window_views')
     const limitedDrivers = useAdminRideshareLimitedDrivers(limitedPage, LIMITED_SIZE, {
         tier: limitedTier === 'all' ? undefined : limitedTier,
         hasCredits: limitedHasCredits,
+        sortBy: limitedSort,
     })
     const [multiPeriod, setMultiPeriod] = useState('30d')
     const [multiPage, setMultiPage] = useState(1)
@@ -623,6 +625,11 @@ export default function BulbulGoAnalyticsPage() {
                 hasCredits={limitedHasCredits}
                 onHasCreditsChange={(v) => {
                     setLimitedHasCredits(v)
+                    setLimitedPage(1)
+                }}
+                sort={limitedSort}
+                onSortChange={(s) => {
+                    setLimitedSort(s)
                     setLimitedPage(1)
                 }}
             />
@@ -1531,6 +1538,15 @@ const LIMITED_TIERS: Array<{ value: 'all' | 'strict' | 'general'; label: string 
     { value: 'general', label: 'Общий' },
 ]
 
+type LimitedSort = 'window_views' | 'free_used' | 'credits_balance' | 'active_days'
+
+const LIMITED_SORTS: Array<{ value: LimitedSort; label: string }> = [
+    { value: 'window_views', label: 'Просмотры' },
+    { value: 'free_used', label: 'Free сегодня' },
+    { value: 'credits_balance', label: 'Купленные' },
+    { value: 'active_days', label: 'Активных дней' },
+]
+
 function LimitedDriversCard({
     query,
     page,
@@ -1540,6 +1556,8 @@ function LimitedDriversCard({
     onTierChange,
     hasCredits,
     onHasCreditsChange,
+    sort,
+    onSortChange,
 }: {
     query: LimitedDriversQuery
     page: number
@@ -1549,6 +1567,8 @@ function LimitedDriversCard({
     onTierChange: (t: 'all' | 'strict' | 'general') => void
     hasCredits: boolean
     onHasCreditsChange: (v: boolean) => void
+    sort: LimitedSort
+    onSortChange: (s: LimitedSort) => void
 }) {
     const cfg = query.data?.config
     const drivers = query.data?.drivers ?? []
@@ -1597,6 +1617,20 @@ function LimitedDriversCard({
                     >
                         С купленными
                     </Button>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground">Сортировка:</span>
+                    {LIMITED_SORTS.map(s => (
+                        <Button
+                            key={s.value}
+                            variant={sort === s.value ? 'default' : 'outline'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => onSortChange(s.value)}
+                        >
+                            {s.label}
+                        </Button>
+                    ))}
                 </div>
                 {cfg && (
                     <p className="text-xs text-muted-foreground">
