@@ -25,6 +25,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Pagination } from '@doska/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
@@ -187,40 +188,60 @@ export default function BulbulGoAnalyticsPage() {
     }
 
     return (
-        <div className="space-y-6 p-6">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                    <h1 className="text-2xl font-semibold">BulBul Go — аналитика</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Rideshare, такси, маршрутки, автобусы, грузовые
-                    </p>
-                </div>
-                <div className="flex gap-2 items-center flex-wrap">
-                    <span className="text-sm text-muted-foreground mr-1">
-                        Общий период:
-                    </span>
-                    {PERIODS.map(p => (
+        <div className="p-4 sm:p-6">
+            <div className="sticky top-0 z-20 -mx-4 mb-6 border-b bg-background/85 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:-mx-6 sm:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                            BulBul Go — аналитика
+                        </h1>
+                        <p className="text-xs text-muted-foreground sm:text-sm">
+                            Rideshare, такси, маршрутки, автобусы, грузовые
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 overflow-x-auto sm:overflow-visible">
+                        <span className="hidden shrink-0 text-sm text-muted-foreground lg:inline">
+                            Период:
+                        </span>
+                        <div className="flex shrink-0 items-center gap-1">
+                            {PERIODS.map(p => (
+                                <Button
+                                    key={p.value}
+                                    variant={period === p.value ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => selectGlobal(p.value)}
+                                >
+                                    {p.label}
+                                </Button>
+                            ))}
+                        </div>
                         <Button
-                            key={p.value}
-                            variant={period === p.value ? 'default' : 'outline'}
+                            variant="outline"
                             size="sm"
-                            onClick={() => selectGlobal(p.value)}
+                            className="shrink-0"
+                            onClick={refetchAll}
+                            disabled={isFetching}
+                            title="Обновить все"
                         >
-                            {p.label}
+                            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                            <span className="ml-1 hidden sm:inline">Обновить</span>
                         </Button>
-                    ))}
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={refetchAll}
-                        disabled={isFetching}
-                    >
-                        <RefreshCw className={`mr-1 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
-                    </Button>
+                    </div>
                 </div>
             </div>
 
+            <Tabs defaultValue="overview" className="space-y-6">
+                <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                    <TabsList className="inline-flex w-max">
+                        <TabsTrigger value="overview">Обзор</TabsTrigger>
+                        <TabsTrigger value="trends">Динамика</TabsTrigger>
+                        <TabsTrigger value="tops">Топы</TabsTrigger>
+                        <TabsTrigger value="limits">Лимиты</TabsTrigger>
+                        <TabsTrigger value="fraud">Антифрод</TabsTrigger>
+                    </TabsList>
+                </div>
+
+                <TabsContent value="overview" className="mt-0 space-y-6">
             <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                     <h2 className="text-sm font-medium text-muted-foreground">
@@ -279,7 +300,25 @@ export default function BulbulGoAnalyticsPage() {
             </div>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
+                    <CardTitle>Воронка ({funnelP})</CardTitle>
+                    <PeriodPicker value={funnelP} onChange={setFunnelP} overridden={funnelOver} />
+                </CardHeader>
+                <CardContent>
+                    {funnel.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !funnel.data || funnel.data.steps.length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных</div>
+                    ) : (
+                        <FunnelView steps={funnel.data.steps} />
+                    )}
+                </CardContent>
+            </Card>
+                </TabsContent>
+
+                <TabsContent value="trends" className="mt-0 space-y-6">
+            <Card>
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
                     <CardTitle>Поездки по дням ({tripsP})</CardTitle>
                     <PeriodPicker value={tripsP} onChange={setTripsP} overridden={tripsOver} />
                 </CardHeader>
@@ -294,7 +333,7 @@ export default function BulbulGoAnalyticsPage() {
             </Card>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
                     <CardTitle>Установки и регистрации по дням ({installsP})</CardTitle>
                     <PeriodPicker value={installsP} onChange={setInstallsP} overridden={installsOver} />
                 </CardHeader>
@@ -312,23 +351,20 @@ export default function BulbulGoAnalyticsPage() {
                     )}
                 </CardContent>
             </Card>
+                </TabsContent>
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-                    <CardTitle>Воронка ({funnelP})</CardTitle>
-                    <PeriodPicker value={funnelP} onChange={setFunnelP} overridden={funnelOver} />
-                </CardHeader>
-                <CardContent>
-                    {funnel.isLoading ? (
-                        <div>Загрузка…</div>
-                    ) : !funnel.data || funnel.data.steps.length === 0 ? (
-                        <div className="text-muted-foreground">Нет данных</div>
-                    ) : (
-                        <FunnelView steps={funnel.data.steps} />
-                    )}
-                </CardContent>
-            </Card>
+                <TabsContent value="tops" className="mt-0">
+                    <Tabs defaultValue="drivers" className="space-y-4">
+                        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                            <TabsList className="inline-flex w-max bg-muted/60">
+                                <TabsTrigger value="drivers">Водители</TabsTrigger>
+                                <TabsTrigger value="users">Пользователи</TabsTrigger>
+                                <TabsTrigger value="routes">Маршруты</TabsTrigger>
+                                <TabsTrigger value="trips">Поездки</TabsTrigger>
+                            </TabsList>
+                        </div>
 
+                        <TabsContent value="drivers" className="mt-0 space-y-6">
             <TopDriversCard
                 title="Топ по созданию поездок"
                 variant="trips"
@@ -353,9 +389,11 @@ export default function BulbulGoAnalyticsPage() {
                 onPeriodChange={setTopAdsP}
                 overridden={topAdsOver}
             />
+                        </TabsContent>
 
+                        <TabsContent value="users" className="mt-0 space-y-6">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
                     <CardTitle>Топ активных пользователей ({topActiveP})</CardTitle>
                     <PeriodPicker
                         value={topActiveP}
@@ -431,9 +469,11 @@ export default function BulbulGoAnalyticsPage() {
                     )}
                 </CardContent>
             </Card>
+                        </TabsContent>
 
+                        <TabsContent value="routes" className="mt-0 space-y-6">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
                     <CardTitle>Топ маршрутов ({routesP})</CardTitle>
                     <PeriodPicker value={routesP} onChange={setRoutesP} overridden={routesOver} />
                 </CardHeader>
@@ -474,7 +514,20 @@ export default function BulbulGoAnalyticsPage() {
                     )}
                 </CardContent>
             </Card>
+                        </TabsContent>
 
+                        <TabsContent value="trips" className="mt-0 space-y-6">
+            <TopViewedTripsCard
+                query={topViewedTrips}
+                page={viewedPage}
+                size={LIMITED_SIZE}
+                onPageChange={setViewedPage}
+            />
+                        </TabsContent>
+                    </Tabs>
+                </TabsContent>
+
+                <TabsContent value="limits" className="mt-0 space-y-6">
             <LimitedDriversCard
                 query={limitedDrivers}
                 page={limitedPage}
@@ -491,7 +544,9 @@ export default function BulbulGoAnalyticsPage() {
                     setLimitedPage(1)
                 }}
             />
+                </TabsContent>
 
+                <TabsContent value="fraud" className="mt-0 space-y-6">
             <MultiAccountDevicesCard
                 query={multiDevices}
                 period={multiPeriod}
@@ -515,13 +570,8 @@ export default function BulbulGoAnalyticsPage() {
                 size={LIMITED_SIZE}
                 onPageChange={setIpPage}
             />
-
-            <TopViewedTripsCard
-                query={topViewedTrips}
-                page={viewedPage}
-                size={LIMITED_SIZE}
-                onPageChange={setViewedPage}
-            />
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
@@ -1249,6 +1299,8 @@ function LimitedDriversCard({
                 ) : drivers.length === 0 ? (
                     <div className="text-muted-foreground">Нет данных</div>
                 ) : (
+                    <>
+                    <div className="hidden md:block">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -1362,6 +1414,116 @@ function LimitedDriversCard({
                             })}
                         </TableBody>
                     </Table>
+                    </div>
+
+                    <div className="space-y-3 md:hidden">
+                        {drivers.map((d: LimitedDriverRow, i: number) => {
+                            const effectiveLimited = d.limit_override ?? d.is_limited
+                            return (
+                                <div
+                                    key={d.user_id}
+                                    className={`rounded-lg border p-3 space-y-3 ${
+                                        effectiveLimited
+                                            ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30'
+                                            : ''
+                                    }`}
+                                >
+                                    <div className="flex items-start gap-2">
+                                        <span className="w-5 shrink-0 pt-1 text-xs tabular-nums text-muted-foreground">
+                                            {(page - 1) * size + i + 1}
+                                        </span>
+                                        <Link
+                                            href={`/admin/analytics/users/${d.user_id}`}
+                                            className="flex min-w-0 flex-1 items-center gap-2 hover:underline"
+                                        >
+                                            {d.avatar_url ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={d.avatar_url}
+                                                    alt=""
+                                                    className="h-8 w-8 shrink-0 rounded-full bg-muted object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+                                                    {(d.name ?? '?').slice(0, 1).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <div className="min-w-0">
+                                                <div className="truncate text-sm font-medium">
+                                                    {d.name ?? `user #${d.user_id}`}
+                                                </div>
+                                                <div className="truncate text-xs tabular-nums text-muted-foreground">
+                                                    #{d.user_id} · {d.phone ?? '—'}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 text-sm">
+                                        <div>
+                                            <span className="text-xs text-muted-foreground">Просмотров </span>
+                                            <span className="font-semibold tabular-nums">{d.window_views}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-muted-foreground">Активных дней </span>
+                                            <span className="tabular-nums">{d.active_days}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-end gap-x-4 gap-y-3 border-t pt-3">
+                                        <div className="space-y-1">
+                                            <div className="text-xs text-muted-foreground">Тариф / статус</div>
+                                            <LimitStatusControl
+                                                d={d}
+                                                pending={limitedM.isPending}
+                                                onSet={(value) =>
+                                                    limitedM.mutate({ userId: d.user_id, value })
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="text-xs text-muted-foreground">Free сегодня</div>
+                                            <AdjustPopover
+                                                title="Free сегодня"
+                                                current={d.free_used}
+                                                pending={freeM.isPending}
+                                                quickResetTo={0}
+                                                quickResetLabel="Сброс (0)"
+                                                onSubmit={(mode, value) =>
+                                                    freeM.mutate({ userId: d.user_id, mode, value })
+                                                }
+                                                display={
+                                                    <>
+                                                        <span className={d.free_remaining === 0 ? 'text-red-600 dark:text-red-400 font-semibold' : undefined}>
+                                                            {d.free_used}
+                                                        </span>
+                                                        <span className="text-muted-foreground"> / {d.free_limit}</span>
+                                                    </>
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="text-xs text-muted-foreground">Куплено</div>
+                                            <AdjustPopover
+                                                title="Купленные лимиты"
+                                                current={d.credits_balance}
+                                                pending={creditsM.isPending}
+                                                onSubmit={(mode, value) =>
+                                                    creditsM.mutate({ userId: d.user_id, mode, value })
+                                                }
+                                                display={
+                                                    <span className={d.credits_balance > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-muted-foreground'}>
+                                                        {d.credits_balance}
+                                                    </span>
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    </>
                 )}
 
                 {(total > size || page > 1) && (
