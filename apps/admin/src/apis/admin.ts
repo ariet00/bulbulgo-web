@@ -558,7 +558,13 @@ export const adminApi = {
         opts?: {
             tier?: 'strict' | 'general'
             hasCredits?: boolean
-            sortBy?: 'window_views' | 'free_used' | 'credits_balance' | 'active_days'
+            onlyLimitReached?: boolean
+            sortBy?:
+                | 'window_views'
+                | 'free_used'
+                | 'credits_balance'
+                | 'active_days'
+                | 'limit_reached_today'
         },
     ) =>
         requests.get<{
@@ -593,6 +599,7 @@ export const adminApi = {
             `/admin/rideshare/analytics/limited-drivers?page=${page}&size=${size}` +
                 (opts?.tier ? `&tier=${opts.tier}` : '') +
                 (opts?.hasCredits ? `&has_credits=true` : '') +
+                (opts?.onlyLimitReached ? `&only_limit_reached=true` : '') +
                 (opts?.sortBy ? `&sort_by=${opts.sortBy}` : ''),
         ),
     // ── BulBul Go wallet reports (product='bulbulgo'), /admin/akcha/reports/* ──

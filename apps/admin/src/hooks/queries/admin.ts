@@ -595,7 +595,13 @@ export const useAdminRideshareLimitedDrivers = (
     opts?: {
         tier?: 'strict' | 'general'
         hasCredits?: boolean
-        sortBy?: 'window_views' | 'free_used' | 'credits_balance' | 'active_days'
+        onlyLimitReached?: boolean
+        sortBy?:
+            | 'window_views'
+            | 'free_used'
+            | 'credits_balance'
+            | 'active_days'
+            | 'limit_reached_today'
     },
 ) => {
     return useQuery({
@@ -607,6 +613,7 @@ export const useAdminRideshareLimitedDrivers = (
             size,
             opts?.tier ?? null,
             opts?.hasCredits ?? false,
+            opts?.onlyLimitReached ?? false,
             opts?.sortBy ?? 'window_views',
         ],
         queryFn: () => adminApi.getRideshareLimitedDrivers(page, size, opts),

@@ -171,10 +171,12 @@ export default function BulbulGoAnalyticsPage() {
     const [limitedPage, setLimitedPage] = useState(1)
     const [limitedTier, setLimitedTier] = useState<'all' | 'strict' | 'general'>('all')
     const [limitedHasCredits, setLimitedHasCredits] = useState(false)
+    const [limitedOnlyReached, setLimitedOnlyReached] = useState(false)
     const [limitedSort, setLimitedSort] = useState<LimitedSort>('window_views')
     const limitedDrivers = useAdminRideshareLimitedDrivers(limitedPage, LIMITED_SIZE, {
         tier: limitedTier === 'all' ? undefined : limitedTier,
         hasCredits: limitedHasCredits,
+        onlyLimitReached: limitedOnlyReached,
         sortBy: limitedSort,
     })
     const [multiPeriod, setMultiPeriod] = useState('30d')
@@ -704,6 +706,11 @@ export default function BulbulGoAnalyticsPage() {
                 hasCredits={limitedHasCredits}
                 onHasCreditsChange={(v) => {
                     setLimitedHasCredits(v)
+                    setLimitedPage(1)
+                }}
+                onlyLimitReached={limitedOnlyReached}
+                onOnlyLimitReachedChange={(v) => {
+                    setLimitedOnlyReached(v)
                     setLimitedPage(1)
                 }}
                 sort={limitedSort}
@@ -1617,13 +1624,19 @@ const LIMITED_TIERS: Array<{ value: 'all' | 'strict' | 'general'; label: string 
     { value: 'general', label: 'Общий' },
 ]
 
-type LimitedSort = 'window_views' | 'free_used' | 'credits_balance' | 'active_days'
+type LimitedSort =
+    | 'window_views'
+    | 'free_used'
+    | 'credits_balance'
+    | 'active_days'
+    | 'limit_reached_today'
 
 const LIMITED_SORTS: Array<{ value: LimitedSort; label: string }> = [
     { value: 'window_views', label: 'Просмотры' },
     { value: 'free_used', label: 'Free сегодня' },
     { value: 'credits_balance', label: 'Купленные' },
     { value: 'active_days', label: 'Активных дней' },
+    { value: 'limit_reached_today', label: 'Лимит сегодня' },
 ]
 
 // Times the user hit the daily phone-view limit today (KG-day). 0 → dash.
@@ -1648,6 +1661,8 @@ function LimitedDriversCard({
     onTierChange,
     hasCredits,
     onHasCreditsChange,
+    onlyLimitReached,
+    onOnlyLimitReachedChange,
     sort,
     onSortChange,
 }: {
@@ -1659,6 +1674,8 @@ function LimitedDriversCard({
     onTierChange: (t: 'all' | 'strict' | 'general') => void
     hasCredits: boolean
     onHasCreditsChange: (v: boolean) => void
+    onlyLimitReached: boolean
+    onOnlyLimitReachedChange: (v: boolean) => void
     sort: LimitedSort
     onSortChange: (s: LimitedSort) => void
 }) {
@@ -1708,6 +1725,15 @@ function LimitedDriversCard({
                         title="Только с купленными (carry-over) лимитами"
                     >
                         С купленными
+                    </Button>
+                    <Button
+                        variant={onlyLimitReached ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => onOnlyLimitReachedChange(!onlyLimitReached)}
+                        title="Только те, кто сегодня упирался в дневной лимит"
+                    >
+                        Упёрлись сегодня
                     </Button>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
