@@ -594,6 +594,55 @@ export const adminApi = {
                 (opts?.hasCredits ? `&has_credits=true` : '') +
                 (opts?.sortBy ? `&sort_by=${opts.sortBy}` : ''),
         ),
+    // ── BulBul Go wallet reports (product='bulbulgo'), /admin/akcha/reports/* ──
+    getWalletReportSummary: (period: string = '7d') =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            balance_by_currency: Array<{ currency: string; balance: number }>
+            topups_sum: number
+            topups_count: number
+            spend_sum: number
+            spend_count: number
+            net_in_period: number
+            active_wallets: number
+            active_users: number
+        }>(`/admin/akcha/reports/summary?period=${period}`),
+    getWalletReportFlowByDay: (period: string = '7d') =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            granularity: 'minute' | 'hour' | 'day'
+            days: Array<{ day: string; total: number; events: Record<string, number> }>
+            event_types: string[]
+        }>(`/admin/akcha/reports/flow-by-day?period=${period}`),
+    getWalletReportTopUsers: (
+        period: string = '7d',
+        metric: 'topups' | 'spend' | 'balance' = 'topups',
+        limit: number = 20,
+    ) =>
+        requests.get<{
+            period: string
+            from_: string
+            to: string
+            metric: string
+            users: Array<{
+                user_id: number
+                name: string | null
+                phone: string | null
+                avatar_url: string | null
+                topups: number
+                topups_count: number
+                spend: number
+                spend_count: number
+                balance: number
+                last_tx_at: string | null
+            }>
+        }>(
+            `/admin/akcha/reports/top-users?period=${period}&metric=${metric}&limit=${limit}`,
+        ),
     getRideshareMultiAccountDevices: (
         period: string = '30d',
         page: number = 1,

@@ -13,6 +13,9 @@ import {
     useAdminRideshareMultiAccountDevices,
     useAdminRideshareMultiAccountIps,
     useAdminRideshareTopViewedTrips,
+    useAdminWalletReportSummary,
+    useAdminWalletReportFlowByDay,
+    useAdminWalletReportTopUsers,
 } from '@/hooks/queries/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
@@ -127,6 +130,10 @@ export default function BulbulGoAnalyticsPage() {
     const [topAdsP, setTopAdsP, topAdsOver] = useCardPeriod(period, resetNonce)
     const [topActiveP, setTopActiveP, topActiveOver] = useCardPeriod(period, resetNonce)
     const [routesP, setRoutesP, routesOver] = useCardPeriod(period, resetNonce)
+    const [walletSumP, setWalletSumP, walletSumOver] = useCardPeriod(period, resetNonce)
+    const [walletFlowP, setWalletFlowP, walletFlowOver] = useCardPeriod(period, resetNonce)
+    const [walletTopP, setWalletTopP, walletTopOver] = useCardPeriod(period, resetNonce)
+    const [walletMetric, setWalletMetric] = useState<WalletMetric>('topups')
 
     const funnel = useAdminRideshareFunnel(funnelP)
     const summary = useAdminRideshareSummary(summaryP)
@@ -139,6 +146,9 @@ export default function BulbulGoAnalyticsPage() {
     const topByAds = useAdminRideshareTopDrivers(topAdsP, 20, 'trip_views')
     const topActive = useAdminRideshareTopActiveUsers(topActiveP, 20)
     const topRoutes = useAdminRideshareTopRoutes(routesP, 20)
+    const walletSummary = useAdminWalletReportSummary(walletSumP)
+    const walletFlow = useAdminWalletReportFlowByDay(walletFlowP)
+    const walletTop = useAdminWalletReportTopUsers(walletTopP, walletMetric, 20)
     const [limitedPage, setLimitedPage] = useState(1)
     const [limitedTier, setLimitedTier] = useState<'all' | 'strict' | 'general'>('all')
     const [limitedHasCredits, setLimitedHasCredits] = useState(false)
@@ -171,7 +181,10 @@ export default function BulbulGoAnalyticsPage() {
         limitedDrivers.isFetching ||
         multiDevices.isFetching ||
         multiIps.isFetching ||
-        topViewedTrips.isFetching
+        topViewedTrips.isFetching ||
+        walletSummary.isFetching ||
+        walletFlow.isFetching ||
+        walletTop.isFetching
     const refetchAll = () => {
         funnel.refetch()
         summary.refetch()
@@ -187,6 +200,9 @@ export default function BulbulGoAnalyticsPage() {
         multiDevices.refetch()
         multiIps.refetch()
         topViewedTrips.refetch()
+        walletSummary.refetch()
+        walletFlow.refetch()
+        walletTop.refetch()
     }
 
     return (
@@ -238,6 +254,7 @@ export default function BulbulGoAnalyticsPage() {
                         <TabsTrigger value="overview">Обзор</TabsTrigger>
                         <TabsTrigger value="trends">Динамика</TabsTrigger>
                         <TabsTrigger value="tops">Топы</TabsTrigger>
+                        <TabsTrigger value="wallets">Кошельки</TabsTrigger>
                         <TabsTrigger value="limits">Лимиты</TabsTrigger>
                         <TabsTrigger value="fraud">Антифрод</TabsTrigger>
                     </TabsList>
@@ -609,6 +626,49 @@ export default function BulbulGoAnalyticsPage() {
             />
                         </TabsContent>
                     </Tabs>
+                </TabsContent>
+
+                <TabsContent value="wallets" className="mt-0 space-y-6">
+                    <WalletSummarySection
+                        query={walletSummary}
+                        period={walletSumP}
+                        onPeriodChange={setWalletSumP}
+                        overridden={walletSumOver}
+                    />
+
+                    <Card>
+                        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
+                            <CardTitle>Пополнения и списания по дням ({walletFlowP})</CardTitle>
+                            <PeriodPicker
+                                value={walletFlowP}
+                                onChange={setWalletFlowP}
+                                overridden={walletFlowOver}
+                            />
+                        </CardHeader>
+                        <CardContent>
+                            {walletFlow.isLoading ? (
+                                <div>Загрузка…</div>
+                            ) : !walletFlow.data || walletFlow.data.days.length === 0 ? (
+                                <div className="text-muted-foreground">Нет данных</div>
+                            ) : (
+                                <DailyStackedBarChart
+                                    data={[...walletFlow.data.days].reverse()}
+                                    eventTypes={walletFlow.data.event_types}
+                                    granularity={walletFlow.data.granularity}
+                                    seriesLabels={WALLET_FLOW_LABELS}
+                                />
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <WalletTopUsersCard
+                        query={walletTop}
+                        period={walletTopP}
+                        onPeriodChange={setWalletTopP}
+                        overridden={walletTopOver}
+                        metric={walletMetric}
+                        onMetricChange={setWalletMetric}
+                    />
                 </TabsContent>
 
                 <TabsContent value="limits" className="mt-0 space-y-6">
@@ -2034,5 +2094,299 @@ function FunnelView({ steps }: { steps: Step[] }) {
                 </div>
             )}
         </div>
+    )
+}
+
+// ── Wallet reports (Кошельки tab) ────────────────────────────────────────────
+
+type WalletMetric = 'topups' | 'spend' | 'balance'
+
+const WALLET_FLOW_LABELS: Record<string, string> = {
+    income: 'Пополнения',
+    expense: 'Списания',
+}
+
+const WALLET_METRICS: Array<{ value: WalletMetric; label: string }> = [
+    { value: 'topups', label: 'Пополнения' },
+    { value: 'spend', label: 'Списания' },
+    { value: 'balance', label: 'Баланс' },
+]
+
+// Money: whole units with ru grouping (amounts are mostly KGS; minor units не показываем).
+const fmtMoney = (n: number) => Math.round(n).toLocaleString('ru-RU')
+
+type WalletSummaryQuery = ReturnType<typeof useAdminWalletReportSummary>
+
+function WalletSummarySection({
+    query,
+    period,
+    onPeriodChange,
+    overridden,
+}: {
+    query: WalletSummaryQuery
+    period: string
+    onPeriodChange: (p: string | null) => void
+    overridden?: boolean
+}) {
+    const d = query.data
+    const primary = d?.balance_by_currency[0]
+    const balanceValue = primary
+        ? `${fmtMoney(primary.balance)} ${primary.currency}`
+        : d
+        ? '0'
+        : undefined
+    const balanceHint =
+        d && d.balance_by_currency.length > 1
+            ? d.balance_by_currency.map(b => `${b.currency}: ${fmtMoney(b.balance)}`)
+            : undefined
+
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-sm font-medium text-muted-foreground">
+                    Сводка по кошелькам ({period})
+                </h2>
+                <PeriodPicker value={period} onChange={onPeriodChange} overridden={overridden} />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                <StatCard
+                    title="Баланс (нетто)"
+                    value={balanceValue}
+                    loading={query.isLoading}
+                    hint={balanceHint}
+                />
+                <StatCard
+                    title={`Пополнения за ${period}`}
+                    value={d ? fmtMoney(d.topups_sum) : undefined}
+                    loading={query.isLoading}
+                    hint={d ? `${d.topups_count.toLocaleString()} операций` : undefined}
+                />
+                <StatCard
+                    title={`Списания за ${period}`}
+                    value={d ? fmtMoney(d.spend_sum) : undefined}
+                    loading={query.isLoading}
+                    hint={d ? `${d.spend_count.toLocaleString()} операций` : undefined}
+                />
+                <StatCard
+                    title="Чистый приток"
+                    value={d ? fmtMoney(d.net_in_period) : undefined}
+                    loading={query.isLoading}
+                    hint={
+                        d
+                            ? `активно: ${d.active_wallets} кош. · ${d.active_users} польз.`
+                            : undefined
+                    }
+                />
+            </div>
+        </div>
+    )
+}
+
+type WalletTopQuery = ReturnType<typeof useAdminWalletReportTopUsers>
+type WalletTopRow = NonNullable<WalletTopQuery['data']>['users'][number]
+
+function balanceClass(balance: number) {
+    if (balance > 0) return 'text-green-600 dark:text-green-400'
+    if (balance < 0) return 'text-red-600 dark:text-red-400'
+    return 'text-muted-foreground'
+}
+
+function WalletTopUsersCard({
+    query,
+    period,
+    onPeriodChange,
+    overridden,
+    metric,
+    onMetricChange,
+}: {
+    query: WalletTopQuery
+    period: string
+    onPeriodChange: (p: string | null) => void
+    overridden?: boolean
+    metric: WalletMetric
+    onMetricChange: (m: WalletMetric) => void
+}) {
+    const users = query.data?.users ?? []
+
+    return (
+        <Card>
+            <CardHeader className="space-y-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <CardTitle>Топ пользователей по кошелькам ({period})</CardTitle>
+                    <PeriodPicker value={period} onChange={onPeriodChange} overridden={overridden} />
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground">Сортировка:</span>
+                    {WALLET_METRICS.map(m => (
+                        <Button
+                            key={m.value}
+                            variant={metric === m.value ? 'default' : 'outline'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => onMetricChange(m.value)}
+                        >
+                            {m.label}
+                        </Button>
+                    ))}
+                </div>
+            </CardHeader>
+            <CardContent>
+                {query.isLoading ? (
+                    <div>Загрузка…</div>
+                ) : users.length === 0 ? (
+                    <div className="text-muted-foreground">Нет данных</div>
+                ) : (
+                    <>
+                    <div className="hidden md:block">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-10">#</TableHead>
+                                <TableHead>Пользователь</TableHead>
+                                <TableHead>Телефон</TableHead>
+                                <TableHead className="w-32 text-right">Пополнения</TableHead>
+                                <TableHead className="w-32 text-right">Списания</TableHead>
+                                <TableHead className="w-28 text-right">Баланс</TableHead>
+                                <TableHead className="w-40">Последняя операция</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {users.map((u: WalletTopRow, i: number) => (
+                                <TableRow key={u.user_id}>
+                                    <TableCell className="text-muted-foreground tabular-nums">
+                                        {i + 1}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Link
+                                            href={`/admin/analytics/users/${u.user_id}`}
+                                            className="flex items-center gap-2 hover:underline"
+                                        >
+                                            {u.avatar_url ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={u.avatar_url}
+                                                    alt=""
+                                                    className="w-7 h-7 rounded-full object-cover bg-muted"
+                                                />
+                                            ) : (
+                                                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                                    {(u.name ?? '?').slice(0, 1).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <span>{u.name ?? `user #${u.user_id}`}</span>
+                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                #{u.user_id}
+                                            </span>
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="font-mono text-sm text-muted-foreground">
+                                        {u.phone ?? '—'}
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums">
+                                        <span className="font-semibold text-green-600 dark:text-green-400">
+                                            {fmtMoney(u.topups)}
+                                        </span>
+                                        <span className="ml-1 text-xs text-muted-foreground">
+                                            · {u.topups_count}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                                        {fmtMoney(u.spend)}
+                                        <span className="ml-1 text-xs">· {u.spend_count}</span>
+                                    </TableCell>
+                                    <TableCell
+                                        className={`text-right tabular-nums font-semibold ${balanceClass(u.balance)}`}
+                                    >
+                                        {fmtMoney(u.balance)}
+                                    </TableCell>
+                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                        {u.last_tx_at
+                                            ? new Date(u.last_tx_at).toLocaleString()
+                                            : '—'}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    </div>
+
+                    <div className="space-y-2 md:hidden">
+                        {users.map((u: WalletTopRow, i: number) => {
+                            const main =
+                                metric === 'spend'
+                                    ? { value: u.spend, label: 'Списания' }
+                                    : metric === 'balance'
+                                    ? { value: u.balance, label: 'Баланс' }
+                                    : { value: u.topups, label: 'Пополнения' }
+                            return (
+                                <div key={u.user_id} className="rounded-lg border p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex min-w-0 items-start gap-2">
+                                            <span className="w-5 shrink-0 pt-1 text-xs tabular-nums text-muted-foreground">
+                                                {i + 1}
+                                            </span>
+                                            <Link
+                                                href={`/admin/analytics/users/${u.user_id}`}
+                                                className="flex min-w-0 items-center gap-2 hover:underline"
+                                            >
+                                                {u.avatar_url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={u.avatar_url}
+                                                        alt=""
+                                                        className="h-8 w-8 shrink-0 rounded-full bg-muted object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+                                                        {(u.name ?? '?').slice(0, 1).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <div className="truncate text-sm font-medium">
+                                                        {u.name ?? `user #${u.user_id}`}
+                                                    </div>
+                                                    <div className="truncate text-xs text-muted-foreground tabular-nums">
+                                                        #{u.user_id} · {u.phone ?? '—'}
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <div className="text-lg font-semibold tabular-nums">
+                                                {fmtMoney(main.value)}
+                                            </div>
+                                            <div className="text-[11px] text-muted-foreground">
+                                                {main.label}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
+                                        <span>
+                                            Пополн.{' '}
+                                            <span className="tabular-nums text-green-600 dark:text-green-400">
+                                                {fmtMoney(u.topups)}
+                                            </span>
+                                        </span>
+                                        <span>
+                                            Списано{' '}
+                                            <span className="tabular-nums text-foreground">
+                                                {fmtMoney(u.spend)}
+                                            </span>
+                                        </span>
+                                        <span>
+                                            Баланс{' '}
+                                            <span className={`tabular-nums ${balanceClass(u.balance)}`}>
+                                                {fmtMoney(u.balance)}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    </>
+                )}
+            </CardContent>
+        </Card>
     )
 }

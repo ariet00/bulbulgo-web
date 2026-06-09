@@ -511,6 +511,32 @@ export const useAdminRideshareSummary = (period: string = '7d') => {
     })
 }
 
+// ── BulBul Go wallet reports ─────────────────────────────────────────────────
+export const useAdminWalletReportSummary = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'wallet-report', 'summary', period],
+        queryFn: () => adminApi.getWalletReportSummary(period),
+    })
+}
+
+export const useAdminWalletReportFlowByDay = (period: string = '7d') => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'wallet-report', 'flow-by-day', period],
+        queryFn: () => adminApi.getWalletReportFlowByDay(period),
+    })
+}
+
+export const useAdminWalletReportTopUsers = (
+    period: string = '7d',
+    metric: 'topups' | 'spend' | 'balance' = 'topups',
+    limit: number = 20,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'wallet-report', 'top-users', period, metric, limit],
+        queryFn: () => adminApi.getWalletReportTopUsers(period, metric, limit),
+    })
+}
+
 export const useAdminRideshareTripsByDay = (
     period: string = '7d',
     groupBy: 'type' | 'role' = 'type',
