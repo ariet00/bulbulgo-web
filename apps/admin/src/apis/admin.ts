@@ -565,6 +565,7 @@ export const adminApi = {
                 | 'credits_balance'
                 | 'active_days'
                 | 'limit_reached_today'
+                | 'last_online_at'
         },
     ) =>
         requests.get<{
@@ -591,6 +592,7 @@ export const adminApi = {
                 free_remaining: number
                 credits_balance: number
                 limit_reached_today: number
+                last_online_at: string | null
             }>
             total: number
             page: number

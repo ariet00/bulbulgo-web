@@ -602,6 +602,7 @@ export const useAdminRideshareLimitedDrivers = (
             | 'credits_balance'
             | 'active_days'
             | 'limit_reached_today'
+            | 'last_online_at'
     },
 ) => {
     return useQuery({

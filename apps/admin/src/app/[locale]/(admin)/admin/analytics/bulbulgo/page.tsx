@@ -1630,6 +1630,7 @@ type LimitedSort =
     | 'credits_balance'
     | 'active_days'
     | 'limit_reached_today'
+    | 'last_online_at'
 
 const LIMITED_SORTS: Array<{ value: LimitedSort; label: string }> = [
     { value: 'window_views', label: 'Просмотры' },
@@ -1637,6 +1638,7 @@ const LIMITED_SORTS: Array<{ value: LimitedSort; label: string }> = [
     { value: 'credits_balance', label: 'Купленные' },
     { value: 'active_days', label: 'Активных дней' },
     { value: 'limit_reached_today', label: 'Лимит сегодня' },
+    { value: 'last_online_at', label: 'Был онлайн' },
 ]
 
 // Times the user hit the daily phone-view limit today (KG-day). 0 → dash.
@@ -1790,6 +1792,9 @@ function LimitedDriversCard({
                                 <TableHead className="w-28 text-center" title="Сколько раз пользователь упёрся в дневной лимит просмотра номеров сегодня">
                                     Лимит сегодня
                                 </TableHead>
+                                <TableHead className="w-40" title="Последняя активность пользователя (last_online_at)">
+                                    Был онлайн
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1881,6 +1886,11 @@ function LimitedDriversCard({
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <LimitReachedBadge count={d.limit_reached_today} />
+                                    </TableCell>
+                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                        {d.last_online_at
+                                            ? new Date(d.last_online_at).toLocaleString()
+                                            : '—'}
                                     </TableCell>
                                 </TableRow>
                                 )
@@ -1994,6 +2004,14 @@ function LimitedDriversCard({
                                         <div className="space-y-1">
                                             <div className="text-xs text-muted-foreground">Лимит сегодня</div>
                                             <LimitReachedBadge count={d.limit_reached_today} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="text-xs text-muted-foreground">Был онлайн</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {d.last_online_at
+                                                    ? new Date(d.last_online_at).toLocaleString()
+                                                    : '—'}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
