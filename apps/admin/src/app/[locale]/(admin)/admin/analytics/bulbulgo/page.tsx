@@ -1775,7 +1775,6 @@ function LimitedDriversCard({
                             <TableRow>
                                 <TableHead className="w-10">#</TableHead>
                                 <TableHead>Пользователь</TableHead>
-                                <TableHead>Телефон</TableHead>
                                 <TableHead className="w-28 text-right" title="Просмотры пассажирских объявлений в окне активности">
                                     Просмотров
                                 </TableHead>
@@ -1791,9 +1790,6 @@ function LimitedDriversCard({
                                 </TableHead>
                                 <TableHead className="w-28 text-center" title="Сколько раз пользователь упёрся в дневной лимит просмотра номеров сегодня">
                                     Лимит сегодня
-                                </TableHead>
-                                <TableHead className="w-40" title="Последняя активность пользователя (last_online_at)">
-                                    Был онлайн
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -1825,14 +1821,21 @@ function LimitedDriversCard({
                                                     {(d.name ?? '?').slice(0, 1).toUpperCase()}
                                                 </div>
                                             )}
-                                            <span>{d.name ?? `user #${d.user_id}`}</span>
-                                            <span className="text-xs text-muted-foreground tabular-nums">
-                                                #{d.user_id}
-                                            </span>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{d.name ?? `user #${d.user_id}`}</span>
+                                                    <span className="text-xs text-muted-foreground tabular-nums">
+                                                        #{d.user_id}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs font-normal text-muted-foreground">
+                                                    был онлайн:{' '}
+                                                    {d.last_online_at
+                                                        ? new Date(d.last_online_at).toLocaleString()
+                                                        : '—'}
+                                                </div>
+                                            </div>
                                         </Link>
-                                    </TableCell>
-                                    <TableCell className="font-mono text-sm text-muted-foreground">
-                                        {d.phone ?? '—'}
                                     </TableCell>
                                     <TableCell className="text-right tabular-nums font-semibold">
                                         {d.window_views}
@@ -1887,11 +1890,6 @@ function LimitedDriversCard({
                                     <TableCell className="text-center">
                                         <LimitReachedBadge count={d.limit_reached_today} />
                                     </TableCell>
-                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                                        {d.last_online_at
-                                            ? new Date(d.last_online_at).toLocaleString()
-                                            : '—'}
-                                    </TableCell>
                                 </TableRow>
                                 )
                             })}
@@ -1936,7 +1934,13 @@ function LimitedDriversCard({
                                                     {d.name ?? `user #${d.user_id}`}
                                                 </div>
                                                 <div className="truncate text-xs tabular-nums text-muted-foreground">
-                                                    #{d.user_id} · {d.phone ?? '—'}
+                                                    #{d.user_id}
+                                                </div>
+                                                <div className="truncate text-xs text-muted-foreground">
+                                                    был онлайн:{' '}
+                                                    {d.last_online_at
+                                                        ? new Date(d.last_online_at).toLocaleString()
+                                                        : '—'}
                                                 </div>
                                             </div>
                                         </Link>
@@ -2004,14 +2008,6 @@ function LimitedDriversCard({
                                         <div className="space-y-1">
                                             <div className="text-xs text-muted-foreground">Лимит сегодня</div>
                                             <LimitReachedBadge count={d.limit_reached_today} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="text-xs text-muted-foreground">Был онлайн</div>
-                                            <div className="text-sm text-muted-foreground">
-                                                {d.last_online_at
-                                                    ? new Date(d.last_online_at).toLocaleString()
-                                                    : '—'}
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
