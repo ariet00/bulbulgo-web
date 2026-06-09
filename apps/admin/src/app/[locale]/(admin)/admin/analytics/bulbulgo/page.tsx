@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
     useAdminRideshareFunnel,
     useAdminRideshareSummary,
@@ -29,7 +30,7 @@ import {
 } from '@doska/ui'
 import { Pagination } from '@doska/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@doska/ui'
-import { Link } from '@doska/i18n'
+import { Link, useRouter, usePathname } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
 import { AdjustPopover, LimitStatusControl } from '@/components/admin/analytics/limit-controls'
@@ -111,7 +112,25 @@ function PeriodPicker({
     )
 }
 
+// Tab selection synced to a URL query param, so it survives back/forward, a
+// reload, and is shareable. Reads the param (falling back to `defaultValue`)
+// and writes via a scroll-preserving replace (no history entry per click).
+function useTabParam(key: string, defaultValue: string) {
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const value = searchParams.get(key) ?? defaultValue
+    const set = (v: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set(key, v)
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+    return [value, set] as const
+}
+
 export default function BulbulGoAnalyticsPage() {
+    const [mainTab, setMainTab] = useTabParam('tab', 'overview')
+    const [topsTab, setTopsTab] = useTabParam('top', 'drivers')
     const [period, setPeriod] = useState('24h')
     const [resetNonce, setResetNonce] = useState(0)
     // Picking a global period also resets every card's override (via the nonce).
@@ -248,7 +267,7 @@ export default function BulbulGoAnalyticsPage() {
                 </div>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
+            <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
                 <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
                     <TabsList className="inline-flex w-max">
                         <TabsTrigger value="overview">Обзор</TabsTrigger>
@@ -373,7 +392,7 @@ export default function BulbulGoAnalyticsPage() {
                 </TabsContent>
 
                 <TabsContent value="tops" className="mt-0">
-                    <Tabs defaultValue="drivers" className="space-y-4">
+                    <Tabs value={topsTab} onValueChange={setTopsTab} className="space-y-4">
                         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
                             <TabsList className="inline-flex w-max bg-muted/60">
                                 <TabsTrigger value="drivers">Водители</TabsTrigger>
