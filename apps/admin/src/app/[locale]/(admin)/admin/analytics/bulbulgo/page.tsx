@@ -1626,6 +1626,19 @@ const LIMITED_SORTS: Array<{ value: LimitedSort; label: string }> = [
     { value: 'active_days', label: 'Активных дней' },
 ]
 
+// Times the user hit the daily phone-view limit today (KG-day). 0 → dash.
+function LimitReachedBadge({ count }: { count: number }) {
+    if (count <= 0) return <span className="text-muted-foreground">—</span>
+    return (
+        <span
+            className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/50 dark:text-red-300"
+            title={`Сегодня упёрся в лимит ${count} раз`}
+        >
+            {count}
+        </span>
+    )
+}
+
 function LimitedDriversCard({
     query,
     page,
@@ -1748,6 +1761,9 @@ function LimitedDriversCard({
                                 <TableHead className="w-28 text-right" title="Купленные лимиты (carry-over)">
                                     Куплено
                                 </TableHead>
+                                <TableHead className="w-28 text-center" title="Сколько раз пользователь упёрся в дневной лимит просмотра номеров сегодня">
+                                    Лимит сегодня
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1836,6 +1852,9 @@ function LimitedDriversCard({
                                                 </span>
                                             }
                                         />
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <LimitReachedBadge count={d.limit_reached_today} />
                                     </TableCell>
                                 </TableRow>
                                 )
@@ -1945,6 +1964,10 @@ function LimitedDriversCard({
                                                     </span>
                                                 }
                                             />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="text-xs text-muted-foreground">Лимит сегодня</div>
+                                            <LimitReachedBadge count={d.limit_reached_today} />
                                         </div>
                                     </div>
                                 </div>

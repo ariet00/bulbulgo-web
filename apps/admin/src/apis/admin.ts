@@ -584,6 +584,7 @@ export const adminApi = {
                 free_limit: number
                 free_remaining: number
                 credits_balance: number
+                limit_reached_today: number
             }>
             total: number
             page: number
