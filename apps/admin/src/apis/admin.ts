@@ -592,6 +592,7 @@ export const adminApi = {
                 free_remaining: number
                 credits_balance: number
                 limit_reached_today: number
+                limit_reached_last_at: string | null
                 last_online_at: string | null
             }>
             total: number

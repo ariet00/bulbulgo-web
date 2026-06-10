@@ -1642,15 +1642,26 @@ const LIMITED_SORTS: Array<{ value: LimitedSort; label: string }> = [
 ]
 
 // Times the user hit the daily phone-view limit today (KG-day). 0 → dash.
-function LimitReachedBadge({ count }: { count: number }) {
+function LimitReachedBadge({ count, lastAt }: { count: number; lastAt?: string | null }) {
     if (count <= 0) return <span className="text-muted-foreground">—</span>
+    const last = lastAt ? new Date(lastAt) : null
     return (
-        <span
-            className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/50 dark:text-red-300"
-            title={`Сегодня упёрся в лимит ${count} раз`}
-        >
-            {count}
-        </span>
+        <div className="inline-flex flex-col items-center gap-0.5">
+            <span
+                className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                title={`Сегодня упёрся в лимит ${count} раз`}
+            >
+                {count}
+            </span>
+            {last && (
+                <span
+                    className="text-[10px] leading-none text-muted-foreground tabular-nums"
+                    title={`Последний раз: ${last.toLocaleString()}`}
+                >
+                    {last.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+            )}
+        </div>
     )
 }
 
@@ -1888,7 +1899,7 @@ function LimitedDriversCard({
                                         />
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        <LimitReachedBadge count={d.limit_reached_today} />
+                                        <LimitReachedBadge count={d.limit_reached_today} lastAt={d.limit_reached_last_at} />
                                     </TableCell>
                                 </TableRow>
                                 )
@@ -2007,7 +2018,7 @@ function LimitedDriversCard({
                                         </div>
                                         <div className="space-y-1">
                                             <div className="text-xs text-muted-foreground">Лимит сегодня</div>
-                                            <LimitReachedBadge count={d.limit_reached_today} />
+                                            <LimitReachedBadge count={d.limit_reached_today} lastAt={d.limit_reached_last_at} />
                                         </div>
                                     </div>
                                 </div>
