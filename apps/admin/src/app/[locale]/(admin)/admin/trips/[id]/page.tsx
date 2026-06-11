@@ -379,7 +379,7 @@ export default function AdminTripDetailPage() {
             </div>
 
             {/* ── Booking stat tiles ── */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                 <StatTile
                     label="Цена"
                     icon={Banknote}
@@ -404,6 +404,11 @@ export default function AdminTripDetailPage() {
                     icon={Clock}
                     accent={ACCENT.amber}
                     value={stats ? stats.pending : '—'}
+                />
+                <StatTile
+                    label="Просмотры номера"
+                    icon={Phone}
+                    value={data.phone_view_count ?? 0}
                 />
             </div>
 
@@ -484,6 +489,11 @@ export default function AdminTripDetailPage() {
                         <InfoRow icon={Clock} label="Истекает">
                             {fmtDate(trip.expire_at, true)}
                         </InfoRow>
+                        {data.tg_message_at && (
+                            <InfoRow icon={MessageSquare} label="Сообщение в TG">
+                                {fmtDate(data.tg_message_at, true)}
+                            </InfoRow>
+                        )}
                         <InfoRow icon={Calendar} label="Создана">
                             {fmtDate(trip.created_at, true)}
                         </InfoRow>
