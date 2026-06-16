@@ -712,7 +712,11 @@ export const adminApi = {
         }>(
             `/admin/rideshare/analytics/multi-account-ips?period=${period}&page=${page}&size=${size}`,
         ),
-    getRideshareTopViewedTrips: (page: number = 1, size: number = 20) =>
+    getRideshareTopViewedTrips: (
+        page: number = 1,
+        size: number = 20,
+        filters: { tripType?: string; role?: string; realOnly?: boolean } = {},
+    ) =>
         requests.get<{
             total: number
             page: number
@@ -731,7 +735,12 @@ export const adminApi = {
                 owner_name: string | null
                 owner_phone: string | null
             }>
-        }>(`/admin/rideshare/analytics/top-viewed-trips?page=${page}&size=${size}`),
+        }>(
+            `/admin/rideshare/analytics/top-viewed-trips?page=${page}&size=${size}` +
+                (filters.tripType ? `&trip_type=${filters.tripType}` : '') +
+                (filters.role ? `&role=${filters.role}` : '') +
+                (filters.realOnly ? `&real_only=true` : ''),
+        ),
     getUserLimit: (userId: number) =>
         requests.get<AdminUserLimit>(`/admin/rideshare/analytics/users/${userId}/limit`),
     setDriverCredits: (userId: number, body: { value: number }) =>

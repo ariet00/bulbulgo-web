@@ -186,7 +186,14 @@ export default function BulbulGoAnalyticsPage() {
     const [ipPage, setIpPage] = useState(1)
     const multiIps = useAdminRideshareMultiAccountIps(ipPeriod, ipPage, LIMITED_SIZE)
     const [viewedPage, setViewedPage] = useState(1)
-    const topViewedTrips = useAdminRideshareTopViewedTrips(viewedPage, LIMITED_SIZE)
+    const [viewedTripType, setViewedTripType] = useState('')
+    const [viewedRole, setViewedRole] = useState('')
+    const [viewedRealOnly, setViewedRealOnly] = useState(false)
+    const topViewedTrips = useAdminRideshareTopViewedTrips(viewedPage, LIMITED_SIZE, {
+        tripType: viewedTripType || undefined,
+        role: viewedRole || undefined,
+        realOnly: viewedRealOnly,
+    })
 
     const isFetching =
         funnel.isFetching ||
@@ -644,6 +651,21 @@ export default function BulbulGoAnalyticsPage() {
                 page={viewedPage}
                 size={LIMITED_SIZE}
                 onPageChange={setViewedPage}
+                tripType={viewedTripType}
+                onTripTypeChange={(v) => {
+                    setViewedTripType(v)
+                    setViewedPage(1)
+                }}
+                role={viewedRole}
+                onRoleChange={(v) => {
+                    setViewedRole(v)
+                    setViewedPage(1)
+                }}
+                realOnly={viewedRealOnly}
+                onRealOnlyChange={(v) => {
+                    setViewedRealOnly(v)
+                    setViewedPage(1)
+                }}
             />
                         </TabsContent>
                     </Tabs>
@@ -1040,24 +1062,52 @@ type LimitedDriverRow = NonNullable<LimitedDriversQuery['data']>['drivers'][numb
 type TopViewedQuery = ReturnType<typeof useAdminRideshareTopViewedTrips>
 type TopViewedRow = NonNullable<TopViewedQuery['data']>['trips'][number]
 
+const TRIP_TYPES: Array<{ value: string; label: string }> = [
+    { value: '', label: 'Все типы' },
+    { value: 'rideshare', label: 'Поездки' },
+    { value: 'taxi', label: 'Такси' },
+    { value: 'shuttle', label: 'Маршрутки' },
+    { value: 'bus', label: 'Автобусы' },
+    { value: 'freight', label: 'Грузовые' },
+    { value: 'delivery', label: 'Доставка' },
+]
+
+const TRIP_ROLES: Array<{ value: string; label: string }> = [
+    { value: '', label: 'Все роли' },
+    { value: 'driver', label: 'Водители' },
+    { value: 'passenger', label: 'Пассажиры' },
+]
+
 // Currently active trips ranked by phone-view count (data.phone_view_count).
 function TopViewedTripsCard({
     query,
     page,
     size,
     onPageChange,
+    tripType,
+    onTripTypeChange,
+    role,
+    onRoleChange,
+    realOnly,
+    onRealOnlyChange,
 }: {
     query: TopViewedQuery
     page: number
     size: number
     onPageChange: (p: number) => void
+    tripType: string
+    onTripTypeChange: (v: string) => void
+    role: string
+    onRoleChange: (v: string) => void
+    realOnly: boolean
+    onRealOnlyChange: (v: boolean) => void
 }) {
     const trips = query.data?.trips ?? []
     const total = query.data?.total ?? 0
 
     return (
         <Card>
-            <CardHeader className="space-y-1">
+            <CardHeader className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                     <CardTitle>Самые просматриваемые поездки ({total})</CardTitle>
                     <Button
@@ -1070,6 +1120,41 @@ function TopViewedTripsCard({
                             className={`mr-1 h-4 w-4 ${query.isFetching ? 'animate-spin' : ''}`}
                         />
                         Обновить
+                    </Button>
+                </div>
+                <div className="flex flex-wrap items-center gap-1">
+                    {TRIP_TYPES.map(t => (
+                        <Button
+                            key={t.value || 'all'}
+                            variant={tripType === t.value ? 'default' : 'outline'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => onTripTypeChange(t.value)}
+                        >
+                            {t.label}
+                        </Button>
+                    ))}
+                    <span className="mx-1 h-4 w-px bg-border" />
+                    {TRIP_ROLES.map(r => (
+                        <Button
+                            key={r.value || 'all'}
+                            variant={role === r.value ? 'default' : 'outline'}
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => onRoleChange(r.value)}
+                        >
+                            {r.label}
+                        </Button>
+                    ))}
+                    <span className="mx-1 h-4 w-px bg-border" />
+                    <Button
+                        variant={realOnly ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => onRealOnlyChange(!realOnly)}
+                        title="Только реальные пользователи (без спарсенных из чатов)"
+                    >
+                        Только реальные
                     </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">

@@ -646,10 +646,23 @@ export const useAdminRideshareMultiAccountIps = (
     })
 }
 
-export const useAdminRideshareTopViewedTrips = (page: number = 1, size: number = 20) => {
+export const useAdminRideshareTopViewedTrips = (
+    page: number = 1,
+    size: number = 20,
+    filters: { tripType?: string; role?: string; realOnly?: boolean } = {},
+) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'rideshare', 'top-viewed-trips', page, size],
-        queryFn: () => adminApi.getRideshareTopViewedTrips(page, size),
+        queryKey: [
+            ...adminKeys.analytics(),
+            'rideshare',
+            'top-viewed-trips',
+            page,
+            size,
+            filters.tripType ?? null,
+            filters.role ?? null,
+            filters.realOnly ?? false,
+        ],
+        queryFn: () => adminApi.getRideshareTopViewedTrips(page, size, filters),
         placeholderData: keepPreviousData,
     })
 }
