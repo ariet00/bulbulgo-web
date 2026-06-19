@@ -848,7 +848,9 @@ export interface AdminUserSession {
     ip_address: string | null
     app_version: string | null
     last_used_at: string | null
-    is_active: boolean
+    // Backend serializes `is_deleted`; `is_active` kept for older callers.
+    is_active?: boolean
+    is_deleted?: boolean
     created_at: string
 }
 
