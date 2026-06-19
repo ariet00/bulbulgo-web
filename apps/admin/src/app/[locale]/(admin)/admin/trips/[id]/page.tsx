@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter, Link } from '@doska/i18n'
-import { useAdminTrip } from '@/hooks/queries/admin'
+import { useAdminTrip, useAdminTripPhoneViewers } from '@/hooks/queries/admin'
 import { useAdminUpdateTripStatus, useAdminDeleteTrip } from '@/hooks/mutations/admin'
 import {
     Card,
@@ -63,6 +63,7 @@ import {
     Repeat,
     Cake,
     MapPinned,
+    Eye,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -199,6 +200,85 @@ function FlagBadge({ on, label }: { on?: boolean; label: string }) {
             <span className={`h-1.5 w-1.5 rounded-full ${on ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
             {label}
         </span>
+    )
+}
+
+function PhoneViewersCard({ tripId }: { tripId: number }) {
+    const { data, isLoading } = useAdminTripPhoneViewers(tripId)
+    const viewers = data?.viewers ?? []
+
+    return (
+        <SectionCard
+            title="Кто смотрел номер"
+            icon={Eye}
+            action={
+                data ? (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                        {data.total_viewers} польз. · {data.total_views} просм.
+                    </span>
+                ) : undefined
+            }
+        >
+            <p className="mb-4 text-xs text-muted-foreground">
+                Полная история из аналитики — не сбрасывается при поднятии объявления
+                (в отличие от счётчика «Просмотры номера»).
+            </p>
+            {isLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ) : viewers.length === 0 ? (
+                <p className="py-6 text-center text-sm italic text-muted-foreground">
+                    Номер ещё никто не смотрел
+                </p>
+            ) : (
+                <div className="divide-y divide-border">
+                    {viewers.map((v, i) => {
+                        const row = (
+                            <div className="flex items-center gap-3 py-2.5">
+                                <Avatar className="h-10 w-10 ring-1 ring-border">
+                                    <AvatarImage src={v.avatar_url || undefined} />
+                                    <AvatarFallback className="bg-zinc-900 text-xs text-white">
+                                        {(v.name || '?').slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium text-foreground">
+                                        {v.name || (v.user_id ? `user #${v.user_id}` : 'Аноним')}
+                                    </p>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                        {v.phone || '—'}
+                                    </p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    <p className="text-sm font-semibold tabular-nums text-foreground">
+                                        {v.views_count}{' '}
+                                        <span className="text-xs font-normal text-muted-foreground">
+                                            просм.
+                                        </span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground tabular-nums">
+                                        {fmtDate(v.last_viewed_at, true)}
+                                    </p>
+                                </div>
+                            </div>
+                        )
+                        return v.user_id ? (
+                            <Link
+                                key={`${v.user_id}-${i}`}
+                                href={`/admin/users/${v.user_id}`}
+                                className="block transition-colors hover:bg-muted/40"
+                            >
+                                {row}
+                            </Link>
+                        ) : (
+                            <div key={`anon-${i}`}>{row}</div>
+                        )
+                    })}
+                </div>
+            )}
+        </SectionCard>
     )
 }
 
@@ -663,6 +743,9 @@ export default function AdminTripDetailPage() {
                     </p>
                 </SectionCard>
             )}
+
+            {/* ── Phone viewers ── */}
+            <PhoneViewersCard tripId={id} />
 
             {/* ── Delete confirm ── */}
             <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>

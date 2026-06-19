@@ -14,6 +14,8 @@ export const adminKeys = {
     company: (id: number) => [...adminKeys.companies(), id] as const,
     trips: () => [...adminKeys.all, 'trips'] as const,
     trip: (id: number) => [...adminKeys.trips(), id] as const,
+    tripPhoneViewers: (id: number) =>
+        [...adminKeys.trips(), id, 'phone-viewers'] as const,
     vehicles: () => [...adminKeys.all, 'vehicles'] as const,
     vehicle: (id: number) => [...adminKeys.vehicles(), id] as const,
     properties: () => [...adminKeys.all, 'properties'] as const,
@@ -235,6 +237,14 @@ export const useAdminTrip = (id: number) => {
     return useQuery({
         queryKey: adminKeys.trip(id),
         queryFn: () => adminApi.getTrip(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminTripPhoneViewers = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.tripPhoneViewers(id),
+        queryFn: () => adminApi.getTripPhoneViewers(id),
         enabled: !!id,
     })
 }
