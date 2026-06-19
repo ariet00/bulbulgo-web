@@ -728,6 +728,8 @@ export const adminApi = {
                 status: string
                 from_name: string | null
                 to_name: string | null
+                price: number | null
+                seats: number | null
                 phone_view_count: number
                 last_phone_view_at: string | null
                 created_at: string

@@ -1203,6 +1203,16 @@ function TopViewedTripsCard({
                                                 #{t.trip_id}
                                             </span>
                                         </Link>
+                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
+                                            <span>
+                                                {t.price != null
+                                                    ? `${t.price.toLocaleString()} сом`
+                                                    : 'Договорная'}
+                                            </span>
+                                            {t.seats != null && (
+                                                <span>· {t.seats} мест</span>
+                                            )}
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-xs text-muted-foreground">
                                         {t.trip_type ?? '—'} / {roleLabel(t.role)}
@@ -1250,6 +1260,12 @@ function TopViewedTripsCard({
                                             </div>
                                             <div className="text-xs text-muted-foreground tabular-nums">
                                                 #{t.trip_id} · {t.trip_type ?? '—'} / {roleLabel(t.role)}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground tabular-nums">
+                                                {t.price != null
+                                                    ? `${t.price.toLocaleString()} сом`
+                                                    : 'Договорная'}
+                                                {t.seats != null && ` · ${t.seats} мест`}
                                             </div>
                                         </Link>
                                     </div>
