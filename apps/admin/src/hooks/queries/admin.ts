@@ -33,6 +33,15 @@ export const adminKeys = {
     ad: (id: number) => [...adminKeys.ads(), id] as const,
     adStats: (id: number) => [...adminKeys.ad(id), 'stats'] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
+    regions: (q?: string) => [...adminKeys.all, 'regions', q ?? null] as const,
+}
+
+export const useAdminRegions = (q?: string) => {
+    return useQuery({
+        queryKey: adminKeys.regions(q),
+        queryFn: () => adminApi.getRegions(q),
+        placeholderData: keepPreviousData,
+    })
 }
 
 export const useAdminUsers = (

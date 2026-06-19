@@ -12,7 +12,25 @@ const requests = {
     delete: <T>(url: string) => requester.delete<T>(url).then(responseBody),
 }
 
+export interface AdminRegion {
+    id: number
+    name: string
+    sub_name?: string | null
+    kind?: string | null
+    parent_id?: number | null
+    is_popular?: boolean | null
+    latitude?: number | null
+    longitude?: number | null
+}
+
 export const adminApi = {
+    // Regions (geo tree, read-only)
+    getRegions: (q?: string) => {
+        const params = new URLSearchParams()
+        if (q) params.set('q', q)
+        const qs = params.toString()
+        return requests.get<AdminRegion[]>(`/admin/regions/${qs ? `?${qs}` : ''}`)
+    },
     // Users
     getUsers: (
         page = 1,
