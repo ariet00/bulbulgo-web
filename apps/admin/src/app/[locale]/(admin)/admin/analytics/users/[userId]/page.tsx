@@ -49,6 +49,7 @@ import {
     Activity,
     CalendarDays,
     Layers,
+    UserCog,
 } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
@@ -182,6 +183,12 @@ export default function UserAnalyticsPage({
                             </Button>
                         ))}
                     </div>
+                    <Link href={`/admin/users/${uid}`}>
+                        <Button variant="outline" size="sm">
+                            <UserCog className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Профиль</span>
+                        </Button>
+                    </Link>
                     <Button
                         variant="outline"
                         size="sm"
