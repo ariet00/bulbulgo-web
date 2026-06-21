@@ -212,7 +212,8 @@ export default function AdminSubscriptionsPage() {
                     {isLoading ? (
                         <div>Loading...</div>
                     ) : (
-                        <div className="rounded-md border overflow-x-auto">
+                        <>
+                        <div className="hidden md:block rounded-md border overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -328,6 +329,97 @@ export default function AdminSubscriptionsPage() {
                                 </TableBody>
                             </Table>
                         </div>
+
+                        <div className="space-y-2 md:hidden">
+                            {data?.items.length === 0 && (
+                                <div className="rounded-lg border p-6 text-center text-muted-foreground">
+                                    Ничего не найдено
+                                </div>
+                            )}
+                            {data?.items.map((s) => {
+                                const st = subStatus(s)
+                                return (
+                                    <div
+                                        key={s.id}
+                                        className={`rounded-lg border p-3 ${s.is_deleted ? 'opacity-60' : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <Link
+                                                href={`/admin/users/${s.user_id}`}
+                                                className="flex min-w-0 flex-col text-sm hover:underline"
+                                            >
+                                                <span className="flex items-center text-blue-600">
+                                                    <User className="h-3 w-3 mr-1 shrink-0" />
+                                                    <span className="truncate">{s.user_name || `#${s.user_id}`}</span>
+                                                </span>
+                                                {s.user_phone && (
+                                                    <span className="flex items-center text-muted-foreground">
+                                                        <Phone className="h-3 w-3 mr-1 shrink-0" />
+                                                        {s.user_phone}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                #{s.id}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-2 flex items-center gap-1.5 text-sm">
+                                            <MapPin className="h-3 w-3 shrink-0 text-blue-500" />
+                                            <span className="truncate">{s.from_name || `#${s.from_location_id}`}</span>
+                                            <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                            <MapPin className="h-3 w-3 shrink-0 text-green-500" />
+                                            <span className="truncate">{s.to_name || `#${s.to_location_id}`}</span>
+                                        </div>
+                                        <div className="mt-0.5 text-xs text-muted-foreground">
+                                            <span className="capitalize">{s.trip_type || '—'}</span>
+                                            {' · '}
+                                            {ROLE_LABELS[s.search_role] ?? s.search_role}
+                                            {s.max_price != null && (
+                                                <> · до {s.max_price.toLocaleString()}</>
+                                            )}
+                                        </div>
+
+                                        <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2">
+                                            <span className={`px-2 py-1 rounded-full text-xs ${st.cls}`}>
+                                                {st.label}
+                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                {!s.is_deleted && (
+                                                    <Switch
+                                                        checked={s.is_active}
+                                                        disabled={setActive.isPending}
+                                                        onCheckedChange={(c) =>
+                                                            setActive.mutate({ id: s.id, isActive: c })
+                                                        }
+                                                        title={s.is_active ? 'Выключить' : 'Включить'}
+                                                    />
+                                                )}
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(s.id)}
+                                                    disabled={deleteSub.isPending || s.is_deleted}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-2 flex flex-col gap-0.5 text-xs text-muted-foreground">
+                                            <span>создана: {format(new Date(s.created_at), 'dd.MM.yyyy HH:mm')}</span>
+                                            <span>
+                                                истекает:{' '}
+                                                {s.expire_at
+                                                    ? format(new Date(s.expire_at), 'dd.MM.yyyy HH:mm')
+                                                    : 'бессрочно'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        </>
                     )}
 
                     {data && (
