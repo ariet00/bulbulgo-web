@@ -218,19 +218,17 @@ export default function AdminSubscriptionsPage() {
                                     <TableRow>
                                         <TableHead>ID</TableHead>
                                         <TableHead>Пользователь</TableHead>
-                                        <TableHead>Маршрут</TableHead>
-                                        <TableHead>Тип / роль</TableHead>
+                                        <TableHead>Маршрут / тип</TableHead>
                                         <TableHead>Макс. цена</TableHead>
                                         <TableHead>Статус</TableHead>
-                                        <TableHead>Истекает</TableHead>
-                                        <TableHead>Создана</TableHead>
+                                        <TableHead>Создана / истекает</TableHead>
                                         <TableHead className="text-right">Действия</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {data?.items.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
+                                            <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
                                                 Ничего не найдено
                                             </TableCell>
                                         </TableRow>
@@ -258,18 +256,17 @@ export default function AdminSubscriptionsPage() {
                                                     </Link>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex items-center gap-1.5 text-sm">
-                                                        <MapPin className="h-3 w-3 text-blue-500" />
-                                                        {s.from_name || `#${s.from_location_id}`}
-                                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                                        <MapPin className="h-3 w-3 text-green-500" />
-                                                        {s.to_name || `#${s.to_location_id}`}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex flex-col text-sm">
-                                                        <span className="capitalize">{s.trip_type || '—'}</span>
-                                                        <span className="text-muted-foreground">
+                                                    <div className="flex flex-col gap-0.5 text-sm">
+                                                        <span className="flex items-center gap-1.5">
+                                                            <MapPin className="h-3 w-3 text-blue-500" />
+                                                            {s.from_name || `#${s.from_location_id}`}
+                                                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                                            <MapPin className="h-3 w-3 text-green-500" />
+                                                            {s.to_name || `#${s.to_location_id}`}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            <span className="capitalize">{s.trip_type || '—'}</span>
+                                                            {' · '}
                                                             {ROLE_LABELS[s.search_role] ?? s.search_role}
                                                         </span>
                                                     </div>
@@ -290,12 +287,18 @@ export default function AdminSubscriptionsPage() {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                                    {s.expire_at
-                                                        ? format(new Date(s.expire_at), 'dd.MM.yyyy HH:mm')
-                                                        : 'бессрочно'}
-                                                </TableCell>
-                                                <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                                    {format(new Date(s.created_at), 'dd.MM.yyyy HH:mm')}
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span>
+                                                            <span className="text-xs">создана:</span>{' '}
+                                                            {format(new Date(s.created_at), 'dd.MM.yyyy HH:mm')}
+                                                        </span>
+                                                        <span>
+                                                            <span className="text-xs">истекает:</span>{' '}
+                                                            {s.expire_at
+                                                                ? format(new Date(s.expire_at), 'dd.MM.yyyy HH:mm')
+                                                                : 'бессрочно'}
+                                                        </span>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center justify-end gap-3">
