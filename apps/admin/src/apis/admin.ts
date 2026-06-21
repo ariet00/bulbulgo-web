@@ -878,6 +878,17 @@ export const adminApi = {
         requests.get<AdminContactLimitsSettings>('/admin/settings/contact-limits'),
     updateContactLimitsSettings: (body: AdminContactLimitsSettings) =>
         requests.put<AdminContactLimitsSettings>('/admin/settings/contact-limits', body),
+
+    // Trip-subscription limits (inside Redis dict `app:settings`)
+    getSubscriptionSettings: () =>
+        requests.get<AdminSubscriptionSettings>('/admin/settings/subscriptions'),
+    updateSubscriptionSettings: (body: AdminSubscriptionSettings) =>
+        requests.put<AdminSubscriptionSettings>('/admin/settings/subscriptions', body),
+}
+
+export interface AdminSubscriptionSettings {
+    max_count: number
+    max_expire_days: number
 }
 
 export interface AdminTripSubscription {

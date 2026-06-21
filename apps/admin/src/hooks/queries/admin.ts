@@ -855,3 +855,10 @@ export const useAdminContactLimitsSettings = () => {
         queryFn: () => adminApi.getContactLimitsSettings(),
     })
 }
+
+export const useAdminSubscriptionSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'subscriptions'] as const,
+        queryFn: () => adminApi.getSubscriptionSettings(),
+    })
+}

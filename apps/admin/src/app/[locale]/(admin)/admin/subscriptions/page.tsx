@@ -29,7 +29,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@doska/ui'
-import { Trash2, MapPin, User, Phone, X, RefreshCw, ArrowRight, Banknote } from 'lucide-react'
+import { Trash2, MapPin, User, Phone, X, RefreshCw, ArrowRight, Banknote, Settings2 } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { format } from 'date-fns'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
@@ -115,15 +115,23 @@ export default function AdminSubscriptionsPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Подписки на поиск поездок</CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => refetch()}
-                        disabled={isFetching}
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Link href="/admin/settings?tab=subscriptions">
+                            <Button variant="outline" size="sm">
+                                <Settings2 className="h-4 w-4 mr-1" />
+                                Настройки
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+                            Обновить
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex flex-wrap items-end gap-2">

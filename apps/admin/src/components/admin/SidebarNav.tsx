@@ -65,9 +65,7 @@ const sections: NavSection[] = [
             { name: 'Подписки', href: '/admin/subscriptions', icon: BellRing },
             { name: 'Vehicles', href: '/admin/vehicles', icon: Car },
             { name: 'Chats', href: '/admin/chats', icon: MessageSquare },
-            { name: 'Версии приложения', href: '/admin/settings/app', icon: SettingsIcon },
-            { name: 'Фичи', href: '/admin/settings/features', icon: SettingsIcon },
-            { name: 'Лимиты номеров', href: '/admin/settings/contact-limits', icon: SettingsIcon },
+            { name: 'Настройки', href: '/admin/settings', icon: SettingsIcon },
         ],
     },
     {
