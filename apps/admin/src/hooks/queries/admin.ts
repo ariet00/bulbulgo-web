@@ -16,6 +16,7 @@ export const adminKeys = {
     trip: (id: number) => [...adminKeys.trips(), id] as const,
     tripPhoneViewers: (id: number) =>
         [...adminKeys.trips(), id, 'phone-viewers'] as const,
+    subscriptions: () => [...adminKeys.all, 'subscriptions'] as const,
     vehicles: () => [...adminKeys.all, 'vehicles'] as const,
     vehicle: (id: number) => [...adminKeys.vehicles(), id] as const,
     properties: () => [...adminKeys.all, 'properties'] as const,
@@ -247,6 +248,37 @@ export const useAdminTrip = (id: number) => {
         queryKey: adminKeys.trip(id),
         queryFn: () => adminApi.getTrip(id),
         enabled: !!id,
+    })
+}
+
+export const useAdminTripSubscriptions = (
+    page: number = 1,
+    size: number = 40,
+    filters?: {
+        q?: string
+        trip_type?: string
+        search_role?: string
+        user_id?: number
+        is_active?: boolean
+        include_deleted?: boolean
+    },
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.subscriptions(),
+            {
+                page,
+                size,
+                q: filters?.q ?? null,
+                trip_type: filters?.trip_type ?? null,
+                search_role: filters?.search_role ?? null,
+                user_id: filters?.user_id ?? null,
+                is_active: filters?.is_active ?? null,
+                include_deleted: filters?.include_deleted ?? null,
+            },
+        ],
+        queryFn: () => adminApi.getTripSubscriptions(page, size, filters),
+        placeholderData: keepPreviousData,
     })
 }
 

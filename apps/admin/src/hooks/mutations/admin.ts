@@ -95,6 +95,29 @@ export const useAdminUpdateTripStatus = () => {
     })
 }
 
+export const useAdminSetTripSubscriptionActive = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+            adminApi.setTripSubscriptionActive(id, isActive),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.subscriptions() })
+            toast.success('Подписка обновлена')
+        },
+    })
+}
+
+export const useAdminDeleteTripSubscription = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteTripSubscription(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.subscriptions() })
+            toast.success('Подписка удалена')
+        },
+    })
+}
+
 export const useAdminDeleteVehicle = () => {
     const queryClient = useQueryClient()
     return useMutation({

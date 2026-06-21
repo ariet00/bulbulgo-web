@@ -175,6 +175,37 @@ export const adminApi = {
         requests.patch<any>(`/admin/trips/${id}/status`, { status }),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
 
+    // Trip subscriptions (saved searches)
+    getTripSubscriptions: (
+        page = 1,
+        size = 40,
+        filters?: {
+            q?: string
+            trip_type?: string
+            search_role?: string
+            user_id?: number
+            is_active?: boolean
+            include_deleted?: boolean
+        },
+    ) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (filters?.q) params.set('q', filters.q)
+        if (filters?.trip_type) params.set('trip_type', filters.trip_type)
+        if (filters?.search_role) params.set('search_role', filters.search_role)
+        if (filters?.user_id) params.set('user_id', String(filters.user_id))
+        if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
+        if (filters?.include_deleted) params.set('include_deleted', 'true')
+        return requests.get<Page<AdminTripSubscription>>(
+            `/admin/rideshare/subscriptions/?${params.toString()}`,
+        )
+    },
+    setTripSubscriptionActive: (id: number, isActive: boolean) =>
+        requests.patch<AdminTripSubscription>(`/admin/rideshare/subscriptions/${id}`, {
+            is_active: isActive,
+        }),
+    deleteTripSubscription: (id: number) =>
+        requests.delete<any>(`/admin/rideshare/subscriptions/${id}`),
+
     // Vehicles
     getVehicles: (
         page = 1,
@@ -847,6 +878,25 @@ export const adminApi = {
         requests.get<AdminContactLimitsSettings>('/admin/settings/contact-limits'),
     updateContactLimitsSettings: (body: AdminContactLimitsSettings) =>
         requests.put<AdminContactLimitsSettings>('/admin/settings/contact-limits', body),
+}
+
+export interface AdminTripSubscription {
+    id: number
+    user_id: number
+    user_name: string | null
+    user_phone: string | null
+    user_avatar_url: string | null
+    from_location_id: number
+    from_name: string | null
+    to_location_id: number
+    to_name: string | null
+    trip_type: string | null
+    search_role: string
+    max_price: number | null
+    is_active: boolean
+    is_deleted: boolean
+    expire_at: string | null
+    created_at: string
 }
 
 export interface AdminDeviceToken {

@@ -11,6 +11,11 @@ import {
     CardHeader,
     CardTitle,
     Input,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@doska/ui'
 import { ChevronDown, ChevronRight, MapPin } from 'lucide-react'
 
@@ -37,6 +42,10 @@ const KIND_LABEL: Record<string, string> = {
     incity: 'внутри города',
 }
 
+const ALL_KINDS = 'all'
+// Порядок опций фильтра = порядок уровней дерева
+const KIND_OPTIONS = ['region', 'district', 'ayil_aimak', 'city', 'near_city', 'village', 'incity']
+
 function normalize(s: string) {
     return s.toLowerCase().replace(/ё/g, 'е')
 }
@@ -45,6 +54,7 @@ export default function AdminRegionsPage() {
     const { data: regions, isLoading, isError } = useAdminRegions()
     const [search, setSearch] = useState('')
     const q = useDebounce(search, 250)
+    const [kind, setKind] = useState<string>(ALL_KINDS)
     const [expanded, setExpanded] = useState<Set<number>>(new Set())
 
     const { childrenByParent, byId, roots } = useMemo(() => {
@@ -70,18 +80,23 @@ export default function AdminRegionsPage() {
         return { childrenByParent, byId, roots }
     }, [regions])
 
-    // Поиск: подсветить совпадения и раскрыть их предков
+    // Фильтр (текст + тип): подсветить совпадения и раскрыть их предков
     const { matched, forcedExpanded, visible } = useMemo(() => {
-        if (!q || q.trim().length < 2) {
+        const qActive = !!q && q.trim().length >= 2
+        const kindActive = kind !== ALL_KINDS
+        if (!qActive && !kindActive) {
             return { matched: null as Set<number> | null, forcedExpanded: null as Set<number> | null, visible: null as Set<number> | null }
         }
-        const nq = normalize(q.trim())
+        const nq = qActive ? normalize(q.trim()) : ''
         const list = regions ?? []
         const matched = new Set<number>()
         for (const r of list) {
-            if (normalize(r.name).includes(nq) || (r.sub_name && normalize(r.sub_name).includes(nq))) {
-                matched.add(r.id)
-            }
+            const textOk =
+                !qActive ||
+                normalize(r.name).includes(nq) ||
+                (r.sub_name ? normalize(r.sub_name).includes(nq) : false)
+            const kindOk = !kindActive || r.kind === kind
+            if (textOk && kindOk) matched.add(r.id)
         }
         // предки совпадений → видимы и раскрыты
         const forcedExpanded = new Set<number>()
@@ -95,7 +110,7 @@ export default function AdminRegionsPage() {
             }
         }
         return { matched, forcedExpanded, visible }
-    }, [q, regions, byId])
+    }, [q, kind, regions, byId])
 
     const toggle = (id: number) =>
         setExpanded((prev) => {
@@ -177,12 +192,27 @@ export default function AdminRegionsPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <Input
-                        placeholder="Поиск по названию или описанию…"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-md"
-                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                            placeholder="Поиск по названию или описанию…"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="max-w-md"
+                        />
+                        <Select value={kind} onValueChange={setKind}>
+                            <SelectTrigger className="w-44">
+                                <SelectValue placeholder="Тип" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL_KINDS}>Все типы</SelectItem>
+                                {KIND_OPTIONS.map((k) => (
+                                    <SelectItem key={k} value={k}>
+                                        {KIND_LABEL[k]}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
                     <div className="text-xs text-muted-foreground">
                         {regions ? `Всего: ${regions.length}` : ''}

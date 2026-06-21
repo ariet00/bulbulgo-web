@@ -7,6 +7,7 @@ import {
     AlertTriangle,
     BarChart,
     Bell,
+    BellRing,
     CalendarCheck,
     Car,
     LayoutDashboard,
@@ -61,6 +62,7 @@ const sections: NavSection[] = [
         label: 'BulBul Go',
         items: [
             { name: 'Trips', href: '/admin/trips', icon: List },
+            { name: 'Подписки', href: '/admin/subscriptions', icon: BellRing },
             { name: 'Vehicles', href: '/admin/vehicles', icon: Car },
             { name: 'Chats', href: '/admin/chats', icon: MessageSquare },
             { name: 'Версии приложения', href: '/admin/settings/app', icon: SettingsIcon },
