@@ -7,10 +7,12 @@ import { AppVersionSettingsForm } from '@/components/admin/settings/AppVersionSe
 import { FeatureFlagsSettingsForm } from '@/components/admin/settings/FeatureFlagsSettingsForm'
 import { ContactLimitsSettingsForm } from '@/components/admin/settings/ContactLimitsSettingsForm'
 import { SubscriptionSettingsForm } from '@/components/admin/settings/SubscriptionSettingsForm'
+import { ServicePricesSettingsForm } from '@/components/admin/settings/ServicePricesSettingsForm'
 
 const TABS = [
     { value: 'app', label: 'Версии приложения', Form: AppVersionSettingsForm },
     { value: 'features', label: 'Фичи', Form: FeatureFlagsSettingsForm },
+    { value: 'services', label: 'Услуги', Form: ServicePricesSettingsForm },
     { value: 'contact-limits', label: 'Лимиты номеров', Form: ContactLimitsSettingsForm },
     { value: 'subscriptions', label: 'Подписки', Form: SubscriptionSettingsForm },
 ] as const

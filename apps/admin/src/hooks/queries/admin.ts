@@ -862,3 +862,10 @@ export const useAdminSubscriptionSettings = () => {
         queryFn: () => adminApi.getSubscriptionSettings(),
     })
 }
+
+export const useAdminServicePricesSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'service-prices'] as const,
+        queryFn: () => adminApi.getServicePricesSettings(),
+    })
+}

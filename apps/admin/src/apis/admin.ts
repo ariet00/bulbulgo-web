@@ -884,6 +884,12 @@ export const adminApi = {
         requests.get<AdminSubscriptionSettings>('/admin/settings/subscriptions'),
     updateSubscriptionSettings: (body: AdminSubscriptionSettings) =>
         requests.put<AdminSubscriptionSettings>('/admin/settings/subscriptions', body),
+
+    // Premium-service prices/tariffs (Redis key `app:service_prices`)
+    getServicePricesSettings: () =>
+        requests.get<AdminServicePrices>('/admin/settings/service-prices'),
+    updateServicePricesSettings: (body: AdminServicePrices) =>
+        requests.put<AdminServicePrices>('/admin/settings/service-prices', body),
 }
 
 export interface AdminSubscriptionSettings {
@@ -1016,6 +1022,26 @@ export interface AdminAppFeaturesSettings {
     is_wallet_enabled: boolean
     is_passenger_search_enabled: boolean
     map_route_preview: boolean
+}
+
+export interface AdminAutoBumpTariff {
+    id: string
+    label: string
+    interval_hours: number
+    duration_days: number
+    price: number
+}
+
+export interface AdminServicePrices {
+    auto_bump_enabled: boolean
+    auto_bump_title: string
+    auto_bump_description: string
+    auto_bump_tariffs: AdminAutoBumpTariff[]
+    urgent_enabled: boolean
+    urgent_title: string
+    urgent_description: string
+    urgent_price: number
+    urgent_duration_days: number
 }
 
 export interface AdminContactLimitsSettings {
