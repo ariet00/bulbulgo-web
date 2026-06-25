@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminChat } from '@doska/shared'
+import { useAdminChat } from '@/hooks/queries/admin'
 import { useParams } from 'next/navigation'
 import { cn } from '@doska/shared'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"

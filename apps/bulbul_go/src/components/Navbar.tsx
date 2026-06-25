@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import { isDev } from '@doska/shared'
 import { useNotificationStore } from '@doska/shared'
 import { useUserStore } from '@doska/shared'
 import { Bell, User } from 'lucide-react'
@@ -51,7 +50,7 @@ export default function Navbar() {
         {/* </div> */}
 
         <div className="flex items-center gap-4">
-          {isDev && user ? <CompanySelector /> : null}
+          {user ? <CompanySelector /> : null}
           {/*<LanguageSwitcher />*/}
           <ThemeToggle />
 

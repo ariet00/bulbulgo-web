@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminBookingBots } from '@doska/shared'
+import { useAdminBookingBots } from '@/hooks/queries/admin'
 import {
     Badge,
     Button,
@@ -18,11 +18,16 @@ import {
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useFilterParams } from '@/hooks/useFilterParams'
+
+const FILTER_DEFAULTS = {
+    only_unlinked: false,
+}
 
 export default function AdminBookingBotsPage() {
     const router = useRouter()
-    const [onlyUnlinked, setOnlyUnlinked] = useState(false)
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+    const onlyUnlinked = values.only_unlinked
     const { data: bots, isLoading } = useAdminBookingBots(onlyUnlinked)
 
     return (
@@ -33,7 +38,7 @@ export default function AdminBookingBotsPage() {
                     <Button
                         variant={onlyUnlinked ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => setOnlyUnlinked((v) => !v)}
+                        onClick={() => setValues({ only_unlinked: !onlyUnlinked })}
                     >
                         Только непривязанные
                     </Button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminRegisterBookingBot, useAdminUpdateBookingBot } from '@doska/shared'
+import { useAdminRegisterBookingBot, useAdminUpdateBookingBot } from '@/hooks/mutations/admin'
 import {
     Button,
     Card,

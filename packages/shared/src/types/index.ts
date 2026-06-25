@@ -5,3 +5,4 @@ export * from './chat';
 export * from './notification';
 export * from './trip';
 export * from './vehicle';
+export * from './pagination';

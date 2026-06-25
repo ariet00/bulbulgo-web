@@ -1,6 +1,8 @@
 'use client'
 
-import { useAdminCompanies, useAdminDeleteCompany, useDebounce } from '@doska/shared'
+import { useAdminCompanies } from '@/hooks/queries/admin'
+import { useAdminDeleteCompany } from '@/hooks/mutations/admin'
+import { useDebounce } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import {
     Badge,
@@ -19,22 +21,32 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { CompanyTypeSelect } from '@/components/admin/selectors/StaticSelects'
+import { useFilterParams } from '@/hooks/useFilterParams'
+
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+    type: '',
+}
 
 export default function AdminCompaniesPage() {
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
-    const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined)
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+
+    const [qInput, setQInput] = useState(values.q)
+    const dq = useDebounce(qInput, 300)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
 
     const { data: companies, isLoading } = useAdminCompanies(
-        page,
-        size,
-        dq || undefined,
-        typeFilter,
+        values.page,
+        values.size,
+        values.q || undefined,
+        values.type || undefined,
     )
     const deleteCompanyMutation = useAdminDeleteCompany()
 
@@ -63,31 +75,22 @@ export default function AdminCompaniesPage() {
                     <div className="flex flex-wrap gap-2">
                         <Input
                             placeholder="Поиск по name/slug/id…"
-                            value={q}
-                            onChange={(e) => {
-                                setQ(e.target.value)
-                                setPage(1)
-                            }}
+                            value={qInput}
+                            onChange={(e) => setQInput(e.target.value)}
                             className="w-full sm:max-w-md"
                         />
                         <div className="w-full sm:w-48">
                             <CompanyTypeSelect
-                                value={typeFilter}
-                                onChange={(v) => {
-                                    setTypeFilter(v === '__all__' ? undefined : v)
-                                    setPage(1)
-                                }}
+                                value={values.type || undefined}
+                                onChange={(v) => setValues({ type: v })}
                                 placeholder="Все типы"
                             />
                         </div>
-                        {typeFilter && (
+                        {values.type && (
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => {
-                                    setTypeFilter(undefined)
-                                    setPage(1)
-                                }}
+                                onClick={() => setValues({ type: '' })}
                             >
                                 Сброс типа
                             </Button>
@@ -169,8 +172,8 @@ export default function AdminCompaniesPage() {
                             page={companies.page}
                             total={companies.total}
                             size={companies.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>

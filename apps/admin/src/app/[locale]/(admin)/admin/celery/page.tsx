@@ -1,12 +1,12 @@
 'use client'
 
+import { CeleryPeriodicTask } from '@/apis/admin'
+import { useAdminCeleryTasks } from '@/hooks/queries/admin'
 import {
-    CeleryPeriodicTask,
-    useAdminCeleryTasks,
     useAdminDeleteCeleryTask,
     useAdminRefreshCeleryBeat,
     useAdminUpdateCeleryTask,
-} from '@doska/shared'
+} from '@/hooks/mutations/admin'
 import {
     Badge,
     Button,

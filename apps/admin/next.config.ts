@@ -6,6 +6,9 @@ import createNextIntlPlugin from 'next-intl/plugin'
 const withNextIntl = createNextIntlPlugin()
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_PRODUCT: 'admin',
+  },
   transpilePackages: ['@doska/shared', '@doska/ui'],
   images: {
     // Disable image optimization in development to avoid "resolved to private ip" errors

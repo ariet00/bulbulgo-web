@@ -25,9 +25,9 @@ export function AdminHeader() {
                     </SheetTrigger>
                     <SheetContent
                         side="left"
-                        className="w-64 p-0 bg-gray-900 dark:bg-gray-950 text-white border-r border-gray-800"
+                        className="w-64 p-0 bg-gray-900 dark:bg-gray-950 text-white border-r border-gray-800 flex flex-col h-full"
                     >
-                        <SheetTitle className="flex items-center justify-center h-16 border-b border-gray-800 text-white text-xl">
+                        <SheetTitle className="flex items-center justify-center h-16 shrink-0 border-b border-gray-800 text-white text-xl">
                             Admin Panel
                         </SheetTitle>
                         <SidebarNav onNavigate={() => setOpen(false)} />

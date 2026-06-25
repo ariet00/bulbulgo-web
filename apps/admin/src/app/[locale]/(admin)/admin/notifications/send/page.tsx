@@ -1,13 +1,15 @@
 'use client'
 
+import { AdminBroadcastFilters } from '@/apis/admin'
 import {
-    AdminBroadcastFilters,
-    useAdminBroadcastNotification,
     useAdminNotificationRoles,
     useAdminPreviewAudience,
+} from '@/hooks/queries/admin'
+import {
+    useAdminBroadcastNotification,
     useAdminScheduleNotification,
     useAdminSendNotification,
-} from '@doska/shared'
+} from '@/hooks/mutations/admin'
 import {
     Badge,
     Button,
@@ -112,6 +114,10 @@ export default function AdminSendNotificationPage() {
     const [isActive, setIsActive] = useState<string>(ALL)
     const [minVersion, setMinVersion] = useState('')
     const [maxVersion, setMaxVersion] = useState('')
+    const [guestsOnly, setGuestsOnly] = useState(false)
+    // Explicit targeting (allowlists), comma/space/newline separated
+    const [userIdsRaw, setUserIdsRaw] = useState('')
+    const [deviceIdsRaw, setDeviceIdsRaw] = useState('')
 
     const { data: roles } = useAdminNotificationRoles()
 
@@ -140,15 +146,38 @@ export default function AdminSendNotificationPage() {
         }
     }, [dataJson])
 
+    const userIds = useMemo(
+        () =>
+            userIdsRaw
+                .split(/[\s,]+/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .map(Number)
+                .filter((n) => Number.isInteger(n) && n > 0),
+        [userIdsRaw],
+    )
+    const deviceIds = useMemo(
+        () =>
+            deviceIdsRaw
+                .split(/[\s,\n]+/)
+                .map((s) => s.trim())
+                .filter(Boolean),
+        [deviceIdsRaw],
+    )
+    const explicitTargeting = userIds.length > 0 || deviceIds.length > 0
+
     const broadcastFilters: AdminBroadcastFilters = useMemo(
         () => ({
-            role_id: roleId === ALL ? null : Number(roleId),
-            is_active: isActive === ALL ? null : isActive === 'true',
+            role_id: guestsOnly ? null : roleId === ALL ? null : Number(roleId),
+            is_active: guestsOnly ? null : isActive === ALL ? null : isActive === 'true',
             device_type: deviceType === ALL ? null : deviceType,
             min_version: minVersion.trim() || null,
             max_version: maxVersion.trim() || null,
+            guests_only: guestsOnly || null,
+            user_ids: userIds.length > 0 ? userIds : null,
+            device_ids: deviceIds.length > 0 ? deviceIds : null,
         }),
-        [roleId, isActive, deviceType, minVersion, maxVersion],
+        [roleId, isActive, deviceType, minVersion, maxVersion, guestsOnly, userIds, deviceIds],
     )
 
     const {
@@ -181,6 +210,9 @@ export default function AdminSendNotificationPage() {
         )
         setMinVersion(tpl.filters.min_version ?? '')
         setMaxVersion(tpl.filters.max_version ?? '')
+        setGuestsOnly(!!tpl.filters.guests_only)
+        setUserIdsRaw((tpl.filters.user_ids ?? []).join(', '))
+        setDeviceIdsRaw((tpl.filters.device_ids ?? []).join('\n'))
     }
 
     const saveTemplate = () => {
@@ -312,10 +344,23 @@ export default function AdminSendNotificationPage() {
                             </TabsContent>
 
                             <TabsContent value="broadcast" className="space-y-3 pt-3">
+                                <div className="flex items-center gap-2 rounded border px-3 py-2">
+                                    <Switch
+                                        checked={guestsOnly}
+                                        onCheckedChange={setGuestsOnly}
+                                    />
+                                    <Label className="flex-1 cursor-pointer">
+                                        Только гостям (user_id IS NULL)
+                                    </Label>
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <Label>Роль</Label>
-                                        <Select value={roleId} onValueChange={setRoleId}>
+                                        <Select
+                                            value={roleId}
+                                            onValueChange={setRoleId}
+                                            disabled={guestsOnly}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Любая" />
                                             </SelectTrigger>
@@ -346,7 +391,11 @@ export default function AdminSendNotificationPage() {
                                     </div>
                                     <div>
                                         <Label>Активность</Label>
-                                        <Select value={isActive} onValueChange={setIsActive}>
+                                        <Select
+                                            value={isActive}
+                                            onValueChange={setIsActive}
+                                            disabled={guestsOnly}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Все" />
                                             </SelectTrigger>
@@ -381,6 +430,51 @@ export default function AdminSendNotificationPage() {
                                     мин-фильтром, но проходят макс-фильтр. Рассылка отправляется
                                     асинхронно через очередь.
                                 </p>
+
+                                <Separator />
+
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-semibold">
+                                        Точечная отправка (необязательно)
+                                    </Label>
+                                    <div>
+                                        <Label>ID пользователей</Label>
+                                        <Textarea
+                                            value={userIdsRaw}
+                                            onChange={(e) => setUserIdsRaw(e.target.value)}
+                                            rows={2}
+                                            placeholder="12, 345, 6789"
+                                            className="font-mono text-xs"
+                                        />
+                                        {userIds.length > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Распознано пользователей: {userIds.length}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label>Device ID</Label>
+                                        <Textarea
+                                            value={deviceIdsRaw}
+                                            onChange={(e) => setDeviceIdsRaw(e.target.value)}
+                                            rows={2}
+                                            placeholder={'device-id-1\ndevice-id-2'}
+                                            className="font-mono text-xs"
+                                        />
+                                        {deviceIds.length > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Распознано устройств: {deviceIds.length}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {explicitTargeting && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-500">
+                                            {deviceIds.length > 0
+                                                ? 'Указаны Device ID — остальные фильтры (роль, тип, версия, пользователи) игнорируются, отправка строго на эти устройства.'
+                                                : 'Указаны ID пользователей — фильтры роли/активности/гостей игнорируются. Тип устройства и версия, если заданы, всё ещё сужают список.'}
+                                        </p>
+                                    )}
+                                </div>
                             </TabsContent>
                         </Tabs>
 
@@ -529,6 +623,12 @@ export default function AdminSendNotificationPage() {
                                     <span className="text-muted-foreground">Пользователей</span>
                                     <span className="font-mono">
                                         {audienceLoading ? '…' : (audience?.users ?? 0)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Гости</span>
+                                    <span className="font-mono">
+                                        {audienceLoading ? '…' : (audience?.guests ?? 0)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between">

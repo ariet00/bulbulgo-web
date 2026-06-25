@@ -1,6 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
     adminApi,
+    AdminAdCreate,
+    AdminAdUpdate,
+    AdminAppFeaturesSettings,
+    AdminAppVersionSettings,
+    AdminContactLimitsSettings,
+    AdminServicePrices,
+    AdminParcelTypesSettings,
+    AdminSubscriptionSettings,
     AdminBroadcastNotification,
     AdminCompanyCreate,
     AdminCompanyUpdate,
@@ -11,8 +19,8 @@ import {
     BookingOnboardRequest,
     CeleryPeriodicTaskCreate,
     CeleryPeriodicTaskUpdate,
-} from '../../apis/admin'
-import { adminKeys } from '../queries/admin'
+} from '@/apis/admin'
+import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
 export const useAdminBanUser = () => {
@@ -72,6 +80,43 @@ export const useAdminDeleteTrip = () => {
             queryClient.invalidateQueries({ queryKey: adminKeys.trips() })
             queryClient.invalidateQueries({ queryKey: adminKeys.analytics() })
             toast.success('Trip deleted')
+        },
+    })
+}
+
+export const useAdminUpdateTripStatus = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, status }: { id: number; status: string }) =>
+            adminApi.updateTripStatus(id, status),
+        onSuccess: (_data, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.trips() })
+            queryClient.invalidateQueries({ queryKey: adminKeys.trip(id) })
+            queryClient.invalidateQueries({ queryKey: adminKeys.analytics() })
+            toast.success('Статус поездки обновлён')
+        },
+    })
+}
+
+export const useAdminSetTripSubscriptionActive = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+            adminApi.setTripSubscriptionActive(id, isActive),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.subscriptions() })
+            toast.success('Подписка обновлена')
+        },
+    })
+}
+
+export const useAdminDeleteTripSubscription = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteTripSubscription(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.subscriptions() })
+            toast.success('Подписка удалена')
         },
     })
 }
@@ -260,6 +305,43 @@ export const useAdminDeleteNotification = () => {
     })
 }
 
+// === Promotions (in-app custom ads) ===
+
+export const useAdminCreateAd = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminAdCreate) => adminApi.createAd(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.ads() })
+            toast.success('Реклама создана')
+        },
+    })
+}
+
+export const useAdminUpdateAd = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: AdminAdUpdate }) =>
+            adminApi.updateAd(id, body),
+        onSuccess: (_, { id }) => {
+            qc.invalidateQueries({ queryKey: adminKeys.ads() })
+            qc.invalidateQueries({ queryKey: adminKeys.ad(id) })
+            toast.success('Реклама обновлена')
+        },
+    })
+}
+
+export const useAdminDeleteAd = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteAd(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.ads() })
+            toast.success('Реклама удалена')
+        },
+    })
+}
+
 export const useAdminScheduleNotification = () => {
     const qc = useQueryClient()
     return useMutation({
@@ -288,6 +370,131 @@ export const useAdminRefreshCeleryBeat = () => {
         onSuccess: (res) => {
             if (res.ok) toast.success('Beat reload signalled')
             else toast.message(`Beat not reloaded: ${res.reason ?? 'unknown'}`)
+        },
+    })
+}
+
+export const useSetAnalyticsMiddlewareToggle = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (enabled: boolean) => adminApi.setAnalyticsMiddlewareToggle(enabled),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.analytics() })
+        },
+    })
+}
+
+export const useUpdateAdminAppVersionSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminAppVersionSettings) =>
+            adminApi.updateAppVersionSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminAppFeaturesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminAppFeaturesSettings) =>
+            adminApi.updateAppFeaturesSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminContactLimitsSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminContactLimitsSettings) =>
+            adminApi.updateContactLimitsSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminSubscriptionSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminSubscriptionSettings) =>
+            adminApi.updateSubscriptionSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminServicePricesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminServicePrices) =>
+            adminApi.updateServicePricesSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminParcelTypesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminParcelTypesSettings) =>
+            adminApi.updateParcelTypesSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+// Per-driver limit overrides (from the BulBul Go "limited drivers" card and the
+// per-user analytics page). Refresh both the list and the single-user summary.
+const invalidateLimitedDrivers = (qc: ReturnType<typeof useQueryClient>) => {
+    qc.invalidateQueries({ queryKey: [...adminKeys.analytics(), 'rideshare', 'limited-drivers'] })
+    qc.invalidateQueries({ queryKey: [...adminKeys.analytics(), 'user-limit'] })
+}
+
+export const useSetDriverCredits = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ userId, value }: { userId: number; value: number }) =>
+            adminApi.setDriverCredits(userId, { value }),
+        onSuccess: () => {
+            invalidateLimitedDrivers(qc)
+            toast.success('Кредиты обновлены')
+        },
+    })
+}
+
+export const useSetDriverFreeUsed = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ userId, value }: { userId: number; value: number }) =>
+            adminApi.setDriverFreeUsed(userId, { value }),
+        onSuccess: () => {
+            invalidateLimitedDrivers(qc)
+            toast.success('Free-лимит обновлён')
+        },
+    })
+}
+
+export const useSetDriverLimited = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ userId, value }: { userId: number; value: number | null }) =>
+            adminApi.setDriverLimited(userId, value),
+        onSuccess: () => {
+            invalidateLimitedDrivers(qc)
+            toast.success('Статус лимита обновлён')
         },
     })
 }

@@ -2,7 +2,7 @@ import { AxiosResponse } from 'axios'
 
 import { requester } from '../lib/requester'
 
-import type { Page } from './admin'
+import type { Page } from '../types'
 
 const responseBody = <T>(response: AxiosResponse<T>) => response.data
 
@@ -61,6 +61,8 @@ export interface ParserChannelBlock {
     bot_username: string
     /** Trip roles to keep when parsing this channel. Empty = keep all. */
     allowed_roles: TripRole[]
+    /** Per-channel trip lifetime in hours. null = use the global parser setting. */
+    trip_expire_hours: number | null
 }
 
 export type ChannelType = 'parse' | 'publish' | 'both' | 'none'

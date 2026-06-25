@@ -14,6 +14,8 @@ interface ImageUploadInputProps {
     disabled?: boolean;
     className?: string;
     previewClassName?: string;
+    /** Upload as a permanent public URL (no expiry). Use for long-lived content like ads. */
+    isPublic?: boolean;
 }
 
 export function ImageUploadInput({
@@ -23,6 +25,7 @@ export function ImageUploadInput({
     disabled,
     className,
     previewClassName,
+    isPublic = false,
 }: ImageUploadInputProps) {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +38,7 @@ export function ImageUploadInput({
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const result = await uploadFile(formData);
+            const result = await uploadFile(formData, isPublic);
             onChange(result.url);
             toast.success('Image uploaded successfully');
         } catch (error) {

@@ -4,6 +4,7 @@ import {
     useDebounce,
     useDeleteParserChannel,
     useParserChannels,
+    useUpdateParserChannel,
 } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import {
@@ -15,6 +16,7 @@ import {
     CardTitle,
     Input,
     Pagination,
+    Switch,
     Table,
     TableBody,
     TableCell,
@@ -23,16 +25,26 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useFilterParams } from '@/hooks/useFilterParams'
+
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+}
 
 export default function ParserChannelsPage() {
-    const [page, setPage] = useState(1)
-    const [size, setSize] = useState(40)
-    const [q, setQ] = useState('')
-    const dq = useDebounce(q, 300)
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+    const [qInput, setQInput] = useState(values.q)
+    const dq = useDebounce(qInput, 300)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
 
-    const { data, isLoading } = useParserChannels(page, size, 'parse', dq || undefined)
+    const { data, isLoading } = useParserChannels(values.page, values.size, 'parse', values.q || undefined)
     const remove = useDeleteParserChannel()
+    const update = useUpdateParserChannel()
 
     const handleDelete = (id: number, chatId: string) => {
         if (confirm(`Удалить канал "${chatId}"?`)) {
@@ -58,11 +70,8 @@ export default function ParserChannelsPage() {
                 <CardContent className="space-y-4">
                     <Input
                         placeholder="Поиск по chat_id…"
-                        value={q}
-                        onChange={(e) => {
-                            setQ(e.target.value)
-                            setPage(1)
-                        }}
+                        value={qInput}
+                        onChange={(e) => setQInput(e.target.value)}
                         className="w-full sm:max-w-md"
                     />
 
@@ -94,11 +103,21 @@ export default function ParserChannelsPage() {
                                                 {row.chat_id}
                                             </TableCell>
                                             <TableCell>
-                                                {row.is_active ? (
-                                                    <Badge variant="default">active</Badge>
-                                                ) : (
-                                                    <Badge variant="secondary">off</Badge>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    <Switch
+                                                        checked={row.is_active}
+                                                        disabled={update.isPending}
+                                                        onCheckedChange={(next) =>
+                                                            update.mutate({
+                                                                id: row.id,
+                                                                body: { is_active: next },
+                                                            })
+                                                        }
+                                                    />
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {row.is_active ? 'active' : 'off'}
+                                                    </span>
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline">{row.channel_type}</Badge>
@@ -155,8 +174,8 @@ export default function ParserChannelsPage() {
                             page={data.page}
                             total={data.total}
                             size={data.size}
-                            onPageChange={setPage}
-                            onSizeChange={setSize}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
                         />
                     )}
                 </CardContent>

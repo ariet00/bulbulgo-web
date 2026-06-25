@@ -1,10 +1,8 @@
 'use client'
 
-import {
-    useAdminDeleteNotification,
-    useAdminNotifications,
-    useDebounce,
-} from '@doska/shared'
+import { useAdminDeleteNotification } from '@/hooks/mutations/admin'
+import { useAdminNotifications } from '@/hooks/queries/admin'
+import { useDebounce } from '@doska/shared'
 import {
     Badge,
     Button,
@@ -26,9 +24,9 @@ import {
     TableHeader,
     TableRow,
 } from '@doska/ui'
-import { Link } from '@doska/i18n'
+import { Link, useRouter } from '@doska/i18n'
 import { CalendarClock, Send, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 
 const ALL = '__all__'
@@ -74,10 +72,12 @@ export default function AdminNotificationsPage() {
     })
 
     const deleteMutation = useAdminDeleteNotification()
+    const router = useRouter()
 
     const resetPage = () => setPage(1)
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (e: MouseEvent, id: number) => {
+        e.stopPropagation()
         if (confirm(`Удалить уведомление #${id}?`)) {
             deleteMutation.mutate(id)
         }
@@ -204,13 +204,25 @@ export default function AdminNotificationsPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {data?.items.map((n: any) => (
-                                        <TableRow key={n.id}>
+                                        <TableRow
+                                            key={n.id}
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                                router.push(`/admin/notifications/${n.id}`)
+                                            }
+                                        >
                                             <TableCell>{n.id}</TableCell>
                                             <TableCell>{n.user_id ?? '—'}</TableCell>
-                                            <TableCell className="font-medium max-w-[180px] truncate">
+                                            <TableCell
+                                                className="font-medium max-w-[260px] whitespace-pre-wrap break-words"
+                                                title={n.title}
+                                            >
                                                 {n.title}
                                             </TableCell>
-                                            <TableCell className="max-w-[220px] truncate text-muted-foreground">
+                                            <TableCell
+                                                className="max-w-[360px] whitespace-pre-wrap break-words text-muted-foreground"
+                                                title={n.body}
+                                            >
                                                 {n.body}
                                             </TableCell>
                                             <TableCell>
@@ -226,7 +238,10 @@ export default function AdminNotificationsPage() {
                                                     <Badge variant="outline">Нет</Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="max-w-[220px] truncate text-destructive text-xs">
+                                            <TableCell
+                                                className="max-w-[280px] whitespace-pre-wrap break-words text-destructive text-xs"
+                                                title={n.error ?? ''}
+                                            >
                                                 {n.error ?? ''}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
@@ -238,7 +253,7 @@ export default function AdminNotificationsPage() {
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
-                                                    onClick={() => handleDelete(n.id)}
+                                                    onClick={(e) => handleDelete(e, n.id)}
                                                     disabled={deleteMutation.isPending}
                                                 >
                                                     <Trash2 className="h-4 w-4" />

@@ -4,9 +4,11 @@ import {
     CeleryCrontab,
     CeleryInterval,
     CeleryPeriodicTask,
+} from '@/apis/admin'
+import {
     useAdminCreateCeleryTask,
     useAdminUpdateCeleryTask,
-} from '@doska/shared'
+} from '@/hooks/mutations/admin'
 import {
     Button,
     Input,

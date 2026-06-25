@@ -3,12 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+    Activity,
+    AlertTriangle,
     BarChart,
     Bell,
+    BellRing,
     CalendarCheck,
     Car,
     LayoutDashboard,
+    LineChart,
     List,
+    MapPin,
+    Megaphone,
     MessageSquare,
     Radio,
     Settings as SettingsIcon,
@@ -37,15 +43,29 @@ const sections: NavSection[] = [
         items: [
             { name: 'Users', href: '/admin/users', icon: Users },
             { name: 'Companies', href: '/admin/companies', icon: BarChart },
+            { name: 'Regions', href: '/admin/regions', icon: MapPin },
             { name: 'Notifications', href: '/admin/notifications', icon: Bell },
+            { name: 'Ads', href: '/admin/ads', icon: Megaphone },
         ],
     },
     {
-        label: 'Rideshare',
+        label: 'Analytics',
+        items: [
+            { name: 'Обзор', href: '/admin/analytics/overview', icon: LineChart },
+            { name: 'BulBul Go', href: '/admin/analytics/bulbulgo', icon: LineChart },
+            { name: 'Версии', href: '/admin/analytics/versions', icon: LineChart },
+            { name: 'Ошибки', href: '/admin/analytics/errors', icon: AlertTriangle },
+            { name: 'События', href: '/admin/analytics/events', icon: Activity },
+        ],
+    },
+    {
+        label: 'BulBul Go',
         items: [
             { name: 'Trips', href: '/admin/trips', icon: List },
+            { name: 'Подписки', href: '/admin/subscriptions', icon: BellRing },
             { name: 'Vehicles', href: '/admin/vehicles', icon: Car },
             { name: 'Chats', href: '/admin/chats', icon: MessageSquare },
+            { name: 'Настройки', href: '/admin/settings', icon: SettingsIcon },
         ],
     },
     {
@@ -72,7 +92,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             : pathname === href || pathname.startsWith(`${href}/`)
 
     return (
-        <nav className="flex-1 px-2 py-4 space-y-4">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-4 space-y-4">
             {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="space-y-1">
                     {section.label && (

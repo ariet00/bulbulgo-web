@@ -3,9 +3,9 @@
 import {
     useAdminBookingBot,
     useAdminCompany,
-    useAdminUpdateBookingBot,
     useAdminUser,
-} from '@doska/shared'
+} from '@/hooks/queries/admin'
+import { useAdminUpdateBookingBot } from '@/hooks/mutations/admin'
 import {
     Badge,
     Button,

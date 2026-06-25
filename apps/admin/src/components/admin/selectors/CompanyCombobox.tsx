@@ -1,6 +1,7 @@
 'use client'
 
-import { useAdminCompanies, useAdminCompany, useDebounce } from '@doska/shared'
+import { useAdminCompanies, useAdminCompany } from '@/hooks/queries/admin'
+import { useDebounce } from '@doska/shared'
 import {
     Button,
     Command,
