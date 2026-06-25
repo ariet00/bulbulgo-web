@@ -20,6 +20,7 @@ const DEFAULT_FORM: AdminContactLimitsSettings = {
     enabled: true,
     free_daily_limit: 15,
     global_free_daily_limit: 50,
+    daily_reset_hour: 0,
     fast_freshness_minutes: 10,
     fast_cost: 2,
     activity_window_days: 7,
@@ -42,6 +43,11 @@ const NUM_FIELDS: { key: NumKey; label: string; hint: string; step?: number }[] 
         key: 'global_free_daily_limit',
         label: 'Общий free/день (остальные)',
         hint: 'global_free_daily_limit — щедрый дневной лимит для тех, кто не прошёл классификацию (анти-абьюз/скрейпинг).',
+    },
+    {
+        key: 'daily_reset_hour',
+        label: 'Час сброса лимита (0–23, KG)',
+        hint: 'daily_reset_hour — час по бишкекскому времени, когда бесплатный дневной лимит обнуляется. 0 = полночь.',
     },
     {
         key: 'fast_cost',

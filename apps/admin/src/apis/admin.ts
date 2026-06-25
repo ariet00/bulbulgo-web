@@ -1048,6 +1048,7 @@ export interface AdminContactLimitsSettings {
     enabled: boolean
     free_daily_limit: number
     global_free_daily_limit: number
+    daily_reset_hour: number
     fast_freshness_minutes: number
     fast_cost: number
     activity_window_days: number
