@@ -890,6 +890,12 @@ export const adminApi = {
         requests.get<AdminServicePrices>('/admin/settings/service-prices'),
     updateServicePricesSettings: (body: AdminServicePrices) =>
         requests.put<AdminServicePrices>('/admin/settings/service-prices', body),
+
+    // Parcel types for courier delivery (Redis key `app:parcel_types`)
+    getParcelTypesSettings: () =>
+        requests.get<AdminParcelTypesSettings>('/admin/settings/parcel-types'),
+    updateParcelTypesSettings: (body: AdminParcelTypesSettings) =>
+        requests.put<AdminParcelTypesSettings>('/admin/settings/parcel-types', body),
 }
 
 export interface AdminSubscriptionSettings {
@@ -1042,6 +1048,19 @@ export interface AdminServicePrices {
     urgent_description: string
     urgent_price: number
     urgent_duration_days: number
+}
+
+export interface AdminParcelType {
+    code: string
+    name: string
+    weight_hint: string
+    price: number | null
+    negotiable: boolean
+}
+
+export interface AdminParcelTypesSettings {
+    enabled: boolean
+    types: AdminParcelType[]
 }
 
 export interface AdminContactLimitsSettings {

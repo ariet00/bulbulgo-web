@@ -869,3 +869,10 @@ export const useAdminServicePricesSettings = () => {
         queryFn: () => adminApi.getServicePricesSettings(),
     })
 }
+
+export const useAdminParcelTypesSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'parcel-types'] as const,
+        queryFn: () => adminApi.getParcelTypesSettings(),
+    })
+}

@@ -7,6 +7,7 @@ import {
     AdminAppVersionSettings,
     AdminContactLimitsSettings,
     AdminServicePrices,
+    AdminParcelTypesSettings,
     AdminSubscriptionSettings,
     AdminBroadcastNotification,
     AdminCompanyCreate,
@@ -436,6 +437,18 @@ export const useUpdateAdminServicePricesSettings = () => {
     return useMutation({
         mutationFn: (body: AdminServicePrices) =>
             adminApi.updateServicePricesSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminParcelTypesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminParcelTypesSettings) =>
+            adminApi.updateParcelTypesSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')
