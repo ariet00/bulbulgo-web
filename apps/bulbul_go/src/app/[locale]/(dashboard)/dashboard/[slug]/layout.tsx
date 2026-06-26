@@ -13,15 +13,25 @@ import {
     UserCog,
 } from 'lucide-react';
 import CompanySelector from '../../../../../components/CompanySelector';
+import type { LucideIcon } from 'lucide-react';
 
-const NAV = [
-    { key: '', label: 'Обзор', icon: LayoutDashboard },
-    { key: '/trips', label: 'Поездки', icon: Route },
-    { key: '/schedule', label: 'Расписание', icon: CalendarClock },
-    { key: '/vehicles', label: 'Автопарк', icon: Car },
-    { key: '/drivers', label: 'Водители', icon: Users },
-    { key: '/employees', label: 'Сотрудники', icon: UserCog },
-];
+type NavItem = { key: string; label: string; icon: LucideIcon };
+
+// Меню дашборда зависит от типа компании (Company.type). Сейчас активен только
+// `transport`; для нового типа добавляем сюда запись. Неизвестный/пустой тип
+// падает на меню перевозчика.
+const MENU_BY_TYPE: Record<string, NavItem[]> = {
+    transport: [
+        { key: '', label: 'Обзор', icon: LayoutDashboard },
+        { key: '/trips', label: 'Поездки', icon: Route },
+        { key: '/schedule', label: 'Расписание', icon: CalendarClock },
+        { key: '/vehicles', label: 'Автопарк', icon: Car },
+        { key: '/drivers', label: 'Водители', icon: Users },
+        { key: '/employees', label: 'Сотрудники', icon: UserCog },
+    ],
+};
+
+const DEFAULT_MENU = MENU_BY_TYPE.transport;
 
 export default function CompanyDashboardLayout({ children }: { children: React.ReactNode }) {
     const params = useParams();
@@ -30,6 +40,7 @@ export default function CompanyDashboardLayout({ children }: { children: React.R
     const { data: company } = useCompany(slug);
 
     const base = `/dashboard/${slug}`;
+    const nav = (company?.type && MENU_BY_TYPE[company.type]) || DEFAULT_MENU;
 
     return (
         <div className="container mx-auto px-4 py-6">
@@ -43,7 +54,7 @@ export default function CompanyDashboardLayout({ children }: { children: React.R
 
             <div className="flex flex-col gap-6 md:flex-row">
                 <nav className="flex gap-1 overflow-x-auto md:w-56 md:flex-col md:overflow-visible">
-                    {NAV.map(({ key, label, icon: Icon }) => {
+                    {nav.map(({ key, label, icon: Icon }) => {
                         const href = `${base}${key}`;
                         const active = key === ''
                             ? pathname === base
