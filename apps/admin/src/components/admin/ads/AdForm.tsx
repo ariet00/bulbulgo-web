@@ -36,6 +36,80 @@ const LANGS = [
     { code: 'en', label: 'EN' },
 ]
 
+/** Тип действия по тапу на рекламу (поле action_type). */
+const ACTION_TYPES = [
+    { value: 'url', label: 'Внешняя ссылка / другое приложение' },
+    { value: 'route', label: 'Внутренний экран приложения' },
+    { value: 'phone', label: 'Позвонить' },
+    { value: 'share', label: 'Поделиться (системное меню)' },
+    { value: 'copy', label: 'Скопировать в буфер (промокод)' },
+    { value: 'none', label: 'Без действия (баннер)' },
+]
+
+/**
+ * Проверка и нормализация action_url под выбранный тип. Возвращает текст ошибки
+ * (или null) и нормализованное значение, которое уйдёт на бэкенд — чтобы в
+ * приложение попадал только валидный формат.
+ */
+function validateAction(
+    type: string,
+    raw: string,
+): { error: string | null; value: string } {
+    const v = raw.trim()
+    switch (type) {
+        case 'none':
+            return { error: null, value: '' }
+        case 'url':
+            return /^https?:\/\/.+/i.test(v)
+                ? { error: null, value: v }
+                : { error: 'Ссылка должна начинаться с http:// или https://', value: v }
+        case 'route':
+            return /^\/[\w\-/:]*$/.test(v)
+                ? { error: null, value: v }
+                : { error: 'Путь экрана должен начинаться с «/» (напр. /profile/wallet)', value: v }
+        case 'phone': {
+            const digits = v.replace(/[\s\-()]/g, '')
+            return /^\+[1-9]\d{8,14}$/.test(digits)
+                ? { error: null, value: digits }
+                : {
+                      error: 'Номер в межд. формате с кодом страны, напр. +996700123456',
+                      value: v,
+                  }
+        }
+        case 'share':
+        case 'copy':
+            return v.length > 0
+                ? { error: null, value: v }
+                : { error: 'Поле не должно быть пустым', value: v }
+        default:
+            return { error: null, value: v }
+    }
+}
+
+/** Подпись и плейсхолдер для поля action_url под каждый тип действия. */
+const ACTION_URL_HINT: Record<string, { label: string; placeholder: string }> = {
+    url: { label: 'Ссылка перехода (action_url)', placeholder: 'https://example.com' },
+    phone: { label: 'Номер телефона', placeholder: '+996700123456' },
+    share: { label: 'Текст для «Поделиться»', placeholder: 'Скачивай Bulbul Go: https://…' },
+    copy: { label: 'Текст для копирования (промокод)', placeholder: 'BULBUL2026' },
+}
+
+/**
+ * Частые внутренние экраны для action_type='route'. Пути — go_router из
+ * native_apps/bulbul_go/lib/core/router/app_router.dart. Можно вписать свой путь.
+ */
+const APP_ROUTES = [
+    { value: '/rideshare', label: 'Поездки (поиск)' },
+    { value: '/rideshare/create', label: 'Создать поездку' },
+    { value: '/freight', label: 'Грузы (поиск)' },
+    { value: '/freight/create', label: 'Создать груз' },
+    { value: '/bus', label: 'Автобусы' },
+    { value: '/messages', label: 'Сообщения' },
+    { value: '/profile', label: 'Профиль' },
+    { value: '/profile/wallet', label: 'Кошелёк' },
+    { value: '/profile/vehicles', label: 'Мои авто' },
+]
+
 const PLATFORM_OPTIONS = [
     { id: 'android', value: 'Android' },
     { id: 'ios', value: 'iOS' },
@@ -124,6 +198,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
     const [placement, setPlacement] = useState(initial?.placement ?? 'contacts')
     const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '')
     const [actionUrl, setActionUrl] = useState(initial?.action_url ?? '')
+    const [actionType, setActionType] = useState(initial?.action_type ?? 'url')
     const [title, setTitle] = useState<Record<string, string>>(initial?.title ?? {})
     const [buttonLabel, setButtonLabel] = useState<Record<string, string>>(
         initial?.button_label ?? {},
@@ -143,13 +218,22 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
 
     const [previewLang, setPreviewLang] = useState('ru')
     const [previewDark, setPreviewDark] = useState(false)
+    const [triedSubmit, setTriedSubmit] = useState(false)
+
+    const action = validateAction(actionType, actionUrl)
+    const showActionError =
+        action.error !== null && (triedSubmit || actionUrl.trim().length > 0)
 
     const handleSubmit = () => {
+        if (action.error) {
+            setTriedSubmit(true)
+            return
+        }
         const body: AdminAdCreate = {
             placement,
             image_url: imageUrl || undefined,
-            action_url: actionUrl || undefined,
-            action_type: 'url',
+            action_url: action.value || undefined,
+            action_type: actionType,
             title: cleanMap(title),
             button_label: cleanMap(buttonLabel),
             colors,
@@ -213,13 +297,72 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Ссылка перехода (action_url)</Label>
-                            <Input
-                                placeholder="https://example.com"
-                                value={actionUrl}
-                                onChange={(e) => setActionUrl(e.target.value)}
-                            />
+                            <Label>Тип действия по тапу</Label>
+                            <Select value={actionType} onValueChange={setActionType}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ACTION_TYPES.map((t) => (
+                                        <SelectItem key={t.value} value={t.value}>
+                                            {t.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
+
+                        {actionType === 'none' ? null : actionType === 'route' ? (
+                            <div className="space-y-2">
+                                <Label>Экран приложения (action_url)</Label>
+                                <Select
+                                    value={
+                                        APP_ROUTES.some((r) => r.value === actionUrl)
+                                            ? actionUrl
+                                            : ''
+                                    }
+                                    onValueChange={setActionUrl}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Выберите раздел" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {APP_ROUTES.map((r) => (
+                                            <SelectItem key={r.value} value={r.value}>
+                                                {r.label} ({r.value})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Input
+                                    placeholder="или свой путь, напр. /profile/wallet"
+                                    value={actionUrl}
+                                    onChange={(e) => setActionUrl(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Путь go_router, начинается с «/».
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Label>
+                                    {(ACTION_URL_HINT[actionType] ?? ACTION_URL_HINT.url)
+                                        .label}
+                                </Label>
+                                <Input
+                                    placeholder={
+                                        (ACTION_URL_HINT[actionType] ?? ACTION_URL_HINT.url)
+                                            .placeholder
+                                    }
+                                    value={actionUrl}
+                                    onChange={(e) => setActionUrl(e.target.value)}
+                                />
+                            </div>
+                        )}
+
+                        {showActionError && (
+                            <p className="text-xs text-destructive">{action.error}</p>
+                        )}
 
                         <div className="space-y-2">
                             <Label>Тексты (по языкам)</Label>
@@ -442,6 +585,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                             <AdPreview
                                 placement={placement}
                                 imageUrl={imageUrl}
+                                actionType={actionType}
                                 title={title[previewLang] || title.ru || ''}
                                 buttonLabel={buttonLabel[previewLang] || buttonLabel.ru || ''}
                                 colors={resolveInherit(
@@ -540,16 +684,20 @@ function ColorField({
 function AdPreview({
     placement,
     imageUrl,
+    actionType,
     title,
     buttonLabel,
     colors,
 }: {
     placement: string
     imageUrl: string
+    actionType: string
     title: string
     buttonLabel: string
     colors: AdminAdColors
 }) {
+    // 'none' — баннер без действия: кнопку не показываем (как в приложении).
+    const isInteractive = actionType !== 'none'
     const textBlock = (
         <div className="space-y-2 p-3">
             <div
@@ -558,13 +706,15 @@ function AdPreview({
             >
                 {title || 'Заголовок'}
             </div>
-            <button
-                type="button"
-                className="w-full rounded-xl px-3 py-2 text-sm font-medium"
-                style={{ backgroundColor: colors.button, color: colors.button_text }}
-            >
-                {buttonLabel || 'Кнопка'}
-            </button>
+            {isInteractive && (
+                <button
+                    type="button"
+                    className="w-full rounded-xl px-3 py-2 text-sm font-medium"
+                    style={{ backgroundColor: colors.button, color: colors.button_text }}
+                >
+                    {buttonLabel || 'Кнопка'}
+                </button>
+            )}
         </div>
     )
 
