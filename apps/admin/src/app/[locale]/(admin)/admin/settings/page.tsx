@@ -9,12 +9,14 @@ import { ContactLimitsSettingsForm } from '@/components/admin/settings/ContactLi
 import { SubscriptionSettingsForm } from '@/components/admin/settings/SubscriptionSettingsForm'
 import { ServicePricesSettingsForm } from '@/components/admin/settings/ServicePricesSettingsForm'
 import { ParcelTypesSettingsForm } from '@/components/admin/settings/ParcelTypesSettingsForm'
+import { AttractivePricesSettingsForm } from '@/components/admin/settings/AttractivePricesSettingsForm'
 
 const TABS = [
     { value: 'app', label: 'Версии приложения', Form: AppVersionSettingsForm },
     { value: 'features', label: 'Фичи', Form: FeatureFlagsSettingsForm },
     { value: 'services', label: 'Услуги', Form: ServicePricesSettingsForm },
     { value: 'parcel-types', label: 'Типы посылок', Form: ParcelTypesSettingsForm },
+    { value: 'attractive-prices', label: 'Выгодные цены', Form: AttractivePricesSettingsForm },
     { value: 'contact-limits', label: 'Лимиты номеров', Form: ContactLimitsSettingsForm },
     { value: 'subscriptions', label: 'Подписки', Form: SubscriptionSettingsForm },
 ] as const

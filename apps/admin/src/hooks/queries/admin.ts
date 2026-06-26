@@ -876,3 +876,10 @@ export const useAdminParcelTypesSettings = () => {
         queryFn: () => adminApi.getParcelTypesSettings(),
     })
 }
+
+export const useAdminAttractivePricesSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'attractive-prices'] as const,
+        queryFn: () => adminApi.getAttractivePricesSettings(),
+    })
+}

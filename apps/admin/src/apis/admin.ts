@@ -896,6 +896,10 @@ export const adminApi = {
         requests.get<AdminParcelTypesSettings>('/admin/settings/parcel-types'),
     updateParcelTypesSettings: (body: AdminParcelTypesSettings) =>
         requests.put<AdminParcelTypesSettings>('/admin/settings/parcel-types', body),
+    getAttractivePricesSettings: () =>
+        requests.get<AdminAttractivePricesSettings>('/admin/settings/attractive-prices'),
+    updateAttractivePricesSettings: (body: AdminAttractivePricesSettings) =>
+        requests.put<AdminAttractivePricesSettings>('/admin/settings/attractive-prices', body),
 }
 
 export interface AdminSubscriptionSettings {
@@ -1061,6 +1065,18 @@ export interface AdminParcelType {
 export interface AdminParcelTypesSettings {
     enabled: boolean
     types: AdminParcelType[]
+}
+
+export interface AdminAttractiveRoute {
+    from_location_id: number
+    to_location_id: number
+    min_price: number
+    max_price: number
+}
+
+export interface AdminAttractivePricesSettings {
+    enabled: boolean
+    routes: AdminAttractiveRoute[]
 }
 
 export interface AdminContactLimitsSettings {
