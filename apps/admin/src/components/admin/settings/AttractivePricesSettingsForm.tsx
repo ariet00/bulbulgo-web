@@ -131,7 +131,6 @@ export function AttractivePricesSettingsForm() {
                                             )
                                         }
                                         placeholder="Город отправления"
-                                        leafOnly
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -146,7 +145,6 @@ export function AttractivePricesSettingsForm() {
                                             )
                                         }
                                         placeholder="Город назначения"
-                                        leafOnly
                                     />
                                 </div>
                             </div>
