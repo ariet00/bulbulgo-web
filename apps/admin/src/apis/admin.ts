@@ -1213,6 +1213,7 @@ export interface AdminAd {
     image_url: string | null
     action_url: string | null
     action_type: string
+    google_in_rotation: boolean
     title: LocalizedText
     button_label: LocalizedText
     colors: AdminAdColors
@@ -1230,6 +1231,7 @@ export interface AdminAdCreate {
     image_url?: string
     action_url?: string
     action_type?: string
+    google_in_rotation?: boolean
     title?: LocalizedText
     button_label?: LocalizedText
     colors?: AdminAdColors

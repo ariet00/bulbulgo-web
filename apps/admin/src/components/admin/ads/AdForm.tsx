@@ -199,6 +199,9 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
     const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '')
     const [actionUrl, setActionUrl] = useState(initial?.action_url ?? '')
     const [actionType, setActionType] = useState(initial?.action_type ?? 'url')
+    const [googleInRotation, setGoogleInRotation] = useState(
+        initial?.google_in_rotation ?? false,
+    )
     const [title, setTitle] = useState<Record<string, string>>(initial?.title ?? {})
     const [buttonLabel, setButtonLabel] = useState<Record<string, string>>(
         initial?.button_label ?? {},
@@ -234,6 +237,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
             image_url: imageUrl || undefined,
             action_url: action.value || undefined,
             action_type: actionType,
+            google_in_rotation: googleInRotation,
             title: cleanMap(title),
             button_label: cleanMap(buttonLabel),
             colors,
@@ -363,6 +367,22 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                         {showActionError && (
                             <p className="text-xs text-destructive">{action.error}</p>
                         )}
+
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    checked={googleInRotation}
+                                    onCheckedChange={setGoogleInRotation}
+                                />
+                                <Label>Добавлять Google-рекламу в ротацию слота</Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Google встанет одной позицией в круговую очередь этого
+                                слота (наравне с объявлениями). Настройка действует на
+                                весь слот: достаточно включить у одного объявления.
+                                Если своих объявлений нет — Google показывается всегда.
+                            </p>
+                        </div>
 
                         <div className="space-y-2">
                             <Label>Тексты (по языкам)</Label>
