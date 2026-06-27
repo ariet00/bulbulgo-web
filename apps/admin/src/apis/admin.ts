@@ -511,6 +511,16 @@ export const adminApi = {
     setAnalyticsMiddlewareToggle: (enabled: boolean) =>
         requests.post<{ enabled: boolean }>('/admin/analytics/middleware/toggle', { enabled }),
 
+    // Events cleanup (retention)
+    getAnalyticsCleanupConfig: () =>
+        requests.get<AnalyticsCleanupConfig>('/admin/analytics/cleanup/config'),
+    setAnalyticsCleanupConfig: (body: AnalyticsCleanupConfigInput) =>
+        requests.put<AnalyticsCleanupConfig>('/admin/analytics/cleanup/config', body),
+    getAnalyticsCleanupPreview: () =>
+        requests.get<{ matching: number }>('/admin/analytics/cleanup/preview'),
+    runAnalyticsCleanup: () =>
+        requests.post<{ task_id: string }>('/admin/analytics/cleanup/run', {}),
+
     // Rideshare (bulbul go) — product-specific analytics
     getRideshareFunnel: (period: string = '7d') =>
         requests.get<{
@@ -1017,6 +1027,16 @@ export interface AdminErrorUser {
     avatar_url: string | null
     count: number
     last_seen: string
+}
+
+export interface AnalyticsCleanupConfigInput {
+    enabled: boolean
+    retention_days: number
+    event_types: string[]
+}
+
+export interface AnalyticsCleanupConfig extends AnalyticsCleanupConfigInput {
+    available_event_types: string[]
 }
 
 export interface AdminAppVersionSettings {

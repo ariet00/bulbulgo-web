@@ -725,6 +725,20 @@ export const useAdminAnalyticsMiddlewareToggle = () => {
     })
 }
 
+export const useAdminAnalyticsCleanupConfig = () => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'cleanup-config'],
+        queryFn: () => adminApi.getAnalyticsCleanupConfig(),
+    })
+}
+
+export const useAdminAnalyticsCleanupPreview = () => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'cleanup-preview'],
+        queryFn: () => adminApi.getAnalyticsCleanupPreview(),
+    })
+}
+
 export const useAdminBookingBots = (onlyUnlinked = false) => {
     return useQuery({
         queryKey: adminKeys.bookingBots(onlyUnlinked),
