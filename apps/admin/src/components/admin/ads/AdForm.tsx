@@ -368,6 +368,12 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                             <p className="text-xs text-destructive">{action.error}</p>
                         )}
 
+                        <p className="text-xs text-muted-foreground">
+                            {actionType === 'none'
+                                ? 'Баннер без действия: тап игнорируется, кнопка не показывается. Подходит для чисто информационного фото.'
+                                : 'Всё объявление кликабельно — тап по фото (и по кнопке, если она есть) ведёт по действию выше. Заголовок и кнопка необязательны: оставьте их пустыми, чтобы показать только кликабельное фото.'}
+                        </p>
+
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
                                 <Switch
@@ -385,7 +391,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Тексты (по языкам)</Label>
+                            <Label>Тексты (по языкам) — необязательно</Label>
                             <Tabs defaultValue="ru">
                                 <TabsList>
                                     {LANGS.map((l) => (
@@ -716,27 +722,42 @@ function AdPreview({
     buttonLabel: string
     colors: AdminAdColors
 }) {
-    // 'none' — баннер без действия: кнопку не показываем (как в приложении).
+    // 'none' — баннер без действия: тапа и кнопки нет (как в приложении).
     const isInteractive = actionType !== 'none'
-    const textBlock = (
+    const hasTitle = title.trim() !== ''
+    const hasButton = isInteractive && buttonLabel.trim() !== ''
+    // Нет ни заголовка, ни кнопки → текстовый блок не рисуем (баннер «только
+    // фото»), как и в native_apps/.../custom_ad_widget.dart.
+    const hasText = hasTitle || hasButton
+    // Кликабельное фото без текста — маленький бейдж, чтобы было видно, что тап
+    // по самой картинке ведёт по действию.
+    const photoClickable = isInteractive && !hasText
+    const textBlock = hasText ? (
         <div className="space-y-2 p-3">
-            <div
-                className="text-sm font-semibold leading-snug line-clamp-2"
-                style={{ color: colors.text }}
-            >
-                {title || 'Заголовок'}
-            </div>
-            {isInteractive && (
+            {hasTitle && (
+                <div
+                    className="text-sm font-semibold leading-snug line-clamp-2"
+                    style={{ color: colors.text }}
+                >
+                    {title}
+                </div>
+            )}
+            {hasButton && (
                 <button
                     type="button"
                     className="w-full rounded-xl px-3 py-2 text-sm font-medium"
                     style={{ backgroundColor: colors.button, color: colors.button_text }}
                 >
-                    {buttonLabel || 'Кнопка'}
+                    {buttonLabel}
                 </button>
             )}
         </div>
-    )
+    ) : null
+    const clickBadge = photoClickable ? (
+        <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white">
+            фото кликабельно
+        </span>
+    ) : null
 
     // Лента: картинка фиксированной высоты, текст снизу (как карточка поездки).
     if (placement === 'feed') {
@@ -745,16 +766,19 @@ function AdPreview({
                 className="overflow-hidden rounded-2xl border"
                 style={{ backgroundColor: colors.background }}
             >
-                {imageUrl ? (
-                    <img src={imageUrl} alt="" className="h-44 w-full object-cover" />
-                ) : (
-                    <div
-                        className="flex h-44 w-full items-center justify-center text-xs opacity-50"
-                        style={{ color: colors.text }}
-                    >
-                        нет фото
-                    </div>
-                )}
+                <div className="relative">
+                    {imageUrl ? (
+                        <img src={imageUrl} alt="" className="h-44 w-full object-cover" />
+                    ) : (
+                        <div
+                            className="flex h-44 w-full items-center justify-center text-xs opacity-50"
+                            style={{ color: colors.text }}
+                        >
+                            нет фото
+                        </div>
+                    )}
+                    {clickBadge}
+                </div>
                 {textBlock}
             </div>
         )
@@ -764,7 +788,7 @@ function AdPreview({
     // над текстом, заголовок и кнопка снизу. Квадрат = фото + текст вместе.
     return (
         <div
-            className="mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border"
+            className="relative mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border"
             style={{ aspectRatio: '380 / 370', backgroundColor: colors.background }}
         >
             {imageUrl ? (
@@ -781,7 +805,8 @@ function AdPreview({
                     нет фото
                 </div>
             )}
-            <div className="shrink-0">{textBlock}</div>
+            {clickBadge}
+            {textBlock && <div className="shrink-0">{textBlock}</div>}
         </div>
     )
 }
