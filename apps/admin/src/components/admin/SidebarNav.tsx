@@ -10,6 +10,8 @@ import {
     BellRing,
     CalendarCheck,
     Car,
+    ClipboardList,
+    FolderTree,
     LayoutDashboard,
     LineChart,
     List,
@@ -18,6 +20,7 @@ import {
     MessageSquare,
     Radio,
     Settings as SettingsIcon,
+    Tags,
     Timer,
     Trash2,
     Users,
@@ -47,6 +50,14 @@ const sections: NavSection[] = [
             { name: 'Regions', href: '/admin/regions', icon: MapPin },
             { name: 'Notifications', href: '/admin/notifications', icon: Bell },
             { name: 'Ads', href: '/admin/ads', icon: Megaphone },
+        ],
+    },
+    {
+        label: 'Маркетплейс',
+        items: [
+            { name: 'Категории', href: '/admin/marketplace/categories', icon: FolderTree },
+            { name: 'Атрибуты', href: '/admin/marketplace/attributes', icon: Tags },
+            { name: 'Объявления', href: '/admin/marketplace/listings', icon: ClipboardList },
         ],
     },
     {
