@@ -149,6 +149,7 @@ export interface McListing {
     id: number
     category_id: number
     kind: string
+    deal_type?: string | null
     status: string
     user_id: number
     company_id?: number | null

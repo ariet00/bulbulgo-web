@@ -18,6 +18,7 @@ import {
     SelectValue,
     Switch,
 } from '@doska/ui'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import type { McAttribute, McBinding } from '@/apis/marketplace'
 import { APPLIES_TO } from '@/apis/marketplace'
 import { useMpCreateBinding, useMpUpdateBinding } from '@/hooks/mutations/marketplace'
@@ -39,7 +40,10 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
     const [filterable, setFilterable] = useState(false)
     const [appliesTo, setAppliesTo] = useState('both')
     const [sortOrder, setSortOrder] = useState(0)
-    const [allowed, setAllowed] = useState<Set<string>>(new Set())
+    // allowed_options as an ORDERED list (defines the strip order per category) +
+    // which values are included.
+    const [order, setOrder] = useState<string[]>([])
+    const [included, setIncluded] = useState<Set<string>>(new Set())
 
     const create = useMpCreateBinding()
     const update = useMpUpdateBinding()
@@ -51,6 +55,10 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
     )
     const isEnum = attr?.type === 'enum' || attr?.type === 'multi_enum'
     const allOptionValues = useMemo(() => (attr?.options ?? []).map((o) => o.value), [attr])
+    const optByValue = useMemo(
+        () => Object.fromEntries((attr?.options ?? []).map((o) => [o.value, o])),
+        [attr],
+    )
 
     useEffect(() => {
         if (!open) return
@@ -59,22 +67,53 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
         setFilterable(binding?.is_filterable ?? false)
         setAppliesTo(binding?.applies_to ?? 'both')
         setSortOrder(binding?.sort_order ?? 0)
-        setAllowed(new Set(binding?.allowed_options ?? []))
     }, [open, binding])
 
-    const toggleAllowed = (v: string) =>
-        setAllowed((prev) => {
+    // Seed the ordered allowed list from the binding (or all options) once the
+    // selected attribute is known.
+    useEffect(() => {
+        if (!open || !attr) return
+        const all = (attr.options ?? []).map((o) => o.value)
+        const ao = binding?.allowed_options ?? null
+        if (ao && ao.length) {
+            setOrder([...ao.filter((v) => all.includes(v)), ...all.filter((v) => !ao.includes(v))])
+            setIncluded(new Set(ao))
+        } else {
+            setOrder(all)
+            setIncluded(new Set(all))
+        }
+    }, [open, attr, binding])
+
+    const toggleIncluded = (v: string) =>
+        setIncluded((prev) => {
             const next = new Set(prev)
             next.has(v) ? next.delete(v) : next.add(v)
             return next
         })
 
-    // partial subset → restrict; empty or full → no restriction (null)
+    const move = (i: number, dir: -1 | 1) =>
+        setOrder((prev) => {
+            const j = i + dir
+            if (j < 0 || j >= prev.length) return prev
+            const a = [...prev]
+            ;[a[i], a[j]] = [a[j], a[i]]
+            return a
+        })
+
+    // Selected values in display order. Returns null (no restriction, default
+    // order, future options auto-included) when all options are kept in their
+    // original order; otherwise the explicit ordered subset.
     const resolveAllowed = (): string[] | null => {
         if (!isEnum) return null
-        const arr = allOptionValues.filter((v) => allowed.has(v))
-        if (arr.length === 0 || arr.length === allOptionValues.length) return null
-        return arr
+        const sel = order.filter((v) => included.has(v))
+        if (sel.length === 0) return null
+        if (
+            sel.length === allOptionValues.length &&
+            sel.every((v, i) => v === allOptionValues[i])
+        ) {
+            return null
+        }
+        return sel
     }
 
     const submit = () => {
@@ -182,19 +221,40 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
 
                     {isEnum && allOptionValues.length > 0 && (
                         <div className="space-y-2">
-                            <Label>Допустимые значения в этой категории</Label>
+                            <Label>Значения и порядок в этой категории</Label>
                             <div className="text-xs text-muted-foreground">
-                                Отметьте подмножество; пусто или все = без ограничения.
+                                Отметьте нужные и расставьте порядок — в этом порядке они
+                                показываются в приложении. Все в исходном порядке = без ограничения.
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5">
-                                {(attr?.options ?? []).map((o) => (
-                                    <label key={o.value} className="flex items-center gap-2 text-sm">
+                            <div className="divide-y rounded-md border">
+                                {order.map((v, i) => (
+                                    <div key={v} className="flex items-center gap-2 px-2 py-1.5">
                                         <Checkbox
-                                            checked={allowed.has(o.value)}
-                                            onCheckedChange={() => toggleAllowed(o.value)}
+                                            checked={included.has(v)}
+                                            onCheckedChange={() => toggleIncluded(v)}
                                         />
-                                        {pickLabel(o.label, o.value)}
-                                    </label>
+                                        <span className="flex-1 text-sm">
+                                            {pickLabel(optByValue[v]?.label, v)}
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            disabled={i === 0}
+                                            onClick={() => move(i, -1)}
+                                        >
+                                            <ChevronUp className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            disabled={i === order.length - 1}
+                                            onClick={() => move(i, 1)}
+                                        >
+                                            <ChevronDown className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 ))}
                             </div>
                         </div>
