@@ -101,7 +101,12 @@ export const adminApi = {
                 product: string
                 date: string | null
                 created_at: string
-            }>
+            }> & {
+                summary: {
+                    income_by_currency: Record<string, number>
+                    expense_by_currency: Record<string, number>
+                }
+            }
         >(`/admin/akcha/users/${id}/transactions?${qs.toString()}`)
     },
 

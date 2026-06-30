@@ -520,6 +520,13 @@ export default function UserDetailPage() {
                         <StatTile label="Отменённые" icon={XCircle} accent={ACCENT.rose} value={summary?.cancelled ?? '—'} />
                     </div>
 
+                    <Link
+                        href={`/admin/trips?user_id=${user.id}`}
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                        <Route className="h-4 w-4" /> Открыть поездки пользователя →
+                    </Link>
+
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                         {/* ── Identity ── */}
                         <SectionCard title="Идентификация" icon={UserIcon}>
@@ -661,79 +668,35 @@ export default function UserDetailPage() {
                         />
                     </div>
 
-                    <div className="grid gap-3 lg:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Поездки <span className="text-sm font-normal text-muted-foreground">(за всё время)</span></CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {tripsSummary.isLoading ? (
-                                    <div>Загрузка…</div>
-                                ) : !tripsSummary.data ? (
-                                    <div className="text-muted-foreground">Нет данных</div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <Metric label="Всего" value={tripsSummary.data.total} />
-                                            <Metric label="Водитель" value={tripsSummary.data.driver} />
-                                            <Metric label="Пассажир" value={tripsSummary.data.passenger} />
-                                            <Metric label="Активно" value={tripsSummary.data.active} />
-                                            <Metric label="Завершено" value={tripsSummary.data.completed} accent="green" />
-                                            <Metric label="Отменено" value={tripsSummary.data.cancelled} accent="red" />
-                                        </div>
-                                        {tripsSummary.data.by_type.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 pt-1">
-                                                {tripsSummary.data.by_type.map(t => (
-                                                    <span
-                                                        key={t.trip_type ?? 'none'}
-                                                        className="rounded bg-muted px-2 py-0.5 text-xs"
-                                                    >
-                                                        {t.trip_type ?? '—'}: <strong>{t.count}</strong>
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        <Link
-                                            href={`/admin/trips?user_id=${uid}`}
-                                            className="inline-block text-sm text-blue-600 hover:underline dark:text-blue-400"
-                                        >
-                                            Открыть поездки пользователя →
-                                        </Link>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Вовлечённость <span className="text-sm font-normal text-muted-foreground">({period})</span></CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {engagement.isLoading ? (
-                                    <div>Загрузка…</div>
-                                ) : !engagement.data ? (
-                                    <div className="text-muted-foreground">Нет данных</div>
-                                ) : (
-                                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                                        <Metric label="Поиски" value={engagement.data.searches} />
-                                        <Metric label="Бронирования" value={engagement.data.bookings} />
-                                        <Metric label="Завершил" value={engagement.data.completed} />
-                                        <Metric
-                                            label="Смотрел номера"
-                                            value={engagement.data.phone_views_made}
-                                            hint={`fast: ${engagement.data.phone_views_fast_made}`}
-                                        />
-                                        <Metric label="Смотрел объявл." value={engagement.data.trip_views_made} />
-                                        <Metric
-                                            label="Смотрели его"
-                                            value={engagement.data.phone_views_received}
-                                            hint={`объявл.: ${engagement.data.trip_views_received}`}
-                                        />
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Вовлечённость <span className="text-sm font-normal text-muted-foreground">({period})</span></CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {engagement.isLoading ? (
+                                <div>Загрузка…</div>
+                            ) : !engagement.data ? (
+                                <div className="text-muted-foreground">Нет данных</div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                                    <Metric label="Поиски" value={engagement.data.searches} />
+                                    <Metric label="Бронирования" value={engagement.data.bookings} />
+                                    <Metric label="Завершил" value={engagement.data.completed} />
+                                    <Metric
+                                        label="Смотрел номера"
+                                        value={engagement.data.phone_views_made}
+                                        hint={`fast: ${engagement.data.phone_views_fast_made}`}
+                                    />
+                                    <Metric label="Смотрел объявл." value={engagement.data.trip_views_made} />
+                                    <Metric
+                                        label="Смотрели его"
+                                        value={engagement.data.phone_views_received}
+                                        hint={`объявл.: ${engagement.data.trip_views_received}`}
+                                    />
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
                     <UserLimitCard uid={uid} />
 
@@ -1284,7 +1247,7 @@ function WalletsCard({ uid }: { uid: number }) {
     const [walletFilter, setWalletFilter] = useState<number | null>(null)
     const [txType, setTxType] = useState('')
     const [txPage, setTxPage] = useState(1)
-    const txSize = 50
+    const [txSize, setTxSize] = useState(50)
 
     const wallets = useAdminUserWallets(uid)
     const txs = useAdminUserTransactions(uid, txPage, txSize, {
@@ -1300,6 +1263,10 @@ function WalletsCard({ uid }: { uid: number }) {
     const balances = wallets.data?.total_balance_by_currency ?? {}
     const txItems = txs.data?.items ?? []
     const activeWallet = walletItems.find(w => w.id === walletFilter)
+
+    const incomeTotals = Object.entries(txs.data?.summary.income_by_currency ?? {})
+    const expenseTotals = Object.entries(txs.data?.summary.expense_by_currency ?? {})
+    const hasTotals = incomeTotals.length > 0 || expenseTotals.length > 0
 
     return (
         <div className="space-y-4">
@@ -1438,6 +1405,54 @@ function WalletsCard({ uid }: { uid: number }) {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    {hasTotals && (
+                        <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                                    <ArrowDownLeft className="h-4 w-4" /> Пополнения
+                                    {activeWallet && (
+                                        <span className="font-normal normal-case text-emerald-600/70 dark:text-emerald-400/70">
+                                            · {activeWallet.name}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                                    {incomeTotals.length === 0 ? (
+                                        <span className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">—</span>
+                                    ) : (
+                                        incomeTotals.map(([cur, val]) => (
+                                            <span key={cur} className="text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                                                +{fmtAmount(val)}{' '}
+                                                <span className="text-sm font-normal text-emerald-600/70 dark:text-emerald-400/70">{cur}</span>
+                                            </span>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                            <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
+                                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-red-700 dark:text-red-400">
+                                    <ArrowUpRight className="h-4 w-4" /> Расходы
+                                    {activeWallet && (
+                                        <span className="font-normal normal-case text-red-600/70 dark:text-red-400/70">
+                                            · {activeWallet.name}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                                    {expenseTotals.length === 0 ? (
+                                        <span className="text-lg font-semibold text-red-700 dark:text-red-400">—</span>
+                                    ) : (
+                                        expenseTotals.map(([cur, val]) => (
+                                            <span key={cur} className="text-lg font-semibold tabular-nums text-red-700 dark:text-red-400">
+                                                −{fmtAmount(val)}{' '}
+                                                <span className="text-sm font-normal text-red-600/70 dark:text-red-400/70">{cur}</span>
+                                            </span>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {txs.isLoading ? (
                         <div>Загрузка…</div>
                     ) : txItems.length === 0 ? (
@@ -1563,6 +1578,10 @@ function WalletsCard({ uid }: { uid: number }) {
                             total={txs.data.total}
                             size={txs.data.size}
                             onPageChange={setTxPage}
+                            onSizeChange={s => {
+                                setTxSize(s)
+                                setTxPage(1)
+                            }}
                         />
                     )}
                 </CardContent>
