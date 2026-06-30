@@ -139,7 +139,7 @@ export default function AnalyticsEventsPage() {
                                         <TableCell>
                                             {ev.user_id ? (
                                                 <Link
-                                                    href={`/admin/analytics/users/${ev.user_id}`}
+                                                    href={`/admin/users/${ev.user_id}`}
                                                     className="text-primary hover:underline"
                                                 >
                                                     {ev.user_id}

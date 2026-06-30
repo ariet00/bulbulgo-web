@@ -481,7 +481,7 @@ export default function BulbulGoAnalyticsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <Link
-                                                href={`/admin/analytics/users/${u.user_id}`}
+                                                href={`/admin/users/${u.user_id}`}
                                                 className="flex items-center gap-2 hover:underline"
                                             >
                                                 {u.avatar_url ? (
@@ -529,7 +529,7 @@ export default function BulbulGoAnalyticsPage() {
                                         </span>
                                         <div className="min-w-0">
                                             <Link
-                                                href={`/admin/analytics/users/${u.user_id}`}
+                                                href={`/admin/users/${u.user_id}`}
                                                 className="flex items-center gap-2 hover:underline"
                                             >
                                                 {u.avatar_url ? (
@@ -782,7 +782,7 @@ type TopVariant = 'trips' | 'phone' | 'ads'
 function UserCell({ d }: { d: TopDriverRow }) {
     return (
         <Link
-            href={`/admin/analytics/users/${d.user_id}`}
+            href={`/admin/users/${d.user_id}`}
             className="flex items-center gap-2 hover:underline"
         >
             {d.avatar_url ? (
@@ -1220,7 +1220,7 @@ function TopViewedTripsCard({
                                     <TableCell>
                                         {t.owner_user_id ? (
                                             <Link
-                                                href={`/admin/analytics/users/${t.owner_user_id}`}
+                                                href={`/admin/users/${t.owner_user_id}`}
                                                 className="hover:underline text-sm"
                                             >
                                                 {t.owner_name ?? `user #${t.owner_user_id}`}
@@ -1280,7 +1280,7 @@ function TopViewedTripsCard({
                                     <span>
                                         {t.owner_user_id ? (
                                             <Link
-                                                href={`/admin/analytics/users/${t.owner_user_id}`}
+                                                href={`/admin/users/${t.owner_user_id}`}
                                                 className="hover:underline"
                                             >
                                                 {t.owner_name ?? `user #${t.owner_user_id}`}
@@ -1418,7 +1418,7 @@ function MultiAccountDevicesCard({
                                                     className="flex items-center gap-2 text-sm flex-wrap"
                                                 >
                                                     <Link
-                                                        href={`/admin/analytics/users/${a.user_id}`}
+                                                        href={`/admin/users/${a.user_id}`}
                                                         className="hover:underline"
                                                     >
                                                         {a.name ?? `user #${a.user_id}`}
@@ -1473,7 +1473,7 @@ function MultiAccountDevicesCard({
                                             className="flex flex-wrap items-center gap-2 text-sm"
                                         >
                                             <Link
-                                                href={`/admin/analytics/users/${a.user_id}`}
+                                                href={`/admin/users/${a.user_id}`}
                                                 className="hover:underline"
                                             >
                                                 {a.name ?? `user #${a.user_id}`}
@@ -1618,7 +1618,7 @@ function MultiAccountIpsCard({
                                                     className="flex items-center gap-2 text-sm flex-wrap"
                                                 >
                                                     <Link
-                                                        href={`/admin/analytics/users/${a.user_id}`}
+                                                        href={`/admin/users/${a.user_id}`}
                                                         className="hover:underline"
                                                     >
                                                         {a.name ?? `user #${a.user_id}`}
@@ -1673,7 +1673,7 @@ function MultiAccountIpsCard({
                                             className="flex flex-wrap items-center gap-2 text-sm"
                                         >
                                             <Link
-                                                href={`/admin/analytics/users/${a.user_id}`}
+                                                href={`/admin/users/${a.user_id}`}
                                                 className="hover:underline"
                                             >
                                                 {a.name ?? `user #${a.user_id}`}
@@ -1918,7 +1918,7 @@ function LimitedDriversCard({
                                     </TableCell>
                                     <TableCell>
                                         <Link
-                                            href={`/admin/analytics/users/${d.user_id}`}
+                                            href={`/admin/users/${d.user_id}`}
                                             className="flex items-center gap-2 hover:underline"
                                         >
                                             {d.avatar_url ? (
@@ -2026,7 +2026,7 @@ function LimitedDriversCard({
                                             {(page - 1) * size + i + 1}
                                         </span>
                                         <Link
-                                            href={`/admin/analytics/users/${d.user_id}`}
+                                            href={`/admin/users/${d.user_id}`}
                                             className="flex min-w-0 flex-1 items-center gap-2 hover:underline"
                                         >
                                             {d.avatar_url ? (
@@ -2452,7 +2452,7 @@ function WalletTopUsersCard({
                                     </TableCell>
                                     <TableCell>
                                         <Link
-                                            href={`/admin/analytics/users/${u.user_id}`}
+                                            href={`/admin/users/${u.user_id}`}
                                             className="flex items-center gap-2 hover:underline"
                                         >
                                             {u.avatar_url ? (
@@ -2520,7 +2520,7 @@ function WalletTopUsersCard({
                                                 {i + 1}
                                             </span>
                                             <Link
-                                                href={`/admin/analytics/users/${u.user_id}`}
+                                                href={`/admin/users/${u.user_id}`}
                                                 className="flex min-w-0 items-center gap-2 hover:underline"
                                             >
                                                 {u.avatar_url ? (

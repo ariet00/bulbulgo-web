@@ -186,7 +186,7 @@ export function ErrorUsersTable({ data }: { data: AdminErrorUser[] }) {
                     <TableRow key={u.user_id}>
                         <TableCell>
                             <Link
-                                href={`/admin/analytics/users/${u.user_id}`}
+                                href={`/admin/users/${u.user_id}`}
                                 className="flex items-center gap-2 hover:underline"
                             >
                                 {u.avatar_url ? (
