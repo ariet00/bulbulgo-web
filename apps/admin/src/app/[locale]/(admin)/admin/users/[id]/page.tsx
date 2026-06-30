@@ -254,13 +254,13 @@ export default function UserDetailPage() {
     const uid = id
 
     // analytics-tab state
-    const [period, setPeriod] = useState('30d')
+    const [period, setPeriod] = useState('7d')
     const [product, setProduct] = useState('')
     const [eventSearch, setEventSearch] = useState('')
     const [eventFrom, setEventFrom] = useState('')
     const [eventTo, setEventTo] = useState('')
     const [eventPage, setEventPage] = useState(1)
-    const [eventSize, setEventSize] = useState(50)
+    const [eventSize, setEventSize] = useState(10)
 
     const profile = useAdminUser(id)
     const user = profile.data
@@ -349,7 +349,7 @@ export default function UserDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-6">
+            <div className="mx-auto max-w-[1400px] space-y-6">
                 <BackButton />
                 <Skeleton className="h-40 w-full" />
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -364,7 +364,7 @@ export default function UserDetailPage() {
 
     if (!user) {
         return (
-            <div className="space-y-6">
+            <div className="mx-auto max-w-[1400px] space-y-6">
                 <BackButton />
                 <p className="py-12 text-center text-muted-foreground">Пользователь не найден</p>
             </div>
@@ -384,7 +384,7 @@ export default function UserDetailPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="mx-auto max-w-[1400px] space-y-6">
             <BackButton />
 
             {/* ── Profile header ── */}
@@ -619,19 +619,6 @@ export default function UserDetailPage() {
                         </SectionCard>
                     </div>
 
-                    {/* ── Trip types breakdown ── */}
-                    {summary && summary.by_type.length > 0 && (
-                        <SectionCard title="Поездки по типам" icon={Route}>
-                            <div className="flex flex-wrap gap-2">
-                                {summary.by_type.map(t => (
-                                    <Pill key={t.trip_type ?? 'unknown'} tone="blue">
-                                        {t.trip_type ?? '—'}
-                                        <span className="font-bold tabular-nums">{t.count}</span>
-                                    </Pill>
-                                ))}
-                            </div>
-                        </SectionCard>
-                    )}
                 </TabsContent>
 
                 {/* ══════════════════ ANALYTICS TAB ══════════════════ */}
@@ -738,30 +725,34 @@ export default function UserDetailPage() {
                             ) : !platforms.data || platforms.data.length === 0 ? (
                                 <div className="text-muted-foreground">Нет событий за период</div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-32">Платформа</TableHead>
-                                            <TableHead className="w-32">Версия</TableHead>
-                                            <TableHead className="text-right">Событий</TableHead>
-                                            <TableHead className="w-44 text-right">Последний раз</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {platforms.data.map((p, i) => (
-                                            <TableRow key={`${p.platform ?? 'null'}-${p.app_version ?? 'null'}-${i}`}>
-                                                <TableCell>{p.platform ?? '—'}</TableCell>
-                                                <TableCell className="font-mono text-xs">
-                                                    {p.app_version ?? '—'}
-                                                </TableCell>
-                                                <TableCell className="text-right tabular-nums">{p.events}</TableCell>
-                                                <TableCell className="text-right text-xs whitespace-nowrap">
-                                                    {new Date(p.last_seen).toLocaleString()}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <LimitedRows items={platforms.data}>
+                                    {rows => (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-32">Платформа</TableHead>
+                                                    <TableHead className="w-32">Версия</TableHead>
+                                                    <TableHead className="text-right">Событий</TableHead>
+                                                    <TableHead className="w-44 text-right">Последний раз</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {rows.map((p, i) => (
+                                                    <TableRow key={`${p.platform ?? 'null'}-${p.app_version ?? 'null'}-${i}`}>
+                                                        <TableCell>{p.platform ?? '—'}</TableCell>
+                                                        <TableCell className="font-mono text-xs">
+                                                            {p.app_version ?? '—'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right tabular-nums">{p.events}</TableCell>
+                                                        <TableCell className="text-right text-xs whitespace-nowrap">
+                                                            {new Date(p.last_seen).toLocaleString()}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                </LimitedRows>
                             )}
                         </CardContent>
                     </Card>
@@ -782,56 +773,102 @@ export default function UserDetailPage() {
                                 ) : !sessions.data || sessions.data.length === 0 ? (
                                     <div className="text-muted-foreground">Нет сессий</div>
                                 ) : (
-                                    <Table className="min-w-[760px]">
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-24">Статус</TableHead>
-                                                <TableHead>device_id</TableHead>
-                                                <TableHead className="w-28">Версия</TableHead>
-                                                <TableHead>Устройство</TableHead>
-                                                <TableHead className="w-32">IP</TableHead>
-                                                <TableHead className="w-40">Последняя активность</TableHead>
-                                                <TableHead className="w-40">Создана</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
+                                    <>
+                                        {/* Mobile: cards */}
+                                        <ul className="space-y-2 md:hidden">
                                             {sessions.data.map(s => (
-                                                <TableRow key={s.id}>
-                                                    <TableCell>
+                                                <li key={s.id} className="rounded-xl border bg-card p-3 shadow-sm">
+                                                    <div className="flex items-center justify-between gap-2">
                                                         <span
-                                                            className={
+                                                            className={`inline-flex items-center gap-1.5 text-xs font-medium ${
                                                                 s.is_active
-                                                                    ? 'text-xs font-medium text-green-600 dark:text-green-400'
-                                                                    : 'text-xs text-muted-foreground'
-                                                            }
+                                                                    ? 'text-green-600 dark:text-green-400'
+                                                                    : 'text-muted-foreground'
+                                                            }`}
                                                         >
+                                                            <span
+                                                                className={`h-1.5 w-1.5 rounded-full ${
+                                                                    s.is_active ? 'bg-green-500' : 'bg-muted-foreground/40'
+                                                                }`}
+                                                            />
                                                             {s.is_active ? 'активна' : 'неактивна'}
                                                         </span>
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs break-all">
-                                                        {s.device_id ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs">
-                                                        {s.app_version ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="text-xs">
+                                                        {s.app_version && (
+                                                            <span className="font-mono text-xs text-muted-foreground">
+                                                                v{s.app_version}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-1.5 text-sm font-medium text-foreground">
                                                         {s.device_info ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs">
-                                                        {s.ip_address ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="text-xs whitespace-nowrap">
+                                                    </div>
+                                                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-xs text-muted-foreground">
+                                                        {s.ip_address && <span>{s.ip_address}</span>}
+                                                        {s.device_id && <span className="break-all">{s.device_id}</span>}
+                                                    </div>
+                                                    <div className="mt-1.5 text-xs text-muted-foreground">
                                                         {s.last_used_at
-                                                            ? new Date(s.last_used_at).toLocaleString()
-                                                            : '—'}
-                                                    </TableCell>
-                                                    <TableCell className="text-xs whitespace-nowrap">
-                                                        {new Date(s.created_at).toLocaleString()}
-                                                    </TableCell>
-                                                </TableRow>
+                                                            ? `Активность: ${new Date(s.last_used_at).toLocaleString()}`
+                                                            : `Создана: ${new Date(s.created_at).toLocaleString()}`}
+                                                    </div>
+                                                </li>
                                             ))}
-                                        </TableBody>
-                                    </Table>
+                                        </ul>
+
+                                        {/* Desktop: table */}
+                                        <div className="hidden md:block">
+                                            <Table className="min-w-[760px]">
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-24">Статус</TableHead>
+                                                        <TableHead>device_id</TableHead>
+                                                        <TableHead className="w-28">Версия</TableHead>
+                                                        <TableHead>Устройство</TableHead>
+                                                        <TableHead className="w-32">IP</TableHead>
+                                                        <TableHead className="w-40">Последняя активность</TableHead>
+                                                        <TableHead className="w-40">Создана</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {sessions.data.map(s => (
+                                                        <TableRow key={s.id}>
+                                                            <TableCell>
+                                                                <span
+                                                                    className={
+                                                                        s.is_active
+                                                                            ? 'text-xs font-medium text-green-600 dark:text-green-400'
+                                                                            : 'text-xs text-muted-foreground'
+                                                                    }
+                                                                >
+                                                                    {s.is_active ? 'активна' : 'неактивна'}
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-xs break-all">
+                                                                {s.device_id ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-xs">
+                                                                {s.app_version ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs">
+                                                                {s.device_info ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-xs">
+                                                                {s.ip_address ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs whitespace-nowrap">
+                                                                {s.last_used_at
+                                                                    ? new Date(s.last_used_at).toLocaleString()
+                                                                    : '—'}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs whitespace-nowrap">
+                                                                {new Date(s.created_at).toLocaleString()}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -851,42 +888,79 @@ export default function UserDetailPage() {
                                 ) : !devices.data || devices.data.length === 0 ? (
                                     <div className="text-muted-foreground">Нет зарегистрированных девайсов</div>
                                 ) : (
-                                    <Table className="min-w-[640px]">
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-24">Тип</TableHead>
-                                                <TableHead>device_id</TableHead>
-                                                <TableHead className="w-28">Версия</TableHead>
-                                                <TableHead>Устройство</TableHead>
-                                                <TableHead className="w-44">Токен</TableHead>
-                                                <TableHead className="w-40">Зарегистрирован</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
+                                    <>
+                                        {/* Mobile: cards */}
+                                        <ul className="space-y-2 md:hidden">
                                             {devices.data.map(d => (
-                                                <TableRow key={d.id}>
-                                                    <TableCell>
+                                                <li key={d.id} className="rounded-xl border bg-card p-3 shadow-sm">
+                                                    <div className="flex items-center justify-between gap-2">
                                                         <DeviceTypeBadge type={d.device_type} />
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs break-all">
-                                                        {d.device_id ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs">
-                                                        {d.app_version ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="text-xs">
+                                                        {d.app_version && (
+                                                            <span className="font-mono text-xs text-muted-foreground">
+                                                                v{d.app_version}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-1.5 text-sm font-medium text-foreground">
                                                         {d.device_info ?? '—'}
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs text-muted-foreground truncate" title={d.token}>
-                                                        {d.token.slice(0, 12)}…
-                                                    </TableCell>
-                                                    <TableCell className="text-xs whitespace-nowrap">
-                                                        {new Date(d.created_at).toLocaleString()}
-                                                    </TableCell>
-                                                </TableRow>
+                                                    </div>
+                                                    {d.device_id && (
+                                                        <div className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                                                            {d.device_id}
+                                                        </div>
+                                                    )}
+                                                    <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                                        <span className="truncate font-mono" title={d.token}>
+                                                            {d.token.slice(0, 16)}…
+                                                        </span>
+                                                        <span className="whitespace-nowrap">
+                                                            {new Date(d.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                </li>
                                             ))}
-                                        </TableBody>
-                                    </Table>
+                                        </ul>
+
+                                        {/* Desktop: table */}
+                                        <div className="hidden md:block">
+                                            <Table className="min-w-[640px]">
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-24">Тип</TableHead>
+                                                        <TableHead>device_id</TableHead>
+                                                        <TableHead className="w-28">Версия</TableHead>
+                                                        <TableHead>Устройство</TableHead>
+                                                        <TableHead className="w-44">Токен</TableHead>
+                                                        <TableHead className="w-40">Зарегистрирован</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {devices.data.map(d => (
+                                                        <TableRow key={d.id}>
+                                                            <TableCell>
+                                                                <DeviceTypeBadge type={d.device_type} />
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-xs break-all">
+                                                                {d.device_id ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-xs">
+                                                                {d.app_version ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs">
+                                                                {d.device_info ?? '—'}
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-xs text-muted-foreground truncate" title={d.token}>
+                                                                {d.token.slice(0, 12)}…
+                                                            </TableCell>
+                                                            <TableCell className="text-xs whitespace-nowrap">
+                                                                {new Date(d.created_at).toLocaleString()}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -907,32 +981,36 @@ export default function UserDetailPage() {
                             ) : !vehicles.data || vehicles.data.items.length === 0 ? (
                                 <div className="text-muted-foreground">Нет транспорта</div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Марка / модель</TableHead>
-                                            <TableHead className="w-28">Тип</TableHead>
-                                            <TableHead className="w-24">Год</TableHead>
-                                            <TableHead className="w-28">Цвет</TableHead>
-                                            <TableHead className="w-32">Номер</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {vehicles.data.items.map((v: any) => (
-                                            <TableRow key={v.id}>
-                                                <TableCell>
-                                                    {[v.brand, v.model].filter(Boolean).join(' ') || '—'}
-                                                </TableCell>
-                                                <TableCell className="text-xs">{v.vehicle_type ?? '—'}</TableCell>
-                                                <TableCell className="tabular-nums">{v.year ?? '—'}</TableCell>
-                                                <TableCell className="text-xs">{v.color ?? '—'}</TableCell>
-                                                <TableCell className="font-mono text-xs">
-                                                    {v.plate_number ?? '—'}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <LimitedRows items={vehicles.data.items as any[]}>
+                                    {rows => (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Марка / модель</TableHead>
+                                                    <TableHead className="w-28">Тип</TableHead>
+                                                    <TableHead className="w-24">Год</TableHead>
+                                                    <TableHead className="w-28">Цвет</TableHead>
+                                                    <TableHead className="w-32">Номер</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {rows.map((v: any) => (
+                                                    <TableRow key={v.id}>
+                                                        <TableCell>
+                                                            {[v.brand, v.model].filter(Boolean).join(' ') || '—'}
+                                                        </TableCell>
+                                                        <TableCell className="text-xs">{v.vehicle_type ?? '—'}</TableCell>
+                                                        <TableCell className="tabular-nums">{v.year ?? '—'}</TableCell>
+                                                        <TableCell className="text-xs">{v.color ?? '—'}</TableCell>
+                                                        <TableCell className="font-mono text-xs">
+                                                            {v.plate_number ?? '—'}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                </LimitedRows>
                             )}
                         </CardContent>
                     </Card>
@@ -967,34 +1045,38 @@ export default function UserDetailPage() {
                             ) : !activity.data || activity.data.days.length === 0 ? (
                                 <div className="text-muted-foreground">Нет данных за период</div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-32">День</TableHead>
-                                            {topEventTypes.map(ev => (
-                                                <TableHead key={ev} className="text-right text-xs font-mono">
-                                                    {ev}
-                                                </TableHead>
-                                            ))}
-                                            <TableHead className="w-20 text-right">Всего</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {activity.data.days.map(d => (
-                                            <TableRow key={d.day}>
-                                                <TableCell className="text-xs whitespace-nowrap">
-                                                    {new Date(d.day).toLocaleDateString()}
-                                                </TableCell>
-                                                {topEventTypes.map(ev => (
-                                                    <TableCell key={ev} className="text-right">
-                                                        {d.events[ev] ?? <span className="text-muted-foreground">—</span>}
-                                                    </TableCell>
+                                <LimitedRows items={activity.data.days}>
+                                    {rows => (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-32">День</TableHead>
+                                                    {topEventTypes.map(ev => (
+                                                        <TableHead key={ev} className="text-right text-xs font-mono">
+                                                            {ev}
+                                                        </TableHead>
+                                                    ))}
+                                                    <TableHead className="w-20 text-right">Всего</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {rows.map(d => (
+                                                    <TableRow key={d.day}>
+                                                        <TableCell className="text-xs whitespace-nowrap">
+                                                            {new Date(d.day).toLocaleDateString()}
+                                                        </TableCell>
+                                                        {topEventTypes.map(ev => (
+                                                            <TableCell key={ev} className="text-right">
+                                                                {d.events[ev] ?? <span className="text-muted-foreground">—</span>}
+                                                            </TableCell>
+                                                        ))}
+                                                        <TableCell className="text-right font-medium">{d.total}</TableCell>
+                                                    </TableRow>
                                                 ))}
-                                                <TableCell className="text-right font-medium">{d.total}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                </LimitedRows>
                             )}
                         </CardContent>
                     </Card>
@@ -1014,40 +1096,44 @@ export default function UserDetailPage() {
                             ) : !notifications.data || notifications.data.items.length === 0 ? (
                                 <div className="text-muted-foreground">Нет уведомлений</div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-44">Когда</TableHead>
-                                            <TableHead>Заголовок</TableHead>
-                                            <TableHead className="w-32">Тип</TableHead>
-                                            <TableHead className="w-24">Прочитано</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {notifications.data.items.map((n: any) => (
-                                            <TableRow key={n.id}>
-                                                <TableCell className="text-xs whitespace-nowrap">
-                                                    {n.created_at ? new Date(n.created_at).toLocaleString() : '—'}
-                                                </TableCell>
-                                                <TableCell className="text-sm">
-                                                    <div className="font-medium">{n.title ?? '—'}</div>
-                                                    {n.body && (
-                                                        <div className="text-xs text-muted-foreground line-clamp-2">
-                                                            {n.body}
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-xs">
-                                                    {n.type ?? '—'}
-                                                    {n.category ? ` / ${n.category}` : ''}
-                                                </TableCell>
-                                                <TableCell className="text-xs">
-                                                    {n.is_read ? 'да' : 'нет'}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <LimitedRows items={notifications.data.items as any[]}>
+                                    {rows => (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-44">Когда</TableHead>
+                                                    <TableHead>Заголовок</TableHead>
+                                                    <TableHead className="w-32">Тип</TableHead>
+                                                    <TableHead className="w-24">Прочитано</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {rows.map((n: any) => (
+                                                    <TableRow key={n.id}>
+                                                        <TableCell className="text-xs whitespace-nowrap">
+                                                            {n.created_at ? new Date(n.created_at).toLocaleString() : '—'}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm">
+                                                            <div className="font-medium">{n.title ?? '—'}</div>
+                                                            {n.body && (
+                                                                <div className="text-xs text-muted-foreground line-clamp-2">
+                                                                    {n.body}
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-xs">
+                                                            {n.type ?? '—'}
+                                                            {n.category ? ` / ${n.category}` : ''}
+                                                        </TableCell>
+                                                        <TableCell className="text-xs">
+                                                            {n.is_read ? 'да' : 'нет'}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                </LimitedRows>
                             )}
                         </CardContent>
                     </Card>
@@ -1113,38 +1199,71 @@ export default function UserDetailPage() {
                                     {hasEventFilter ? 'Нет событий по фильтру' : 'Нет событий'}
                                 </div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-44">Когда</TableHead>
-                                            <TableHead>Событие</TableHead>
-                                            <TableHead className="w-32">platform</TableHead>
-                                            <TableHead className="w-24">app_version</TableHead>
-                                            <TableHead className="w-40">device_id</TableHead>
-                                            <TableHead>data</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
+                                <>
+                                    {/* Mobile: cards */}
+                                    <ul className="space-y-2 md:hidden">
                                         {eventItems.map((ev: any) => (
-                                            <TableRow key={ev.id}>
-                                                <TableCell className="text-xs whitespace-nowrap">
-                                                    {new Date(ev.created_at).toLocaleString()}
-                                                </TableCell>
-                                                <TableCell className="font-mono text-sm">{ev.event_type}</TableCell>
-                                                <TableCell>{ev.platform ?? '—'}</TableCell>
-                                                <TableCell className="text-xs whitespace-nowrap">
-                                                    {ev.app_version ?? '—'}
-                                                </TableCell>
-                                                <TableCell className="font-mono text-xs break-all">
-                                                    {ev.device_id ?? '—'}
-                                                </TableCell>
-                                                <TableCell>
+                                            <li key={ev.id} className="rounded-xl border bg-card p-3 shadow-sm">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <span className="break-all font-mono text-sm font-medium text-foreground">
+                                                        {ev.event_type}
+                                                    </span>
+                                                    <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
+                                                        {new Date(ev.created_at).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                                                    <span>
+                                                        {ev.platform ?? '—'}
+                                                        {ev.app_version ? ` · v${ev.app_version}` : ''}
+                                                    </span>
+                                                    {ev.device_id && (
+                                                        <span className="break-all font-mono">{ev.device_id}</span>
+                                                    )}
+                                                </div>
+                                                <div className="mt-2">
                                                     <DataCell data={ev.data} eventType={ev.event_type} />
-                                                </TableCell>
-                                            </TableRow>
+                                                </div>
+                                            </li>
                                         ))}
-                                    </TableBody>
-                                </Table>
+                                    </ul>
+
+                                    {/* Desktop: table */}
+                                    <div className="hidden md:block">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-44">Когда</TableHead>
+                                                    <TableHead>Событие</TableHead>
+                                                    <TableHead className="w-32">platform</TableHead>
+                                                    <TableHead className="w-24">app_version</TableHead>
+                                                    <TableHead className="w-40">device_id</TableHead>
+                                                    <TableHead>data</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {eventItems.map((ev: any) => (
+                                                    <TableRow key={ev.id}>
+                                                        <TableCell className="text-xs whitespace-nowrap">
+                                                            {new Date(ev.created_at).toLocaleString()}
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-sm">{ev.event_type}</TableCell>
+                                                        <TableCell>{ev.platform ?? '—'}</TableCell>
+                                                        <TableCell className="text-xs whitespace-nowrap">
+                                                            {ev.app_version ?? '—'}
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-xs break-all">
+                                                            {ev.device_id ?? '—'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <DataCell data={ev.data} eventType={ev.event_type} />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </>
                             )}
                             {events.data && events.data.total > 0 && (
                                 <Pagination
@@ -1204,6 +1323,45 @@ export default function UserDetailPage() {
 
 /* ────────────────────────── analytics sub-components ────────────────────────── */
 
+// Client-side row limiter — renders first `step` rows with a "show more" toggle
+// so analytics tables stay compact instead of dumping hundreds of rows.
+function LimitedRows<T>({
+    items,
+    step = 10,
+    children,
+}: {
+    items: T[]
+    step?: number
+    children: (rows: T[]) => ReactNode
+}) {
+    const [limit, setLimit] = useState(step)
+    const visible = items.slice(0, limit)
+    const rest = items.length - limit
+    return (
+        <div className="space-y-3">
+            {children(visible)}
+            {rest > 0 && (
+                <div className="flex justify-center">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLimit(l => l + step)}
+                    >
+                        Показать ещё ({rest})
+                    </Button>
+                </div>
+            )}
+            {limit > step && rest <= 0 && (
+                <div className="flex justify-center">
+                    <Button variant="ghost" size="sm" onClick={() => setLimit(step)}>
+                        Свернуть
+                    </Button>
+                </div>
+            )}
+        </div>
+    )
+}
+
 const TX_TYPES = [
     { value: '', label: 'Все' },
     { value: 'income', label: 'Доход' },
@@ -1247,7 +1405,7 @@ function WalletsCard({ uid }: { uid: number }) {
     const [walletFilter, setWalletFilter] = useState<number | null>(null)
     const [txType, setTxType] = useState('')
     const [txPage, setTxPage] = useState(1)
-    const [txSize, setTxSize] = useState(50)
+    const [txSize, setTxSize] = useState(10)
 
     const wallets = useAdminUserWallets(uid)
     const txs = useAdminUserTransactions(uid, txPage, txSize, {
