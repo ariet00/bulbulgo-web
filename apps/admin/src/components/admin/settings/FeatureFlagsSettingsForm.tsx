@@ -19,6 +19,7 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     is_wallet_enabled: false,
     is_passenger_search_enabled: false,
     map_route_preview: false,
+    require_verified_phone: false,
 }
 
 export function FeatureFlagsSettingsForm() {
@@ -43,9 +44,9 @@ export function FeatureFlagsSettingsForm() {
                 Глобальные feature-флаги для клиентов. Хранятся в Redis под
                 ключом <code className="text-xs">app:features</code> и
                 отдаются через <code className="text-xs">settings.features</code>{' '}
-                в <code className="text-xs">GET /me</code>. Per-user
-                override (<code className="text-xs">users.data.settings.features</code>)
-                побеждает.
+                в <code className="text-xs">GET /me</code>. Per-user override
+                (<code className="text-xs">users.data.feature_overrides</code>,
+                на странице пользователя) побеждает.
             </p>
 
             <Card>
@@ -126,6 +127,27 @@ export function FeatureFlagsSettingsForm() {
                             checked={form.map_route_preview}
                             onCheckedChange={(v) =>
                                 set('map_route_preview', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                Требовать подтверждённый номер
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                <code>require_verified_phone</code>. Требует
+                                подтверждённый по SMS номер, чтобы публиковать
+                                поездки и смотреть контакты. Переопределяется
+                                для отдельного пользователя на его странице.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.require_verified_phone}
+                            onCheckedChange={(v) =>
+                                set('require_verified_phone', v)
                             }
                             disabled={isLoading}
                         />

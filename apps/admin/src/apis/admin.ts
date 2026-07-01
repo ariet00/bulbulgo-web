@@ -1061,6 +1061,7 @@ export interface AdminAppFeaturesSettings {
     is_wallet_enabled: boolean
     is_passenger_search_enabled: boolean
     map_route_preview: boolean
+    require_verified_phone: boolean
 }
 
 // Per-user feature-flag overrides. `overrides` holds only the flags explicitly
