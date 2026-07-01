@@ -38,6 +38,25 @@ export const useAdminBanUser = () => {
     })
 }
 
+export const useUpdateAdminUserFeatures = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({
+            id,
+            overrides,
+        }: {
+            id: number
+            overrides: Record<string, boolean | null>
+        }) => adminApi.updateUserFeatures(id, overrides),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({
+                queryKey: [...adminKeys.user(id), 'features'],
+            })
+            toast.success('Сохранено')
+        },
+    })
+}
+
 export const useAdminDeleteCompany = () => {
     const queryClient = useQueryClient()
     return useMutation({

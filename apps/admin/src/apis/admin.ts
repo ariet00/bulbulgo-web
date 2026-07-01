@@ -62,6 +62,10 @@ export const adminApi = {
         requests.get<AdminDeviceToken[]>(`/admin/users/${id}/devices`),
     getUserSessions: (id: number) =>
         requests.get<AdminUserSession[]>(`/admin/users/${id}/sessions`),
+    getUserFeatures: (id: number) =>
+        requests.get<AdminUserFeatures>(`/admin/users/${id}/features`),
+    updateUserFeatures: (id: number, overrides: Record<string, boolean | null>) =>
+        requests.put<AdminUserFeatures>(`/admin/users/${id}/features`, { overrides }),
     getUserTripsSummary: (id: number) =>
         requests.get<AdminUserTripsSummary>(`/admin/users/${id}/trips-summary`),
     getUserWallets: (id: number) =>
@@ -1057,6 +1061,13 @@ export interface AdminAppFeaturesSettings {
     is_wallet_enabled: boolean
     is_passenger_search_enabled: boolean
     map_route_preview: boolean
+}
+
+// Per-user feature-flag overrides. `overrides` holds only the flags explicitly
+// set for this user (true/false); everything else inherits `global_features`.
+export interface AdminUserFeatures {
+    overrides: Record<string, boolean>
+    global_features: Record<string, boolean>
 }
 
 export interface AdminAutoBumpTariff {

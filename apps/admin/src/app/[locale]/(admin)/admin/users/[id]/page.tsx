@@ -35,6 +35,7 @@ import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
 import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
 import { DataCell } from '@/components/admin/analytics/DataCell'
+import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
 import {
     Card,
     CardContent,
@@ -102,6 +103,7 @@ import {
     ArrowLeftRight,
     CalendarDays,
     Layers,
+    Flag,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -577,6 +579,11 @@ export default function UserDetailPage() {
                                     {user.rating ? `${Number(user.rating).toFixed(1)} (${user.review_count ?? 0})` : '—'}
                                 </InfoRow>
                             </div>
+                        </SectionCard>
+
+                        {/* ── Feature overrides ── */}
+                        <SectionCard title="Фичи (переопределения)" icon={Flag}>
+                            <UserFeatureOverridesForm userId={id} />
                         </SectionCard>
 
                         {/* ── Wallets ── */}
