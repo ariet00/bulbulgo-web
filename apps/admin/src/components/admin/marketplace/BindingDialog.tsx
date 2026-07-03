@@ -19,10 +19,12 @@ import {
     Switch,
 } from '@doska/ui'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import type { McAttribute, McBinding } from '@/apis/marketplace'
+import type { McAttribute, McBinding, McGroupDef } from '@/apis/marketplace'
 import { APPLIES_TO } from '@/apis/marketplace'
 import { useMpCreateBinding, useMpUpdateBinding } from '@/hooks/mutations/marketplace'
 import { pickLabel } from './shared'
+
+const NO_GROUP = '__none__'
 
 type Props = {
     open: boolean
@@ -31,15 +33,25 @@ type Props = {
     /** present → edit; absent → create */
     binding?: McBinding | null
     attributes: McAttribute[]
+    /** groups available for this category (self + inherited), for the group picker */
+    groups?: McGroupDef[]
 }
 
-export function BindingDialog({ open, onOpenChange, categoryId, binding, attributes }: Props) {
+export function BindingDialog({
+    open,
+    onOpenChange,
+    categoryId,
+    binding,
+    attributes,
+    groups = [],
+}: Props) {
     const isEdit = !!binding
     const [attributeId, setAttributeId] = useState<number | null>(null)
     const [required, setRequired] = useState(false)
     const [filterable, setFilterable] = useState(false)
     const [appliesTo, setAppliesTo] = useState('both')
     const [sortOrder, setSortOrder] = useState(0)
+    const [group, setGroup] = useState<string>(NO_GROUP)
     // allowed_options as an ORDERED list (defines the strip order per category) +
     // which values are included.
     const [order, setOrder] = useState<string[]>([])
@@ -67,6 +79,7 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
         setFilterable(binding?.is_filterable ?? false)
         setAppliesTo(binding?.applies_to ?? 'both')
         setSortOrder(binding?.sort_order ?? 0)
+        setGroup(binding?.group ?? NO_GROUP)
     }, [open, binding])
 
     // Seed the ordered allowed list from the binding (or all options) once the
@@ -117,6 +130,7 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
     }
 
     const submit = () => {
+        const groupVal = group === NO_GROUP ? '' : group
         if (isEdit) {
             update.mutate(
                 {
@@ -127,6 +141,7 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
                         applies_to: appliesTo,
                         sort_order: sortOrder,
                         allowed_options: resolveAllowed(),
+                        group: groupVal,
                     },
                 },
                 { onSuccess: () => onOpenChange(false) },
@@ -142,6 +157,7 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
                     applies_to: appliesTo,
                     sort_order: sortOrder,
                     allowed_options: resolveAllowed(),
+                    group: groupVal || undefined,
                 },
                 { onSuccess: () => onOpenChange(false) },
             )
@@ -217,6 +233,28 @@ export function BindingDialog({ open, onOpenChange, categoryId, binding, attribu
                                 onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Группа</Label>
+                        <Select value={group} onValueChange={setGroup}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Без группы" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={NO_GROUP}>Без группы</SelectItem>
+                                {groups.map((g) => (
+                                    <SelectItem key={g.key} value={g.key}>
+                                        {pickLabel(g.label, g.key)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {groups.length === 0 && (
+                            <p className="text-xs text-muted-foreground">
+                                Групп нет — задайте их в редакторе категории.
+                            </p>
+                        )}
                     </div>
 
                     {isEnum && allOptionValues.length > 0 && (

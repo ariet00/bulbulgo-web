@@ -18,7 +18,7 @@ import {
     Plus,
     Trash2,
 } from 'lucide-react'
-import type { McAttribute, McCategoryNode } from '@/apis/marketplace'
+import type { McAttribute, McCategoryNode, McGroupDef } from '@/apis/marketplace'
 import {
     useMpAttributes,
     useMpCategories,
@@ -54,6 +54,19 @@ export default function MarketplaceCategoriesPage() {
 
     const byId = useMemo(() => flatten(tree ?? [], new Map()), [tree])
     const selected = selectedId != null ? byId.get(selectedId) ?? null : null
+
+    // groups available for bindings = selected category + inherited from ancestors
+    const bindingGroups = useMemo(() => {
+        const merged = new Map<string, McGroupDef>()
+        const chain: McCategoryNode[] = []
+        let node: McCategoryNode | null = selected
+        while (node) {
+            chain.unshift(node)
+            node = node.parent_id != null ? byId.get(node.parent_id) ?? null : null
+        }
+        for (const c of chain) for (const g of c.attribute_groups ?? []) merged.set(g.key, g)
+        return [...merged.values()].sort((a, b) => a.sort_order - b.sort_order)
+    }, [selected, byId])
     const attrsById = useMemo(() => {
         const m = new Map<number, McAttribute>()
         for (const a of attributes ?? []) m.set(a.id, a)
@@ -316,6 +329,7 @@ export default function MarketplaceCategoriesPage() {
                     categoryId={selectedId}
                     binding={bindDialog.binding}
                     attributes={attributes ?? []}
+                    groups={bindingGroups}
                 />
             )}
         </div>

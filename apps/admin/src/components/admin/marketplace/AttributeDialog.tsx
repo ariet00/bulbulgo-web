@@ -15,6 +15,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
+    Switch,
 } from '@doska/ui'
 import { Plus, Trash2 } from 'lucide-react'
 import type { LabelMap, McAttribute, McAttributeOption } from '@/apis/marketplace'
@@ -36,6 +37,7 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
     const [type, setType] = useState<string>('string')
     const [label, setLabel] = useState<LabelMap>({})
     const [unit, setUnit] = useState<LabelMap>({})
+    const [isSystem, setIsSystem] = useState(false)
     const [options, setOptions] = useState<McAttributeOption[]>([])
 
     const create = useMpCreateAttribute()
@@ -49,6 +51,7 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
         setType(attribute?.type ?? 'string')
         setLabel(attribute?.label ?? {})
         setUnit(attribute?.unit ?? {})
+        setIsSystem(attribute?.role === 'system')
         setOptions(attribute?.options?.map((o) => ({ ...o })) ?? [])
     }, [open, attribute])
 
@@ -64,17 +67,18 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
             ? options.filter((o) => o.value.trim()).map((o, i) => ({ ...o, sort_order: i }))
             : []
         const unitVal = Object.keys(unit).length ? unit : null
+        const role = isSystem ? 'system' : ''
         if (isEdit) {
             update.mutate(
                 {
                     id: attribute!.id,
-                    body: { key, type: type as any, label, unit: unitVal, options: cleanOptions },
+                    body: { key, type: type as any, label, unit: unitVal, role, options: cleanOptions },
                 },
                 { onSuccess: () => onOpenChange(false) },
             )
         } else {
             create.mutate(
-                { key, type: type as any, label, unit: unitVal, options: cleanOptions },
+                { key, type: type as any, label, unit: unitVal, role, options: cleanOptions },
                 { onSuccess: () => onOpenChange(false) },
             )
         }
@@ -112,6 +116,16 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
 
                     <LabelInputs label="Название" value={label} onChange={setLabel} placeholder="Год выпуска" />
                     <LabelInputs label="Единица (опц.)" value={unit} onChange={setUnit} placeholder="км" />
+
+                    <div className="flex items-center justify-between rounded-md border p-3">
+                        <div>
+                            <Label>Системный</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Не показывать в общем списке (напр. deal_type — отдельная полоса)
+                            </p>
+                        </div>
+                        <Switch checked={isSystem} onCheckedChange={setIsSystem} />
+                    </div>
 
                     {isEnum && (
                         <div className="space-y-2">

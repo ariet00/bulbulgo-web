@@ -34,6 +34,12 @@ export const LISTING_STATUSES = [
 ] as const
 
 // ── categories ──
+export interface McGroupDef {
+    key: string
+    label: LabelMap
+    sort_order: number
+}
+
 export interface McCategoryNode {
     id: number
     slug: string
@@ -43,6 +49,7 @@ export interface McCategoryNode {
     is_active: boolean
     label: LabelMap
     icon?: string | null
+    attribute_groups?: McGroupDef[]
     children: McCategoryNode[]
 }
 
@@ -52,6 +59,7 @@ export interface McCategoryCreate {
     parent_id?: number | null
     icon?: string | null
     sort_order?: number
+    attribute_groups?: McGroupDef[]
 }
 
 export interface McCategoryUpdate {
@@ -61,6 +69,7 @@ export interface McCategoryUpdate {
     icon?: string | null
     sort_order?: number
     is_active?: boolean
+    attribute_groups?: McGroupDef[]
 }
 
 // ── attributes ──
@@ -79,6 +88,7 @@ export interface McAttribute {
     is_active: boolean
     label: LabelMap
     unit?: LabelMap | null
+    role?: string | null
     options: McAttributeOption[]
 }
 
@@ -87,6 +97,7 @@ export interface McAttributeCreate {
     type: AttributeType
     label: LabelMap
     unit?: LabelMap | null
+    role?: string | null
     options?: McAttributeOption[]
 }
 
@@ -96,6 +107,7 @@ export interface McAttributeUpdate {
     label?: LabelMap
     unit?: LabelMap | null
     is_active?: boolean
+    role?: string | null
     options?: McAttributeOption[]
 }
 
@@ -110,6 +122,9 @@ export interface McEffectiveAttribute {
     is_filterable: boolean
     applies_to: string
     sort_order: number
+    role?: string | null
+    group?: string | null
+    group_label?: LabelMap
     options: McAttributeOption[]
 }
 
@@ -123,6 +138,7 @@ export interface McBinding {
     sort_order: number
     is_active: boolean
     allowed_options?: string[] | null
+    group?: string | null
 }
 
 export interface McBindingCreate {
@@ -133,6 +149,7 @@ export interface McBindingCreate {
     applies_to?: string
     sort_order?: number
     allowed_options?: string[] | null
+    group?: string | null
 }
 
 export interface McBindingUpdate {
@@ -142,6 +159,7 @@ export interface McBindingUpdate {
     sort_order?: number
     is_active?: boolean
     allowed_options?: string[] | null
+    group?: string | null
 }
 
 // ── listings ──
