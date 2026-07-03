@@ -11,6 +11,7 @@ import {
     CalendarCheck,
     Car,
     ClipboardList,
+    Flag,
     FolderTree,
     LayoutDashboard,
     LineChart,
@@ -50,6 +51,7 @@ const sections: NavSection[] = [
             { name: 'Regions', href: '/admin/regions', icon: MapPin },
             { name: 'Notifications', href: '/admin/notifications', icon: Bell },
             { name: 'Ads', href: '/admin/ads', icon: Megaphone },
+            { name: 'Жалобы', href: '/admin/complaints', icon: Flag },
         ],
     },
     {

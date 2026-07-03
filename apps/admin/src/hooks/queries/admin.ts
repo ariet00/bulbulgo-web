@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
     AdminAdListParams,
     AdminBroadcastFilters,
+    AdminComplaintListParams,
     AdminNotificationListParams,
     adminApi,
 } from '@/apis/admin'
@@ -35,6 +36,8 @@ export const adminKeys = {
     adStats: (id: number) => [...adminKeys.ad(id), 'stats'] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
     regions: (q?: string) => [...adminKeys.all, 'regions', q ?? null] as const,
+    complaints: () => [...adminKeys.all, 'complaints'] as const,
+    complaint: (id: number) => [...adminKeys.complaints(), id] as const,
 }
 
 export const useAdminRegions = (q?: string) => {
@@ -180,6 +183,26 @@ export const useAdminUserPlatforms = (
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'user-platforms', id, period, product ?? null],
         queryFn: () => adminApi.getUserPlatforms(id, period, product),
+        enabled: !!id,
+    })
+}
+
+export const useAdminComplaints = (
+    page: number = 1,
+    size: number = 40,
+    filters?: AdminComplaintListParams,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.complaints(), { page, size, ...(filters ?? {}) }],
+        queryFn: () => adminApi.getComplaints(page, size, filters),
+        placeholderData: keepPreviousData,
+    })
+}
+
+export const useAdminComplaint = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.complaint(id),
+        queryFn: () => adminApi.getComplaint(id),
         enabled: !!id,
     })
 }

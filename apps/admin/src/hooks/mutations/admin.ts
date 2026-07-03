@@ -3,6 +3,7 @@ import {
     adminApi,
     AdminAdCreate,
     AdminAdUpdate,
+    AdminComplaintStatus,
     AdminAppFeaturesSettings,
     AdminAppVersionSettings,
     AdminContactLimitsSettings,
@@ -53,6 +54,31 @@ export const useUpdateAdminUserFeatures = () => {
                 queryKey: [...adminKeys.user(id), 'features'],
             })
             toast.success('Сохранено')
+        },
+    })
+}
+
+// === Complaints (user reports) ===
+export const useAdminSetComplaintStatus = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, status }: { id: number; status: AdminComplaintStatus }) =>
+            adminApi.setComplaintStatus(id, status),
+        onSuccess: (_, { id }) => {
+            qc.invalidateQueries({ queryKey: adminKeys.complaints() })
+            qc.invalidateQueries({ queryKey: adminKeys.complaint(id) })
+            toast.success('Статус жалобы обновлён')
+        },
+    })
+}
+
+export const useAdminDeleteComplaint = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteComplaint(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.complaints() })
+            toast.success('Жалоба удалена')
         },
     })
 }
