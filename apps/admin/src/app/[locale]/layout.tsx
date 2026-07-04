@@ -1,4 +1,4 @@
-import { getMe, authOptions, Providers, NotificationSystem, NotificationHandler } from '@doska/shared'
+import { authOptions, Providers, NotificationSystem, NotificationHandler } from '@doska/shared'
 import type { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { NextIntlClientProvider } from 'next-intl'
@@ -40,14 +40,8 @@ export default async function RootLayout({
     // crash the whole app — render logged-out instead of a Server Components 500.
     console.error("getServerSession failed in layout:", error)
   }
-  if (session) {
-    try {
-      const user = await getMe()
-      session.user = user || session.user || {}
-    } catch (error) {
-      console.warn("Failed to fetch user in layout:", error)
-    }
-  }
+  // Backend-session liveness (and re-fetching the fresh user) is handled in the
+  // (admin) layout, which redirects to /login on a dead session.
   return (
     <html lang={locale} suppressHydrationWarning>
       <body

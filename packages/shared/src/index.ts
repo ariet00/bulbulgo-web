@@ -50,7 +50,9 @@ export * from './hooks/queries/useUsers'
 
 export * from './lib/auth'
 export * from './lib/categoryIcons'
-export * from './lib/firebase'
+// NOTE: './lib/firebase' is intentionally NOT re-exported here. Firebase (~39MB module
+// graph) is loaded lazily inside NotificationHandler via dynamic import(). Re-exporting it
+// from the barrel would drag the whole Firebase SDK into every page importing @doska/shared.
 export * from './lib/queryClient'
 export * from './lib/requester'
 export * from './lib/server-fetch'

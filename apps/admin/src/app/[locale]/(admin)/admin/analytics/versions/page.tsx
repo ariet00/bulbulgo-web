@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@doska/i18n'
 import {
     useAdminAnalyticsAppVersions,
@@ -21,18 +21,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { RefreshCw, ArrowUpRight } from 'lucide-react'
-import {
-    CartesianGrid,
-    Legend,
-    Line,
-    LineChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts'
-import { useTheme } from 'next-themes'
-import { CHART_COLORS } from '@/components/admin/analytics/charts'
+import { VersionsTimeseriesChart } from '@/components/admin/analytics/charts-lazy'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 
 const PERIODS = [
@@ -97,13 +86,6 @@ function minVersionFor(
     if (platform === 'ios') return s.ios_min_version || null
     return null
 }
-function formatBucket(iso: string): string {
-    const d = new Date(iso)
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    return `${dd}.${mm}`
-}
-
 const STATUS_META: Record<Status, { label: string; cls: string }> = {
     latest: { label: 'Актуальная', cls: 'bg-green-500/15 text-green-600 dark:text-green-400' },
     outdated: { label: 'Устарела', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
@@ -120,26 +102,11 @@ function StatusPill({ status }: { status: Status }) {
     )
 }
 
-function useChartTheme() {
-    const { resolvedTheme } = useTheme()
-    const [mounted, setMounted] = useState(false)
-    useEffect(() => setMounted(true), [])
-    const dark = mounted && resolvedTheme === 'dark'
-    return {
-        grid: dark ? '#27272a' : '#e5e7eb',
-        axis: dark ? '#a1a1aa' : '#52525b',
-        tooltipBg: dark ? '#18181b' : '#ffffff',
-        tooltipBorder: dark ? '#3f3f46' : '#e5e7eb',
-        tooltipText: dark ? '#fafafa' : '#18181b',
-    }
-}
-
 export default function AnalyticsVersionsPage() {
     const [period, setPeriod] = useState('7d')
     const [granularity, setGranularity] = useState('day')
     const [product, setProduct] = useState('')
     const [platform, setPlatform] = useState('')
-    const t = useChartTheme()
 
     const versions = useAdminAnalyticsAppVersions(period, product || undefined, platform || undefined)
     const series = useAdminAnalyticsAppVersionsTimeseries(
@@ -279,54 +246,7 @@ export default function AnalyticsVersionsPage() {
                     ) : lineData.length === 0 ? (
                         <div className="text-muted-foreground">Нет данных за период</div>
                     ) : (
-                        <ResponsiveContainer width="100%" height={360}>
-                            <LineChart
-                                data={lineData}
-                                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
-                                <XAxis
-                                    dataKey="bucket"
-                                    tickFormatter={formatBucket}
-                                    fontSize={12}
-                                    stroke={t.axis}
-                                    tick={{ fill: t.axis }}
-                                />
-                                <YAxis
-                                    allowDecimals={false}
-                                    fontSize={12}
-                                    stroke={t.axis}
-                                    tick={{ fill: t.axis }}
-                                />
-                                <Tooltip
-                                    labelFormatter={(v) => formatBucket(String(v))}
-                                    contentStyle={{
-                                        backgroundColor: t.tooltipBg,
-                                        border: `1px solid ${t.tooltipBorder}`,
-                                        borderRadius: 6,
-                                        color: t.tooltipText,
-                                    }}
-                                    labelStyle={{ color: t.tooltipText }}
-                                    itemStyle={{ color: t.tooltipText }}
-                                />
-                                <Legend wrapperStyle={{ color: t.axis }} />
-                                {lineKeys.map((v, i) => (
-                                    <Line
-                                        key={v}
-                                        type="monotone"
-                                        dataKey={v}
-                                        stroke={
-                                            v === 'Прочие'
-                                                ? t.axis
-                                                : CHART_COLORS[i % CHART_COLORS.length]
-                                        }
-                                        strokeWidth={2}
-                                        dot={false}
-                                        connectNulls
-                                    />
-                                ))}
-                            </LineChart>
-                        </ResponsiveContainer>
+                        <VersionsTimeseriesChart lineData={lineData} lineKeys={lineKeys} />
                     )}
                     <p className="mt-2 text-xs text-muted-foreground">
                         Линия = число активных пользователей на версии за интервал.

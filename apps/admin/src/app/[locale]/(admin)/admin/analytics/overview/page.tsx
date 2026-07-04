@@ -26,7 +26,7 @@ import {
     ActiveUsersChart,
     CountPieChart,
     TopEventsChart,
-} from '@/components/admin/analytics/charts'
+} from '@/components/admin/analytics/charts-lazy'
 
 const PERIODS: Array<{ value: string; label: string }> = [
     { value: '24h', label: '24h' },

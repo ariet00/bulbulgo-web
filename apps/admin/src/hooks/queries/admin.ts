@@ -247,6 +247,7 @@ export const useAdminTrips = (
         seats_max?: number
         date_from?: string
         date_to?: string
+        only_real?: boolean
     },
 ) => {
     return useQuery({
@@ -268,6 +269,7 @@ export const useAdminTrips = (
                 seats_max: filters?.seats_max ?? null,
                 date_from: filters?.date_from ?? null,
                 date_to: filters?.date_to ?? null,
+                only_real: filters?.only_real ?? null,
             },
         ],
         queryFn: () => adminApi.getTrips(page, size, q, status, filters),

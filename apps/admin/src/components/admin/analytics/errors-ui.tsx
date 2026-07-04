@@ -9,18 +9,6 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Legend,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts'
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
 import type { AdminErrorGroup, AdminErrorUser } from '@/apis/admin'
 
 export const ERROR_CLASSES: Array<{ value: string; label: string }> = [
@@ -43,57 +31,6 @@ export function ErrorStatusBadge({ status }: { status: string | null }) {
         <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-semibold font-mono ${cls}`}>
             {status ?? '—'}
         </span>
-    )
-}
-
-const SERIES = [
-    { key: 'server', label: '5xx', color: '#dc2626' },
-    { key: 'client', label: '4xx', color: '#f97316' },
-    { key: 'validation', label: '422', color: '#f59e0b' },
-] as const
-
-export function ErrorsTimeseriesChart({
-    data,
-    granularity = 'day',
-}: {
-    data: Array<{ bucket: string; server: number; client: number; validation: number; total: number }>
-    granularity?: 'hour' | 'day' | 'week' | 'month'
-}) {
-    const { resolvedTheme } = useTheme()
-    const [mounted, setMounted] = useState(false)
-    useEffect(() => setMounted(true), [])
-    const dark = mounted && resolvedTheme === 'dark'
-    const grid = dark ? '#27272a' : '#e5e7eb'
-    const axis = dark ? '#a1a1aa' : '#52525b'
-
-    const series = data.map(d => ({
-        ...d,
-        label:
-            granularity === 'hour'
-                ? new Date(d.bucket).toLocaleString(undefined, { day: 'numeric', hour: '2-digit' })
-                : new Date(d.bucket).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-    }))
-
-    return (
-        <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={series} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={grid} />
-                <XAxis dataKey="label" fontSize={12} stroke={axis} tick={{ fill: axis }} />
-                <YAxis allowDecimals={false} fontSize={12} stroke={axis} tick={{ fill: axis }} />
-                <Tooltip
-                    contentStyle={{
-                        backgroundColor: dark ? '#18181b' : '#ffffff',
-                        border: `1px solid ${dark ? '#3f3f46' : '#e5e7eb'}`,
-                        borderRadius: 6,
-                        color: dark ? '#fafafa' : '#18181b',
-                    }}
-                />
-                <Legend wrapperStyle={{ color: axis }} />
-                {SERIES.map(s => (
-                    <Bar key={s.key} dataKey={s.key} name={s.label} stackId="errors" fill={s.color} />
-                ))}
-            </BarChart>
-        </ResponsiveContainer>
     )
 }
 

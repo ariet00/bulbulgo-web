@@ -165,6 +165,7 @@ export const adminApi = {
             seats_max?: number
             date_from?: string
             date_to?: string
+            only_real?: boolean
         },
     ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
@@ -181,6 +182,8 @@ export const adminApi = {
         if (filters?.seats_max != null) params.set('seats_max', String(filters.seats_max))
         if (filters?.date_from) params.set('date_from', filters.date_from)
         if (filters?.date_to) params.set('date_to', filters.date_to)
+        if (filters?.only_real !== undefined)
+            params.set('only_real', String(filters.only_real))
         return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)
     },
     getTrip: (id: number) => requests.get<any>(`/admin/trips/${id}`),

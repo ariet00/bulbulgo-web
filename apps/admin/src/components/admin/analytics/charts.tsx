@@ -17,17 +17,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts'
-
-export const CHART_COLORS = [
-    '#2563eb', // blue
-    '#16a34a', // green
-    '#dc2626', // red
-    '#f59e0b', // amber
-    '#8b5cf6', // violet
-    '#06b6d4', // cyan
-    '#ec4899', // pink
-    '#64748b', // slate
-] as const
+import { CHART_COLORS } from './chart-constants'
 
 function pickColor(i: number) {
     return CHART_COLORS[i % CHART_COLORS.length]
@@ -203,6 +193,93 @@ export function DailyStackedBarChart({
                 <Legend wrapperStyle={{ color: t.axis }} />
                 {eventTypes.map((ev, i) => (
                     <Bar key={ev} dataKey={ev} name={labelFor(ev)} stackId="events" fill={pickColor(i)} />
+                ))}
+            </BarChart>
+        </ResponsiveContainer>
+    )
+}
+
+// Short dd.mm bucket label for the app-versions timeseries.
+function formatVersionBucket(iso: string): string {
+    const d = new Date(iso)
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    return `${dd}.${mm}`
+}
+
+export function VersionsTimeseriesChart({
+    lineData,
+    lineKeys,
+}: {
+    lineData: Array<Record<string, number | string>>
+    lineKeys: string[]
+}) {
+    const t = useChartTheme()
+    return (
+        <ResponsiveContainer width="100%" height={360}>
+            <LineChart data={lineData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                <XAxis
+                    dataKey="bucket"
+                    tickFormatter={formatVersionBucket}
+                    fontSize={12}
+                    stroke={t.axis}
+                    tick={{ fill: t.axis }}
+                />
+                <YAxis allowDecimals={false} fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <Tooltip
+                    labelFormatter={v => formatVersionBucket(String(v))}
+                    {...tooltipProps(t)}
+                />
+                <Legend wrapperStyle={{ color: t.axis }} />
+                {lineKeys.map((v, i) => (
+                    <Line
+                        key={v}
+                        type="monotone"
+                        dataKey={v}
+                        stroke={v === 'Прочие' ? t.axis : CHART_COLORS[i % CHART_COLORS.length]}
+                        strokeWidth={2}
+                        dot={false}
+                        connectNulls
+                    />
+                ))}
+            </LineChart>
+        </ResponsiveContainer>
+    )
+}
+
+const ERROR_SERIES = [
+    { key: 'server', label: '5xx', color: '#dc2626' },
+    { key: 'client', label: '4xx', color: '#f97316' },
+    { key: 'validation', label: '422', color: '#f59e0b' },
+] as const
+
+export function ErrorsTimeseriesChart({
+    data,
+    granularity = 'day',
+}: {
+    data: Array<{ bucket: string; server: number; client: number; validation: number; total: number }>
+    granularity?: 'hour' | 'day' | 'week' | 'month'
+}) {
+    const t = useChartTheme()
+    const series = data.map(d => ({
+        ...d,
+        label:
+            granularity === 'hour'
+                ? new Date(d.bucket).toLocaleString(undefined, { day: 'numeric', hour: '2-digit' })
+                : new Date(d.bucket).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    }))
+
+    return (
+        <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={series} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                <XAxis dataKey="label" fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <YAxis allowDecimals={false} fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <Tooltip {...tooltipProps(t)} />
+                <Legend wrapperStyle={{ color: t.axis }} />
+                {ERROR_SERIES.map(s => (
+                    <Bar key={s.key} dataKey={s.key} name={s.label} stackId="errors" fill={s.color} />
                 ))}
             </BarChart>
         </ResponsiveContainer>

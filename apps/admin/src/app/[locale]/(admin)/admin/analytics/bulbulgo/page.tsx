@@ -32,7 +32,7 @@ import { Pagination } from '@doska/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@doska/ui'
 import { Link, useRouter, usePathname } from '@doska/i18n'
 import { RefreshCw } from 'lucide-react'
-import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
+import { DailyStackedBarChart } from '@/components/admin/analytics/charts-lazy'
 import { AdjustPopover, LimitStatusControl } from '@/components/admin/analytics/limit-controls'
 import {
     useSetDriverCredits,

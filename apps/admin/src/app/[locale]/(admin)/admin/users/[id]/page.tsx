@@ -32,7 +32,7 @@ import {
     LimitStatusControl,
 } from '@/components/admin/analytics/limit-controls'
 import { ProductSelector } from '@/components/admin/ProductSelector'
-import { DailyStackedBarChart } from '@/components/admin/analytics/charts'
+import { DailyStackedBarChart } from '@/components/admin/analytics/charts-lazy'
 import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
 import { DataCell } from '@/components/admin/analytics/DataCell'
 import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'

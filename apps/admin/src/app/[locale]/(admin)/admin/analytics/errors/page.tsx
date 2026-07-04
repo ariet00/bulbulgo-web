@@ -18,8 +18,8 @@ import {
     ERROR_CLASSES,
     ErrorSignaturesTable,
     ErrorUsersTable,
-    ErrorsTimeseriesChart,
 } from '@/components/admin/analytics/errors-ui'
+import { ErrorsTimeseriesChart } from '@/components/admin/analytics/charts-lazy'
 import type { AdminErrorGroup } from '@/apis/admin'
 import {
     Table,

@@ -16,11 +16,13 @@ import {
 import {
     Button,
     Input,
+    Label,
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
+    Switch,
 } from "@doska/ui"
 import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw } from 'lucide-react'
 import { Link } from '@doska/i18n'
@@ -51,6 +53,7 @@ const FILTER_DEFAULTS = {
     seats_max: 0,
     date_from: '',
     date_to: '',
+    only_real: true,
 }
 
 const statusClass = (status: string) => {
@@ -122,6 +125,7 @@ export default function AdminTripsPage() {
             seats_max: values.seats_max || undefined,
             date_from: values.date_from || undefined,
             date_to: values.date_to || undefined,
+            only_real: values.only_real,
         },
     )
     const deleteTripMutation = useAdminDeleteTrip()
@@ -154,7 +158,8 @@ export default function AdminTripsPage() {
         !!values.seats_min ||
         !!values.seats_max ||
         !!values.date_from ||
-        !!values.date_to
+        !!values.date_to ||
+        !values.only_real
 
     return (
         <div className="space-y-6">
@@ -236,6 +241,20 @@ export default function AdminTripsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <div className="flex h-10 items-center gap-2 rounded-md border px-3">
+                            <Switch
+                                id="only-real"
+                                checked={values.only_real}
+                                onCheckedChange={(v) => setValues({ only_real: v })}
+                            />
+                            <Label
+                                htmlFor="only-real"
+                                className="cursor-pointer whitespace-nowrap text-sm"
+                                title="Скрыть объявления, созданные парсером (chat_parser_user, gettik_parser_user)"
+                            >
+                                Только реальные
+                            </Label>
+                        </div>
                         <div className="flex flex-col">
                             <span className="text-xs text-muted-foreground mb-1">Откуда</span>
                             <div className="w-full sm:w-44">
