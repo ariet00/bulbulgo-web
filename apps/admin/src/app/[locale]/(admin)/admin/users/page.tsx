@@ -217,14 +217,17 @@ export default function UsersPage() {
                                     <TableRow key={user.id}>
                                         <TableCell>{user.id}</TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col">
+                                            <Link
+                                                href={`/admin/users/${user.id}`}
+                                                className="flex flex-col hover:underline"
+                                            >
                                                 <span className="font-medium">
                                                     {user.full_name || user.name || '—'}
                                                 </span>
                                                 <span className="text-xs text-muted-foreground">
                                                     @{user.username}
                                                 </span>
-                                            </div>
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col text-sm">
