@@ -337,6 +337,7 @@ export const adminApi = {
 
     // Mobile app services (home hub cards / tabs / webview services)
     getServices: () => requests.get<AdminService[]>('/admin/services/'),
+    getService: (id: number) => requests.get<AdminService>(`/admin/services/${id}`),
     createService: (body: AdminServiceCreate) =>
         requests.post<AdminService>('/admin/services/', body),
     updateService: (id: number, body: AdminServiceUpdate) =>
@@ -1394,6 +1395,13 @@ export interface AdminAdListParams {
 
 // === Mobile app services (home hub cards / tabs / webview services) ===
 
+export interface AdminServiceNavItem {
+    label: LocalizedText
+    icon: string
+    kind: 'url' | 'route'
+    value: string
+}
+
 export interface AdminService {
     id: number
     slug: string
@@ -1406,6 +1414,7 @@ export interface AdminService {
     show_in_tabs: boolean
     url: string | null
     auth: boolean
+    nav_items: AdminServiceNavItem[]
     enabled: boolean
     created_at: string | null
 }
@@ -1420,6 +1429,7 @@ export interface AdminServiceCreate {
     show_in_tabs?: boolean
     url?: string | null
     auth?: boolean
+    nav_items?: AdminServiceNavItem[]
     enabled?: boolean
     position?: number
 }

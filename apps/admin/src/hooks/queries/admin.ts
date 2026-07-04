@@ -35,6 +35,7 @@ export const adminKeys = {
     ad: (id: number) => [...adminKeys.ads(), id] as const,
     adStats: (id: number) => [...adminKeys.ad(id), 'stats'] as const,
     services: () => [...adminKeys.all, 'services'] as const,
+    service: (id: number) => [...adminKeys.services(), id] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
     regions: (q?: string) => [...adminKeys.all, 'regions', q ?? null] as const,
     complaints: () => [...adminKeys.all, 'complaints'] as const,
@@ -882,6 +883,14 @@ export const useAdminServices = () => {
     return useQuery({
         queryKey: adminKeys.services(),
         queryFn: () => adminApi.getServices(),
+    })
+}
+
+export const useAdminService = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.service(id),
+        queryFn: () => adminApi.getService(id),
+        enabled: !!id,
     })
 }
 

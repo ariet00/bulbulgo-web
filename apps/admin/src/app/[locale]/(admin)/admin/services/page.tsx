@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type MouseEvent } from 'react'
+import { type MouseEvent } from 'react'
 import {
     Badge,
     Button,
@@ -16,9 +16,9 @@ import {
     TableHeader,
     TableRow,
 } from '@doska/ui'
+import { Link, useRouter } from '@doska/i18n'
 import { Check, Globe, Plus, Smartphone, Trash2 } from 'lucide-react'
 import type { AdminService } from '@/apis/admin'
-import { ServiceDialog } from '@/components/admin/services/ServiceDialog'
 import {
     useAdminDeleteService,
     useAdminUpdateService,
@@ -29,18 +29,7 @@ export default function AdminServicesPage() {
     const { data, isLoading } = useAdminServices()
     const updateMutation = useAdminUpdateService()
     const deleteMutation = useAdminDeleteService()
-
-    const [dialogOpen, setDialogOpen] = useState(false)
-    const [editing, setEditing] = useState<AdminService | null>(null)
-
-    const openCreate = () => {
-        setEditing(null)
-        setDialogOpen(true)
-    }
-    const openEdit = (s: AdminService) => {
-        setEditing(s)
-        setDialogOpen(true)
-    }
+    const router = useRouter()
 
     const handleDelete = (e: MouseEvent, s: AdminService) => {
         e.stopPropagation()
@@ -59,8 +48,10 @@ export default function AdminServicesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">Сервисы приложения</h1>
-                <Button size="sm" onClick={openCreate}>
-                    <Plus className="size-4 mr-1" /> Создать
+                <Button asChild size="sm">
+                    <Link href="/admin/services/new">
+                        <Plus className="size-4 mr-1" /> Создать
+                    </Link>
                 </Button>
             </div>
 
@@ -91,7 +82,9 @@ export default function AdminServicesPage() {
                                         <TableRow
                                             key={s.id}
                                             className="cursor-pointer"
-                                            onClick={() => openEdit(s)}
+                                            onClick={() =>
+                                                router.push(`/admin/services/${s.id}`)
+                                            }
                                         >
                                             <TableCell>{s.position}</TableCell>
                                             <TableCell className="font-medium">
@@ -175,12 +168,6 @@ export default function AdminServicesPage() {
                     )}
                 </CardContent>
             </Card>
-
-            <ServiceDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                service={editing}
-            />
         </div>
     )
 }

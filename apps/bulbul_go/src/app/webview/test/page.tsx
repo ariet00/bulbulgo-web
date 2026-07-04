@@ -1,6 +1,24 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import {
+    bridgeAvailable,
+    callPhone,
+    copyToClipboard,
+    getAppInfo,
+    getLocale,
+    getLocation,
+    getTheme,
+    interceptBack,
+    openUrl,
+    pickFiles,
+    pickPhoto,
+    pickPhotos,
+    setNavBadge,
+    setTitle,
+    share,
+    toast,
+} from '../bridge'
 
 // Диагностическая страница webview-сервисов: прогоняет всю цепочку
 // авторизации (?code= → /auth/webview-exchange → access token → /users/me)
@@ -130,6 +148,211 @@ export default function WebviewTestPage() {
                     <p className="text-lg font-semibold">{displayName}</p>
                 </div>
             )}
+
+            {done && (
+                <a
+                    href="bulbulgo://profile"
+                    className="block rounded-lg border p-3 text-center text-sm font-medium"
+                >
+                    Открыть нативный профиль (bulbulgo://profile)
+                </a>
+            )}
+
+            {done && <BridgePlayground />}
         </main>
+    )
+}
+
+// Демо JS-моста: каждая кнопка дёргает нативный метод и показывает результат.
+function BridgePlayground() {
+    const [result, setResult] = useState<string>('')
+    const [photos, setPhotos] = useState<string[]>([])
+    const [customTitle, setCustomTitle] = useState(false)
+    const [badgeCount, setBadgeCount] = useState(0)
+    const [releaseBack, setReleaseBack] = useState<(() => void) | null>(null)
+
+    const run = async (name: string, fn: () => Promise<unknown>) => {
+        try {
+            const r = await fn()
+            setResult(`${name}: ${JSON.stringify(r)}`)
+        } catch (e) {
+            setResult(`${name}: ошибка — ${e instanceof Error ? e.message : e}`)
+        }
+    }
+
+    return (
+        <div className="space-y-2 rounded-lg border p-3">
+            <p className="text-sm font-medium">
+                JS-мост:{' '}
+                {bridgeAvailable() ? '✅ доступен' : '➖ вне приложения'}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() => run('appInfo', getAppInfo)}
+                >
+                    Версия приложения
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() => run('location', getLocation)}
+                >
+                    Локация
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('photo', async () => {
+                            const p = await pickPhoto('gallery')
+                            setPhotos(
+                                p ? [`data:${p.mimeType};base64,${p.base64}`] : [],
+                            )
+                            return p ? `${p.name} (${p.mimeType})` : null
+                        })
+                    }
+                >
+                    Фото из галереи
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('photos', async () => {
+                            const list = await pickPhotos(3)
+                            setPhotos(
+                                (list ?? []).map(
+                                    (p) => `data:${p.mimeType};base64,${p.base64}`,
+                                ),
+                            )
+                            return list ? `выбрано: ${list.length}` : null
+                        })
+                    }
+                >
+                    Несколько фото (до 3)
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('files', async () => {
+                            const list = await pickFiles()
+                            return list
+                                ? list.map((f) => `${f.name} (${f.size} б)`)
+                                : null
+                        })
+                    }
+                >
+                    Файлы
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() => run('share', () => share('Привет из вебвью BulBul Go!'))}
+                >
+                    Поделиться
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() => run('call', () => callPhone('+996700123456'))}
+                >
+                    Позвонить
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('toast', () => toast('Тост из вебвью', 'success'))
+                    }
+                >
+                    Тост
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('clipboard', () => copyToClipboard('BULBUL-PROMO-2026'))
+                    }
+                >
+                    Скопировать промокод
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('locale/theme', async () => ({
+                            locale: await getLocale(),
+                            theme: await getTheme(),
+                        }))
+                    }
+                >
+                    Локаль и тема
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() => run('openUrl', () => openUrl('https://bulbul.asia'))}
+                >
+                    Внешняя ссылка
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('setTitle', async () => {
+                            const next = !customTitle
+                            await setTitle(next ? 'Заголовок из страницы' : '')
+                            setCustomTitle(next)
+                            return next ? 'установлен' : 'сброшен'
+                        })
+                    }
+                >
+                    {customTitle ? 'Сбросить заголовок' : 'Сменить заголовок'}
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('setNavBadge', async () => {
+                            // 0 → 1 → 2 → 3 → 0 (снятие) на второй вкладке
+                            const next = (badgeCount + 1) % 4
+                            await setNavBadge(1, next)
+                            setBadgeCount(next)
+                            return next === 0 ? 'снят' : `счётчик: ${next}`
+                        })
+                    }
+                >
+                    Бейдж вкладки ({badgeCount})
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() => {
+                        if (releaseBack) {
+                            releaseBack()
+                            setReleaseBack(null)
+                            setResult('interceptBack: отпущен — назад снова закрывает')
+                        } else {
+                            const release = interceptBack(() =>
+                                setResult(
+                                    `interceptBack: перехвачено «назад» (${new Date().toLocaleTimeString()})`,
+                                ),
+                            )
+                            setReleaseBack(() => release)
+                            setResult(
+                                'interceptBack: включён — нажмите системный «назад»',
+                            )
+                        }
+                    }}
+                >
+                    {releaseBack ? 'Отпустить «назад»' : 'Перехватить «назад»'}
+                </button>
+            </div>
+            {result && (
+                <p className="break-all text-xs text-muted-foreground">{result}</p>
+            )}
+            {photos.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    {photos.map((src, i) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            key={i}
+                            src={src}
+                            alt=""
+                            className="max-h-32 rounded-md"
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
     )
 }
