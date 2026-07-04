@@ -15,7 +15,6 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-    Switch,
 } from '@doska/ui'
 import { Plus, Trash2 } from 'lucide-react'
 import type { LabelMap, McAttribute, McAttributeOption } from '@/apis/marketplace'
@@ -117,14 +116,24 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
                     <LabelInputs label="Название" value={label} onChange={setLabel} placeholder="Год выпуска" />
                     <LabelInputs label="Единица (опц.)" value={unit} onChange={setUnit} placeholder="км" />
 
-                    <div className="flex items-center justify-between rounded-md border p-3">
-                        <div>
-                            <Label>Системный</Label>
-                            <p className="text-xs text-muted-foreground">
-                                Не показывать в общем списке (напр. deal_type — отдельная полоса)
-                            </p>
-                        </div>
-                        <Switch checked={isSystem} onCheckedChange={setIsSystem} />
+                    <div className="space-y-1.5">
+                        <Label>Роль</Label>
+                        <Select
+                            value={isSystem ? 'system' : 'normal'}
+                            onValueChange={(v) => setIsSystem(v === 'system')}
+                        >
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="normal">Обычный</SelectItem>
+                                <SelectItem value="system">Системный</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                            «Системный» не показывается в общем списке атрибутов
+                            (напр. deal_type — отдельная полоса выбора).
+                        </p>
                     </div>
 
                     {isEnum && (

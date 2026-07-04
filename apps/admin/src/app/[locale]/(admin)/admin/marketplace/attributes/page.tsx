@@ -68,7 +68,12 @@ export default function MarketplaceAttributesPage() {
                                         </TableCell>
                                         <TableCell className="font-mono text-xs">{a.key}</TableCell>
                                         <TableCell>
-                                            <Badge variant="secondary">{a.type}</Badge>
+                                            <div className="flex items-center gap-1">
+                                                <Badge variant="secondary">{a.type}</Badge>
+                                                {a.role === 'system' && (
+                                                    <Badge variant="outline">системный</Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground">
                                             {a.options.length
