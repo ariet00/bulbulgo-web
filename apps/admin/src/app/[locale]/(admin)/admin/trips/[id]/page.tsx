@@ -58,6 +58,7 @@ import {
     Hash,
     Building2,
     ExternalLink,
+    Rss,
     Map as MapIcon,
     CalendarClock,
     Repeat,
@@ -741,6 +742,66 @@ export default function AdminTripDetailPage() {
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                         {trip.comment}
                     </p>
+                </SectionCard>
+            )}
+
+            {/* ── Source (parsed ads) ── */}
+            {trip.source && (
+                <SectionCard title="Источник (парсер)" icon={Rss}>
+                    <div className="space-y-3 text-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {trip.source.channel &&
+                                (trip.source.channel_url ? (
+                                    <a
+                                        href={trip.source.channel_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-1 font-medium hover:underline"
+                                    >
+                                        @{trip.source.channel}
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                ) : (
+                                    <span className="font-medium">{trip.source.channel}</span>
+                                ))}
+                            {data.parser && (
+                                <Badge variant="secondary" className="uppercase">
+                                    {data.parser}
+                                </Badge>
+                            )}
+                            {trip.source.kind && (
+                                <Badge variant="outline">{trip.source.kind}</Badge>
+                            )}
+                        </div>
+
+                        {trip.source.message_url && (
+                            <a
+                                href={trip.source.message_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-primary hover:underline"
+                            >
+                                <ExternalLink className="h-4 w-4" /> Открыть сообщение в Telegram
+                            </a>
+                        )}
+
+                        {trip.remote_id && (
+                            <div className="font-mono text-xs text-muted-foreground">
+                                {trip.remote_id}
+                            </div>
+                        )}
+
+                        {data.original_message && (
+                            <div>
+                                <div className="mb-1 text-xs uppercase text-muted-foreground">
+                                    Исходный текст
+                                </div>
+                                <p className="whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-sm leading-relaxed">
+                                    {data.original_message}
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </SectionCard>
             )}
 
