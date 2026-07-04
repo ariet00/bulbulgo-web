@@ -34,6 +34,7 @@ export const adminKeys = {
     ads: () => [...adminKeys.all, 'ads'] as const,
     ad: (id: number) => [...adminKeys.ads(), id] as const,
     adStats: (id: number) => [...adminKeys.ad(id), 'stats'] as const,
+    services: () => [...adminKeys.all, 'services'] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
     regions: (q?: string) => [...adminKeys.all, 'regions', q ?? null] as const,
     complaints: () => [...adminKeys.all, 'complaints'] as const,
@@ -872,6 +873,15 @@ export const useAdminAdStats = (id: number) => {
         queryKey: adminKeys.adStats(id),
         queryFn: () => adminApi.getAdStats(id),
         enabled: !!id,
+    })
+}
+
+// === Mobile app services (home hub / tabs / webview) ===
+
+export const useAdminServices = () => {
+    return useQuery({
+        queryKey: adminKeys.services(),
+        queryFn: () => adminApi.getServices(),
     })
 }
 

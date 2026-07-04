@@ -335,6 +335,15 @@ export const adminApi = {
         return requests.get<AdminAdStats>(`/admin/promotions/${id}/stats${s ? `?${s}` : ''}`)
     },
 
+    // Mobile app services (home hub cards / tabs / webview services)
+    getServices: () => requests.get<AdminService[]>('/admin/services/'),
+    createService: (body: AdminServiceCreate) =>
+        requests.post<AdminService>('/admin/services/', body),
+    updateService: (id: number, body: AdminServiceUpdate) =>
+        requests.patch<AdminService>(`/admin/services/${id}`, body),
+    deleteService: (id: number) =>
+        requests.delete<{ deleted: boolean }>(`/admin/services/${id}`),
+
     // Analytics
     getAnalytics: () => requests.get<any>('/admin/analytics/'),
     listAnalyticsEvents: (params: {
@@ -1382,6 +1391,41 @@ export interface AdminAdListParams {
     is_active?: boolean
     q?: string
 }
+
+// === Mobile app services (home hub cards / tabs / webview services) ===
+
+export interface AdminService {
+    id: number
+    slug: string
+    type: 'native' | 'webview'
+    position: number
+    label: LocalizedText
+    description: LocalizedText
+    icon: string | null
+    badge: 'new' | 'soon' | null
+    show_in_tabs: boolean
+    url: string | null
+    auth: boolean
+    enabled: boolean
+    created_at: string | null
+}
+
+export interface AdminServiceCreate {
+    slug: string
+    type: 'native' | 'webview'
+    label?: LocalizedText
+    description?: LocalizedText
+    icon?: string | null
+    badge?: 'new' | 'soon' | null
+    show_in_tabs?: boolean
+    url?: string | null
+    auth?: boolean
+    enabled?: boolean
+    position?: number
+}
+
+// slug/type иммутабельны после создания (бэк их игнорирует в PATCH)
+export type AdminServiceUpdate = Partial<Omit<AdminServiceCreate, 'slug' | 'type'>>
 
 export interface BookingBotItem {
     bot_id: number

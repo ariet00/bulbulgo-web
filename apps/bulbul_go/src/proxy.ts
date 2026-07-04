@@ -54,5 +54,6 @@ export const config = {
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
     // - images (public images)
-    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|images|.*\\..*).*)"],
+    // - webview (страницы для вебвью мобильного приложения — без локали и auth-редиректов)
+    matcher: ["/((?!api|webview|_next/static|_next/image|favicon.ico|images|.*\\..*).*)"],
 };
