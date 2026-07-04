@@ -392,6 +392,23 @@ export const adminApi = {
             }>
         >(`/admin/analytics/app-versions?${qs.toString()}`)
     },
+    getAppVersionsTimeseries: (
+        period: string = '30d',
+        granularity: string = 'day',
+        product?: string,
+        platform?: string,
+    ) => {
+        const qs = new URLSearchParams({ period, granularity })
+        if (product) qs.set('product', product)
+        if (platform) qs.set('platform', platform)
+        return requests.get<
+            Array<{
+                bucket: string
+                app_version: string | null
+                users: number
+            }>
+        >(`/admin/analytics/app-versions/timeseries?${qs.toString()}`)
+    },
     getUserAnalyticsEvents: (
         userId: number,
         page = 1,

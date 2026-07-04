@@ -546,6 +546,26 @@ export const useAdminAnalyticsAppVersions = (
     })
 }
 
+export const useAdminAnalyticsAppVersionsTimeseries = (
+    period: string = '30d',
+    granularity: string = 'day',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.analytics(),
+            'app-versions-timeseries',
+            period,
+            granularity,
+            product ?? null,
+            platform ?? null,
+        ],
+        queryFn: () =>
+            adminApi.getAppVersionsTimeseries(period, granularity, product, platform),
+    })
+}
+
 export const useAdminAnalyticsUserEvents = (
     userId: number,
     page: number = 1,
