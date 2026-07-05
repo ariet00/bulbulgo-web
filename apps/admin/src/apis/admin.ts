@@ -1414,6 +1414,8 @@ export interface AdminService {
     show_in_tabs: boolean
     url: string | null
     auth: boolean
+    // false — вебвью без нативной шапки (страница рисует свою)
+    app_bar: boolean
     nav_items: AdminServiceNavItem[]
     enabled: boolean
     created_at: string | null
@@ -1429,6 +1431,7 @@ export interface AdminServiceCreate {
     show_in_tabs?: boolean
     url?: string | null
     auth?: boolean
+    app_bar?: boolean
     nav_items?: AdminServiceNavItem[]
     enabled?: boolean
     position?: number

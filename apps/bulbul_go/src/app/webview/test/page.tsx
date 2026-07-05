@@ -223,6 +223,24 @@ export default function WebviewTestPage() {
                 </button>
             )}
 
+            {done && (
+                <button
+                    className="block w-full rounded-lg border p-3 text-center text-sm font-medium"
+                    onClick={() =>
+                        openWebPage(
+                            '/webview/test/details/42?chrome=self',
+                            undefined,
+                            { appBar: false },
+                        ).catch(() => {
+                            window.location.href =
+                                '/webview/test/details/42?chrome=self'
+                        })
+                    }
+                >
+                    Детали без нативной шапки (appBar: false)
+                </button>
+            )}
+
             {done && <BridgePlayground />}
 
             {done && <DebugLog />}

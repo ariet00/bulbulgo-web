@@ -123,10 +123,17 @@ export const openRoute = (route: string) =>
  * жестом — предыдущий экран. Возврат по истории приложение делает само.
  * Относительный путь резолвится от текущего origin.
  */
-export const openWebPage = (url: string, title?: string) =>
+export const openWebPage = (
+    url: string,
+    title?: string,
+    opts?: { appBar?: boolean },
+) =>
     call<boolean>('openWebPage', {
         url: new URL(url, window.location.origin).toString(),
         title,
+        // false — экран без нативной шапки с первого кадра: страница рисует
+        // свой заголовок, закрытие — closeWebview()
+        appBar: opts?.appBar,
     })
 
 /** Заголовок нативного AppBar (сбрасывается при смене страницы). */

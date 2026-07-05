@@ -105,6 +105,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     const [showInTabs, setShowInTabs] = useState(initial?.show_in_tabs ?? true)
     const [url, setUrl] = useState(initial?.url ?? '')
     const [auth, setAuth] = useState(initial?.auth ?? false)
+    const [appBar, setAppBar] = useState(initial?.app_bar ?? true)
     const [navItems, setNavItems] = useState<AdminServiceNavItem[]>(
         initial?.nav_items?.map((i) => ({ ...i })) ?? [],
     )
@@ -140,6 +141,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             show_in_tabs: showInTabs,
             url: type === 'webview' ? url.trim() : null,
             auth: type === 'webview' ? auth : false,
+            app_bar: type === 'webview' ? appBar : true,
             nav_items:
                 type === 'webview' ? navItems.filter((i) => i.value.trim()) : [],
             enabled,
@@ -264,6 +266,17 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                                 </p>
                             </div>
                             <Switch checked={auth} onCheckedChange={setAuth} />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-md border p-3">
+                            <div>
+                                <Label>Нативная шапка</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Выкл — страница рисует свой заголовок и кнопку
+                                    закрытия сама (мостовой close)
+                                </p>
+                            </div>
+                            <Switch checked={appBar} onCheckedChange={setAppBar} />
                         </div>
 
                         <div className="space-y-2 rounded-md border p-3">

@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
-import { openWebPage, share } from '../../../bridge'
+import { closeWebview, openWebPage, share } from '../../../bridge'
 import { authFetch, getAccessToken } from '../../../auth'
 
 // Демо «деталей», открываемых отдельным нативным экраном (мостовой
@@ -16,8 +16,19 @@ export default function WebviewTestDetailsPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = use(params)
+    // ?chrome=self — экран открыт без нативной шапки (openWebPage
+    // {appBar: false}): рисуем свой заголовок с кнопкой закрытия.
+    // Читается после маунта (не useSearchParams — тому нужен Suspense).
+    const [ownHeader, setOwnHeader] = useState(false)
     const [shared, setShared] = useState(false)
     const [auth, setAuth] = useState('Проверяем…')
+
+    useEffect(() => {
+        setOwnHeader(
+            new URLSearchParams(window.location.search).get('chrome') ===
+                'self',
+        )
+    }, [])
 
     useEffect(() => {
         const run = async () => {
@@ -48,6 +59,21 @@ export default function WebviewTestDetailsPage({
 
     return (
         <main className="mx-auto max-w-md space-y-4 p-5">
+            {ownHeader && (
+                <div className="flex items-center justify-between">
+                    <h1 className="text-lg font-bold">
+                        Своя шапка — #{id}
+                    </h1>
+                    <button
+                        className="rounded-md border px-3 py-1.5 text-sm"
+                        onClick={() =>
+                            closeWebview().catch(() => window.history.back())
+                        }
+                    >
+                        Закрыть
+                    </button>
+                </div>
+            )}
             <div className="flex h-40 items-center justify-center rounded-xl border text-4xl">
                 📦
             </div>
