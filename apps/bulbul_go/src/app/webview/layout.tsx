@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import '../globals.css'
+import { BridgeNav } from './BridgeNav'
 import { ThemeSync } from './ThemeSync'
 import { WebviewErrorBoundary } from './WebviewErrorBoundary'
 
@@ -48,13 +49,21 @@ export default function WebviewLayout({
     return (
         // overflow-x-hidden на обоих уровнях: в вебвью не должно быть
         // горизонтального скрола, даже если контент шире экрана.
+        // bg-background на <html>: цвет документа используется WebKit для
+        // «пустых» областей (снапшот свайпа по SPA-истории, overscroll) —
+        // в тёмной теме они тёмные, а не белые.
         // suppressHydrationWarning: класс dark ставится до гидрации.
-        <html lang="ru" className="overflow-x-hidden" suppressHydrationWarning>
+        <html
+            lang="ru"
+            className="overflow-x-hidden bg-background"
+            suppressHydrationWarning
+        >
             <head>
                 <script dangerouslySetInnerHTML={{ __html: themeInitJs }} />
             </head>
             <body className="overflow-x-hidden max-w-[100vw] bg-background text-foreground antialiased">
                 <ThemeSync />
+                <BridgeNav />
                 <WebviewErrorBoundary>{children}</WebviewErrorBoundary>
             </body>
         </html>

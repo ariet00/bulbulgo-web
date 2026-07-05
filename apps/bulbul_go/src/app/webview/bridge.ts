@@ -115,8 +115,31 @@ export const openUrl = (url: string) => call<boolean>('openUrl', { url })
 export const openRoute = (route: string) =>
     call<boolean>('openRoute', { route })
 
+/**
+ * Открыть страницу сервиса ОТДЕЛЬНЫМ нативным экраном поверх текущего
+ * (для «деталей») БЕЗ перезагрузки: приложение переносит вебвью на новый
+ * экран и диспатчит `bbg:navigate` — BridgeNav делает SPA-переход Next'ом
+ * (состояние и токены сохраняются). Нативные заголовок и свайп назад; под
+ * жестом — предыдущий экран. Возврат по истории приложение делает само.
+ * Относительный путь резолвится от текущего origin.
+ */
+export const openWebPage = (url: string, title?: string) =>
+    call<boolean>('openWebPage', {
+        url: new URL(url, window.location.origin).toString(),
+        title,
+    })
+
 /** Заголовок нативного AppBar (сбрасывается при смене страницы). */
 export const setTitle = (title: string) => call<boolean>('setTitle', { title })
+
+/**
+ * Скрыть/показать нативный хром (шапку и нижнюю навигацию) — для
+ * полноэкранных «деталей», рисующих свою шапку. Непереданное поле не
+ * меняется; сбрасывается при смене страницы (не при SPA-переходах —
+ * верните хром сами при уходе со страницы).
+ */
+export const setChrome = (chrome: { appBar?: boolean; navBar?: boolean }) =>
+    call<boolean>('setChrome', chrome)
 
 /** Бейдж-счётчик на пункте нижней навигации (count 0 — убрать). */
 export const setNavBadge = (index: number, count: number) =>

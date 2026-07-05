@@ -35,7 +35,9 @@ export async function initWebviewAuth(): Promise<boolean> {
     if (!code) return !!getAccessToken()
 
     url.searchParams.delete('code')
-    window.history.replaceState(null, '', url.toString())
+    // Сохраняем history.state: Next App Router хранит в нём своё состояние,
+    // replaceState(null) ломает навигацию назад по истории.
+    window.history.replaceState(window.history.state, '', url.toString())
 
     const r = await fetch(`${API_URL}/auth/webview-exchange`, {
         method: 'POST',

@@ -11,6 +11,7 @@ import {
     getTheme,
     interceptBack,
     openUrl,
+    openWebPage,
     pickFiles,
     pickPhoto,
     pickPhotos,
@@ -19,13 +20,19 @@ import {
     share,
     toast,
 } from '../bridge'
+import {
+    WebviewSessionExpired,
+    authFetch,
+    getAccessToken,
+    initWebviewAuth,
+} from '../auth'
 
 // Диагностическая страница webview-сервисов: прогоняет всю цепочку
-// авторизации (?code= → /auth/webview-exchange → access token → /users/me)
-// и показывает результат каждого шага. Открывается из мобильного приложения
-// (карточка «Тест вебвью» на «Главной») или напрямую в браузере (без кода).
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+// авторизации через базовый auth.ts (?code= → обмен на токены ИЛИ уже
+// сохранённая сессия из sessionStorage → authFetch /users/me) и показывает
+// результат каждого шага. SPA-переходы (детали ↔ назад) сессию не теряют.
+// Открывается из мобильного приложения (карточка «Тест вебвью» на «Главной»)
+// или напрямую в браузере (без кода).
 
 type Step = { name: string; status: 'ok' | 'fail' | 'skip'; detail?: string }
 
@@ -45,52 +52,70 @@ export default function WebviewTestPage() {
     useEffect(() => {
         const run = async () => {
             const collected: Step[] = []
-            const url = new URL(window.location.href)
-            const code = url.searchParams.get('code')
+            const hadCode = new URL(window.location.href).searchParams.has(
+                'code',
+            )
+            const hadSession = !!getAccessToken()
 
-            // Одноразовый код не должен оставаться в адресной строке/истории.
-            if (code) {
-                url.searchParams.delete('code')
-                window.history.replaceState(null, '', url.toString())
-            }
-
+            // detail есть у каждого шага всегда: высота чек-листа стабильна
+            // между первым открытием и SPA-возвратом — иначе контент под
+            // кадром-заморозкой openWebPage сдвигается на пару пикселей.
             collected.push(
-                code
-                    ? { name: 'Код в URL', status: 'ok' }
+                hadCode
+                    ? {
+                          name: 'Код в URL',
+                          status: 'ok',
+                          detail: 'Одноразовый код получен',
+                      }
                     : {
                           name: 'Код в URL',
                           status: 'skip',
-                          detail: 'Открыто без ?code= — страница вне приложения',
+                          detail: hadSession
+                              ? 'Без ?code= — используем сохранённую сессию'
+                              : 'Открыто без ?code= — страница вне приложения',
                       },
             )
 
-            if (code) {
-                try {
-                    const r = await fetch(`${API_URL}/auth/webview-exchange`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code }),
-                    })
-                    if (!r.ok) throw new Error(`HTTP ${r.status}`)
-                    const { access_token } = (await r.json()) as {
-                        access_token: string
-                    }
-                    collected.push({ name: 'Обмен кода на токен', status: 'ok' })
+            try {
+                const authed = await initWebviewAuth()
+                collected.push(
+                    authed
+                        ? {
+                              name: 'Авторизация',
+                              status: 'ok',
+                              detail: hadCode
+                                  ? 'Обмен кода на токены'
+                                  : 'Сессия из sessionStorage',
+                          }
+                        : {
+                              name: 'Авторизация',
+                              status: 'skip',
+                              detail: 'Нет ни кода, ни сохранённой сессии',
+                          },
+                )
 
-                    const me = await fetch(`${API_URL}/users/me`, {
-                        headers: { Authorization: `Bearer ${access_token}` },
-                    })
+                if (authed) {
+                    const me = await authFetch('/users/me')
                     if (!me.ok) throw new Error(`HTTP ${me.status}`)
                     const profile = (await me.json()) as UserMe
                     setUser(profile)
-                    collected.push({ name: 'Запрос профиля', status: 'ok' })
-                } catch (e) {
                     collected.push({
-                        name: 'Авторизация',
-                        status: 'fail',
-                        detail: e instanceof Error ? e.message : String(e),
+                        name: 'Запрос профиля',
+                        status: 'ok',
+                        detail: 'GET /users/me с Bearer-токеном',
                     })
                 }
+            } catch (e) {
+                collected.push({
+                    name: 'Авторизация',
+                    status: 'fail',
+                    detail:
+                        e instanceof WebviewSessionExpired
+                            ? 'Сессия истекла'
+                            : e instanceof Error
+                              ? e.message
+                              : String(e),
+                })
             }
 
             setSteps(collected)
@@ -129,10 +154,13 @@ export default function WebviewTestPage() {
                                 {s.status === 'fail' && '❌'}
                                 {s.status === 'skip' && '➖'}
                             </span>
-                            <span>
+                            <span className="min-w-0 flex-1">
                                 <span className="font-medium">{s.name}</span>
+                                {/* всегда ровно одна строка (truncate): высота
+                                    чек-листа не зависит от текста — контент под
+                                    кадром-заморозкой openWebPage не сдвигается */}
                                 {s.detail && (
-                                    <span className="block text-muted-foreground">
+                                    <span className="block truncate text-muted-foreground">
                                         {s.detail}
                                     </span>
                                 )}
@@ -158,8 +186,105 @@ export default function WebviewTestPage() {
                 </a>
             )}
 
+            {/* Не-web схемы и target=_blank: в приложении уходят в системную
+                звонилку/браузер (shouldOverrideUrlLoading / onCreateWindow) */}
+            {done && (
+                <div className="grid grid-cols-2 gap-2">
+                    <a
+                        href="tel:+996700123456"
+                        className="rounded-lg border p-3 text-center text-sm font-medium"
+                    >
+                        Ссылка tel:
+                    </a>
+                    <a
+                        href="https://bulbul.asia"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border p-3 text-center text-sm font-medium"
+                    >
+                        Ссылка _blank
+                    </a>
+                </div>
+            )}
+
+            {done && (
+                <button
+                    className="block w-full rounded-lg border p-3 text-center text-sm font-medium"
+                    onClick={() =>
+                        openWebPage('/webview/test/details/42', 'Детали #42').catch(
+                            () => {
+                                // вне приложения моста нет — обычный переход
+                                window.location.href = '/webview/test/details/42'
+                            },
+                        )
+                    }
+                >
+                    Детали #42 — отдельным экраном (openWebPage)
+                </button>
+            )}
+
             {done && <BridgePlayground />}
+
+            {done && <DebugLog />}
         </main>
+    )
+}
+
+// Хлебные крошки BridgeNav (sessionStorage bbg_debug): видно, перехватился ли
+// openWebPage SPA-переходом, сохранился/восстановился ли скролл и не было ли
+// полной перезагрузки документа.
+function DebugLog() {
+    const [entries, setEntries] = useState<string[]>([])
+
+    const refresh = () => {
+        try {
+            setEntries(
+                JSON.parse(sessionStorage.getItem('bbg_debug') || '[]'),
+            )
+        } catch {
+            setEntries([])
+        }
+    }
+
+    useEffect(refresh, [])
+
+    return (
+        <div className="space-y-2 rounded-lg border p-3">
+            <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Отладка навигации</p>
+                <div className="flex gap-2">
+                    <button
+                        className="rounded-md border px-2 py-1 text-xs"
+                        onClick={refresh}
+                    >
+                        Обновить
+                    </button>
+                    <button
+                        className="rounded-md border px-2 py-1 text-xs"
+                        onClick={() => {
+                            sessionStorage.removeItem('bbg_debug')
+                            setEntries([])
+                        }}
+                    >
+                        Очистить
+                    </button>
+                </div>
+            </div>
+            {entries.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Пусто</p>
+            ) : (
+                <ul className="space-y-1">
+                    {entries.map((e, i) => (
+                        <li
+                            key={i}
+                            className="break-all font-mono text-[11px] leading-tight text-muted-foreground"
+                        >
+                            {e}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
     )
 }
 
