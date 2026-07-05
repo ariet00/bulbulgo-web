@@ -20,6 +20,8 @@ const DEFAULT_FORM: AdminAppVersionSettings = {
     set_version_header: false,
     android_min_version: '1.0.0',
     ios_min_version: '1.0.0',
+    android_recommended_version: '1.0.0',
+    ios_recommended_version: '1.0.0',
     android_force_update: false,
     ios_force_update: false,
 }
@@ -43,8 +45,10 @@ export function AppVersionSettingsForm() {
     return (
         <div className="space-y-6">
             <p className="text-sm text-muted-foreground">
-                Минимальные версии, force-update и мастер-флаг version-gating
-                middleware. Значения хранятся в Redis под ключами{' '}
+                Версии принудительного и рекомендуемого обновления + мастер-флаг
+                version-gating middleware. Клиент ниже принудительной версии
+                получает неубираемый экран обновления, ниже рекомендуемой —
+                пропускаемый. Значения хранятся в Redis под ключами{' '}
                 <code className="text-xs">app:*</code>.
             </p>
 
@@ -75,7 +79,7 @@ export function AppVersionSettingsForm() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <Label>Android — мин. версия</Label>
+                            <Label>Android — принудительное обновление</Label>
                             <Input
                                 value={form.android_min_version}
                                 onChange={(e) =>
@@ -89,7 +93,7 @@ export function AppVersionSettingsForm() {
                             </code>
                         </div>
                         <div>
-                            <Label>iOS — мин. версия</Label>
+                            <Label>iOS — принудительное обновление</Label>
                             <Input
                                 value={form.ios_min_version}
                                 onChange={(e) => set('ios_min_version', e.target.value)}
@@ -101,16 +105,63 @@ export function AppVersionSettingsForm() {
                             </code>
                         </div>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                        Клиенты ниже этой версии получают{' '}
+                        <code>X-App-ForceUpdate=true</code> — экран обновления
+                        без кнопки «Пропустить».
+                    </p>
+
+                    <Separator />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <Label>Android — рекомендуемая версия</Label>
+                            <Input
+                                value={form.android_recommended_version}
+                                onChange={(e) =>
+                                    set('android_recommended_version', e.target.value)
+                                }
+                                placeholder="1.0.0"
+                                disabled={isLoading}
+                            />
+                            <code className="text-[10px] text-muted-foreground">
+                                app:android_recommended_version
+                            </code>
+                        </div>
+                        <div>
+                            <Label>iOS — рекомендуемая версия</Label>
+                            <Input
+                                value={form.ios_recommended_version}
+                                onChange={(e) =>
+                                    set('ios_recommended_version', e.target.value)
+                                }
+                                placeholder="1.0.0"
+                                disabled={isLoading}
+                            />
+                            <code className="text-[10px] text-muted-foreground">
+                                app:ios_recommended_version
+                            </code>
+                        </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Клиенты ниже этой версии (но не ниже принудительной)
+                        получают пропускаемый экран «Доступно обновление» — не
+                        чаще раза в сутки. Равна принудительной — рекомендация
+                        отключена.
+                    </p>
+
+                    <Separator />
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
                             <div className="space-y-0.5">
                                 <Label className="cursor-pointer">
-                                    Android — force update
+                                    Android — force update (legacy)
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Возвращать <code>X-App-ForceUpdate=true</code>{' '}
-                                    клиентам ниже минимума.
+                                    <code>app:android_force_update</code>. Старые
+                                    клиенты читают флаг из <code>GET /version</code>;
+                                    на заголовки не влияет. Удалим в будущем.
                                 </p>
                             </div>
                             <Switch
@@ -124,11 +175,12 @@ export function AppVersionSettingsForm() {
                         <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
                             <div className="space-y-0.5">
                                 <Label className="cursor-pointer">
-                                    iOS — force update
+                                    iOS — force update (legacy)
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Возвращать <code>X-App-ForceUpdate=true</code>{' '}
-                                    клиентам ниже минимума.
+                                    <code>app:ios_force_update</code>. Старые
+                                    клиенты читают флаг из <code>GET /version</code>;
+                                    на заголовки не влияет. Удалим в будущем.
                                 </p>
                             </div>
                             <Switch

@@ -1151,6 +1151,9 @@ export interface AdminAppVersionSettings {
     set_version_header: boolean
     android_min_version: string
     ios_min_version: string
+    android_recommended_version: string
+    ios_recommended_version: string
+    // Legacy — для старых клиентов, читающих GET /version (удалим в будущем).
     android_force_update: boolean
     ios_force_update: boolean
 }
