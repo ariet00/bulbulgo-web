@@ -24,7 +24,7 @@ import {
     SelectValue,
     Switch,
 } from "@doska/ui"
-import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw } from 'lucide-react'
+import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
@@ -167,15 +167,23 @@ export default function AdminTripsPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Trip Management</CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => refetch()}
-                        disabled={isFetching}
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Link href="/admin/trips/blocked-authors">
+                            <Button variant="outline" size="sm">
+                                <Ban className="h-4 w-4 mr-1" />
+                                Заблокированные ТГ аккаунты
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+                            Обновить
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex flex-wrap items-end gap-2">

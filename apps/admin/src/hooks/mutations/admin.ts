@@ -147,6 +147,33 @@ export const useAdminUpdateTripStatus = () => {
     })
 }
 
+export const useAdminBlockAuthor = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (payload: {
+            author_id: number
+            username?: string | null
+            name?: string | null
+            trip_id?: number | null
+        }) => adminApi.blockAuthor(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.blockedAuthors() })
+            toast.success('Автор заблокирован — его посты парсер пропускает')
+        },
+    })
+}
+
+export const useAdminUnblockAuthor = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (authorId: number) => adminApi.unblockAuthor(authorId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.blockedAuthors() })
+            toast.success('Автор разблокирован')
+        },
+    })
+}
+
 export const useAdminSetTripSubscriptionActive = () => {
     const qc = useQueryClient()
     return useMutation({

@@ -3,8 +3,17 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter, Link } from '@doska/i18n'
-import { useAdminTrip, useAdminTripPhoneViewers } from '@/hooks/queries/admin'
-import { useAdminUpdateTripStatus, useAdminDeleteTrip } from '@/hooks/mutations/admin'
+import {
+    useAdminTrip,
+    useAdminTripPhoneViewers,
+    useAdminBlockedAuthors,
+} from '@/hooks/queries/admin'
+import {
+    useAdminUpdateTripStatus,
+    useAdminDeleteTrip,
+    useAdminBlockAuthor,
+    useAdminUnblockAuthor,
+} from '@/hooks/mutations/admin'
 import {
     Card,
     CardContent,
@@ -65,6 +74,8 @@ import {
     Cake,
     MapPinned,
     Eye,
+    Ban,
+    ShieldOff,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -201,6 +212,83 @@ function FlagBadge({ on, label }: { on?: boolean; label: string }) {
             <span className={`h-1.5 w-1.5 rounded-full ${on ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
             {label}
         </span>
+    )
+}
+
+function SourceAuthorControl({
+    tripId,
+    author,
+}: {
+    tripId: number
+    author: { author_id: number; username?: string | null; name?: string | null }
+}) {
+    const { data: blocked } = useAdminBlockedAuthors()
+    const blockAuthor = useAdminBlockAuthor()
+    const unblockAuthor = useAdminUnblockAuthor()
+
+    const isBlocked = (blocked ?? []).some((b) => b.author_id === author.author_id)
+    const busy = blockAuthor.isPending || unblockAuthor.isPending
+    const displayName =
+        author.name || (author.username ? `@${author.username}` : `id ${author.author_id}`)
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 p-3">
+            <div className="min-w-0 space-y-0.5">
+                <div className="text-xs uppercase text-muted-foreground">Автор сообщения</div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground">{displayName}</span>
+                    {author.username && author.name && (
+                        <span className="text-sm text-muted-foreground">@{author.username}</span>
+                    )}
+                    <span className="font-mono text-xs text-muted-foreground">
+                        id {author.author_id}
+                    </span>
+                    {isBlocked && (
+                        <Badge variant="destructive" className="gap-1">
+                            <Ban className="h-3 w-3" /> Заблокирован
+                        </Badge>
+                    )}
+                </div>
+            </div>
+            {isBlocked ? (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => unblockAuthor.mutate(author.author_id)}
+                    className="gap-1.5"
+                >
+                    {unblockAuthor.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <ShieldOff className="h-4 w-4" />
+                    )}
+                    Разблокировать
+                </Button>
+            ) : (
+                <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() =>
+                        blockAuthor.mutate({
+                            author_id: author.author_id,
+                            username: author.username,
+                            name: author.name,
+                            trip_id: tripId,
+                        })
+                    }
+                    className="gap-1.5"
+                >
+                    {blockAuthor.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <Ban className="h-4 w-4" />
+                    )}
+                    Заблокировать автора
+                </Button>
+            )}
+        </div>
     )
 }
 
@@ -749,6 +837,9 @@ export default function AdminTripDetailPage() {
             {trip.source && (
                 <SectionCard title="Источник (парсер)" icon={Rss}>
                     <div className="space-y-3 text-sm">
+                        {trip.author && (
+                            <SourceAuthorControl tripId={id} author={trip.author} />
+                        )}
                         <div className="flex flex-wrap items-center gap-2">
                             {trip.source.channel &&
                                 (trip.source.channel_url ? (

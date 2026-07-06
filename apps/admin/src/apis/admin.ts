@@ -206,6 +206,20 @@ export const adminApi = {
         requests.patch<any>(`/admin/trips/${id}/status`, { status }),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
 
+    // Parser author blocklist (Telegram accounts the chat parser skips)
+    getBlockedAuthors: () =>
+        requests.get<BlockedAuthor[]>(`/admin/trips/blocked-authors`),
+    blockAuthor: (payload: {
+        author_id: number
+        username?: string | null
+        name?: string | null
+        trip_id?: number | null
+    }) => requests.post<BlockedAuthor>(`/admin/trips/blocked-authors`, payload),
+    unblockAuthor: (authorId: number) =>
+        requests.delete<{ message: string; removed: boolean }>(
+            `/admin/trips/blocked-authors/${authorId}`,
+        ),
+
     // Trip subscriptions (saved searches)
     getTripSubscriptions: (
         page = 1,
@@ -1023,6 +1037,15 @@ export interface AdminComplaintListParams {
     target_id?: number
     date_from?: string
     date_to?: string
+}
+
+export interface BlockedAuthor {
+    author_id: number
+    username: string | null
+    name: string | null
+    trip_id: number | null
+    blocked_by: string | null
+    blocked_at: string | null
 }
 
 export interface AdminTripSubscription {
