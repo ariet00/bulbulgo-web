@@ -1,0 +1,46 @@
+/* Редакционные детали страниц новостей (лента + статья). */
+
+.news-display {
+    font-family: var(--font-news-display), Georgia, 'Times New Roman', serif;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+}
+
+/* Каскадное появление контента при загрузке. */
+@keyframes news-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.news-rise {
+    opacity: 0;
+    animation: news-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Скелетон-шиммер. */
+@keyframes news-shimmer {
+    from {
+        background-position: 200% 0;
+    }
+    to {
+        background-position: -200% 0;
+    }
+}
+
+.news-skeleton {
+    border-radius: 12px;
+    background: linear-gradient(
+        100deg,
+        color-mix(in oklab, var(--foreground) 6%, transparent) 40%,
+        color-mix(in oklab, var(--foreground) 12%, transparent) 50%,
+        color-mix(in oklab, var(--foreground) 6%, transparent) 60%
+    );
+    background-size: 200% 100%;
+    animation: news-shimmer 1.4s linear infinite;
+}

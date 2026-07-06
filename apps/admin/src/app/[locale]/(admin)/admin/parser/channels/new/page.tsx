@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import {
     ChannelForm,
@@ -21,7 +22,14 @@ export default function NewParserChannelPage() {
 
     const save = async () => {
         if (!state.chat_id.trim()) return
-        await create.mutateAsync(channelToBody(state))
+        let body
+        try {
+            body = channelToBody(state)
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Ошибка в форме')
+            return
+        }
+        await create.mutateAsync(body)
         router.push('/admin/parser/channels')
     }
 

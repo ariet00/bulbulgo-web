@@ -6,6 +6,8 @@ import {
     AdminServiceCreate,
     AdminServiceUpdate,
     AdminComplaintStatus,
+    AdminComplaintReasonInput,
+    AdminNewsInput,
     AdminAppFeaturesSettings,
     AdminAppVersionSettings,
     AdminContactLimitsSettings,
@@ -81,6 +83,87 @@ export const useAdminDeleteComplaint = () => {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.complaints() })
             toast.success('Жалоба удалена')
+        },
+    })
+}
+
+// === Complaint reasons dictionary ===
+export const useAdminCreateComplaintReason = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminComplaintReasonInput) => adminApi.createComplaintReason(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.complaintReasons() })
+            toast.success('Тип жалобы добавлен')
+        },
+    })
+}
+
+export const useAdminUpdateComplaintReason = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, ...body }: { id: number } & Partial<AdminComplaintReasonInput>) =>
+            adminApi.updateComplaintReason(id, body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.complaintReasons() })
+            toast.success('Тип жалобы обновлён')
+        },
+    })
+}
+
+export const useAdminDeleteComplaintReason = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteComplaintReason(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.complaintReasons() })
+            toast.success('Тип жалобы удалён')
+        },
+    })
+}
+
+export const useAdminReorderComplaintReasons = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (ids: number[]) => adminApi.reorderComplaintReasons(ids),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.complaintReasons() })
+        },
+    })
+}
+
+// === BulBul Go news ===
+export const useAdminCreateNews = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminNewsInput) => adminApi.createNews(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.news() })
+            toast.success('Новость создана')
+        },
+    })
+}
+
+export const useAdminUpdateNews = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, ...body }: { id: number } & Partial<AdminNewsInput>) =>
+            adminApi.updateNews(id, body),
+        onSuccess: (_, { id }) => {
+            qc.invalidateQueries({ queryKey: adminKeys.news() })
+            qc.invalidateQueries({ queryKey: adminKeys.newsItem(id) })
+            toast.success('Новость сохранена')
+        },
+    })
+}
+
+export const useAdminDeleteNews = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.deleteNews(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.news() })
+            toast.success('Новость удалена')
         },
     })
 }

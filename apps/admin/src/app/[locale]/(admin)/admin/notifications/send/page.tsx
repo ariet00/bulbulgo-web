@@ -2,6 +2,7 @@
 
 import { AdminBroadcastFilters } from '@/apis/admin'
 import {
+    useAdminNewsList,
     useAdminNotificationRoles,
     useAdminPreviewAudience,
 } from '@/hooks/queries/admin'
@@ -120,6 +121,8 @@ export default function AdminSendNotificationPage() {
     const [deviceIdsRaw, setDeviceIdsRaw] = useState('')
 
     const { data: roles } = useAdminNotificationRoles()
+    const { data: newsPage } = useAdminNewsList(1, 50, { status: 'published' })
+    const publishedNews = newsPage?.items ?? []
 
     const sendMutation = useAdminSendNotification()
     const broadcastMutation = useAdminBroadcastNotification()
@@ -547,6 +550,43 @@ export default function AdminSendNotificationPage() {
                                 По нажатию приложение откроет указанный экран. Если пусто —
                                 откроется главный экран.
                             </p>
+                            <div className="mt-2">
+                                <Select
+                                    value={ALL}
+                                    onValueChange={(v) => {
+                                        const n = publishedNews.find(
+                                            (x) => String(x.id) === v,
+                                        )
+                                        if (!n) return
+                                        setClickActionPreset(ALL)
+                                        setClickActionCustom(n.click_action)
+                                        if (!title.trim()) setTitle(n.title)
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="…или открыть новость" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {publishedNews.length === 0 && (
+                                            <SelectItem value={ALL} disabled>
+                                                Нет опубликованных новостей
+                                            </SelectItem>
+                                        )}
+                                        {publishedNews.map((n) => (
+                                            <SelectItem
+                                                key={n.id}
+                                                value={String(n.id)}
+                                            >
+                                                #{n.id} — {n.title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Подставит диплинк выбранной новости (полноэкранная
+                                    статья). Создать новость: «BulBul Go → Новости».
+                                </p>
+                            </div>
                         </div>
 
                         <div>

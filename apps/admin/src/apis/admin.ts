@@ -133,6 +133,31 @@ export const adminApi = {
     deleteComplaint: (id: number) =>
         requests.delete<{ deleted: boolean }>(`/admin/complaints/${id}`),
 
+    // Complaint reasons dictionary (admin-editable, served to the mobile app)
+    getComplaintReasons: () =>
+        requests.get<AdminComplaintReason[]>('/admin/complaints/reasons'),
+    createComplaintReason: (body: AdminComplaintReasonInput) =>
+        requests.post<AdminComplaintReason>('/admin/complaints/reasons', body),
+    updateComplaintReason: (id: number, body: Partial<AdminComplaintReasonInput>) =>
+        requests.put<AdminComplaintReason>(`/admin/complaints/reasons/${id}`, body),
+    deleteComplaintReason: (id: number) =>
+        requests.delete<{ deleted: boolean }>(`/admin/complaints/reasons/${id}`),
+    reorderComplaintReasons: (ids: number[]) =>
+        requests.put<AdminComplaintReason[]>('/admin/complaints/reasons/reorder', { ids }),
+
+    // BulBul Go news (in-app articles opened from pushes / home card)
+    getNewsList: (page = 1, size = 40, filters?: { q?: string; status?: string }) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (filters?.q) params.set('q', filters.q)
+        if (filters?.status) params.set('status', filters.status)
+        return requests.get<Page<AdminNews>>(`/admin/news/?${params.toString()}`)
+    },
+    getNews: (id: number) => requests.get<AdminNews>(`/admin/news/${id}`),
+    createNews: (body: AdminNewsInput) => requests.post<AdminNews>('/admin/news/', body),
+    updateNews: (id: number, body: Partial<AdminNewsInput>) =>
+        requests.put<AdminNews>(`/admin/news/${id}`, body),
+    deleteNews: (id: number) => requests.delete<{ deleted: boolean }>(`/admin/news/${id}`),
+
     // Companies
     getCompanies: (page = 1, size = 40, q?: string, type?: string) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
@@ -1037,6 +1062,51 @@ export interface AdminComplaintListParams {
     target_id?: number
     date_from?: string
     date_to?: string
+}
+
+// Report screens in the app; the backend accepts any string (open set).
+export type AdminComplaintContext = 'rideshare' | 'freight' | 'real_estate' | 'user' | (string & {})
+
+export interface AdminComplaintReason {
+    id: number
+    text: string
+    // Empty array = the reason is shown in every context.
+    contexts: AdminComplaintContext[]
+    is_active: boolean
+    position: number
+    created_at: string
+}
+
+export interface AdminComplaintReasonInput {
+    text: string
+    contexts: AdminComplaintContext[]
+    is_active: boolean
+    position?: number
+}
+
+// === BulBul Go news ===
+
+export type AdminNewsStatus = 'draft' | 'published'
+
+export interface AdminNews {
+    id: number
+    title: string
+    status: AdminNewsStatus
+    published_at: string | null
+    content: string
+    cover_url: string | null
+    // Computed by the backend: the /webview/news page and the in-app deep
+    // link for push notifications.
+    public_url: string
+    click_action: string
+    created_at: string
+}
+
+export interface AdminNewsInput {
+    title: string
+    content: string
+    status: AdminNewsStatus
+    cover_url?: string | null
 }
 
 export interface BlockedAuthor {

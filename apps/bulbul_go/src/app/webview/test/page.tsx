@@ -1,15 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
     bridgeAvailable,
     callPhone,
     copyToClipboard,
     getAppInfo,
+    getCapabilities,
     getLocale,
     getLocation,
     getTheme,
+    haptic,
     interceptBack,
+    isAuthorized,
+    onAuthChanged,
     openUrl,
     openWebPage,
     pickFiles,
@@ -18,13 +22,16 @@ import {
     setNavBadge,
     setTitle,
     share,
+    supports,
     toast,
 } from '../bridge'
 import {
     WebviewSessionExpired,
     authFetch,
+    ensureAuth,
     getAccessToken,
     initWebviewAuth,
+    trySilentAuth,
 } from '../auth'
 
 // Диагностическая страница webview-сервисов: прогоняет всю цепочку
@@ -49,8 +56,8 @@ export default function WebviewTestPage() {
     const [user, setUser] = useState<UserMe | null>(null)
     const [done, setDone] = useState(false)
 
-    useEffect(() => {
-        const run = async () => {
+    const run = useCallback(async () => {
+        {
             const collected: Step[] = []
             const hadCode = new URL(window.location.href).searchParams.has(
                 'code',
@@ -77,21 +84,22 @@ export default function WebviewTestPage() {
             )
 
             try {
-                const authed = await initWebviewAuth()
+                let authed = await initWebviewAuth()
+                let detail = hadCode
+                    ? 'Обмен кода на токены'
+                    : 'Сессия из sessionStorage'
+                if (!authed) {
+                    // Сервис открыт без кода (auth: false) — тихая попытка:
+                    // если приложение залогинено, сессия появится без UI.
+                    authed = await trySilentAuth()
+                    detail = authed
+                        ? 'Тихая авторизация (requestAuth без UI)'
+                        : 'Нет кода, сессии и тихого входа'
+                }
                 collected.push(
                     authed
-                        ? {
-                              name: 'Авторизация',
-                              status: 'ok',
-                              detail: hadCode
-                                  ? 'Обмен кода на токены'
-                                  : 'Сессия из sessionStorage',
-                          }
-                        : {
-                              name: 'Авторизация',
-                              status: 'skip',
-                              detail: 'Нет ни кода, ни сохранённой сессии',
-                          },
+                        ? { name: 'Авторизация', status: 'ok', detail }
+                        : { name: 'Авторизация', status: 'skip', detail },
                 )
 
                 if (authed) {
@@ -121,8 +129,18 @@ export default function WebviewTestPage() {
             setSteps(collected)
             setDone(true)
         }
-        run()
     }, [])
+
+    useEffect(() => {
+        run()
+        // Смена логина в приложении (разлогин/вход в профиле поверх вебвью):
+        // токены страница уже почистил auth.ts — перепрогоняем чек-лист.
+        return onAuthChanged(() => {
+            setDone(false)
+            setUser(null)
+            run()
+        })
+    }, [run])
 
     const displayName = user
         ? [user.name, user.surname].filter(Boolean).join(' ') ||
@@ -184,6 +202,24 @@ export default function WebviewTestPage() {
                 >
                     Открыть нативный профиль (bulbulgo://profile)
                 </a>
+            )}
+
+            {/* Диплинк на страницу вебвью — тот же роут используют пуши
+                (data.route = /home/web/<slug>/page?url=…): fallback-режим
+                с полной загрузкой и своей авторизацией */}
+            {done && (
+                <button
+                    className="block w-full rounded-lg border p-3 text-center text-sm font-medium"
+                    onClick={() => {
+                        const url = encodeURIComponent(
+                            `${window.location.origin}/webview/test/details/42`,
+                        )
+                        const title = encodeURIComponent('Из диплинка')
+                        window.location.href = `bulbulgo://home/web/webview_test/page?url=${url}&title=${title}`
+                    }}
+                >
+                    Детали диплинком (bulbulgo://…/page) — как из пуша
+                </button>
             )}
 
             {/* Не-web схемы и target=_blank: в приложении уходят в системную
@@ -416,6 +452,41 @@ function BridgePlayground() {
                 <button
                     className="rounded-md border p-2 text-sm"
                     onClick={() =>
+                        run('haptic', async () => {
+                            // паттерн деградации: новый метод — только после
+                            // проверки supports (старое приложение его не знает)
+                            if (!(await supports('haptic'))) {
+                                return 'не поддерживается этим приложением'
+                            }
+                            for (const t of [
+                                'light',
+                                'medium',
+                                'heavy',
+                                'success',
+                            ] as const) {
+                                await haptic(t)
+                                await new Promise((r) => setTimeout(r, 250))
+                            }
+                            return 'light → medium → heavy → success'
+                        })
+                    }
+                >
+                    Хаптика
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('capabilities', async () => {
+                            const c = await getCapabilities()
+                            return `${c.appVersion}: ${c.methods.length} методов`
+                        })
+                    }
+                >
+                    Возможности моста
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
                         run('locale/theme', async () => ({
                             locale: await getLocale(),
                             theme: await getTheme(),
@@ -423,6 +494,29 @@ function BridgePlayground() {
                     }
                 >
                     Локаль и тема
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('isAuthorized', () => isAuthorized())
+                    }
+                >
+                    Логин в приложении?
+                </button>
+                <button
+                    className="rounded-md border p-2 text-sm"
+                    onClick={() =>
+                        run('ensureAuth', async () => {
+                            // гейт защищённого действия: молча — если логин
+                            // есть, иначе нативный экран входа поверх вебвью
+                            if (!(await ensureAuth())) return 'отменено/нет входа'
+                            const r = await authFetch('/users/me')
+                            const me = (await r.json()) as { id: number }
+                            return `сессия есть, user #${me.id}`
+                        })
+                    }
+                >
+                    Действие с гейтом
                 </button>
                 <button
                     className="rounded-md border p-2 text-sm"

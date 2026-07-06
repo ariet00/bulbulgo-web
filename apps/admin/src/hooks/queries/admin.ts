@@ -41,6 +41,9 @@ export const adminKeys = {
     regions: (q?: string) => [...adminKeys.all, 'regions', q ?? null] as const,
     complaints: () => [...adminKeys.all, 'complaints'] as const,
     complaint: (id: number) => [...adminKeys.complaints(), id] as const,
+    complaintReasons: () => [...adminKeys.all, 'complaint-reasons'] as const,
+    news: () => [...adminKeys.all, 'news'] as const,
+    newsItem: (id: number) => [...adminKeys.news(), id] as const,
 }
 
 export const useAdminRegions = (q?: string) => {
@@ -206,6 +209,33 @@ export const useAdminComplaint = (id: number) => {
     return useQuery({
         queryKey: adminKeys.complaint(id),
         queryFn: () => adminApi.getComplaint(id),
+        enabled: !!id,
+    })
+}
+
+export const useAdminComplaintReasons = () => {
+    return useQuery({
+        queryKey: adminKeys.complaintReasons(),
+        queryFn: () => adminApi.getComplaintReasons(),
+    })
+}
+
+export const useAdminNewsList = (
+    page: number = 1,
+    size: number = 40,
+    filters?: { q?: string; status?: string },
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.news(), { page, size, ...(filters ?? {}) }],
+        queryFn: () => adminApi.getNewsList(page, size, filters),
+        placeholderData: keepPreviousData,
+    })
+}
+
+export const useAdminNews = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.newsItem(id),
+        queryFn: () => adminApi.getNews(id),
         enabled: !!id,
     })
 }

@@ -12,6 +12,18 @@ export const STATUSES: { value: string; label: string }[] = [
     { value: 'dismissed', label: 'Отклонена' },
 ]
 
+// Report screens in the mobile app (open set — the backend accepts any string).
+export const COMPLAINT_CONTEXTS: { value: string; label: string }[] = [
+    { value: 'rideshare', label: 'Попутки' },
+    { value: 'freight', label: 'Грузовые' },
+    { value: 'real_estate', label: 'Недвижимость' },
+    { value: 'user', label: 'Пользователь' },
+]
+
+export function contextLabel(value: string): string {
+    return COMPLAINT_CONTEXTS.find((c) => c.value === value)?.label ?? value
+}
+
 export function targetHref(t: AdminComplaintTarget | null): string | null {
     if (!t || !t.exists) return null
     if (t.type === 'user') return `/admin/users/${t.id}`

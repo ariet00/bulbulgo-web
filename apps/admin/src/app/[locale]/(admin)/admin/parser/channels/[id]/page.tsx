@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 import {
     ChannelForm,
@@ -31,7 +32,14 @@ export default function EditParserChannelPage() {
     if (isLoading || !channel) return <div>Loading…</div>
 
     const save = async () => {
-        await update.mutateAsync({ id: channelId, body: channelToBody(state) })
+        let body
+        try {
+            body = channelToBody(state)
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Ошибка в форме')
+            return
+        }
+        await update.mutateAsync({ id: channelId, body })
     }
 
     return (

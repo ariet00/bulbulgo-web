@@ -45,6 +45,7 @@ export type ChannelFormState = {
     bot_username: string
     allowed_roles: TripRole[]
     trip_expire_hours: string // string so empty input → null (use global)
+    filters_json: string // raw JSON for data.parser.filters; '' = none
 }
 
 export const emptyChannel: ChannelFormState = {
@@ -60,6 +61,26 @@ export const emptyChannel: ChannelFormState = {
     bot_username: '',
     allowed_roles: [],
     trip_expire_hours: '',
+    filters_json: '',
+}
+
+/** Parse the filters JSON field. Returns `{ value }` on success (undefined =
+ * empty/cleared), or `{ error }` when the text isn't a JSON object. */
+export function parseFiltersJson(
+    raw: string,
+): { value?: Record<string, any>; error?: string } {
+    const t = raw.trim()
+    if (!t) return { value: undefined }
+    let parsed: unknown
+    try {
+        parsed = JSON.parse(t)
+    } catch {
+        return { error: 'Невалидный JSON' }
+    }
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        return { error: 'Ожидается JSON-объект, например { "price": { … } }' }
+    }
+    return { value: parsed as Record<string, any> }
 }
 
 export function channelFromRow(row: ParserChannel): ChannelFormState {
@@ -79,11 +100,19 @@ export function channelFromRow(row: ParserChannel): ChannelFormState {
             row.parser.trip_expire_hours == null
                 ? ''
                 : String(row.parser.trip_expire_hours),
+        filters_json: row.parser.filters
+            ? JSON.stringify(row.parser.filters, null, 2)
+            : '',
     }
 }
 
 export function channelToBody(s: ChannelFormState) {
     const bot_id = s.bot_id.trim() ? Number(s.bot_id) : null
+    const filters = parseFiltersJson(s.filters_json)
+    if (filters.error) {
+        // Guard against saving invalid JSON — the form also surfaces this inline.
+        throw new Error(`filters: ${filters.error}`)
+    }
     return {
         chat_id: s.chat_id.trim(),
         bot_id: Number.isFinite(bot_id as number) ? (bot_id as number | null) : null,
@@ -104,6 +133,8 @@ export function channelToBody(s: ChannelFormState) {
                 s.trip_expire_hours.trim() && Number(s.trip_expire_hours) > 0
                     ? Number(s.trip_expire_hours)
                     : null,
+            // null when cleared → backend drops the filters key (no filtering).
+            filters: filters.value ?? null,
         },
     }
 }
@@ -115,6 +146,7 @@ type Props = {
 
 export function ChannelForm({ value: v, onChange }: Props) {
     const set = (patch: Partial<ChannelFormState>) => onChange({ ...v, ...patch })
+    const filtersError = parseFiltersJson(v.filters_json).error
 
     return (
         <div className="space-y-6">
@@ -283,11 +315,39 @@ export function ChannelForm({ value: v, onChange }: Props) {
                             Если ничего не выбрано — парсим все роли (driver / passenger / parcel).
                         </p>
                     </div>
+                    <div>
+                        <Label>Фильтры (JSON, опц.)</Label>
+                        <Textarea
+                            value={v.filters_json}
+                            onChange={(e) => set({ filters_json: e.target.value })}
+                            rows={8}
+                            className="font-mono text-xs"
+                            placeholder={FILTERS_PLACEHOLDER}
+                        />
+                        {filtersError ? (
+                            <p className="text-xs text-destructive mt-1">{filtersError}</p>
+                        ) : (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Фильтр цены по ролям. min/max — границы (null = без
+                                ограничения), enabled=false — фильтр для роли выключен.
+                                Если фильтр роли включён, а цена не распознана —
+                                объявление отбрасывается. Пусто — фильтров нет.
+                            </p>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </div>
     )
 }
+
+const FILTERS_PLACEHOLDER = `{
+  "price": {
+    "driver":    { "enabled": true,  "min": 200, "max": 8000 },
+    "passenger": { "enabled": false, "min": 0,   "max": 5000 },
+    "parcel":    { "enabled": false, "min": 0,   "max": 3000 }
+  }
+}`
 
 type ActionsProps = {
     onSave: () => void

@@ -63,6 +63,12 @@ export interface ParserChannelBlock {
     allowed_roles: TripRole[]
     /** Per-channel trip lifetime in hours. null = use the global parser setting. */
     trip_expire_hours: number | null
+    /**
+     * Per-channel content filters (free-form JSON, extensible). Currently:
+     * `{ price: { <role>: { enabled: boolean; min: number|null; max: number|null } } }`.
+     * null / absent = no filtering.
+     */
+    filters?: Record<string, any> | null
 }
 
 export type ChannelType = 'parse' | 'publish' | 'both' | 'none'

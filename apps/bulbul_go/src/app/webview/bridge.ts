@@ -89,6 +89,73 @@ export const toast = (
 export const copyToClipboard = (text: string) =>
     call<boolean>('copyToClipboard', { text })
 
+/**
+ * Тактильный отклик. light — мягкий (дефолт), selection — переключение,
+ * medium/success — подтверждение действия, heavy/error — ошибка/акцент.
+ */
+export const haptic = (
+    type:
+        | 'light'
+        | 'medium'
+        | 'heavy'
+        | 'selection'
+        | 'success'
+        | 'error' = 'light',
+) => call<boolean>('haptic', { type })
+
+export type BridgeCapabilities = { methods: string[]; appVersion: string }
+
+/** Список методов моста этого приложения (для проверки поддержки). */
+export const getCapabilities = () =>
+    call<BridgeCapabilities>('getCapabilities')
+
+/**
+ * Методы моста первого релиза приложения: старое приложение без
+ * getCapabilities поддерживает ровно их — фолбэк supports().
+ */
+const V1_METHODS = new Set([
+    'getAppInfo', 'getLocation', 'pickPhoto', 'pickPhotos', 'pickFiles',
+    'share', 'call', 'toast', 'copyToClipboard', 'isAuthorized',
+    'requestAuth', 'getLocale', 'getTheme', 'openUrl', 'openRoute',
+    'openWebPage', 'setTitle', 'setChrome', 'setNavBadge', 'setBackHandler',
+    'close',
+])
+
+let capabilitiesCache: Promise<Set<string>> | null = null
+
+/**
+ * Поддерживает ли ПРИЛОЖЕНИЕ метод моста. Страницы деплоятся мгновенно,
+ * приложение обновляется неделями — новый метод зовём только после проверки,
+ * иначе деградируем (спрятать кнопку, обойтись без хаптики и т.п.).
+ * На старом приложении без getCapabilities — фолбэк на список V1.
+ */
+export function supports(method: string): Promise<boolean> {
+    if (!bridgeAvailable()) return Promise.resolve(false)
+    capabilitiesCache ??= getCapabilities()
+        .then((c) => new Set(c.methods))
+        .catch(() => V1_METHODS)
+    return capabilitiesCache.then((methods) => methods.has(method))
+}
+
+/**
+ * Есть ли логин в ПРИЛОЖЕНИИ (не сессия страницы): дешёвый статус для
+ * адаптации UI анонимной страницы, ничего не создаёт.
+ */
+export const isAuthorized = () => call<boolean>('isAuthorized')
+
+/**
+ * Одноразовый код авторизации по требованию (ленивая авторизация страницы).
+ * interactive: false — только тихий путь (код, если приложение залогинено,
+ * иначе null); true (по умолчанию) — при отсутствии логина откроется
+ * нативный экран входа поверх вебвью. null — логина нет / пользователь
+ * отменил. Обычно нужен не сам метод, а хелперы trySilentAuth()/ensureAuth()
+ * из auth.ts — они и код обменяют.
+ */
+export const requestAuth = (opts?: { interactive?: boolean }) =>
+    call<{ code: string } | null>('requestAuth', {
+        interactive: opts?.interactive !== false,
+    })
+
 /** Язык интерфейса приложения. */
 export const getLocale = () => call<'ru' | 'en' | 'ky'>('getLocale')
 
@@ -180,6 +247,18 @@ export function onThemeChanged(cb: (theme: 'light' | 'dark') => void) {
         cb((e as CustomEvent).detail === 'dark' ? 'dark' : 'light')
     window.addEventListener('bbg:themechanged', handler)
     return () => window.removeEventListener('bbg:themechanged', handler)
+}
+
+/**
+ * Подписка на смену логина ПРИЛОЖЕНИЯ, пока страница открыта (разлогин или
+ * вход в нативном профиле поверх вебвью). При false auth.ts уже почистил
+ * токены страницы — колбэку остаётся перестроить UI (или сделать
+ * trySilentAuth при true). Возвращает функцию отписки.
+ */
+export function onAuthChanged(cb: (authorized: boolean) => void) {
+    const handler = (e: Event) => cb((e as CustomEvent).detail === true)
+    window.addEventListener('bbg:authchanged', handler)
+    return () => window.removeEventListener('bbg:authchanged', handler)
 }
 
 /** Подписка на смену языка приложения. Возвращает функцию отписки. */

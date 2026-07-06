@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminComplaints } from '@/hooks/queries/admin'
+import { useAdminComplaintReasons, useAdminComplaints } from '@/hooks/queries/admin'
 import {
     useAdminDeleteComplaint,
     useAdminSetComplaintStatus,
@@ -28,7 +28,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@doska/ui'
-import { CheckCircle, Eye, RefreshCw, Trash2, X, XCircle } from 'lucide-react'
+import { CheckCircle, Eye, ListChecks, RefreshCw, Trash2, X, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import type { AdminComplaint } from '@/apis/admin'
@@ -42,6 +42,7 @@ const FILTER_DEFAULTS = {
     q: '',
     target_type: ALL,
     status: ALL,
+    reason: ALL,
     date_from: '',
     date_to: '',
 }
@@ -63,10 +64,12 @@ export default function ComplaintsPage() {
             target_type:
                 values.target_type === ALL ? undefined : (values.target_type as any),
             status: values.status === ALL ? undefined : (values.status as any),
+            reason: values.reason === ALL ? undefined : values.reason,
             date_from: values.date_from || undefined,
             date_to: values.date_to || undefined,
         },
     )
+    const { data: reasons } = useAdminComplaintReasons()
 
     const setStatus = useAdminSetComplaintStatus()
     const deleteComplaint = useAdminDeleteComplaint()
@@ -86,6 +89,7 @@ export default function ComplaintsPage() {
         !!values.q ||
         values.target_type !== ALL ||
         values.status !== ALL ||
+        values.reason !== ALL ||
         !!values.date_from ||
         !!values.date_to
 
@@ -95,15 +99,23 @@ export default function ComplaintsPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Модерация жалоб</CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => refetch()}
-                        disabled={isFetching}
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
-                    </Button>
+                    <div className="flex gap-2">
+                        <Link href="/admin/complaints/reasons">
+                            <Button variant="outline" size="sm">
+                                <ListChecks className="h-4 w-4 mr-1" />
+                                Типы жалоб
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+                            Обновить
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex flex-wrap items-end gap-2">
@@ -141,6 +153,22 @@ export default function ComplaintsPage() {
                                 {STATUSES.map((s) => (
                                     <SelectItem key={s.value} value={s.value}>
                                         {s.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={values.reason}
+                            onValueChange={(v) => setValues({ reason: v })}
+                        >
+                            <SelectTrigger className="w-full sm:w-52">
+                                <SelectValue placeholder="Причина" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>Все причины</SelectItem>
+                                {reasons?.map((r) => (
+                                    <SelectItem key={r.id} value={r.text}>
+                                        {r.text}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
