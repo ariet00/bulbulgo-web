@@ -57,7 +57,14 @@ type Row = {
     users: number
 }
 type TsRow = { bucket: string; app_version: string | null; users: number }
-type Status = 'latest' | 'outdated' | 'below_min' | 'unknown'
+type Status = 'latest' | 'outdated' | 'below_recommended' | 'below_min' | 'unknown'
+
+type VersionSettings = {
+    android_min_version: string
+    ios_min_version: string
+    android_recommended_version: string
+    ios_recommended_version: string
+}
 
 // ── version helpers ────────────────────────────────────────────────────────
 function parseVersion(v: string | null | undefined): number[] {
@@ -77,18 +84,25 @@ function cmpVersion(a: string | null | undefined, b: string | null | undefined):
     }
     return 0
 }
-function minVersionFor(
-    platform: string | null,
-    s?: { android_min_version: string; ios_min_version: string },
-): string | null {
+function minVersionFor(platform: string | null, s?: VersionSettings): string | null {
     if (!s) return null
     if (platform === 'android') return s.android_min_version || null
     if (platform === 'ios') return s.ios_min_version || null
     return null
 }
+function recommendedVersionFor(platform: string | null, s?: VersionSettings): string | null {
+    if (!s) return null
+    if (platform === 'android') return s.android_recommended_version || null
+    if (platform === 'ios') return s.ios_recommended_version || null
+    return null
+}
 const STATUS_META: Record<Status, { label: string; cls: string }> = {
     latest: { label: 'Актуальная', cls: 'bg-green-500/15 text-green-600 dark:text-green-400' },
-    outdated: { label: 'Устарела', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+    outdated: { label: 'Устарела', cls: 'bg-slate-500/15 text-slate-600 dark:text-slate-400' },
+    below_recommended: {
+        label: 'Ниже рекомендуемой',
+        cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    },
     below_min: { label: 'Ниже минимума', cls: 'bg-red-500/15 text-red-600 dark:text-red-400' },
     unknown: { label: '—', cls: 'bg-muted text-muted-foreground' },
 }
@@ -379,10 +393,7 @@ type PlatformGroup = {
     rows: ClassifiedRow[]
 }
 
-function classify(
-    rows: Row[],
-    settings?: { android_min_version: string; ios_min_version: string },
-) {
+function classify(rows: Row[], settings?: VersionSettings) {
     // Latest observed version per platform.
     const latestByPlatform = new Map<string, string>()
     for (const r of rows) {
@@ -400,6 +411,8 @@ function classify(
         if (min && cmpVersion(r.app_version, min) < 0) return 'below_min'
         const latest = latestByPlatform.get(r.platform ?? 'null')
         if (latest && r.app_version === latest) return 'latest'
+        const rec = recommendedVersionFor(r.platform, settings)
+        if (rec && cmpVersion(r.app_version, rec) < 0) return 'below_recommended'
         return 'outdated'
     }
 
@@ -439,7 +452,7 @@ function classify(
     const kpi = {
         totalUsers,
         latestUsers: sumBy('latest'),
-        outdatedUsers: sumBy('outdated'),
+        outdatedUsers: sumBy('outdated') + sumBy('below_recommended'),
         belowMinUsers: sumBy('below_min'),
     }
 
