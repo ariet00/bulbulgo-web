@@ -37,6 +37,7 @@ import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
 import { DataCell } from '@/components/admin/analytics/DataCell'
 import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
 import { UserPreBlockWarningForm } from '@/components/admin/users/UserPreBlockWarningForm'
+import { RelatedAccountsTab } from '@/components/admin/users/RelatedAccountsTab'
 import {
     Card,
     CardContent,
@@ -511,6 +512,9 @@ export default function UserDetailPage() {
                     </TabsTrigger>
                     <TabsTrigger value="analytics" className="gap-2">
                         <Activity className="h-4 w-4" /> Аналитика
+                    </TabsTrigger>
+                    <TabsTrigger value="related" className="gap-2">
+                        <Fingerprint className="h-4 w-4" /> Связи
                     </TabsTrigger>
                 </TabsList>
 
@@ -1098,71 +1102,6 @@ export default function UserDetailPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader>
-                            <CardTitle>
-                                Уведомления{' '}
-                                <span className="text-sm font-normal text-muted-foreground">
-                                    (всего {notifications.data?.total ?? 0})
-                                </span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {notifications.isLoading ? (
-                                <div>Загрузка…</div>
-                            ) : !notifications.data || notifications.data.items.length === 0 ? (
-                                <div className="text-muted-foreground">Нет уведомлений</div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-44">Когда</TableHead>
-                                            <TableHead>Заголовок</TableHead>
-                                            <TableHead className="w-32">Тип</TableHead>
-                                            <TableHead className="w-24">Прочитано</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {notifications.data.items.map((n: any) => (
-                                            <TableRow key={n.id}>
-                                                <TableCell className="text-xs whitespace-nowrap">
-                                                    {n.created_at ? new Date(n.created_at).toLocaleString() : '—'}
-                                                </TableCell>
-                                                <TableCell className="text-sm">
-                                                    <div className="font-medium">{n.title ?? '—'}</div>
-                                                    {n.body && (
-                                                        <div className="text-xs text-muted-foreground line-clamp-2">
-                                                            {n.body}
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-xs">
-                                                    {n.type ?? '—'}
-                                                    {n.category ? ` / ${n.category}` : ''}
-                                                </TableCell>
-                                                <TableCell className="text-xs">
-                                                    {n.is_read ? 'да' : 'нет'}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
-                            {notifications.data && notifications.data.total > 0 && (
-                                <Pagination
-                                    page={notifications.data.page}
-                                    total={notifications.data.total}
-                                    size={notifications.data.size}
-                                    onPageChange={setNotifPage}
-                                    onSizeChange={s => {
-                                        setNotifSize(s)
-                                        setNotifPage(1)
-                                    }}
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
                         <CardHeader className="space-y-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <CardTitle>
@@ -1326,6 +1265,76 @@ export default function UserDetailPage() {
                             )}
                         </CardContent>
                     </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                Уведомления{' '}
+                                <span className="text-sm font-normal text-muted-foreground">
+                                    (всего {notifications.data?.total ?? 0})
+                                </span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {notifications.isLoading ? (
+                                <div>Загрузка…</div>
+                            ) : !notifications.data || notifications.data.items.length === 0 ? (
+                                <div className="text-muted-foreground">Нет уведомлений</div>
+                            ) : (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-44">Когда</TableHead>
+                                            <TableHead>Заголовок</TableHead>
+                                            <TableHead className="w-32">Тип</TableHead>
+                                            <TableHead className="w-24">Прочитано</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {notifications.data.items.map((n: any) => (
+                                            <TableRow key={n.id}>
+                                                <TableCell className="text-xs whitespace-nowrap">
+                                                    {n.created_at ? new Date(n.created_at).toLocaleString() : '—'}
+                                                </TableCell>
+                                                <TableCell className="text-sm">
+                                                    <div className="font-medium">{n.title ?? '—'}</div>
+                                                    {n.body && (
+                                                        <div className="text-xs text-muted-foreground line-clamp-2">
+                                                            {n.body}
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    {n.type ?? '—'}
+                                                    {n.category ? ` / ${n.category}` : ''}
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    {n.is_read ? 'да' : 'нет'}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            )}
+                            {notifications.data && notifications.data.total > 0 && (
+                                <Pagination
+                                    page={notifications.data.page}
+                                    total={notifications.data.total}
+                                    size={notifications.data.size}
+                                    onPageChange={setNotifPage}
+                                    onSizeChange={s => {
+                                        setNotifSize(s)
+                                        setNotifPage(1)
+                                    }}
+                                />
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* ══════════════════ RELATED TAB ══════════════════ */}
+                <TabsContent value="related" className="space-y-6">
+                    <RelatedAccountsTab userId={id} />
                 </TabsContent>
             </Tabs>
 

@@ -116,6 +116,14 @@ export const useAdminUserSessions = (id: number) => {
     })
 }
 
+export const useAdminUserRelatedAccounts = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.user(id), 'related-accounts'] as const,
+        queryFn: () => adminApi.getUserRelatedAccounts(id),
+        enabled: !!id,
+    })
+}
+
 export const useAdminUserFeatures = (id: number) => {
     return useQuery({
         queryKey: [...adminKeys.user(id), 'features'] as const,

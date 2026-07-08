@@ -62,6 +62,29 @@ export const adminApi = {
         requests.get<AdminDeviceToken[]>(`/admin/users/${id}/devices`),
     getUserSessions: (id: number) =>
         requests.get<AdminUserSession[]>(`/admin/users/${id}/sessions`),
+    getUserRelatedAccounts: (id: number) =>
+        requests.get<{
+            devices: Array<{
+                device_id: string
+                sources: string[]
+                platforms: string[]
+                first_seen: string | null
+                last_seen: string | null
+                events: number
+            }>
+            related: Array<{
+                user_id: number
+                name: string | null
+                phone: string | null
+                avatar_url: string | null
+                is_active: boolean
+                registered_at: string | null
+                shared_devices: string[]
+                first_seen: string | null
+                last_seen: string | null
+                events: number
+            }>
+        }>(`/admin/users/${id}/related-accounts`),
     getUserFeatures: (id: number) =>
         requests.get<AdminUserFeatures>(`/admin/users/${id}/features`),
     updateUserFeatures: (id: number, overrides: Record<string, boolean | null>) =>
