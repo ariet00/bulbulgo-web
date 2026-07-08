@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from '@doska/i18n'
 import {
     useAdminAnalytics,
     useAdminAnalyticsActiveUsers,
@@ -36,6 +37,7 @@ const PERIODS: Array<{ value: string; label: string }> = [
 ]
 
 export default function AnalyticsOverviewPage() {
+    const router = useRouter()
     const [period, setPeriod] = useState('7d')
     const [product, setProduct] = useState('')
     const summary = useAdminAnalytics()
@@ -110,8 +112,16 @@ export default function AnalyticsOverviewPage() {
                     ) : !top.data || top.data.length === 0 ? (
                         <div className="text-muted-foreground">Нет данных</div>
                     ) : (
-                        <TopEventsChart data={top.data} />
+                        <TopEventsChart
+                            data={top.data}
+                            onSelect={(ev) =>
+                                router.push(`/admin/analytics/events/${encodeURIComponent(ev)}`)
+                            }
+                        />
                     )}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        Клик по столбцу — детальная аналитика события.
+                    </p>
                 </CardContent>
             </Card>
 

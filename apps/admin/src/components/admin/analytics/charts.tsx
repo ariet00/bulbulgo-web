@@ -77,8 +77,10 @@ export function ActiveUsersChart({
 
 export function TopEventsChart({
     data,
+    onSelect,
 }: {
     data: Array<{ event_type: string; count: number }>
+    onSelect?: (eventType: string) => void
 }) {
     const t = useChartTheme()
     const maxLabel = data.reduce((m, d) => Math.max(m, d.event_type.length), 0)
@@ -106,7 +108,16 @@ export function TopEventsChart({
                     tickFormatter={truncate}
                 />
                 <Tooltip {...tooltipProps(t)} />
-                <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
+                <Bar
+                    dataKey="count"
+                    fill={CHART_COLORS[0]}
+                    radius={[0, 4, 4, 0]}
+                    cursor={onSelect ? 'pointer' : undefined}
+                    onClick={(d: any) => {
+                        const ev = d?.event_type ?? d?.payload?.event_type
+                        if (ev) onSelect?.(ev)
+                    }}
+                />
             </BarChart>
         </ResponsiveContainer>
     )
@@ -244,6 +255,85 @@ export function VersionsTimeseriesChart({
                     />
                 ))}
             </LineChart>
+        </ResponsiveContainer>
+    )
+}
+
+// Per-event drill-down: events (left axis) + unique users (right axis) over time.
+export function EventTimeseriesChart({
+    data,
+    granularity = 'day',
+}: {
+    data: Array<{ bucket: string; events: number; users: number }>
+    granularity?: 'hour' | 'day' | 'week'
+}) {
+    const t = useChartTheme()
+    const series = data.map(d => ({
+        ...d,
+        label: formatBucket(d.bucket, granularity === 'hour' ? 'hour' : 'day'),
+    }))
+
+    return (
+        <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={series} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                <XAxis dataKey="label" fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <YAxis
+                    yAxisId="events"
+                    allowDecimals={false}
+                    fontSize={12}
+                    stroke={CHART_COLORS[0]}
+                    tick={{ fill: t.axis }}
+                />
+                <YAxis
+                    yAxisId="users"
+                    orientation="right"
+                    allowDecimals={false}
+                    fontSize={12}
+                    stroke={CHART_COLORS[1]}
+                    tick={{ fill: t.axis }}
+                />
+                <Tooltip {...tooltipProps(t)} />
+                <Legend wrapperStyle={{ color: t.axis }} />
+                <Line
+                    yAxisId="events"
+                    type="monotone"
+                    dataKey="events"
+                    name="События"
+                    stroke={CHART_COLORS[0]}
+                    strokeWidth={2}
+                    dot={false}
+                />
+                <Line
+                    yAxisId="users"
+                    type="monotone"
+                    dataKey="users"
+                    name="Пользователи"
+                    stroke={CHART_COLORS[1]}
+                    strokeWidth={2}
+                    dot={false}
+                />
+            </LineChart>
+        </ResponsiveContainer>
+    )
+}
+
+// Histogram: users bucketed by how many times they triggered an event.
+export function FrequencyBarChart({
+    data,
+}: {
+    data: Array<{ bucket: string; users: number }>
+}) {
+    const t = useChartTheme()
+    return (
+        <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                <XAxis dataKey="bucket" fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <YAxis allowDecimals={false} fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <Tooltip {...tooltipProps(t)} />
+                <Bar dataKey="users" name="Пользователи" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+            </BarChart>
         </ResponsiveContainer>
     )
 }

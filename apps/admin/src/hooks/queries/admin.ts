@@ -461,6 +461,62 @@ export const useAdminAnalyticsTopEvents = (period: string = '7d', limit: number 
     })
 }
 
+export const useAdminAnalyticsEventSummary = (
+    eventType: string,
+    period: string = '7d',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-summary', eventType, period, product ?? null, platform ?? null],
+        queryFn: () => adminApi.getEventAnalyticsSummary(eventType, { period, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
+export const useAdminAnalyticsEventTimeseries = (
+    eventType: string,
+    period: string = '7d',
+    granularity: string = 'day',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-timeseries', eventType, period, granularity, product ?? null, platform ?? null],
+        queryFn: () =>
+            adminApi.getEventAnalyticsTimeseries(eventType, { period, granularity, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
+export const useAdminAnalyticsEventFrequency = (
+    eventType: string,
+    period: string = '7d',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-frequency', eventType, period, product ?? null, platform ?? null],
+        queryFn: () => adminApi.getEventAnalyticsFrequency(eventType, { period, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
+export const useAdminAnalyticsEventTopUsers = (
+    eventType: string,
+    period: string = '7d',
+    limit: number = 20,
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-top-users', eventType, period, limit, product ?? null, platform ?? null],
+        queryFn: () =>
+            adminApi.getEventAnalyticsTopUsers(eventType, { period, limit, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
 export const useAdminAnalyticsActiveUsers = (period: string = '30d', granularity: string = 'day', product?: string) => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'active-users', period, granularity, product ?? null],
@@ -468,10 +524,10 @@ export const useAdminAnalyticsActiveUsers = (period: string = '30d', granularity
     })
 }
 
-export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: string) => {
+export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: string, eventType?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'platforms', period, product ?? null],
-        queryFn: () => adminApi.getPlatformsBreakdown(period, product),
+        queryKey: [...adminKeys.analytics(), 'platforms', period, product ?? null, eventType ?? null],
+        queryFn: () => adminApi.getPlatformsBreakdown(period, product, eventType),
     })
 }
 
@@ -575,6 +631,7 @@ export const useAdminAnalyticsAppVersions = (
     period: string = '7d',
     product?: string,
     platform?: string,
+    eventType?: string,
 ) => {
     return useQuery({
         queryKey: [
@@ -583,8 +640,9 @@ export const useAdminAnalyticsAppVersions = (
             period,
             product ?? null,
             platform ?? null,
+            eventType ?? null,
         ],
-        queryFn: () => adminApi.getAppVersionsBreakdown(period, product, platform),
+        queryFn: () => adminApi.getAppVersionsBreakdown(period, product, platform, eventType),
     })
 }
 

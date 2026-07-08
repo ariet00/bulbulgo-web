@@ -134,7 +134,12 @@ export default function AnalyticsEventsPage() {
                                             {new Date(ev.created_at).toLocaleString()}
                                         </TableCell>
                                         <TableCell className="font-mono text-sm">
-                                            {ev.event_type}
+                                            <Link
+                                                href={`/admin/analytics/events/${encodeURIComponent(ev.event_type)}`}
+                                                className="hover:text-primary hover:underline"
+                                            >
+                                                {ev.event_type}
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             {ev.user_id ? (

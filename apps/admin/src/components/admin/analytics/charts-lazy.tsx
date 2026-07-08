@@ -33,6 +33,16 @@ export const VersionsTimeseriesChart = dynamic(
     { ssr: false, loading },
 )
 
+export const EventTimeseriesChart = dynamic(
+    () => import('./charts').then(m => m.EventTimeseriesChart),
+    { ssr: false, loading },
+)
+
+export const FrequencyBarChart = dynamic(
+    () => import('./charts').then(m => m.FrequencyBarChart),
+    { ssr: false, loading },
+)
+
 export const ErrorsTimeseriesChart = dynamic(
     () => import('./charts').then(m => m.ErrorsTimeseriesChart),
     { ssr: false, loading },

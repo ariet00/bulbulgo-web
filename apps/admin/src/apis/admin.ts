@@ -411,6 +411,70 @@ export const adminApi = {
             `/admin/analytics/events/top?${qs.toString()}`,
         )
     },
+    getEventAnalyticsSummary: (
+        eventType: string,
+        params: { period?: string; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<{
+            total: number
+            users: number
+            devices: number
+            anonymous: number
+            avg_per_user: number
+            median_per_user: number
+            prev_total: number
+            prev_users: number
+        }>(`/admin/analytics/events/${encodeURIComponent(eventType)}/summary?${qs.toString()}`)
+    },
+    getEventAnalyticsTimeseries: (
+        eventType: string,
+        params: { period?: string; granularity?: string; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.granularity) qs.set('granularity', params.granularity)
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<Array<{ bucket: string; events: number; users: number }>>(
+            `/admin/analytics/events/${encodeURIComponent(eventType)}/timeseries?${qs.toString()}`,
+        )
+    },
+    getEventAnalyticsFrequency: (
+        eventType: string,
+        params: { period?: string; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<Array<{ bucket: string; users: number }>>(
+            `/admin/analytics/events/${encodeURIComponent(eventType)}/frequency?${qs.toString()}`,
+        )
+    },
+    getEventAnalyticsTopUsers: (
+        eventType: string,
+        params: { period?: string; limit?: number; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.limit) qs.set('limit', String(params.limit))
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<
+            Array<{
+                user_id: number
+                name: string | null
+                avatar_url: string | null
+                count: number
+                first_seen: string
+                last_seen: string
+            }>
+        >(`/admin/analytics/events/${encodeURIComponent(eventType)}/top-users?${qs.toString()}`)
+    },
     getActiveUsers: (params: { period?: string; granularity?: string; product?: string }) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
@@ -420,9 +484,10 @@ export const adminApi = {
             `/admin/analytics/users/active?${qs.toString()}`,
         )
     },
-    getPlatformsBreakdown: (period: string = '7d', product?: string) => {
+    getPlatformsBreakdown: (period: string = '7d', product?: string, eventType?: string) => {
         const qs = new URLSearchParams({ period })
         if (product) qs.set('product', product)
+        if (eventType) qs.set('event_type', eventType)
         return requests.get<Array<{ platform: string | null; events: number; users: number }>>(
             `/admin/analytics/platforms?${qs.toString()}`,
         )
@@ -431,10 +496,16 @@ export const adminApi = {
         requests.get<Array<{ product: string; events: number; users: number }>>(
             `/admin/analytics/products?period=${period}`,
         ),
-    getAppVersionsBreakdown: (period: string = '7d', product?: string, platform?: string) => {
+    getAppVersionsBreakdown: (
+        period: string = '7d',
+        product?: string,
+        platform?: string,
+        eventType?: string,
+    ) => {
         const qs = new URLSearchParams({ period })
         if (product) qs.set('product', product)
         if (platform) qs.set('platform', platform)
+        if (eventType) qs.set('event_type', eventType)
         return requests.get<
             Array<{
                 platform: string | null
