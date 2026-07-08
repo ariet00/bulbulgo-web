@@ -1131,6 +1131,18 @@ export const adminApi = {
     updateContactLimitsSettings: (body: AdminContactLimitsSettings) =>
         requests.put<AdminContactLimitsSettings>('/admin/settings/contact-limits', body),
 
+    // Per-user bump rate limit (Redis key `app:bump_limits`)
+    getBumpLimitsSettings: () =>
+        requests.get<AdminBumpLimitsSettings>('/admin/settings/bump-limits'),
+    updateBumpLimitsSettings: (body: AdminBumpLimitsSettings) =>
+        requests.put<AdminBumpLimitsSettings>('/admin/settings/bump-limits', body),
+
+    // Per-user trip-creation rate limit (Redis key `app:create_limits`)
+    getCreateLimitsSettings: () =>
+        requests.get<AdminCreateLimitsSettings>('/admin/settings/create-limits'),
+    updateCreateLimitsSettings: (body: AdminCreateLimitsSettings) =>
+        requests.put<AdminCreateLimitsSettings>('/admin/settings/create-limits', body),
+
     // Trip-subscription limits (inside Redis dict `app:settings`)
     getSubscriptionSettings: () =>
         requests.get<AdminSubscriptionSettings>('/admin/settings/subscriptions'),
@@ -1469,6 +1481,19 @@ export interface AdminContactLimitsSettings {
     package_views: number
     package_price: number
     package_currency: string
+}
+
+export interface AdminBumpLimitsSettings {
+    enabled: boolean
+    max_count: number
+    window_seconds: number
+}
+
+export interface AdminCreateLimitsSettings {
+    enabled: boolean
+    max_per_day: number
+    max_per_direction_per_day: number
+    daily_reset_hour: number
 }
 
 export interface AdminNotificationListParams {

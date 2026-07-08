@@ -11,6 +11,8 @@ import {
     AdminAppFeaturesSettings,
     AdminAppVersionSettings,
     AdminContactLimitsSettings,
+    AdminBumpLimitsSettings,
+    AdminCreateLimitsSettings,
     AdminServicePrices,
     AdminParcelTypesSettings,
     AdminAttractivePricesSettings,
@@ -631,6 +633,30 @@ export const useUpdateAdminContactLimitsSettings = () => {
     return useMutation({
         mutationFn: (body: AdminContactLimitsSettings) =>
             adminApi.updateContactLimitsSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminBumpLimitsSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminBumpLimitsSettings) =>
+            adminApi.updateBumpLimitsSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminCreateLimitsSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminCreateLimitsSettings) =>
+            adminApi.updateCreateLimitsSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')

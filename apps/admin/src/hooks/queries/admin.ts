@@ -1122,6 +1122,20 @@ export const useAdminContactLimitsSettings = () => {
     })
 }
 
+export const useAdminBumpLimitsSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'bump-limits'] as const,
+        queryFn: () => adminApi.getBumpLimitsSettings(),
+    })
+}
+
+export const useAdminCreateLimitsSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'create-limits'] as const,
+        queryFn: () => adminApi.getCreateLimitsSettings(),
+    })
+}
+
 export const useAdminSubscriptionSettings = () => {
     return useQuery({
         queryKey: [...adminKeys.appSettings(), 'subscriptions'] as const,
