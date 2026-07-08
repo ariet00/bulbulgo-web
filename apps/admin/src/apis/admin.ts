@@ -373,6 +373,41 @@ export const adminApi = {
         const s = qs.toString()
         return requests.get<AdminAdStats>(`/admin/promotions/${id}/stats${s ? `?${s}` : ''}`)
     },
+    getAdStatsDetailed: (id: number, period: string = '30d') =>
+        requests.get<{
+            impressions: number
+            clicks: number
+            ctr: number
+            impression_users: number
+            impression_devices: number
+            click_users: number
+            click_devices: number
+            anonymous_clicks: number
+        }>(`/admin/promotions/${id}/stats/detailed?period=${period}`),
+    getAdStatsTimeseries: (id: number, period: string = '30d', granularity: string = 'day') =>
+        requests.get<Array<{ bucket: string; impressions: number; clicks: number }>>(
+            `/admin/promotions/${id}/stats/timeseries?period=${period}&granularity=${granularity}`,
+        ),
+    getAdStatsBreakdown: (id: number, by: 'platform' | 'placement', period: string = '30d') =>
+        requests.get<
+            Array<{ value: string | null; impressions: number; clicks: number; ctr: number }>
+        >(`/admin/promotions/${id}/stats/breakdown?by=${by}&period=${period}`),
+    getAdStatsUsers: (
+        id: number,
+        type: 'click' | 'impression',
+        period: string = '30d',
+        limit: number = 50,
+    ) =>
+        requests.get<
+            Array<{
+                user_id: number
+                name: string | null
+                avatar_url: string | null
+                count: number
+                first_seen: string
+                last_seen: string
+            }>
+        >(`/admin/promotions/${id}/stats/users?type=${type}&period=${period}&limit=${limit}`),
 
     // Mobile app services (home hub cards / tabs / webview services)
     getServices: () => requests.get<AdminService[]>('/admin/services/'),

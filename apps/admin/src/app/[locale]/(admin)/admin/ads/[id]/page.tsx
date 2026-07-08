@@ -10,7 +10,7 @@ import {
     CardTitle,
 } from '@doska/ui'
 import { Link, useRouter } from '@doska/i18n'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { use } from 'react'
 import { AdForm } from '@/components/admin/ads/AdForm'
 
@@ -39,8 +39,14 @@ export default function AdminAdEditPage({
             </div>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Статистика</CardTitle>
+                    <Button asChild variant="outline" size="sm">
+                        <Link href={`/admin/ads/${adId}/stats`}>
+                            Подробная статистика
+                            <ArrowUpRight className="size-4 ml-1" />
+                        </Link>
+                    </Button>
                 </CardHeader>
                 <CardContent className="flex gap-8">
                     <Stat label="Показы" value={stats?.impressions ?? 0} />

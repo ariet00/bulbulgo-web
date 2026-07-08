@@ -1012,6 +1012,51 @@ export const useAdminAdStats = (id: number) => {
     })
 }
 
+export const useAdminAdStatsDetailed = (id: number, period: string = '30d') => {
+    return useQuery({
+        queryKey: [...adminKeys.adStats(id), 'detailed', period],
+        queryFn: () => adminApi.getAdStatsDetailed(id, period),
+        enabled: !!id,
+    })
+}
+
+export const useAdminAdStatsTimeseries = (
+    id: number,
+    period: string = '30d',
+    granularity: string = 'day',
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.adStats(id), 'timeseries', period, granularity],
+        queryFn: () => adminApi.getAdStatsTimeseries(id, period, granularity),
+        enabled: !!id,
+    })
+}
+
+export const useAdminAdStatsBreakdown = (
+    id: number,
+    by: 'platform' | 'placement',
+    period: string = '30d',
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.adStats(id), 'breakdown', by, period],
+        queryFn: () => adminApi.getAdStatsBreakdown(id, by, period),
+        enabled: !!id,
+    })
+}
+
+export const useAdminAdStatsUsers = (
+    id: number,
+    type: 'click' | 'impression',
+    period: string = '30d',
+    limit: number = 50,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.adStats(id), 'users', type, period, limit],
+        queryFn: () => adminApi.getAdStatsUsers(id, type, period, limit),
+        enabled: !!id,
+    })
+}
+
 // === Mobile app services (home hub / tabs / webview) ===
 
 export const useAdminServices = () => {

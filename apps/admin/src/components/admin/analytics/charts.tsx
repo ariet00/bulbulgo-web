@@ -318,6 +318,65 @@ export function EventTimeseriesChart({
     )
 }
 
+// Promo drill-down: impressions (left axis) + clicks (right axis) over time.
+export function ImpressionsClicksChart({
+    data,
+    granularity = 'day',
+}: {
+    data: Array<{ bucket: string; impressions: number; clicks: number }>
+    granularity?: 'hour' | 'day' | 'week'
+}) {
+    const t = useChartTheme()
+    const series = data.map(d => ({
+        ...d,
+        label: formatBucket(d.bucket, granularity === 'hour' ? 'hour' : 'day'),
+    }))
+
+    return (
+        <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={series} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                <XAxis dataKey="label" fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <YAxis
+                    yAxisId="impressions"
+                    allowDecimals={false}
+                    fontSize={12}
+                    stroke={CHART_COLORS[0]}
+                    tick={{ fill: t.axis }}
+                />
+                <YAxis
+                    yAxisId="clicks"
+                    orientation="right"
+                    allowDecimals={false}
+                    fontSize={12}
+                    stroke={CHART_COLORS[1]}
+                    tick={{ fill: t.axis }}
+                />
+                <Tooltip {...tooltipProps(t)} />
+                <Legend wrapperStyle={{ color: t.axis }} />
+                <Line
+                    yAxisId="impressions"
+                    type="monotone"
+                    dataKey="impressions"
+                    name="Показы"
+                    stroke={CHART_COLORS[0]}
+                    strokeWidth={2}
+                    dot={false}
+                />
+                <Line
+                    yAxisId="clicks"
+                    type="monotone"
+                    dataKey="clicks"
+                    name="Клики"
+                    stroke={CHART_COLORS[1]}
+                    strokeWidth={2}
+                    dot={false}
+                />
+            </LineChart>
+        </ResponsiveContainer>
+    )
+}
+
 // Histogram: users bucketed by how many times they triggered an event.
 export function FrequencyBarChart({
     data,
