@@ -64,6 +64,35 @@ export const useUpdateAdminUserFeatures = () => {
     })
 }
 
+export const useUpdateAdminUserPreBlockWarning = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({
+            id,
+            enabled,
+            message,
+            rules_url,
+        }: {
+            id: number
+            enabled: boolean
+            message: string | null
+            rules_url: string | null
+        }) =>
+            adminApi.updateUserPreBlockWarning(id, {
+                enabled,
+                message,
+                rules_url,
+            }),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({
+                queryKey: [...adminKeys.user(id), 'pre-block-warning'],
+            })
+            queryClient.invalidateQueries({ queryKey: adminKeys.user(id) })
+            toast.success('Сохранено')
+        },
+    })
+}
+
 // === Complaints (user reports) ===
 export const useAdminSetComplaintStatus = () => {
     const qc = useQueryClient()

@@ -66,6 +66,10 @@ export const adminApi = {
         requests.get<AdminUserFeatures>(`/admin/users/${id}/features`),
     updateUserFeatures: (id: number, overrides: Record<string, boolean | null>) =>
         requests.put<AdminUserFeatures>(`/admin/users/${id}/features`, { overrides }),
+    getUserPreBlockWarning: (id: number) =>
+        requests.get<AdminUserPreBlockWarning>(`/admin/users/${id}/pre-block-warning`),
+    updateUserPreBlockWarning: (id: number, body: AdminUserPreBlockWarning) =>
+        requests.put<AdminUserPreBlockWarning>(`/admin/users/${id}/pre-block-warning`, body),
     getUserTripsSummary: (id: number) =>
         requests.get<AdminUserTripsSummary>(`/admin/users/${id}/trips-summary`),
     getUserWallets: (id: number) =>
@@ -1421,6 +1425,12 @@ export interface AdminAppFeaturesSettings {
 export interface AdminUserFeatures {
     overrides: Record<string, boolean>
     global_features: Record<string, boolean>
+}
+
+export interface AdminUserPreBlockWarning {
+    enabled: boolean
+    message: string | null
+    rules_url: string | null
 }
 
 export interface AdminAutoBumpTariff {

@@ -36,6 +36,7 @@ import { DailyStackedBarChart } from '@/components/admin/analytics/charts-lazy'
 import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
 import { DataCell } from '@/components/admin/analytics/DataCell'
 import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
+import { UserPreBlockWarningForm } from '@/components/admin/users/UserPreBlockWarningForm'
 import {
     Card,
     CardContent,
@@ -104,6 +105,7 @@ import {
     CalendarDays,
     Layers,
     Flag,
+    AlertTriangle,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -584,6 +586,11 @@ export default function UserDetailPage() {
                         {/* ── Feature overrides ── */}
                         <SectionCard title="Фичи (переопределения)" icon={Flag}>
                             <UserFeatureOverridesForm userId={id} />
+                        </SectionCard>
+
+                        {/* ── Pre-block warning ── */}
+                        <SectionCard title="Предупреждение перед блокировкой" icon={AlertTriangle}>
+                            <UserPreBlockWarningForm userId={id} />
                         </SectionCard>
 
                         {/* ── Wallets ── */}
