@@ -100,6 +100,9 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     const [description, setDescription] = useState<LocalizedText>(
         initial?.description ?? {},
     )
+    const [category, setCategory] = useState<LocalizedText>(
+        initial?.category ?? {},
+    )
     const [icon, setIcon] = useState(initial?.icon ?? '')
     const [badge, setBadge] = useState(initial?.badge ?? NO_BADGE)
     const [showInTabs, setShowInTabs] = useState(initial?.show_in_tabs ?? true)
@@ -136,6 +139,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             type,
             label,
             description,
+            category,
             icon: icon.trim() || null,
             badge: badge === NO_BADGE ? null : (badge as 'new' | 'soon'),
             show_in_tabs: showInTabs,
@@ -191,6 +195,11 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                         value={description}
                         onChange={setDescription}
                         label="Описание"
+                    />
+                    <LocalizedInputs
+                        value={category}
+                        onChange={setCategory}
+                        label="Категория (группа на «Главной»; пусто — «Другое»)"
                     />
 
                     <div className="grid grid-cols-2 gap-3">

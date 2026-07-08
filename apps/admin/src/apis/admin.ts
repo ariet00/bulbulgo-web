@@ -1708,6 +1708,8 @@ export interface AdminService {
     position: number
     label: LocalizedText
     description: LocalizedText
+    // категория для группировки/фильтра на «Главной»; пусто — «Другое»
+    category: LocalizedText
     icon: string | null
     badge: 'new' | 'soon' | null
     show_in_tabs: boolean
@@ -1725,6 +1727,7 @@ export interface AdminServiceCreate {
     type: 'native' | 'webview'
     label?: LocalizedText
     description?: LocalizedText
+    category?: LocalizedText
     icon?: string | null
     badge?: 'new' | 'soon' | null
     show_in_tabs?: boolean
