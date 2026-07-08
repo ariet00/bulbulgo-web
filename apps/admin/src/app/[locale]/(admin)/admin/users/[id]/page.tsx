@@ -1157,14 +1157,27 @@ export default function UserDetailPage() {
 
                     <Card>
                         <CardHeader className="space-y-3">
-                            <CardTitle>
-                                Лента событий{' '}
-                                <span className="text-sm font-normal text-muted-foreground">
-                                    {hasEventFilter
-                                        ? `(найдено ${events.data?.total ?? 0})`
-                                        : `(всего ${events.data?.total ?? 0})`}
-                                </span>
-                            </CardTitle>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <CardTitle>
+                                    Лента событий{' '}
+                                    <span className="text-sm font-normal text-muted-foreground">
+                                        {hasEventFilter
+                                            ? `(найдено ${events.data?.total ?? 0})`
+                                            : `(всего ${events.data?.total ?? 0})`}
+                                    </span>
+                                </CardTitle>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => events.refetch()}
+                                    disabled={events.isFetching}
+                                >
+                                    <RefreshCw
+                                        className={`mr-1 h-4 w-4 ${events.isFetching ? 'animate-spin' : ''}`}
+                                    />
+                                    Обновить
+                                </Button>
+                            </div>
                             <div className="flex flex-wrap items-end gap-3">
                                 <div className="flex flex-col gap-1">
                                     <label className="text-xs text-muted-foreground">Тип события</label>
@@ -1222,9 +1235,12 @@ export default function UserDetailPage() {
                                         {eventItems.map((ev: any) => (
                                             <li key={ev.id} className="rounded-xl border bg-card p-3 shadow-sm">
                                                 <div className="flex items-start justify-between gap-2">
-                                                    <span className="break-all font-mono text-sm font-medium text-foreground">
+                                                    <Link
+                                                        href={`/admin/analytics/events/${encodeURIComponent(ev.event_type)}`}
+                                                        className="break-all font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+                                                    >
                                                         {ev.event_type}
-                                                    </span>
+                                                    </Link>
                                                     <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
                                                         {new Date(ev.created_at).toLocaleString()}
                                                     </span>
@@ -1264,7 +1280,14 @@ export default function UserDetailPage() {
                                                         <TableCell className="text-xs whitespace-nowrap">
                                                             {new Date(ev.created_at).toLocaleString()}
                                                         </TableCell>
-                                                        <TableCell className="font-mono text-sm">{ev.event_type}</TableCell>
+                                                        <TableCell className="font-mono text-sm">
+                                                            <Link
+                                                                href={`/admin/analytics/events/${encodeURIComponent(ev.event_type)}`}
+                                                                className="hover:text-primary hover:underline"
+                                                            >
+                                                                {ev.event_type}
+                                                            </Link>
+                                                        </TableCell>
                                                         <TableCell>{ev.platform ?? '—'}</TableCell>
                                                         <TableCell className="text-xs whitespace-nowrap">
                                                             {ev.app_version ?? '—'}
