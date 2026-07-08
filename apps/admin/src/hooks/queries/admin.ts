@@ -502,6 +502,45 @@ export const useAdminAnalyticsEventFrequency = (
     })
 }
 
+export const useAdminAnalyticsEventHeatmap = (
+    eventType: string,
+    period: string = '7d',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-heatmap', eventType, period, product ?? null, platform ?? null],
+        queryFn: () => adminApi.getEventAnalyticsHeatmap(eventType, { period, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
+export const useAdminAnalyticsEventAudience = (
+    eventType: string,
+    period: string = '7d',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-audience', eventType, period, product ?? null, platform ?? null],
+        queryFn: () => adminApi.getEventAnalyticsAudience(eventType, { period, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
+export const useAdminAnalyticsEventRepeat = (
+    eventType: string,
+    period: string = '7d',
+    product?: string,
+    platform?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'event-repeat', eventType, period, product ?? null, platform ?? null],
+        queryFn: () => adminApi.getEventAnalyticsRepeat(eventType, { period, product, platform }),
+        enabled: !!eventType,
+    })
+}
+
 export const useAdminAnalyticsEventTopUsers = (
     eventType: string,
     period: string = '7d',

@@ -455,6 +455,45 @@ export const adminApi = {
             `/admin/analytics/events/${encodeURIComponent(eventType)}/frequency?${qs.toString()}`,
         )
     },
+    getEventAnalyticsHeatmap: (
+        eventType: string,
+        params: { period?: string; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<Array<{ dow: number; hour: number; events: number }>>(
+            `/admin/analytics/events/${encodeURIComponent(eventType)}/heatmap?${qs.toString()}`,
+        )
+    },
+    getEventAnalyticsAudience: (
+        eventType: string,
+        params: { period?: string; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<{ active: number; new: number; returning: number }>(
+            `/admin/analytics/events/${encodeURIComponent(eventType)}/audience?${qs.toString()}`,
+        )
+    },
+    getEventAnalyticsRepeat: (
+        eventType: string,
+        params: { period?: string; product?: string; platform?: string },
+    ) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        if (params.product) qs.set('product', params.product)
+        if (params.platform) qs.set('platform', params.platform)
+        return requests.get<{
+            cohort: number
+            repeated_7d: number
+            repeated_30d: number
+            median_gap_hours: number | null
+        }>(`/admin/analytics/events/${encodeURIComponent(eventType)}/repeat?${qs.toString()}`)
+    },
     getEventAnalyticsTopUsers: (
         eventType: string,
         params: { period?: string; limit?: number; product?: string; platform?: string },

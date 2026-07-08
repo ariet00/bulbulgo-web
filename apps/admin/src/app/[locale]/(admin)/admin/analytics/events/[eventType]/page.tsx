@@ -5,7 +5,10 @@ import { useParams } from 'next/navigation'
 import { Link } from '@doska/i18n'
 import {
     useAdminAnalyticsAppVersions,
+    useAdminAnalyticsEventAudience,
     useAdminAnalyticsEventFrequency,
+    useAdminAnalyticsEventHeatmap,
+    useAdminAnalyticsEventRepeat,
     useAdminAnalyticsEventSummary,
     useAdminAnalyticsEventTimeseries,
     useAdminAnalyticsEventTopUsers,
@@ -26,6 +29,7 @@ import {
 } from '@doska/ui'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { EventTimeseriesChart, FrequencyBarChart } from '@/components/admin/analytics/charts-lazy'
+import { EventHeatmap } from '@/components/admin/analytics/EventHeatmap'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 
 const PERIODS = [
@@ -65,6 +69,14 @@ function delta(cur: number, prev: number): { text: string; tone: 'good' | 'bad' 
     const d = ((cur - prev) / prev) * 100
     const sign = d >= 0 ? '+' : ''
     return { text: `${sign}${d.toFixed(1)}% к пред. периоду`, tone: d >= 0 ? 'good' : 'bad' }
+}
+
+// "2 ч", "35 мин", "3.5 дн" — human-friendly gap between repeats.
+function formatGap(hours: number | null | undefined): string {
+    if (hours == null) return '—'
+    if (hours < 1) return `${Math.round(hours * 60)} мин`
+    if (hours < 48) return `${hours.toLocaleString()} ч`
+    return `${(hours / 24).toFixed(1)} дн`
 }
 
 function KpiCard({
@@ -111,6 +123,9 @@ export default function AnalyticsEventDetailPage() {
     const series = useAdminAnalyticsEventTimeseries(eventType, period, granularity, p, pl)
     const frequency = useAdminAnalyticsEventFrequency(eventType, period, p, pl)
     const topUsers = useAdminAnalyticsEventTopUsers(eventType, period, TOP_USERS_LIMIT, p, pl)
+    const heatmap = useAdminAnalyticsEventHeatmap(eventType, period, p, pl)
+    const audience = useAdminAnalyticsEventAudience(eventType, period, p, pl)
+    const repeat = useAdminAnalyticsEventRepeat(eventType, period, p, pl)
     const platforms = useAdminAnalyticsPlatforms(period, p, eventType)
     const versions = useAdminAnalyticsAppVersions(period, p, pl, eventType)
 
@@ -125,6 +140,9 @@ export default function AnalyticsEventDetailPage() {
         series.refetch()
         frequency.refetch()
         topUsers.refetch()
+        heatmap.refetch()
+        audience.refetch()
+        repeat.refetch()
         platforms.refetch()
         versions.refetch()
     }
@@ -207,6 +225,109 @@ export default function AnalyticsEventDetailPage() {
                 />
             </div>
 
+            {/* Audience + repeat */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Новые vs вернувшиеся</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {audience.isLoading ? (
+                            <div className="text-muted-foreground">Загрузка…</div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Впервые</div>
+                                        <div className="mt-1 text-2xl font-semibold">
+                                            {(audience.data?.new ?? 0).toLocaleString()}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {pct(audience.data?.new ?? 0, audience.data?.active ?? 0)}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Делали раньше</div>
+                                        <div className="mt-1 text-2xl font-semibold">
+                                            {(audience.data?.returning ?? 0).toLocaleString()}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {pct(audience.data?.returning ?? 0, audience.data?.active ?? 0)}
+                                        </div>
+                                    </div>
+                                </div>
+                                {(audience.data?.active ?? 0) > 0 && (
+                                    <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
+                                        <div
+                                            className="bg-primary"
+                                            style={{
+                                                width: pct(
+                                                    audience.data!.new,
+                                                    audience.data!.active,
+                                                ),
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    «Впервые» — первое событие этого типа у пользователя пришлось
+                                    на выбранный период.
+                                </p>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Повторяемость</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {repeat.isLoading ? (
+                            <div className="text-muted-foreground">Загрузка…</div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Повторили за 7 дн</div>
+                                        <div className="mt-1 text-2xl font-semibold">
+                                            {pct(repeat.data?.repeated_7d ?? 0, repeat.data?.cohort ?? 0)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {(repeat.data?.repeated_7d ?? 0).toLocaleString()} из{' '}
+                                            {(repeat.data?.cohort ?? 0).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Повторили за 30 дн</div>
+                                        <div className="mt-1 text-2xl font-semibold">
+                                            {pct(repeat.data?.repeated_30d ?? 0, repeat.data?.cohort ?? 0)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {(repeat.data?.repeated_30d ?? 0).toLocaleString()} из{' '}
+                                            {(repeat.data?.cohort ?? 0).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Медианный интервал</div>
+                                        <div className="mt-1 text-2xl font-semibold">
+                                            {formatGap(repeat.data?.median_gap_hours)}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            между 1-м и 2-м разом
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    Когорта — пользователи, впервые совершившие событие в периоде.
+                                    У недавних первых событий окно 7/30 дней ещё не истекло.
+                                </p>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Timeseries */}
             <Card>
                 <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
@@ -235,6 +356,25 @@ export default function AnalyticsEventDetailPage() {
                             granularity={granularity as 'hour' | 'day' | 'week'}
                         />
                     )}
+                </CardContent>
+            </Card>
+
+            {/* Hour × day-of-week heatmap */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Активность по часам и дням недели</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {heatmap.isLoading ? (
+                        <div className="text-muted-foreground">Загрузка…</div>
+                    ) : (heatmap.data ?? []).length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных за период</div>
+                    ) : (
+                        <EventHeatmap data={heatmap.data!} />
+                    )}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        Время — Asia/Bishkek. Чем темнее ячейка, тем больше событий.
+                    </p>
                 </CardContent>
             </Card>
 

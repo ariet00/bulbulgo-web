@@ -130,7 +130,7 @@ function useTabParam(key: string, defaultValue: string) {
 
 export default function BulbulGoAnalyticsPage() {
     const [mainTab, setMainTab] = useTabParam('tab', 'overview')
-    const [topsTab, setTopsTab] = useTabParam('top', 'drivers')
+    const [topsTab, setTopsTab] = useTabParam('top', 'trips')
     const [period, setPeriod] = useState('24h')
     const [resetNonce, setResetNonce] = useState(0)
     // Picking a global period also resets every card's override (via the nonce).
@@ -404,10 +404,10 @@ export default function BulbulGoAnalyticsPage() {
                     <Tabs value={topsTab} onValueChange={setTopsTab} className="space-y-4">
                         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
                             <TabsList className="inline-flex w-max bg-muted/60">
+                                <TabsTrigger value="trips">Поездки</TabsTrigger>
                                 <TabsTrigger value="drivers">Водители</TabsTrigger>
                                 <TabsTrigger value="users">Пользователи</TabsTrigger>
                                 <TabsTrigger value="routes">Маршруты</TabsTrigger>
-                                <TabsTrigger value="trips">Поездки</TabsTrigger>
                             </TabsList>
                         </div>
 
