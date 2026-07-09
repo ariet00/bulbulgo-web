@@ -241,11 +241,13 @@ export const adminApi = {
         return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)
     },
     getTrip: (id: number) => requests.get<any>(`/admin/trips/${id}`),
-    extendTripService: (id: number, body: { service_type: string; days: number }) =>
-        requests.post<{ service_type: string; until: string; admin_extended: boolean }>(
-            `/admin/trips/${id}/extend-service`,
-            body,
-        ),
+    setTripServiceUntil: (id: number, body: { service_type: string; until: string }) =>
+        requests.post<{
+            service_type: string
+            until: string
+            active: boolean
+            admin_edited: boolean
+        }>(`/admin/trips/${id}/service-until`, body),
     getTripServicePayments: (id: number) =>
         requests.get<
             Array<{

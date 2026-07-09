@@ -14,7 +14,7 @@ import {
     useAdminDeleteTrip,
     useAdminBlockAuthor,
     useAdminUnblockAuthor,
-    useAdminExtendTripService,
+    useAdminSetTripServiceUntil,
 } from '@/hooks/mutations/admin'
 import {
     Card,
@@ -406,16 +406,16 @@ function ServiceStateBlock({
     title,
     icon: Icon,
     state,
-    adminExtended,
+    adminEdited,
     rows,
-    onExtend,
+    onEdit,
 }: {
     title: string
     icon: React.ElementType
     state: ServiceState
-    adminExtended?: boolean
+    adminEdited?: boolean
     rows: Array<{ label: string; value: React.ReactNode }>
-    onExtend: () => void
+    onEdit: () => void
 }) {
     const meta = SERVICE_STATE_META[state]
     return (
@@ -426,9 +426,9 @@ function ServiceStateBlock({
                     {title}
                 </div>
                 <div className="flex items-center gap-1.5">
-                    {adminExtended && (
+                    {adminEdited && (
                         <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
-                            Продлевал админ
+                            Изменял админ
                         </span>
                     )}
                     <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${meta.cls}`}>
@@ -451,31 +451,48 @@ function ServiceStateBlock({
                     ))}
                 </div>
             )}
-            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={onExtend}>
+            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={onEdit}>
                 <CalendarClock className="h-4 w-4" />
-                {state === 'active' ? 'Продлить' : 'Продлить / активировать'}
+                {state === 'active' ? 'Изменить срок' : 'Активировать / задать срок'}
             </Button>
         </div>
     )
 }
 
+// Date → value for <input type="datetime-local"> in the admin's local time.
+function toLocalInputValue(d: Date): string {
+    return format(d, "yyyy-MM-dd'T'HH:mm")
+}
+
 function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
     const { data: payments, isLoading } = useAdminTripServicePayments(tripId)
-    const extendService = useAdminExtendTripService()
-    const [extendTarget, setExtendTarget] = useState<string | null>(null)
-    const [extendDays, setExtendDays] = useState('7')
+    const setServiceUntil = useAdminSetTripServiceUntil()
+    const [editTarget, setEditTarget] = useState<string | null>(null)
+    const [untilInput, setUntilInput] = useState('')
 
     const autoBumpState = serviceState(data.is_auto_bump, data.auto_bump_until)
     const urgentState = serviceState(data.is_urgent, data.urgent_until)
 
-    const submitExtend = () => {
-        const days = Number(extendDays)
-        if (!extendTarget || !days || days < 1) return
-        extendService.mutate(
-            { id: tripId, service_type: extendTarget, days },
-            { onSuccess: () => setExtendTarget(null) },
+    const openEdit = (serviceType: string) => {
+        const cur = data[`${serviceType}_until`]
+        const base =
+            cur && !Number.isNaN(new Date(cur).getTime())
+                ? new Date(cur)
+                : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        setUntilInput(toLocalInputValue(base))
+        setEditTarget(serviceType)
+    }
+
+    const submitUntil = () => {
+        if (!editTarget || !untilInput) return
+        const until = new Date(untilInput)
+        if (Number.isNaN(until.getTime())) return
+        setServiceUntil.mutate(
+            { id: tripId, service_type: editTarget, until: until.toISOString() },
+            { onSuccess: () => setEditTarget(null) },
         )
     }
+    const untilInPast = untilInput && new Date(untilInput).getTime() <= Date.now()
 
     const totalPaid = (payments ?? []).reduce(
         (acc, p) => {
@@ -506,8 +523,8 @@ function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
                     title="Авто-подъём"
                     icon={TrendingUp}
                     state={autoBumpState}
-                    adminExtended={!!data.auto_bump_admin_extended}
-                    onExtend={() => setExtendTarget('auto_bump')}
+                    adminEdited={!!data.auto_bump_admin_edited}
+                    onEdit={() => openEdit('auto_bump')}
                     rows={[
                         { label: 'Действует до', value: fmtDate(data.auto_bump_until, true) },
                         {
@@ -538,8 +555,8 @@ function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
                     title="Срочно"
                     icon={Zap}
                     state={urgentState}
-                    adminExtended={!!data.urgent_admin_extended}
-                    onExtend={() => setExtendTarget('urgent')}
+                    adminEdited={!!data.urgent_admin_edited}
+                    onEdit={() => openEdit('urgent')}
                     rows={[
                         { label: 'Действует до', value: fmtDate(data.urgent_until, true) },
                     ]}
@@ -596,51 +613,53 @@ function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
             </div>
 
             <Dialog
-                open={!!extendTarget}
-                onOpenChange={(open) => !open && setExtendTarget(null)}
+                open={!!editTarget}
+                onOpenChange={(open) => !open && setEditTarget(null)}
             >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            Продлить «{SERVICE_LABELS[extendTarget ?? ''] ?? extendTarget}»
+                            Срок услуги «{SERVICE_LABELS[editTarget ?? ''] ?? editTarget}»
                         </DialogTitle>
                         <DialogDescription>
-                            Услуга будет продлена бесплатно от текущей даты окончания (или от
-                            сегодняшнего дня, если уже истекла). Поездка получит отметку, что
-                            продление сделал админ.
+                            Дата окончания меняется бесплатно, в обе стороны. Дата в будущем —
+                            услуга активна до неё; дата в прошлом — услуга отключается сразу.
+                            Поездка получит отметку, что срок менял админ.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex items-center gap-3">
+                    <div className="space-y-2">
                         <Input
-                            type="number"
-                            min={1}
-                            max={90}
-                            value={extendDays}
-                            onChange={(e) => setExtendDays(e.target.value)}
-                            className="w-28"
+                            type="datetime-local"
+                            value={untilInput}
+                            onChange={(e) => setUntilInput(e.target.value)}
+                            className="w-full sm:w-64"
                         />
-                        <span className="text-sm text-muted-foreground">дней (1–90)</span>
+                        {untilInPast && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Дата в прошлом — услуга будет отключена сразу.
+                            </p>
+                        )}
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline">Отмена</Button>
                         </DialogClose>
                         <Button
-                            onClick={submitExtend}
+                            onClick={submitUntil}
+                            variant={untilInPast ? 'destructive' : 'default'}
                             disabled={
-                                extendService.isPending ||
-                                !Number(extendDays) ||
-                                Number(extendDays) < 1 ||
-                                Number(extendDays) > 90
+                                setServiceUntil.isPending ||
+                                !untilInput ||
+                                Number.isNaN(new Date(untilInput).getTime())
                             }
                             className="gap-2"
                         >
-                            {extendService.isPending ? (
+                            {setServiceUntil.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                                 <CalendarClock className="h-4 w-4" />
                             )}
-                            Продлить
+                            {untilInPast ? 'Отключить услугу' : 'Сохранить срок'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
