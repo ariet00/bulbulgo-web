@@ -766,7 +766,13 @@ export default function AdminTripDetailPage() {
                             <span>{trip.to_location?.name || trip.to_address || '—'}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 pt-1">
-                            <StatusPill status={trip.status} />
+                            {trip.is_deleted ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1 text-sm font-semibold text-zinc-800 ring-1 ring-inset ring-zinc-500/30">
+                                    <Trash2 className="h-3.5 w-3.5" /> Удалена
+                                </span>
+                            ) : (
+                                <StatusPill status={trip.status} />
+                            )}
                             {trip.trip_type && (
                                 <Badge className="bg-white/10 capitalize text-white hover:bg-white/15">
                                     {trip.trip_type}

@@ -219,12 +219,14 @@ export const adminApi = {
             date_to?: string
             service?: string
             only_real?: boolean
+            include_deleted?: boolean
         },
     ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (q) params.set('q', q)
         if (status) params.set('status', status)
         if (filters?.service) params.set('service', filters.service)
+        if (filters?.include_deleted) params.set('include_deleted', 'true')
         if (filters?.trip_type) params.set('trip_type', filters.trip_type)
         if (filters?.role) params.set('role', filters.role)
         if (filters?.user_id) params.set('user_id', String(filters.user_id))

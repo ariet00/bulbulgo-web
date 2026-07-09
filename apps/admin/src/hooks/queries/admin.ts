@@ -298,6 +298,7 @@ export const useAdminTrips = (
         date_to?: string
         service?: string
         only_real?: boolean
+        include_deleted?: boolean
     },
 ) => {
     return useQuery({
@@ -321,6 +322,7 @@ export const useAdminTrips = (
                 date_to: filters?.date_to ?? null,
                 service: filters?.service ?? null,
                 only_real: filters?.only_real ?? null,
+                include_deleted: filters?.include_deleted ?? null,
             },
         ],
         queryFn: () => adminApi.getTrips(page, size, q, status, filters),

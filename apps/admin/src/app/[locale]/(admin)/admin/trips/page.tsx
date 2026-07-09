@@ -61,6 +61,7 @@ const FILTER_DEFAULTS = {
     date_to: '',
     service: ALL,
     only_real: true,
+    include_deleted: true,
 }
 
 const statusClass = (status: string) => {
@@ -134,6 +135,7 @@ export default function AdminTripsPage() {
             date_to: values.date_to || undefined,
             service: values.service === ALL ? undefined : values.service,
             only_real: values.only_real,
+            include_deleted: values.include_deleted,
         },
     )
     const deleteTripMutation = useAdminDeleteTrip()
@@ -168,7 +170,8 @@ export default function AdminTripsPage() {
         !!values.date_from ||
         !!values.date_to ||
         values.service !== ALL ||
-        !values.only_real
+        !values.only_real ||
+        values.include_deleted
 
     return (
         <div className="space-y-6">
@@ -286,6 +289,19 @@ export default function AdminTripsPage() {
                                 title="Скрыть объявления, созданные парсером (chat_parser_user, gettik_parser_user)"
                             >
                                 Только реальные
+                            </Label>
+                        </div>
+                        <div className="flex h-10 items-center gap-2 rounded-md border px-3">
+                            <Switch
+                                id="include-deleted"
+                                checked={values.include_deleted}
+                                onCheckedChange={(v) => setValues({ include_deleted: v })}
+                            />
+                            <Label
+                                htmlFor="include-deleted"
+                                className="cursor-pointer whitespace-nowrap text-sm"
+                            >
+                                Показывать удалённые
                             </Label>
                         </div>
                         <div className="flex flex-col">
@@ -488,9 +504,15 @@ export default function AdminTripsPage() {
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <span className={`px-2 py-1 rounded-full text-xs ${statusClass(trip.status)}`}>
-                                                {trip.status}
-                                            </span>
+                                            {trip.is_deleted ? (
+                                                <span className="px-2 py-1 rounded-full text-xs bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900">
+                                                    Удален
+                                                </span>
+                                            ) : (
+                                                <span className={`px-2 py-1 rounded-full text-xs ${statusClass(trip.status)}`}>
+                                                    {trip.status}
+                                                </span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                                             {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
@@ -502,14 +524,16 @@ export default function AdminTripsPage() {
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
                                                 </Link>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(trip.id)}
-                                                    disabled={deleteTripMutation.isPending}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                {!trip.is_deleted && (
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleDelete(trip.id)}
+                                                        disabled={deleteTripMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>
