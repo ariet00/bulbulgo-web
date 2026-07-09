@@ -36,6 +36,12 @@ const ALL = '__all__'
 const TRIP_STATUSES = ['active', 'processing', 'completed', 'cancelled', 'archived']
 const TRIP_TYPES = ['rideshare', 'rideshare_city', 'taxi', 'shuttle', 'bus', 'freight', 'freight_city', 'delivery']
 const TRIP_ROLES = ['driver', 'passenger', 'cargo_owner']
+const SERVICE_OPTIONS = [
+    { value: 'any', label: 'Любая активная' },
+    { value: 'auto_bump', label: 'Авто-подъём (активен)' },
+    { value: 'urgent', label: 'Срочно (активен)' },
+    { value: 'ever', label: 'Когда-либо подключали' },
+]
 
 const FILTER_DEFAULTS = {
     page: 1,
@@ -43,7 +49,7 @@ const FILTER_DEFAULTS = {
     q: '',
     status: 'active',
     trip_type: ALL,
-    role: 'passenger',
+    role: ALL,
     user_id: 0,
     from_location_id: 0,
     to_location_id: 0,
@@ -53,6 +59,7 @@ const FILTER_DEFAULTS = {
     seats_max: 0,
     date_from: '',
     date_to: '',
+    service: ALL,
     only_real: true,
 }
 
@@ -125,6 +132,7 @@ export default function AdminTripsPage() {
             seats_max: values.seats_max || undefined,
             date_from: values.date_from || undefined,
             date_to: values.date_to || undefined,
+            service: values.service === ALL ? undefined : values.service,
             only_real: values.only_real,
         },
     )
@@ -159,6 +167,7 @@ export default function AdminTripsPage() {
         !!values.seats_max ||
         !!values.date_from ||
         !!values.date_to ||
+        values.service !== ALL ||
         !values.only_real
 
     return (
@@ -245,6 +254,22 @@ export default function AdminTripsPage() {
                                 {TRIP_ROLES.map((r) => (
                                     <SelectItem key={r} value={r} className="capitalize">
                                         {r}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={values.service}
+                            onValueChange={(v) => setValues({ service: v })}
+                        >
+                            <SelectTrigger className="w-full sm:w-44">
+                                <SelectValue placeholder="Услуги" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>Услуги: не важно</SelectItem>
+                                {SERVICE_OPTIONS.map((s) => (
+                                    <SelectItem key={s.value} value={s.value}>
+                                        {s.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

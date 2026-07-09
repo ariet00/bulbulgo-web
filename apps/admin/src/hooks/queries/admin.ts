@@ -296,6 +296,7 @@ export const useAdminTrips = (
         seats_max?: number
         date_from?: string
         date_to?: string
+        service?: string
         only_real?: boolean
     },
 ) => {
@@ -318,6 +319,7 @@ export const useAdminTrips = (
                 seats_max: filters?.seats_max ?? null,
                 date_from: filters?.date_from ?? null,
                 date_to: filters?.date_to ?? null,
+                service: filters?.service ?? null,
                 only_real: filters?.only_real ?? null,
             },
         ],
@@ -361,6 +363,14 @@ export const useAdminTripSubscriptions = (
         ],
         queryFn: () => adminApi.getTripSubscriptions(page, size, filters),
         placeholderData: keepPreviousData,
+    })
+}
+
+export const useAdminTripServicePayments = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.trip(id), 'service-payments'] as const,
+        queryFn: () => adminApi.getTripServicePayments(id),
+        enabled: !!id,
     })
 }
 

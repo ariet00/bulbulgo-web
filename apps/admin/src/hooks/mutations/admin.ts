@@ -247,6 +247,26 @@ export const useAdminDeleteTrip = () => {
     })
 }
 
+export const useAdminExtendTripService = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({
+            id,
+            service_type,
+            days,
+        }: {
+            id: number
+            service_type: string
+            days: number
+        }) => adminApi.extendTripService(id, { service_type, days }),
+        onSuccess: (_data, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.trip(id) })
+            queryClient.invalidateQueries({ queryKey: adminKeys.trips() })
+            toast.success('Услуга продлена')
+        },
+    })
+}
+
 export const useAdminUpdateTripStatus = () => {
     const queryClient = useQueryClient()
     return useMutation({

@@ -6,6 +6,7 @@ import { useRouter, Link } from '@doska/i18n'
 import {
     useAdminTrip,
     useAdminTripPhoneViewers,
+    useAdminTripServicePayments,
     useAdminBlockedAuthors,
 } from '@/hooks/queries/admin'
 import {
@@ -13,6 +14,7 @@ import {
     useAdminDeleteTrip,
     useAdminBlockAuthor,
     useAdminUnblockAuthor,
+    useAdminExtendTripService,
 } from '@/hooks/mutations/admin'
 import {
     Card,
@@ -22,6 +24,7 @@ import {
     BackButton,
     Badge,
     Button,
+    Input,
     Separator,
     Avatar,
     AvatarImage,
@@ -367,6 +370,281 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
                     })}
                 </div>
             )}
+        </SectionCard>
+    )
+}
+
+/* ────────────────────────── trip promo services ────────────────────────── */
+
+const SERVICE_LABELS: Record<string, string> = {
+    auto_bump: 'Авто-подъём',
+    urgent: 'Срочно',
+}
+
+type ServiceState = 'active' | 'expired' | 'never'
+
+function serviceState(flag: unknown, until: string | null | undefined): ServiceState {
+    const u = until ? new Date(until) : null
+    if (flag && (!u || u.getTime() > Date.now())) return 'active'
+    if (u) return 'expired'
+    return 'never'
+}
+
+const SERVICE_STATE_META: Record<ServiceState, { label: string; cls: string }> = {
+    active: {
+        label: 'Активна',
+        cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
+    },
+    expired: {
+        label: 'Истекла',
+        cls: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
+    },
+    never: { label: 'Не подключалась', cls: 'bg-muted text-muted-foreground' },
+}
+
+function ServiceStateBlock({
+    title,
+    icon: Icon,
+    state,
+    adminExtended,
+    rows,
+    onExtend,
+}: {
+    title: string
+    icon: React.ElementType
+    state: ServiceState
+    adminExtended?: boolean
+    rows: Array<{ label: string; value: React.ReactNode }>
+    onExtend: () => void
+}) {
+    const meta = SERVICE_STATE_META[state]
+    return (
+        <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    {title}
+                </div>
+                <div className="flex items-center gap-1.5">
+                    {adminExtended && (
+                        <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
+                            Продлевал админ
+                        </span>
+                    )}
+                    <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${meta.cls}`}>
+                        {meta.label}
+                    </span>
+                </div>
+            </div>
+            {state !== 'never' && rows.length > 0 && (
+                <div className="mt-3 divide-y divide-border/60">
+                    {rows.map((r) => (
+                        <div
+                            key={r.label}
+                            className="flex items-center justify-between gap-4 py-1.5 text-sm"
+                        >
+                            <span className="text-muted-foreground">{r.label}</span>
+                            <span className="text-right font-medium text-foreground">
+                                {r.value}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            )}
+            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={onExtend}>
+                <CalendarClock className="h-4 w-4" />
+                {state === 'active' ? 'Продлить' : 'Продлить / активировать'}
+            </Button>
+        </div>
+    )
+}
+
+function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
+    const { data: payments, isLoading } = useAdminTripServicePayments(tripId)
+    const extendService = useAdminExtendTripService()
+    const [extendTarget, setExtendTarget] = useState<string | null>(null)
+    const [extendDays, setExtendDays] = useState('7')
+
+    const autoBumpState = serviceState(data.is_auto_bump, data.auto_bump_until)
+    const urgentState = serviceState(data.is_urgent, data.urgent_until)
+
+    const submitExtend = () => {
+        const days = Number(extendDays)
+        if (!extendTarget || !days || days < 1) return
+        extendService.mutate(
+            { id: tripId, service_type: extendTarget, days },
+            { onSuccess: () => setExtendTarget(null) },
+        )
+    }
+
+    const totalPaid = (payments ?? []).reduce(
+        (acc, p) => {
+            const cur = p.currency ?? '—'
+            acc[cur] = (acc[cur] ?? 0) + p.amount
+            return acc
+        },
+        {} as Record<string, number>,
+    )
+    const totalStr = Object.entries(totalPaid)
+        .map(([cur, sum]) => `${sum.toLocaleString()} ${cur}`)
+        .join(' · ')
+
+    return (
+        <SectionCard
+            title="Подключённые услуги"
+            icon={Zap}
+            action={
+                payments && payments.length > 0 ? (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                        оплачено: {totalStr}
+                    </span>
+                ) : undefined
+            }
+        >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <ServiceStateBlock
+                    title="Авто-подъём"
+                    icon={TrendingUp}
+                    state={autoBumpState}
+                    adminExtended={!!data.auto_bump_admin_extended}
+                    onExtend={() => setExtendTarget('auto_bump')}
+                    rows={[
+                        { label: 'Действует до', value: fmtDate(data.auto_bump_until, true) },
+                        {
+                            label: 'Интервал подъёма',
+                            value: data.auto_bump_interval_hours
+                                ? `каждые ${data.auto_bump_interval_hours} ч`
+                                : '—',
+                        },
+                        {
+                            label: 'Последний подъём',
+                            value: data.auto_bump_last_at
+                                ? fmtDate(data.auto_bump_last_at, true)
+                                : 'ещё не поднималась',
+                        },
+                        {
+                            label: 'Тариф',
+                            value: data.auto_bump_tariff_id ? (
+                                <span className="font-mono text-xs">
+                                    {data.auto_bump_tariff_id}
+                                </span>
+                            ) : (
+                                '—'
+                            ),
+                        },
+                    ]}
+                />
+                <ServiceStateBlock
+                    title="Срочно"
+                    icon={Zap}
+                    state={urgentState}
+                    adminExtended={!!data.urgent_admin_extended}
+                    onExtend={() => setExtendTarget('urgent')}
+                    rows={[
+                        { label: 'Действует до', value: fmtDate(data.urgent_until, true) },
+                    ]}
+                />
+            </div>
+
+            <div className="mt-5">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    История оплат
+                </div>
+                {isLoading ? (
+                    <Skeleton className="h-16 w-full" />
+                ) : !payments || payments.length === 0 ? (
+                    <p className="py-4 text-center text-sm italic text-muted-foreground">
+                        Оплат услуг по этой поездке не было
+                    </p>
+                ) : (
+                    <div className="divide-y divide-border">
+                        {payments.map((p) => (
+                            <div
+                                key={p.id}
+                                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-sm"
+                            >
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <span className="font-medium text-foreground">
+                                        {SERVICE_LABELS[p.service_type ?? ''] ??
+                                            p.service_type ??
+                                            '—'}
+                                    </span>
+                                    {p.tariff_id && (
+                                        <Badge variant="outline" className="font-mono text-xs">
+                                            {p.tariff_id}
+                                        </Badge>
+                                    )}
+                                    <Link
+                                        href={`/admin/users/${p.user_id}`}
+                                        className="truncate text-muted-foreground hover:text-primary hover:underline"
+                                    >
+                                        {p.user_name || `user #${p.user_id}`}
+                                    </Link>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-3">
+                                    <span className="font-semibold tabular-nums text-foreground">
+                                        {p.amount.toLocaleString()} {p.currency ?? ''}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground tabular-nums">
+                                        {fmtDate(p.created_at, true)}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <Dialog
+                open={!!extendTarget}
+                onOpenChange={(open) => !open && setExtendTarget(null)}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            Продлить «{SERVICE_LABELS[extendTarget ?? ''] ?? extendTarget}»
+                        </DialogTitle>
+                        <DialogDescription>
+                            Услуга будет продлена бесплатно от текущей даты окончания (или от
+                            сегодняшнего дня, если уже истекла). Поездка получит отметку, что
+                            продление сделал админ.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center gap-3">
+                        <Input
+                            type="number"
+                            min={1}
+                            max={90}
+                            value={extendDays}
+                            onChange={(e) => setExtendDays(e.target.value)}
+                            className="w-28"
+                        />
+                        <span className="text-sm text-muted-foreground">дней (1–90)</span>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Отмена</Button>
+                        </DialogClose>
+                        <Button
+                            onClick={submitExtend}
+                            disabled={
+                                extendService.isPending ||
+                                !Number(extendDays) ||
+                                Number(extendDays) < 1 ||
+                                Number(extendDays) > 90
+                            }
+                            className="gap-2"
+                        >
+                            {extendService.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <CalendarClock className="h-4 w-4" />
+                            )}
+                            Продлить
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </SectionCard>
     )
 }
@@ -793,6 +1071,9 @@ export default function AdminTripDetailPage() {
                     )}
                 </SectionCard>
             </div>
+
+            {/* ── Promo services ── */}
+            <TripServicesCard tripId={id} data={data} />
 
             {/* ── Preferences / options ── */}
             <SectionCard title="Опции и предпочтения" icon={Settings2}>

@@ -217,12 +217,14 @@ export const adminApi = {
             seats_max?: number
             date_from?: string
             date_to?: string
+            service?: string
             only_real?: boolean
         },
     ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (q) params.set('q', q)
         if (status) params.set('status', status)
+        if (filters?.service) params.set('service', filters.service)
         if (filters?.trip_type) params.set('trip_type', filters.trip_type)
         if (filters?.role) params.set('role', filters.role)
         if (filters?.user_id) params.set('user_id', String(filters.user_id))
@@ -239,6 +241,25 @@ export const adminApi = {
         return requests.get<Page<any>>(`/admin/trips/?${params.toString()}`)
     },
     getTrip: (id: number) => requests.get<any>(`/admin/trips/${id}`),
+    extendTripService: (id: number, body: { service_type: string; days: number }) =>
+        requests.post<{ service_type: string; until: string; admin_extended: boolean }>(
+            `/admin/trips/${id}/extend-service`,
+            body,
+        ),
+    getTripServicePayments: (id: number) =>
+        requests.get<
+            Array<{
+                id: number
+                service_type: string | null
+                tariff_id: string | null
+                amount: number
+                currency: string | null
+                description: string | null
+                user_id: number
+                user_name: string | null
+                created_at: string
+            }>
+        >(`/admin/trips/${id}/service-payments`),
     getTripPhoneViewers: (id: number) =>
         requests.get<{
             trip_id: number
