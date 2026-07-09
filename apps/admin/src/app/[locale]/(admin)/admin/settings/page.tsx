@@ -7,7 +7,7 @@ import { AppVersionSettingsForm } from '@/components/admin/settings/AppVersionSe
 import { FeatureFlagsSettingsForm } from '@/components/admin/settings/FeatureFlagsSettingsForm'
 import { ContactLimitsSettingsForm } from '@/components/admin/settings/ContactLimitsSettingsForm'
 import { BumpLimitsSettingsForm } from '@/components/admin/settings/BumpLimitsSettingsForm'
-import { CreateLimitsSettingsForm } from '@/components/admin/settings/CreateLimitsSettingsForm'
+import { ActiveLimitsSettingsForm } from '@/components/admin/settings/ActiveLimitsSettingsForm'
 import { SubscriptionSettingsForm } from '@/components/admin/settings/SubscriptionSettingsForm'
 import { ServicePricesSettingsForm } from '@/components/admin/settings/ServicePricesSettingsForm'
 import { ParcelTypesSettingsForm } from '@/components/admin/settings/ParcelTypesSettingsForm'
@@ -21,7 +21,7 @@ const TABS = [
     { value: 'attractive-prices', label: 'Выгодные цены', Form: AttractivePricesSettingsForm },
     { value: 'contact-limits', label: 'Лимиты номеров', Form: ContactLimitsSettingsForm },
     { value: 'bump-limits', label: 'Лимиты поднятий', Form: BumpLimitsSettingsForm },
-    { value: 'create-limits', label: 'Лимиты создания', Form: CreateLimitsSettingsForm },
+    { value: 'active-limits', label: 'Лимиты активных', Form: ActiveLimitsSettingsForm },
     { value: 'subscriptions', label: 'Подписки', Form: SubscriptionSettingsForm },
 ] as const
 

@@ -1157,10 +1157,10 @@ export const useAdminBumpLimitsSettings = () => {
     })
 }
 
-export const useAdminCreateLimitsSettings = () => {
+export const useAdminActiveLimitsSettings = () => {
     return useQuery({
-        queryKey: [...adminKeys.appSettings(), 'create-limits'] as const,
-        queryFn: () => adminApi.getCreateLimitsSettings(),
+        queryKey: [...adminKeys.appSettings(), 'active-limits'] as const,
+        queryFn: () => adminApi.getActiveLimitsSettings(),
     })
 }
 

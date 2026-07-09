@@ -1,8 +1,8 @@
 'use client'
 
-import { type AdminCreateLimitsSettings } from '@/apis/admin'
-import { useAdminCreateLimitsSettings } from '@/hooks/queries/admin'
-import { useUpdateAdminCreateLimitsSettings } from '@/hooks/mutations/admin'
+import { type AdminActiveLimitsSettings } from '@/apis/admin'
+import { useAdminActiveLimitsSettings } from '@/hooks/queries/admin'
+import { useUpdateAdminActiveLimitsSettings } from '@/hooks/mutations/admin'
 import {
     Button,
     Card,
@@ -16,45 +16,39 @@ import {
 } from '@doska/ui'
 import { useEffect, useState } from 'react'
 
-const DEFAULT_FORM: AdminCreateLimitsSettings = {
+const DEFAULT_FORM: AdminActiveLimitsSettings = {
     enabled: true,
-    max_per_day: 10,
-    max_per_direction_per_day: 5,
-    daily_reset_hour: 0,
+    max_active_total: 5,
+    max_active_per_direction: 1,
 }
 
-type NumKey = Exclude<keyof AdminCreateLimitsSettings, 'enabled'>
+type NumKey = Exclude<keyof AdminActiveLimitsSettings, 'enabled'>
 
 const NUM_FIELDS: { key: NumKey; label: string; hint: string }[] = [
     {
-        key: 'max_per_day',
-        label: 'Всего в день (на роль)',
-        hint: 'max_per_day — сколько всего объявлений пользователь может создать за сутки. Счётчик раздельный для водителя и пассажира.',
+        key: 'max_active_total',
+        label: 'Всего активных (на роль)',
+        hint: 'max_active_total — сколько одновременно активных объявлений может быть у пользователя. Считается раздельно для водителя, пассажира и посылок.',
     },
     {
-        key: 'max_per_direction_per_day',
-        label: 'В одном направлении в день',
-        hint: 'max_per_direction_per_day — сколько объявлений в одном направлении (откуда→куда) за сутки на роль.',
-    },
-    {
-        key: 'daily_reset_hour',
-        label: 'Час сброса (0–23, KG)',
-        hint: 'daily_reset_hour — час по бишкекскому времени, когда суточные счётчики обнуляются. 0 = полночь.',
+        key: 'max_active_per_direction',
+        label: 'Активных в одном направлении',
+        hint: 'max_active_per_direction — сколько активных объявлений в одном направлении (откуда→куда) на роль. Обычно 1.',
     },
 ]
 
-export function CreateLimitsSettingsForm() {
-    const { data, isLoading } = useAdminCreateLimitsSettings()
-    const update = useUpdateAdminCreateLimitsSettings()
-    const [form, setForm] = useState<AdminCreateLimitsSettings>(DEFAULT_FORM)
+export function ActiveLimitsSettingsForm() {
+    const { data, isLoading } = useAdminActiveLimitsSettings()
+    const update = useUpdateAdminActiveLimitsSettings()
+    const [form, setForm] = useState<AdminActiveLimitsSettings>(DEFAULT_FORM)
 
     useEffect(() => {
         if (data) setForm(data)
     }, [data])
 
-    const set = <K extends keyof AdminCreateLimitsSettings>(
+    const set = <K extends keyof AdminActiveLimitsSettings>(
         key: K,
-        value: AdminCreateLimitsSettings[K],
+        value: AdminActiveLimitsSettings[K],
     ) => setForm((prev) => ({ ...prev, [key]: value }))
 
     const submit = () => update.mutate(form)
@@ -62,11 +56,13 @@ export function CreateLimitsSettingsForm() {
     return (
         <div className="space-y-6">
             <p className="text-sm text-muted-foreground">
-                Лимиты на создание объявлений (обычный rideshare). Два суточных
-                счётчика на каждую роль: всего за день и в одном направлении.
-                Сверх лимита создание отклоняется, приложение предлагает поднять
-                уже существующие. Хранится в Redis под ключом{' '}
-                <code className="text-xs">app:create_limits</code>.
+                Лимиты на количество одновременно активных объявлений (обычный
+                rideshare). Два порога на каждую роль: всего активных и активных
+                в одном направлении. Считается по живым данным в БД. Проверяется
+                при создании и при поднятии архивного объявления; сверх лимита
+                действие отклоняется, приложение показывает боттом-шит. Хранится
+                в Redis под ключом{' '}
+                <code className="text-xs">app:active_limits</code>.
             </p>
 
             <Card>
@@ -79,7 +75,7 @@ export function CreateLimitsSettingsForm() {
                             <Label className="cursor-pointer">Лимиты включены</Label>
                             <p className="text-xs text-muted-foreground">
                                 <code>enabled</code>. Глобальный выключатель —
-                                при выключении создание безлимитно.
+                                при выключении количество активных безлимитно.
                             </p>
                         </div>
                         <Switch

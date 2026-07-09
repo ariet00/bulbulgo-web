@@ -12,7 +12,7 @@ import {
     AdminAppVersionSettings,
     AdminContactLimitsSettings,
     AdminBumpLimitsSettings,
-    AdminCreateLimitsSettings,
+    AdminActiveLimitsSettings,
     AdminServicePrices,
     AdminParcelTypesSettings,
     AdminAttractivePricesSettings,
@@ -701,11 +701,11 @@ export const useUpdateAdminBumpLimitsSettings = () => {
     })
 }
 
-export const useUpdateAdminCreateLimitsSettings = () => {
+export const useUpdateAdminActiveLimitsSettings = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (body: AdminCreateLimitsSettings) =>
-            adminApi.updateCreateLimitsSettings(body),
+        mutationFn: (body: AdminActiveLimitsSettings) =>
+            adminApi.updateActiveLimitsSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')

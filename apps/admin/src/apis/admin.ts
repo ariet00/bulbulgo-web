@@ -1189,11 +1189,11 @@ export const adminApi = {
     updateBumpLimitsSettings: (body: AdminBumpLimitsSettings) =>
         requests.put<AdminBumpLimitsSettings>('/admin/settings/bump-limits', body),
 
-    // Per-user trip-creation rate limit (Redis key `app:create_limits`)
-    getCreateLimitsSettings: () =>
-        requests.get<AdminCreateLimitsSettings>('/admin/settings/create-limits'),
-    updateCreateLimitsSettings: (body: AdminCreateLimitsSettings) =>
-        requests.put<AdminCreateLimitsSettings>('/admin/settings/create-limits', body),
+    // Per-user active-listings limit (Redis key `app:active_limits`)
+    getActiveLimitsSettings: () =>
+        requests.get<AdminActiveLimitsSettings>('/admin/settings/active-limits'),
+    updateActiveLimitsSettings: (body: AdminActiveLimitsSettings) =>
+        requests.put<AdminActiveLimitsSettings>('/admin/settings/active-limits', body),
 
     // Trip-subscription limits (inside Redis dict `app:settings`)
     getSubscriptionSettings: () =>
@@ -1547,11 +1547,10 @@ export interface AdminBumpLimitsSettings {
     window_seconds: number
 }
 
-export interface AdminCreateLimitsSettings {
+export interface AdminActiveLimitsSettings {
     enabled: boolean
-    max_per_day: number
-    max_per_direction_per_day: number
-    daily_reset_hour: number
+    max_active_total: number
+    max_active_per_direction: number
 }
 
 export interface AdminNotificationListParams {
