@@ -1492,10 +1492,12 @@ export interface AdminAutoBumpTariff {
 export interface AdminServicePrices {
     auto_bump_enabled: boolean
     auto_bump_title: string
+    auto_bump_short_description: string
     auto_bump_description: string
     auto_bump_tariffs: AdminAutoBumpTariff[]
     urgent_enabled: boolean
     urgent_title: string
+    urgent_short_description: string
     urgent_description: string
     urgent_price: number
     urgent_duration_days: number

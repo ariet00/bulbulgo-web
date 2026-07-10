@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react'
 const DEFAULT_FORM: AdminServicePrices = {
     auto_bump_enabled: false,
     auto_bump_title: 'Автоподнятие',
+    auto_bump_short_description: '',
     auto_bump_description: '',
     auto_bump_tariffs: [
         {
@@ -42,6 +43,7 @@ const DEFAULT_FORM: AdminServicePrices = {
     ],
     urgent_enabled: false,
     urgent_title: 'Срочно',
+    urgent_short_description: '',
     urgent_description: '',
     urgent_price: 50,
     urgent_duration_days: 1,
@@ -72,8 +74,10 @@ export function ServicePricesSettingsForm() {
     const setText = (
         key:
             | 'auto_bump_title'
+            | 'auto_bump_short_description'
             | 'auto_bump_description'
             | 'urgent_title'
+            | 'urgent_short_description'
             | 'urgent_description',
         value: string,
     ) => setForm((prev) => ({ ...prev, [key]: value }))
@@ -149,6 +153,23 @@ export function ServicePricesSettingsForm() {
                             }
                             disabled={isLoading}
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Краткое описание (под заголовком)</Label>
+                        <Input
+                            value={form.urgent_short_description}
+                            onChange={(e) =>
+                                setText(
+                                    'urgent_short_description',
+                                    e.target.value,
+                                )
+                            }
+                            disabled={isLoading}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Короткая строка под названием услуги в шите
+                            подключения.
+                        </p>
                     </div>
                     <div className="space-y-1">
                         <Label>Описание (как работает)</Label>
@@ -237,6 +258,23 @@ export function ServicePricesSettingsForm() {
                             }
                             disabled={isLoading}
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Краткое описание (под заголовком)</Label>
+                        <Input
+                            value={form.auto_bump_short_description}
+                            onChange={(e) =>
+                                setText(
+                                    'auto_bump_short_description',
+                                    e.target.value,
+                                )
+                            }
+                            disabled={isLoading}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Короткая строка под названием услуги в шите
+                            подключения.
+                        </p>
                     </div>
                     <div className="space-y-1">
                         <Label>Описание (как работает)</Label>
