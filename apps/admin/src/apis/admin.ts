@@ -1489,6 +1489,13 @@ export interface AdminAutoBumpTariff {
     price: number
 }
 
+export interface AdminUrgentTariff {
+    id: string
+    label: string
+    duration_days: number
+    price: number
+}
+
 export interface AdminServicePrices {
     auto_bump_enabled: boolean
     auto_bump_title: string
@@ -1499,6 +1506,7 @@ export interface AdminServicePrices {
     urgent_title: string
     urgent_short_description: string
     urgent_description: string
+    urgent_tariffs: AdminUrgentTariff[]
     urgent_price: number
     urgent_duration_days: number
 }

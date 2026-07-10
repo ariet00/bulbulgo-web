@@ -2,6 +2,7 @@
 
 import {
     type AdminAutoBumpTariff,
+    type AdminUrgentTariff,
     type AdminServicePrices,
 } from '@/apis/admin'
 import { useAdminServicePricesSettings } from '@/hooks/queries/admin'
@@ -45,6 +46,10 @@ const DEFAULT_FORM: AdminServicePrices = {
     urgent_title: 'Срочно',
     urgent_short_description: '',
     urgent_description: '',
+    urgent_tariffs: [
+        { id: 'd1', label: '1 день', duration_days: 1, price: 100 },
+        { id: 'd3', label: '3 дня', duration_days: 3, price: 200 },
+    ],
     urgent_price: 50,
     urgent_duration_days: 1,
 }
@@ -53,6 +58,13 @@ const newTariff = (): AdminAutoBumpTariff => ({
     id: crypto.randomUUID(),
     label: '',
     interval_hours: 1,
+    duration_days: 1,
+    price: 100,
+})
+
+const newUrgentTariff = (): AdminUrgentTariff => ({
+    id: crypto.randomUUID(),
+    label: '',
     duration_days: 1,
     price: 100,
 })
@@ -109,6 +121,30 @@ export function ServicePricesSettingsForm() {
         setForm((prev) => ({
             ...prev,
             auto_bump_tariffs: prev.auto_bump_tariffs.filter((_, i) => i !== idx),
+        }))
+
+    const setUrgentTariff = <K extends keyof AdminUrgentTariff>(
+        idx: number,
+        key: K,
+        value: AdminUrgentTariff[K],
+    ) =>
+        setForm((prev) => ({
+            ...prev,
+            urgent_tariffs: prev.urgent_tariffs.map((t, i) =>
+                i === idx ? { ...t, [key]: value } : t,
+            ),
+        }))
+
+    const addUrgentTariff = () =>
+        setForm((prev) => ({
+            ...prev,
+            urgent_tariffs: [...prev.urgent_tariffs, newUrgentTariff()],
+        }))
+
+    const removeUrgentTariff = (idx: number) =>
+        setForm((prev) => ({
+            ...prev,
+            urgent_tariffs: prev.urgent_tariffs.filter((_, i) => i !== idx),
         }))
 
     const submit = () => update.mutate(form)
@@ -186,9 +222,93 @@ export function ServicePricesSettingsForm() {
                             строк сохраняются.
                         </p>
                     </div>
+
+                    <Separator />
+
+                    <p className="text-sm font-medium">Тарифы</p>
+                    {form.urgent_tariffs.map((t, idx) => (
+                        <div
+                            key={idx}
+                            className="space-y-3 rounded border px-3 py-3"
+                        >
+                            <div className="space-y-1">
+                                <Label>Название</Label>
+                                <Input
+                                    value={t.label}
+                                    placeholder="1 день"
+                                    onChange={(e) =>
+                                        setUrgentTariff(
+                                            idx,
+                                            'label',
+                                            e.target.value,
+                                        )
+                                    }
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label>Срок, дней</Label>
+                                    <Input
+                                        type="number"
+                                        value={t.duration_days}
+                                        onChange={(e) =>
+                                            setUrgentTariff(
+                                                idx,
+                                                'duration_days',
+                                                parseInt(e.target.value) || 0,
+                                            )
+                                        }
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Цена</Label>
+                                    <Input
+                                        type="number"
+                                        step={0.01}
+                                        value={t.price}
+                                        onChange={(e) =>
+                                            setUrgentTariff(
+                                                idx,
+                                                'price',
+                                                parseFloat(e.target.value) || 0,
+                                            )
+                                        }
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeUrgentTariff(idx)}
+                                    disabled={isLoading}
+                                >
+                                    Удалить
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
+
+                    <Button
+                        variant="outline"
+                        onClick={addUrgentTariff}
+                        disabled={isLoading}
+                    >
+                        + Добавить тариф
+                    </Button>
+
+                    <Separator />
+
+                    <p className="text-[10px] text-muted-foreground">
+                        ⚠️ Legacy: одиночная цена/срок для старых клиентов,
+                        которые не умеют тарифы. Позже уберём.
+                    </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <Label>Цена</Label>
+                            <Label>Цена (legacy)</Label>
                             <Input
                                 type="number"
                                 step={0.01}
@@ -202,11 +322,11 @@ export function ServicePricesSettingsForm() {
                                 disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                                urgent_price — стоимость статуса «Срочно».
+                                urgent_price — стоимость для старых клиентов.
                             </p>
                         </div>
                         <div className="space-y-1">
-                            <Label>Срок, дней</Label>
+                            <Label>Срок, дней (legacy)</Label>
                             <Input
                                 type="number"
                                 value={form.urgent_duration_days}
@@ -219,7 +339,7 @@ export function ServicePricesSettingsForm() {
                                 disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                                urgent_duration_days — сколько дней действует.
+                                urgent_duration_days — срок для старых клиентов.
                             </p>
                         </div>
                     </div>
