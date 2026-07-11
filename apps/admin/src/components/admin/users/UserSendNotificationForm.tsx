@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
     Button,
     Card,
@@ -22,11 +22,16 @@ import {
     TabsTrigger,
     Textarea,
 } from '@doska/ui'
-import { CalendarClock, Send } from 'lucide-react'
+import { CalendarClock, Save, Send, Trash2 } from 'lucide-react'
 import {
     useAdminSendNotification,
     useAdminScheduleNotification,
 } from '@/hooks/mutations/admin'
+import {
+    loadTemplates,
+    saveTemplates,
+    type NotificationTemplate,
+} from '@/lib/notification-templates'
 
 const ALL = '__all__'
 
@@ -84,6 +89,52 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
             return { ok: false as const, error: e?.message ?? 'Невалидный JSON' }
         }
     }, [dataJson])
+
+    // Шаблоны общие со страницей рассылок (localStorage). Фильтры рассылки здесь
+    // не нужны — из шаблона применяется только текстовая часть.
+    const [templates, setTemplates] = useState<NotificationTemplate[]>([])
+    useEffect(() => {
+        setTemplates(loadTemplates())
+    }, [])
+
+    const applyTemplate = (tpl: NotificationTemplate) => {
+        setTitle(tpl.title)
+        setBody(tpl.body)
+        setType(tpl.type || 'info')
+        setCategory(tpl.category || '')
+        const isPreset = CLICK_ACTION_PRESETS.some((p) => p.value === tpl.clickAction)
+        setClickActionPreset(isPreset ? tpl.clickAction : ALL)
+        setClickActionCustom(isPreset ? '' : tpl.clickAction || '')
+        setDataJson(tpl.dataJson || '')
+        setIsDataOnly(!!tpl.isDataOnly)
+    }
+
+    const saveTemplate = () => {
+        const name = prompt('Название шаблона:')
+        if (!name) return
+        const tpl: NotificationTemplate = {
+            name,
+            tab: 'user',
+            title,
+            body,
+            type,
+            category,
+            clickAction: clickAction ?? '',
+            dataJson,
+            isDataOnly,
+            filters: {},
+        }
+        const next = [...templates.filter((t) => t.name !== name), tpl]
+        setTemplates(next)
+        saveTemplates(next)
+    }
+
+    const deleteTemplate = (name: string) => {
+        if (!confirm(`Удалить шаблон «${name}»?`)) return
+        const next = templates.filter((t) => t.name !== name)
+        setTemplates(next)
+        saveTemplates(next)
+    }
 
     const scheduleAtFuture = useMemo(() => {
         if (mode !== 'schedule') return true
@@ -261,7 +312,10 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
                         </Tabs>
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex flex-wrap gap-2 items-center justify-between">
+                        <Button variant="outline" size="sm" onClick={saveTemplate}>
+                            <Save className="size-4 mr-1" /> Сохранить как шаблон
+                        </Button>
                         <Button onClick={submit} disabled={!canSubmit || pending}>
                             {mode === 'schedule' ? (
                                 <>
@@ -277,29 +331,71 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
                 </CardContent>
             </Card>
 
-            <Card className="h-fit">
-                <CardHeader>
-                    <CardTitle className="text-base">Превью</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-2xl border bg-muted/40 p-3 space-y-1 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <div className="size-4 rounded bg-primary/70" />
-                            <span>BulBul Go</span>
-                            <span>· сейчас</span>
-                        </div>
-                        <div className="font-semibold text-sm">{title || 'Заголовок'}</div>
-                        <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                            {body || 'Текст уведомления…'}
-                        </div>
-                        {clickAction && (
-                            <div className="text-[10px] text-muted-foreground pt-1">
-                                → {clickAction}
+            <div className="space-y-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Превью</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-2xl border bg-muted/40 p-3 space-y-1 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="size-4 rounded bg-primary/70" />
+                                <span>BulBul Go</span>
+                                <span>· сейчас</span>
                             </div>
+                            <div className="font-semibold text-sm">{title || 'Заголовок'}</div>
+                            <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                {body || 'Текст уведомления…'}
+                            </div>
+                            {clickAction && (
+                                <div className="text-[10px] text-muted-foreground pt-1">
+                                    → {clickAction}
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Шаблоны</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1">
+                        {templates.length === 0 ? (
+                            <p className="text-xs text-muted-foreground">
+                                Сохранённых шаблонов нет. Нажмите «Сохранить как шаблон» под
+                                формой.
+                            </p>
+                        ) : (
+                            templates.map((tpl) => (
+                                <div
+                                    key={tpl.name}
+                                    className="flex items-center justify-between gap-2 rounded border px-2 py-1"
+                                >
+                                    <button
+                                        type="button"
+                                        className="text-left text-sm truncate flex-1 hover:underline"
+                                        onClick={() => applyTemplate(tpl)}
+                                        title={tpl.title}
+                                    >
+                                        {tpl.name}
+                                        <span className="text-xs text-muted-foreground ml-1">
+                                            ({tpl.tab === 'user' ? 'пользователю' : 'рассылка'})
+                                        </span>
+                                    </button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteTemplate(tpl.name)}
+                                    >
+                                        <Trash2 className="size-3" />
+                                    </Button>
+                                </div>
+                            ))
                         )}
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }

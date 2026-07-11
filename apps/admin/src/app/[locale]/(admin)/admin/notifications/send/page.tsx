@@ -37,6 +37,11 @@ import { Link, useRouter } from '@doska/i18n'
 import { ArrowLeft, CalendarClock, Save, Send, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
+import {
+    loadTemplates,
+    saveTemplates,
+    type NotificationTemplate as Template,
+} from '@/lib/notification-templates'
 
 const ALL = '__all__'
 
@@ -57,38 +62,6 @@ const CLICK_ACTION_PRESETS: { value: string; label: string }[] = [
     { value: '/profile/vehicles', label: '/profile/vehicles — автомобили' },
     { value: '/profile/reviews', label: '/profile/reviews — отзывы' },
 ]
-
-const TEMPLATE_STORAGE_KEY = 'admin:notification-templates:v1'
-
-type Template = {
-    name: string
-    tab: 'user' | 'broadcast'
-    title: string
-    body: string
-    type: string
-    category: string
-    clickAction: string
-    dataJson: string
-    isDataOnly: boolean
-    filters: AdminBroadcastFilters
-}
-
-function loadTemplates(): Template[] {
-    if (typeof window === 'undefined') return []
-    try {
-        const raw = localStorage.getItem(TEMPLATE_STORAGE_KEY)
-        if (!raw) return []
-        const parsed = JSON.parse(raw)
-        return Array.isArray(parsed) ? parsed : []
-    } catch {
-        return []
-    }
-}
-
-function saveTemplates(templates: Template[]) {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
-}
 
 export default function AdminSendNotificationPage() {
     const router = useRouter()
