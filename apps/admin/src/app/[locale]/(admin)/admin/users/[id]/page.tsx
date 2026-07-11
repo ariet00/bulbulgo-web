@@ -37,6 +37,7 @@ import { ErrorSignaturesTable } from '@/components/admin/analytics/errors-ui'
 import { DataCell } from '@/components/admin/analytics/DataCell'
 import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
 import { UserPreBlockWarningForm } from '@/components/admin/users/UserPreBlockWarningForm'
+import { UserSendNotificationForm } from '@/components/admin/users/UserSendNotificationForm'
 import { RelatedAccountsTab } from '@/components/admin/users/RelatedAccountsTab'
 import {
     Card,
@@ -107,6 +108,7 @@ import {
     Layers,
     Flag,
     AlertTriangle,
+    Bell,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -515,6 +517,9 @@ export default function UserDetailPage() {
                     </TabsTrigger>
                     <TabsTrigger value="related" className="gap-2">
                         <Fingerprint className="h-4 w-4" /> Связи
+                    </TabsTrigger>
+                    <TabsTrigger value="notify" className="gap-2">
+                        <Bell className="h-4 w-4" /> Уведомление
                     </TabsTrigger>
                 </TabsList>
 
@@ -1335,6 +1340,11 @@ export default function UserDetailPage() {
                 {/* ══════════════════ RELATED TAB ══════════════════ */}
                 <TabsContent value="related" className="space-y-6">
                     <RelatedAccountsTab userId={id} />
+                </TabsContent>
+
+                {/* ══════════════════ NOTIFY TAB ══════════════════ */}
+                <TabsContent value="notify" className="space-y-6">
+                    <UserSendNotificationForm userId={id} />
                 </TabsContent>
             </Tabs>
 
