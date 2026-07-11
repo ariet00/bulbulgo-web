@@ -1,6 +1,7 @@
 'use client'
 
 import {
+    Badge,
     Table,
     TableBody,
     TableCell,
@@ -9,13 +10,31 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import type { AdminErrorGroup, AdminErrorUser } from '@/apis/admin'
+import type { AdminAppErrorGroup, AdminErrorGroup, AdminErrorUser } from '@/apis/admin'
 
 export const ERROR_CLASSES: Array<{ value: string; label: string }> = [
     { value: '', label: 'Все' },
     { value: '5xx', label: '5xx' },
     { value: '4xx', label: '4xx' },
 ]
+
+export const APP_ERROR_TYPES: Array<{ value: string; label: string }> = [
+    { value: '', label: 'Все' },
+    { value: 'app_error', label: 'Приложение' },
+    { value: 'permission_error', label: 'Пермишены' },
+    { value: 'webview_error', label: 'Webview' },
+]
+
+export function NewErrorBadge() {
+    return (
+        <Badge
+            className="bg-red-600 text-white hover:bg-red-600"
+            title="Сигнатура не встречалась до начала периода — свежая регрессия"
+        >
+            новая
+        </Badge>
+    )
+}
 
 export function ErrorStatusBadge({ status }: { status: string | null }) {
     const code = Number(status)
@@ -75,9 +94,10 @@ export function ErrorSignaturesTable({
                             <ErrorStatusBadge status={row.status} />
                         </TableCell>
                         <TableCell>
-                            <div className="font-mono text-sm">
+                            <div className="font-mono text-sm flex items-center gap-2">
                                 {row.error_type ?? '—'}
                                 {row.error_code ? ` · ${row.error_code}` : ''}
+                                {row.is_new && <NewErrorBadge />}
                             </div>
                             {row.sample_message && (
                                 <div className="text-xs text-muted-foreground truncate max-w-md">
@@ -98,6 +118,79 @@ export function ErrorSignaturesTable({
                         <TableCell className="text-right text-xs text-muted-foreground">
                             {new Date(row.first_seen).toLocaleString()}
                         </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                            {new Date(row.last_seen).toLocaleString()}
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    )
+}
+
+export function AppErrorSignaturesTable({
+    data,
+    onSelect,
+    selected,
+}: {
+    data: AdminAppErrorGroup[]
+    onSelect?: (row: AdminAppErrorGroup) => void
+    selected?: AdminAppErrorGroup | null
+}) {
+    const isSelected = (r: AdminAppErrorGroup) =>
+        selected &&
+        selected.event_type === r.event_type &&
+        selected.source === r.source &&
+        selected.error_type === r.error_type &&
+        selected.fatal === r.fatal
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead className="w-24">Тип</TableHead>
+                    <TableHead>Где (source)</TableHead>
+                    <TableHead>Ошибка</TableHead>
+                    <TableHead className="w-20 text-right">Кол-во</TableHead>
+                    <TableHead className="w-20 text-right">Юзеров</TableHead>
+                    <TableHead className="w-20 text-right">Девайсов</TableHead>
+                    <TableHead className="w-32 text-right">Последняя</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {data.map((row, i) => (
+                    <TableRow
+                        key={i}
+                        onClick={onSelect ? () => onSelect(row) : undefined}
+                        className={`${onSelect ? 'cursor-pointer' : ''} ${
+                            isSelected(row) ? 'bg-muted' : ''
+                        }`}
+                    >
+                        <TableCell>
+                            {row.fatal ? (
+                                <Badge className="bg-red-600 text-white hover:bg-red-600">fatal</Badge>
+                            ) : (
+                                <Badge variant="secondary">
+                                    {row.event_type === 'app_error' ? 'экран' : row.event_type.replace('_error', '')}
+                                </Badge>
+                            )}
+                        </TableCell>
+                        <TableCell>
+                            <div className="font-mono text-xs truncate max-w-[16rem] flex items-center gap-2">
+                                {row.source ?? '—'}
+                                {row.is_new && <NewErrorBadge />}
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <div className="font-mono text-sm">{row.error_type ?? '—'}</div>
+                            {row.sample_message && (
+                                <div className="text-xs text-muted-foreground truncate max-w-md">
+                                    {row.sample_message}
+                                </div>
+                            )}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">{row.count}</TableCell>
+                        <TableCell className="text-right">{row.users}</TableCell>
+                        <TableCell className="text-right">{row.devices}</TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
                             {new Date(row.last_seen).toLocaleString()}
                         </TableCell>

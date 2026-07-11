@@ -615,11 +615,12 @@ export const useAdminAnalyticsTopErrors = (
     statusClass?: string,
     userId?: number,
     limit: number = 30,
+    path?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'errors', period, product ?? null, statusClass ?? null, userId ?? null, limit],
+        queryKey: [...adminKeys.analytics(), 'errors', period, product ?? null, statusClass ?? null, userId ?? null, limit, path ?? null],
         queryFn: () =>
-            adminApi.getTopErrors({ period, product, status_class: statusClass, user_id: userId, limit }),
+            adminApi.getTopErrors({ period, product, status_class: statusClass, user_id: userId, limit, path }),
     })
 }
 
@@ -684,6 +685,100 @@ export const useAdminAnalyticsErrorSignatureUsers = (
         queryKey: [...adminKeys.analytics(), 'error-signature-users', signature, period, product ?? null],
         queryFn: () => adminApi.getErrorSignatureUsers({ ...signature!, period, product }),
         enabled: !!signature,
+    })
+}
+
+export const useAdminAnalyticsErrorSignatureEvents = (
+    signature: {
+        kind: string | null
+        status: string | null
+        error_type: string | null
+        error_code: string | null
+    } | null,
+    period: string = '7d',
+    product?: string,
+    limit: number = 50,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'error-signature-events', signature, period, product ?? null, limit],
+        queryFn: () => adminApi.getErrorSignatureEvents({ ...signature!, period, product, limit }),
+        enabled: !!signature,
+    })
+}
+
+export const useAdminAnalyticsErrorSignatureBreakdown = (
+    signature: {
+        kind: string | null
+        status: string | null
+        error_type: string | null
+        error_code: string | null
+    } | null,
+    period: string = '7d',
+    granularity: string = 'day',
+    product?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'error-signature-breakdown', signature, period, granularity, product ?? null],
+        queryFn: () =>
+            adminApi.getErrorSignatureBreakdown({ ...signature!, period, granularity, product }),
+        enabled: !!signature,
+    })
+}
+
+export const useAdminAnalyticsAppErrorsSummary = (
+    period: string = '7d',
+    product?: string,
+    eventType?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'app-errors-summary', period, product ?? null, eventType ?? null],
+        queryFn: () => adminApi.getAppErrorsSummary({ period, product, event_type: eventType }),
+    })
+}
+
+export const useAdminAnalyticsTopAppErrors = (
+    period: string = '7d',
+    product?: string,
+    eventType?: string,
+    fatal?: boolean,
+    limit: number = 30,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'app-errors', period, product ?? null, eventType ?? null, fatal ?? null, limit],
+        queryFn: () =>
+            adminApi.getTopAppErrors({ period, product, event_type: eventType, fatal, limit }),
+    })
+}
+
+export const useAdminAnalyticsAppErrorSignatureEvents = (
+    signature: {
+        event_type: string
+        source: string | null
+        error_type: string | null
+        fatal: boolean | null
+    } | null,
+    period: string = '7d',
+    product?: string,
+    limit: number = 50,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'app-error-signature-events', signature, period, product ?? null, limit],
+        queryFn: () => adminApi.getAppErrorSignatureEvents({ ...signature!, period, product, limit }),
+        enabled: !!signature,
+    })
+}
+
+export const useAdminAnalyticsAppErrorsByVersion = (
+    period: string = '7d',
+    product?: string,
+    eventType?: string,
+    fatal?: boolean,
+    limit: number = 30,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'app-errors-by-version', period, product ?? null, eventType ?? null, fatal ?? null, limit],
+        queryFn: () =>
+            adminApi.getAppErrorsByVersion({ period, product, event_type: eventType, fatal, limit }),
     })
 }
 
@@ -1133,6 +1228,13 @@ export const useAdminAppVersionSettings = () => {
     return useQuery({
         queryKey: [...adminKeys.appSettings(), 'version'] as const,
         queryFn: () => adminApi.getAppVersionSettings(),
+    })
+}
+
+export const useAdminMaintenanceSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'maintenance'] as const,
+        queryFn: () => adminApi.getMaintenanceSettings(),
     })
 }
 

@@ -7,6 +7,7 @@ import {
     BarChart,
     CartesianGrid,
     Cell,
+    ComposedChart,
     Legend,
     Line,
     LineChart,
@@ -407,7 +408,14 @@ export function ErrorsTimeseriesChart({
     data,
     granularity = 'day',
 }: {
-    data: Array<{ bucket: string; server: number; client: number; validation: number; total: number }>
+    data: Array<{
+        bucket: string
+        server: number
+        client: number
+        validation: number
+        total: number
+        app?: number
+    }>
     granularity?: 'hour' | 'day' | 'week' | 'month'
 }) {
     const t = useChartTheme()
@@ -418,10 +426,11 @@ export function ErrorsTimeseriesChart({
                 ? new Date(d.bucket).toLocaleString(undefined, { day: 'numeric', hour: '2-digit' })
                 : new Date(d.bucket).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
     }))
+    const hasApp = series.some(d => (d.app ?? 0) > 0)
 
     return (
         <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={series} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <ComposedChart data={series} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
                 <XAxis dataKey="label" fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
                 <YAxis allowDecimals={false} fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
@@ -430,6 +439,44 @@ export function ErrorsTimeseriesChart({
                 {ERROR_SERIES.map(s => (
                     <Bar key={s.key} dataKey={s.key} name={s.label} stackId="errors" fill={s.color} />
                 ))}
+                {hasApp && (
+                    <Line
+                        type="monotone"
+                        dataKey="app"
+                        name="Приложение"
+                        stroke="#8b5cf6"
+                        strokeWidth={2}
+                        dot={false}
+                    />
+                )}
+            </ComposedChart>
+        </ResponsiveContainer>
+    )
+}
+
+// Compact trend of a single error signature inside the drill-down panel.
+export function ErrorSignatureSparkline({
+    data,
+    granularity = 'day',
+}: {
+    data: Array<{ bucket: string; count: number }>
+    granularity?: 'hour' | 'day' | 'week' | 'month'
+}) {
+    const t = useChartTheme()
+    const series = data.map(d => ({
+        ...d,
+        label:
+            granularity === 'hour'
+                ? new Date(d.bucket).toLocaleString(undefined, { day: 'numeric', hour: '2-digit' })
+                : new Date(d.bucket).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    }))
+    return (
+        <ResponsiveContainer width="100%" height={120}>
+            <BarChart data={series} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <XAxis dataKey="label" fontSize={10} stroke={t.axis} tick={{ fill: t.axis }} />
+                <YAxis allowDecimals={false} fontSize={10} stroke={t.axis} tick={{ fill: t.axis }} width={30} />
+                <Tooltip {...tooltipProps(t)} />
+                <Bar dataKey="count" name="Ошибок" fill="#dc2626" radius={[3, 3, 0, 0]} />
             </BarChart>
         </ResponsiveContainer>
     )

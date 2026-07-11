@@ -10,6 +10,7 @@ import {
     AdminNewsInput,
     AdminAppFeaturesSettings,
     AdminAppVersionSettings,
+    AdminMaintenanceSettings,
     AdminContactLimitsSettings,
     AdminBumpLimitsSettings,
     AdminActiveLimitsSettings,
@@ -658,6 +659,18 @@ export const useUpdateAdminAppVersionSettings = () => {
     return useMutation({
         mutationFn: (body: AdminAppVersionSettings) =>
             adminApi.updateAppVersionSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminMaintenanceSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminMaintenanceSettings) =>
+            adminApi.updateMaintenanceSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')

@@ -52,3 +52,8 @@ export const ErrorsTimeseriesChart = dynamic(
     () => import('./charts').then(m => m.ErrorsTimeseriesChart),
     { ssr: false, loading },
 )
+
+export const ErrorSignatureSparkline = dynamic(
+    () => import('./charts').then(m => m.ErrorSignatureSparkline),
+    { ssr: false, loading },
+)

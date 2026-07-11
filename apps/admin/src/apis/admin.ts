@@ -701,19 +701,14 @@ export const adminApi = {
         Object.entries(params).forEach(([k, v]) => {
             if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
         })
-        return requests.get<{
-            total: number
-            server: number
-            client: number
-            validation: number
-            users: number
-        }>(`/admin/analytics/errors/summary?${qs.toString()}`)
+        return requests.get<AdminErrorSummary>(`/admin/analytics/errors/summary?${qs.toString()}`)
     },
     getTopErrors: (params: {
         period?: string
         product?: string
         status_class?: string
         user_id?: number
+        path?: string
         limit?: number
     }) => {
         const qs = new URLSearchParams()
@@ -738,6 +733,7 @@ export const adminApi = {
                 client: number
                 validation: number
                 total: number
+                app: number
             }>
         >(`/admin/analytics/errors/timeseries?${qs.toString()}`)
     },
@@ -764,7 +760,7 @@ export const adminApi = {
             if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
         })
         return requests.get<
-            Array<{ path: string | null; count: number; users: number }>
+            Array<{ path: string | null; method: string | null; count: number; users: number }>
         >(`/admin/analytics/errors/by-path?${qs.toString()}`)
     },
     getErrorsByVersion: (params: {
@@ -799,6 +795,97 @@ export const adminApi = {
             if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
         })
         return requests.get<AdminErrorUser[]>(`/admin/analytics/errors/users?${qs.toString()}`)
+    },
+    getErrorSignatureEvents: (params: {
+        period?: string
+        product?: string
+        kind?: string | null
+        status?: string | null
+        error_type?: string | null
+        error_code?: string | null
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminErrorEvent[]>(`/admin/analytics/errors/events?${qs.toString()}`)
+    },
+    getErrorSignatureBreakdown: (params: {
+        period?: string
+        granularity?: string
+        product?: string
+        kind?: string | null
+        status?: string | null
+        error_type?: string | null
+        error_code?: string | null
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminErrorBreakdown>(
+            `/admin/analytics/errors/breakdown?${qs.toString()}`,
+        )
+    },
+    getAppErrorsSummary: (params: { period?: string; product?: string; event_type?: string }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminAppErrorSummary>(
+            `/admin/analytics/errors/app/summary?${qs.toString()}`,
+        )
+    },
+    getTopAppErrors: (params: {
+        period?: string
+        product?: string
+        event_type?: string
+        fatal?: boolean
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminAppErrorGroup[]>(`/admin/analytics/errors/app?${qs.toString()}`)
+    },
+    getAppErrorSignatureEvents: (params: {
+        period?: string
+        product?: string
+        event_type: string
+        source?: string | null
+        error_type?: string | null
+        fatal?: boolean | null
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<AdminAppErrorEvent[]>(
+            `/admin/analytics/errors/app/events?${qs.toString()}`,
+        )
+    },
+    getAppErrorsByVersion: (params: {
+        period?: string
+        product?: string
+        event_type?: string
+        fatal?: boolean
+        limit?: number
+    }) => {
+        const qs = new URLSearchParams()
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+        })
+        return requests.get<
+            Array<{
+                platform: string | null
+                app_version: string | null
+                count: number
+                users: number
+            }>
+        >(`/admin/analytics/errors/app/by-version?${qs.toString()}`)
     },
     getAnalyticsMiddlewareToggle: () =>
         requests.get<{ enabled: boolean }>('/admin/analytics/middleware/toggle'),
@@ -1171,6 +1258,12 @@ export const adminApi = {
     updateAppVersionSettings: (body: AdminAppVersionSettings) =>
         requests.put<AdminAppVersionSettings>('/admin/settings/version', body),
 
+    // App settings (maintenance mode — Redis key `app:maintenance_mode`)
+    getMaintenanceSettings: () =>
+        requests.get<AdminMaintenanceSettings>('/admin/settings/maintenance'),
+    updateMaintenanceSettings: (body: AdminMaintenanceSettings) =>
+        requests.put<AdminMaintenanceSettings>('/admin/settings/maintenance', body),
+
     // App settings (global feature flags — Redis key `app:features`)
     getAppFeaturesSettings: () =>
         requests.get<AdminAppFeaturesSettings>('/admin/settings/features'),
@@ -1429,6 +1522,7 @@ export interface AdminErrorGroup {
     sample_message: string | null
     first_seen: string
     last_seen: string
+    is_new: boolean
 }
 
 export interface AdminErrorUser {
@@ -1437,6 +1531,90 @@ export interface AdminErrorUser {
     avatar_url: string | null
     count: number
     last_seen: string
+}
+
+export interface AdminErrorSummary {
+    total: number
+    server: number
+    client: number
+    validation: number
+    users: number
+    prev_total: number
+    prev_server: number
+    prev_client: number
+    prev_validation: number
+    prev_users: number
+}
+
+export interface AdminErrorEvent {
+    id: number
+    created_at: string
+    method: string | null
+    path: string | null
+    route: string | null
+    status: string | null
+    message: string | null
+    traceback: string | null
+    request_id: string | null
+    platform: string | null
+    app_version: string | null
+    user_id: number | null
+    user_name: string | null
+    device_id: string | null
+}
+
+export interface AdminErrorBreakdown {
+    paths: Array<{ path: string | null; method: string | null; count: number; users: number }>
+    versions: Array<{
+        platform: string | null
+        app_version: string | null
+        count: number
+        users: number
+    }>
+    timeseries: Array<{ bucket: string; count: number }>
+}
+
+export interface AdminAppErrorGroup {
+    event_type: string
+    source: string | null
+    error_type: string | null
+    fatal: boolean | null
+    count: number
+    users: number
+    devices: number
+    sample_message: string | null
+    first_seen: string
+    last_seen: string
+    is_new: boolean
+}
+
+export interface AdminAppErrorSummary {
+    total: number
+    fatal: number
+    users: number
+    devices: number
+    prev_total: number
+    prev_fatal: number
+}
+
+export interface AdminAppErrorEvent {
+    id: number
+    created_at: string
+    source: string | null
+    error_type: string | null
+    message: string | null
+    stack: string | null
+    fatal: boolean | null
+    url: string | null
+    http_method: string | null
+    status: string | null
+    response_body: string | null
+    os_version: string | null
+    platform: string | null
+    app_version: string | null
+    user_id: number | null
+    user_name: string | null
+    device_id: string | null
 }
 
 export interface AnalyticsCleanupConfigInput {
@@ -1458,6 +1636,11 @@ export interface AdminAppVersionSettings {
     // Legacy — для старых клиентов, читающих GET /version (удалим в будущем).
     android_force_update: boolean
     ios_force_update: boolean
+}
+
+export interface AdminMaintenanceSettings {
+    enabled: boolean
+    message: string
 }
 
 export interface AdminAppFeaturesSettings {

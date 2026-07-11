@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@doska/ui'
 import { useFilterParams } from '@/hooks/useFilterParams'
 import { AppVersionSettingsForm } from '@/components/admin/settings/AppVersionSettingsForm'
+import { MaintenanceSettingsForm } from '@/components/admin/settings/MaintenanceSettingsForm'
 import { FeatureFlagsSettingsForm } from '@/components/admin/settings/FeatureFlagsSettingsForm'
 import { ContactLimitsSettingsForm } from '@/components/admin/settings/ContactLimitsSettingsForm'
 import { BumpLimitsSettingsForm } from '@/components/admin/settings/BumpLimitsSettingsForm'
@@ -15,6 +16,7 @@ import { AttractivePricesSettingsForm } from '@/components/admin/settings/Attrac
 
 const TABS = [
     { value: 'app', label: 'Версии приложения', Form: AppVersionSettingsForm },
+    { value: 'maintenance', label: 'Техработы', Form: MaintenanceSettingsForm },
     { value: 'features', label: 'Фичи', Form: FeatureFlagsSettingsForm },
     { value: 'services', label: 'Услуги', Form: ServicePricesSettingsForm },
     { value: 'parcel-types', label: 'Типы посылок', Form: ParcelTypesSettingsForm },
