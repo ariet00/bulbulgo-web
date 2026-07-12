@@ -396,7 +396,124 @@ export default function AdminTripsPage() {
                     {isLoading ? (
                         <div>Loading...</div>
                     ) : (
-                    <div className="rounded-md border overflow-x-auto">
+                    <>
+                    {/* Mobile: cards */}
+                    <div className="space-y-3 md:hidden">
+                        {trips?.items.length === 0 && (
+                            <div className="rounded-md border py-6 text-center text-muted-foreground">
+                                Ничего не найдено
+                            </div>
+                        )}
+                        {trips?.items.map((trip: any) => (
+                            <div key={trip.id} className="rounded-md border p-3 space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col text-sm min-w-0">
+                                        <span className="flex items-center">
+                                            <MapPin className="h-3 w-3 mr-1 shrink-0 text-blue-500" />
+                                            <span className="truncate">
+                                                {trip.from_location?.name || trip.from_address || 'Unknown'}
+                                            </span>
+                                        </span>
+                                        <span className="flex items-center">
+                                            <MapPin className="h-3 w-3 mr-1 shrink-0 text-green-500" />
+                                            <span className="truncate">
+                                                {trip.to_location?.name || trip.to_address || 'Unknown'}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    {trip.is_deleted ? (
+                                        <span className="shrink-0 px-2 py-1 rounded-full text-xs bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900">
+                                            Удален
+                                        </span>
+                                    ) : (
+                                        <span className={`shrink-0 px-2 py-1 rounded-full text-xs ${statusClass(trip.status)}`}>
+                                            {trip.status}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                                    <span className="text-muted-foreground">#{trip.id}</span>
+                                    <span>
+                                        {trip.departure_date ? format(new Date(trip.departure_date), 'dd.MM.yyyy') : 'N/A'}
+                                        {trip.time ? ` ${String(trip.time).slice(0, 5)}` : ''}
+                                    </span>
+                                    <span className="capitalize text-muted-foreground">
+                                        {trip.trip_type || '—'} / {trip.role}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                                    <span className="font-medium">
+                                        {trip.price != null
+                                            ? `${trip.price} ${trip.currency?.symbol || trip.currency?.code || ''}`.trim()
+                                            : 'Цена: —'}
+                                    </span>
+                                    {trip.seats != null && (
+                                        <span className="text-muted-foreground">мест: {trip.seats}</span>
+                                    )}
+                                    {trip.booking_stats && (
+                                        <span className="text-muted-foreground">
+                                            ✓ {trip.booking_stats.accepted}
+                                            {trip.booking_stats.pending > 0 && ` ⧗ ${trip.booking_stats.pending}`}
+                                        </span>
+                                    )}
+                                    <span
+                                        className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                                        title="Просмотры номера телефона"
+                                    >
+                                        <Phone className="h-3 w-3" />
+                                        {trip.data?.phone_view_count ?? 0}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                                    <div className="flex flex-col text-sm min-w-0">
+                                        {trip.user_id ? (
+                                            <Link
+                                                href={`/admin/users/${trip.user_id}`}
+                                                className="flex items-center text-blue-600 hover:underline"
+                                            >
+                                                <User className="h-3 w-3 mr-1 shrink-0" />
+                                                <span className="truncate">
+                                                    {trip.user?.full_name || trip.user?.name || trip.user?.username || `#${trip.user_id}`}
+                                                </span>
+                                            </Link>
+                                        ) : (
+                                            <span className="flex items-center">
+                                                <User className="h-3 w-3 mr-1 shrink-0 text-muted-foreground" />
+                                                <span className="truncate">
+                                                    {trip.user?.full_name || trip.user?.name || trip.user?.username || '—'}
+                                                </span>
+                                            </span>
+                                        )}
+                                        {(trip.phone || trip.user?.phone) && (
+                                            <span className="flex items-center text-muted-foreground">
+                                                <Phone className="h-3 w-3 mr-1 shrink-0" />
+                                                {trip.phone || trip.user?.phone}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex shrink-0 space-x-2">
+                                        <Link href={`/admin/trips/${trip.id}`}>
+                                            <Button variant="outline" size="sm">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                        {!trip.is_deleted && (
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => handleDelete(trip.id)}
+                                                disabled={deleteTripMutation.isPending}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Desktop: table */}
+                    <div className="hidden md:block rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -407,6 +524,12 @@ export default function AdminTripsPage() {
                                     <TableHead>Type / Role</TableHead>
                                     <TableHead>Price</TableHead>
                                     <TableHead>Seats</TableHead>
+                                    <TableHead title="Просмотры номера телефона">
+                                        <span className="flex items-center whitespace-nowrap">
+                                            <Phone className="h-3 w-3 mr-1" />
+                                            Views
+                                        </span>
+                                    </TableHead>
                                     <TableHead>Bookings</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Created</TableHead>
@@ -416,7 +539,7 @@ export default function AdminTripsPage() {
                             <TableBody>
                                 {trips?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={11} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={12} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -489,6 +612,16 @@ export default function AdminTripsPage() {
                                         </TableCell>
                                         <TableCell>{trip.seats ?? '—'}</TableCell>
                                         <TableCell>
+                                            {trip.data?.phone_view_count ? (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                    <Phone className="h-3 w-3" />
+                                                    {trip.data.phone_view_count}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground">0</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
                                             {trip.booking_stats ? (
                                                 <div className="flex flex-col text-xs">
                                                     <span className="text-green-700">✓ {trip.booking_stats.accepted}</span>
@@ -541,6 +674,7 @@ export default function AdminTripsPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    </>
                     )}
                     {trips && (
                         <Pagination
