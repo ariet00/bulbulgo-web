@@ -391,6 +391,49 @@ export default function UserDetailPage() {
                         </DropdownMenu>
                     </div>
                 </CardContent>
+
+                {/* ── Quick facts strip ── */}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-border bg-muted/30 px-6 py-3 text-sm text-muted-foreground">
+                    <button
+                        onClick={() => copy(String(user.id))}
+                        className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                        title="Скопировать ID"
+                    >
+                        <Hash className="h-3.5 w-3.5" /> {user.id}
+                        <Copy className="h-3 w-3 opacity-50" />
+                    </button>
+                    {user.phone && (
+                        <button
+                            onClick={() => copy(user.phone)}
+                            className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                            title="Скопировать телефон"
+                        >
+                            <Phone className="h-3.5 w-3.5" /> {user.phone}
+                            <Copy className="h-3 w-3 opacity-50" />
+                        </button>
+                    )}
+                    {user.email && (
+                        <button
+                            onClick={() => copy(user.email)}
+                            className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                            title="Скопировать email"
+                        >
+                            <Mail className="h-3.5 w-3.5" /> {user.email}
+                            <Copy className="h-3 w-3 opacity-50" />
+                        </button>
+                    )}
+                    <span className="flex items-center gap-1.5" title="Дата регистрации">
+                        <Calendar className="h-3.5 w-3.5" /> с {fmt(user.created_at, false)}
+                    </span>
+                    <span className="flex items-center gap-1.5" title="Был онлайн">
+                        <Clock className="h-3.5 w-3.5" />
+                        {online ? (
+                            <span className="text-emerald-600 dark:text-emerald-400">в сети</span>
+                        ) : (
+                            fmt(user.last_online_at)
+                        )}
+                    </span>
+                </div>
             </Card>
 
             {/* ── Tabs ── */}

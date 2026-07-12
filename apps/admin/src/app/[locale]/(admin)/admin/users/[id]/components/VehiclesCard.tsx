@@ -1,5 +1,6 @@
 'use client'
 
+import { Link } from '@doska/i18n'
 import {
     Card,
     CardContent,
@@ -50,7 +51,12 @@ export function VehiclesCard({ uid }: { uid: number }) {
                                                 {rows.map((v: any) => (
                                                     <TableRow key={v.id}>
                                                         <TableCell>
-                                                            {[v.brand, v.model].filter(Boolean).join(' ') || '—'}
+                                                            <Link
+                                                                href={`/admin/vehicles/${v.id}`}
+                                                                className="text-blue-600 hover:underline dark:text-blue-400"
+                                                            >
+                                                                {[v.brand, v.model].filter(Boolean).join(' ') || `#${v.id}`}
+                                                            </Link>
                                                         </TableCell>
                                                         <TableCell className="text-xs">{v.vehicle_type ?? '—'}</TableCell>
                                                         <TableCell className="tabular-nums">{v.year ?? '—'}</TableCell>
