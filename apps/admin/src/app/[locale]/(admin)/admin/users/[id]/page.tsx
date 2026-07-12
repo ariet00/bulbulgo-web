@@ -58,7 +58,6 @@ import {
     CheckCircle2,
     Clock,
     Copy,
-    Fingerprint,
     Flag,
     Hash,
     Loader2,
@@ -452,13 +451,10 @@ export default function UserDetailPage() {
                         <AlertTriangle className="h-4 w-4" /> Ошибки
                     </TabsTrigger>
                     <TabsTrigger value="devices" className="gap-2 shrink-0">
-                        <Smartphone className="h-4 w-4" /> Устройства
+                        <Smartphone className="h-4 w-4" /> Устройства и связи
                     </TabsTrigger>
                     <TabsTrigger value="wallet" className="gap-2 shrink-0">
                         <WalletIcon className="h-4 w-4" /> Кошелёк
-                    </TabsTrigger>
-                    <TabsTrigger value="related" className="gap-2 shrink-0">
-                        <Fingerprint className="h-4 w-4" /> Связи
                     </TabsTrigger>
                     <TabsTrigger value="notify" className="gap-2 shrink-0">
                         <Bell className="h-4 w-4" /> Уведомление
@@ -526,19 +522,15 @@ export default function UserDetailPage() {
                     <ErrorsTab uid={uid} period={period} setPeriod={setPeriod} product={product} setProduct={setProduct} />
                 </TabsContent>
 
-                {/* ══════════════════ DEVICES TAB ══════════════════ */}
+                {/* ══════════════════ DEVICES & RELATED TAB ══════════════════ */}
                 <TabsContent value="devices" className="space-y-6">
                     <DevicesTab uid={uid} />
+                    <RelatedAccountsTab userId={id} />
                 </TabsContent>
 
                 {/* ══════════════════ WALLET TAB ══════════════════ */}
                 <TabsContent value="wallet" className="space-y-6">
                     <WalletsCard uid={uid} />
-                </TabsContent>
-
-                {/* ══════════════════ RELATED TAB ══════════════════ */}
-                <TabsContent value="related" className="space-y-6">
-                    <RelatedAccountsTab userId={id} />
                 </TabsContent>
 
                 {/* ══════════════════ NOTIFY TAB ══════════════════ */}
