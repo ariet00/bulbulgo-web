@@ -60,7 +60,6 @@ import {
     Copy,
     Fingerprint,
     Flag,
-    Globe,
     Hash,
     Loader2,
     Mail,
@@ -486,51 +485,18 @@ export default function UserDetailPage() {
                     </Link>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                        {/* ── Identity ── */}
-                        <SectionCard title="Идентификация" icon={UserIcon}>
+                        {/* ── Basic info (id/username/provider/role/dates/gender/rating
+                             live in the header pills + quick-facts strip) ── */}
+                        <SectionCard title="Основное" icon={UserIcon}>
                             <div className="divide-y divide-border">
-                                <InfoRow icon={Hash} label="ID" onCopy={() => copy(String(user.id))}>
-                                    {user.id}
-                                </InfoRow>
                                 <InfoRow icon={UserIcon} label="ФИО">
                                     {[user.surname, user.name, user.patronymic].filter(Boolean).join(' ') || '—'}
                                 </InfoRow>
-                                <InfoRow icon={Fingerprint} label="Username">
-                                    @{user.username}
-                                </InfoRow>
-                                <InfoRow icon={Globe} label="Провайдер">
-                                    <span className="capitalize">{user.provider || '—'}</span>
-                                </InfoRow>
-                                <InfoRow icon={ShieldCheck} label="Роль">
-                                    {user.role_slug || '—'}
-                                </InfoRow>
-                                <InfoRow icon={Calendar} label="Регистрация">
-                                    {fmt(user.created_at, false)}
-                                </InfoRow>
-                                <InfoRow icon={Clock} label="Был онлайн">
-                                    {online ? (
-                                        <span className="text-emerald-600 dark:text-emerald-400">сейчас</span>
-                                    ) : (
-                                        fmt(user.last_online_at)
-                                    )}
-                                </InfoRow>
-                            </div>
-                        </SectionCard>
-
-                        {/* ── Contacts ── */}
-                        <SectionCard title="Контакты" icon={Phone}>
-                            <div className="divide-y divide-border">
                                 <InfoRow icon={Phone} label="Телефон" onCopy={user.phone ? () => copy(user.phone) : undefined}>
                                     {user.phone || '—'}
                                 </InfoRow>
                                 <InfoRow icon={Mail} label="Email" onCopy={user.email ? () => copy(user.email) : undefined}>
                                     {user.email || '—'}
-                                </InfoRow>
-                                <InfoRow icon={UserIcon} label="Пол">
-                                    <span className="capitalize">{user.gender || '—'}</span>
-                                </InfoRow>
-                                <InfoRow icon={Star} label="Рейтинг">
-                                    {user.rating ? `${Number(user.rating).toFixed(1)} (${user.review_count ?? 0})` : '—'}
                                 </InfoRow>
                             </div>
                         </SectionCard>
