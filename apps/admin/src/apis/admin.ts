@@ -2024,6 +2024,8 @@ export interface BookingBotUpdate {
     bot_type?: string
     /** Empty string clears it. */
     mini_app_url?: string
+    /** Write-only: set a new bot token. Omit/empty → no change. Never returned. */
+    token?: string
 }
 
 export interface BookingBotUpdateResponse {

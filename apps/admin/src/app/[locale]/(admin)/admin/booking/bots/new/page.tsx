@@ -107,7 +107,13 @@ export default function NewBookingBotPage() {
                             <option value="booking">booking</option>
                             <option value="akcha">akcha</option>
                             <option value="popytka">popytka</option>
+                            <option value="system">system</option>
                         </select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            <code>system</code> — служебный бот только для отправки
+                            (алерты модераторам и т.п.): без вебхука, входящие
+                            сообщения не обрабатывает.
+                        </p>
                     </div>
                     <div>
                         <Label>Mini App URL</Label>

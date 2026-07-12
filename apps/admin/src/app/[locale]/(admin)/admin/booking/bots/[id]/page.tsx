@@ -41,6 +41,7 @@ export default function EditBookingBotPage() {
     const [miniAppUrl, setMiniAppUrl] = useState('')
     const [isActive, setIsActive] = useState(true)
     const [companyId, setCompanyId] = useState<number | null>(null)
+    const [token, setToken] = useState('')
 
     useEffect(() => {
         if (!bot) return
@@ -68,10 +69,14 @@ export default function EditBookingBotPage() {
             bot_type: botType,
             mini_app_url: miniAppUrl,
         }
+        if (token.trim()) {
+            patch.token = token.trim()
+        }
         if (companyId !== (bot.company_id ?? null)) {
             patch.company_id = companyId ?? 0
         }
         await update.mutateAsync({ id: botId, body: patch })
+        setToken('')
     }
 
     const unlink = async () => {
@@ -109,6 +114,19 @@ export default function EditBookingBotPage() {
                         </p>
                     </div>
                     <div>
+                        <Label>Token</Label>
+                        <Input
+                            value={token}
+                            onChange={(e) => setToken(e.target.value)}
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="Оставьте пустым, чтобы не менять"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Текущий токен не показывается. Введите новый, чтобы заменить.
+                        </p>
+                    </div>
+                    <div>
                         <Label>Имя</Label>
                         <Input value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
@@ -135,10 +153,12 @@ export default function EditBookingBotPage() {
                             <option value="booking">booking</option>
                             <option value="akcha">akcha</option>
                             <option value="popytka">popytka</option>
+                            <option value="system">system</option>
                         </select>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Определяет диспетчер aiogram. Меняйте только при миграции бота
-                            между доменами — после смены перезапустите FastAPI.
+                            Определяет диспетчер aiogram (<code>system</code> — служебный
+                            бот только для отправки, без вебхука). Меняйте только при
+                            миграции бота между доменами — после смены перезапустите FastAPI.
                         </p>
                     </div>
                     <div>
