@@ -407,7 +407,10 @@ export default function AdminTripsPage() {
                         {trips?.items.map((trip: any) => (
                             <div key={trip.id} className="rounded-md border p-3 space-y-2">
                                 <div className="flex items-start justify-between gap-2">
-                                    <div className="flex flex-col text-sm min-w-0">
+                                    <Link
+                                        href={`/admin/trips/${trip.id}`}
+                                        className="flex flex-col text-sm min-w-0 hover:underline"
+                                    >
                                         <span className="flex items-center">
                                             <MapPin className="h-3 w-3 mr-1 shrink-0 text-blue-500" />
                                             <span className="truncate">
@@ -420,7 +423,7 @@ export default function AdminTripsPage() {
                                                 {trip.to_location?.name || trip.to_address || 'Unknown'}
                                             </span>
                                         </span>
-                                    </div>
+                                    </Link>
                                     {trip.is_deleted ? (
                                         <span className="shrink-0 px-2 py-1 rounded-full text-xs bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900">
                                             Удален
@@ -450,12 +453,6 @@ export default function AdminTripsPage() {
                                     {trip.seats != null && (
                                         <span className="text-muted-foreground">мест: {trip.seats}</span>
                                     )}
-                                    {trip.booking_stats && (
-                                        <span className="text-muted-foreground">
-                                            ✓ {trip.booking_stats.accepted}
-                                            {trip.booking_stats.pending > 0 && ` ⧗ ${trip.booking_stats.pending}`}
-                                        </span>
-                                    )}
                                     <span
                                         className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
                                         title="Просмотры номера телефона"
@@ -463,6 +460,16 @@ export default function AdminTripsPage() {
                                         <Phone className="h-3 w-3" />
                                         {trip.data?.phone_view_count ?? 0}
                                     </span>
+                                </div>
+                                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                    <span title="Создано">
+                                        {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                    </span>
+                                    {trip.updated_at && trip.updated_at !== trip.created_at && (
+                                        <span title="Обновлено">
+                                            ↻ {format(new Date(trip.updated_at), 'dd.MM.yyyy HH:mm')}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center justify-between gap-2 pt-1 border-t">
                                     <div className="flex flex-col text-sm min-w-0">
@@ -518,9 +525,8 @@ export default function AdminTripsPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ID</TableHead>
-                                    <TableHead>From - To</TableHead>
+                                    <TableHead>Trip</TableHead>
                                     <TableHead>User</TableHead>
-                                    <TableHead>Date</TableHead>
                                     <TableHead>Type / Role</TableHead>
                                     <TableHead>Price</TableHead>
                                     <TableHead>Seats</TableHead>
@@ -530,16 +536,15 @@ export default function AdminTripsPage() {
                                             Views
                                         </span>
                                     </TableHead>
-                                    <TableHead>Bookings</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Created</TableHead>
+                                    <TableHead>Created / Updated</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {trips?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={12} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -548,7 +553,10 @@ export default function AdminTripsPage() {
                                     <TableRow key={trip.id}>
                                         <TableCell>{trip.id}</TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col">
+                                            <Link
+                                                href={`/admin/trips/${trip.id}`}
+                                                className="flex flex-col hover:underline"
+                                            >
                                                 <span className="flex items-center text-sm">
                                                     <MapPin className="h-3 w-3 mr-1 text-blue-500" />
                                                     {trip.from_location?.name || trip.from_address || 'Unknown'}
@@ -557,7 +565,11 @@ export default function AdminTripsPage() {
                                                     <MapPin className="h-3 w-3 mr-1 text-green-500" />
                                                     {trip.to_location?.name || trip.to_address || 'Unknown'}
                                                 </span>
-                                            </div>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {trip.departure_date ? format(new Date(trip.departure_date), 'dd.MM.yyyy') : 'N/A'}
+                                                    {trip.time ? ` ${String(trip.time).slice(0, 5)}` : ''}
+                                                </span>
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col text-sm">
@@ -591,16 +603,6 @@ export default function AdminTripsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col text-sm">
-                                                <span>
-                                                    {trip.departure_date ? format(new Date(trip.departure_date), 'dd.MM.yyyy') : 'N/A'}
-                                                </span>
-                                                {trip.time && (
-                                                    <span className="text-muted-foreground">{String(trip.time).slice(0, 5)}</span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col text-sm">
                                                 <span className="capitalize">{trip.trip_type || '—'}</span>
                                                 <span className="capitalize text-muted-foreground">{trip.role}</span>
                                             </div>
@@ -622,21 +624,6 @@ export default function AdminTripsPage() {
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            {trip.booking_stats ? (
-                                                <div className="flex flex-col text-xs">
-                                                    <span className="text-green-700">✓ {trip.booking_stats.accepted}</span>
-                                                    {trip.booking_stats.pending > 0 && (
-                                                        <span className="text-yellow-700">⧗ {trip.booking_stats.pending}</span>
-                                                    )}
-                                                    <span className="text-muted-foreground">
-                                                        мест: {trip.booking_stats.seats_left}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                '—'
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
                                             {trip.is_deleted ? (
                                                 <span className="px-2 py-1 rounded-full text-xs bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900">
                                                     Удален
@@ -648,7 +635,16 @@ export default function AdminTripsPage() {
                                             )}
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                            {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                            <div className="flex flex-col text-xs">
+                                                <span title="Создано">
+                                                    {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                                </span>
+                                                {trip.updated_at && trip.updated_at !== trip.created_at && (
+                                                    <span title="Обновлено">
+                                                        ↻ {format(new Date(trip.updated_at), 'dd.MM.yyyy HH:mm')}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex space-x-2">
