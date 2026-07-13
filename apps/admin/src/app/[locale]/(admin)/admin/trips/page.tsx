@@ -181,24 +181,23 @@ export default function AdminTripsPage() {
                     <CardTitle>Trip Management</CardTitle>
                     <div className="flex items-center gap-2">
                         <Link href="/admin/trips/blocked-authors">
-                            <Button variant="outline" size="sm">
-                                <Ban className="h-4 w-4 mr-1" />
-                                Заблокированные ТГ аккаунты
+                            <Button variant="outline" size="icon" title="Заблокированные ТГ аккаунты">
+                                <Ban className="h-4 w-4" />
                             </Button>
                         </Link>
                         <Button
                             variant="outline"
-                            size="sm"
+                            size="icon"
                             onClick={() => refetch()}
                             disabled={isFetching}
+                            title="Обновить"
                         >
-                            <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
-                            Обновить
+                            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex flex-wrap items-end gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
                         <div className="w-full sm:w-64">
                             <UserCombobox
                                 value={values.user_id || null}
@@ -277,7 +276,7 @@ export default function AdminTripsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <div className="flex h-10 items-center gap-2 rounded-md border px-3">
+                        <div className="flex h-10 w-full items-center gap-2 rounded-md border px-3 sm:w-auto">
                             <Switch
                                 id="only-real"
                                 checked={values.only_real}
@@ -291,7 +290,7 @@ export default function AdminTripsPage() {
                                 Только реальные
                             </Label>
                         </div>
-                        <div className="flex h-10 items-center gap-2 rounded-md border px-3">
+                        <div className="flex h-10 w-full items-center gap-2 rounded-md border px-3 sm:w-auto">
                             <Switch
                                 id="include-deleted"
                                 checked={values.include_deleted}
@@ -304,7 +303,7 @@ export default function AdminTripsPage() {
                                 Показывать удалённые
                             </Label>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Откуда</span>
                             <div className="w-full sm:w-44">
                                 <RegionCombobox
@@ -314,7 +313,7 @@ export default function AdminTripsPage() {
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Куда</span>
                             <div className="w-full sm:w-44">
                                 <RegionCombobox
@@ -324,7 +323,7 @@ export default function AdminTripsPage() {
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Цена</span>
                             <div className="flex items-center gap-1">
                                 <Input
@@ -333,7 +332,7 @@ export default function AdminTripsPage() {
                                     placeholder="от"
                                     value={priceMinInput}
                                     onChange={(e) => setPriceMinInput(e.target.value)}
-                                    className="w-24"
+                                    className="flex-1 sm:flex-none sm:w-24"
                                 />
                                 <span className="text-muted-foreground">—</span>
                                 <Input
@@ -342,11 +341,11 @@ export default function AdminTripsPage() {
                                     placeholder="до"
                                     value={priceMaxInput}
                                     onChange={(e) => setPriceMaxInput(e.target.value)}
-                                    className="w-24"
+                                    className="flex-1 sm:flex-none sm:w-24"
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Места</span>
                             <div className="flex items-center gap-1">
                                 <Input
@@ -355,7 +354,7 @@ export default function AdminTripsPage() {
                                     placeholder="от"
                                     value={seatsMinInput}
                                     onChange={(e) => setSeatsMinInput(e.target.value)}
-                                    className="w-20"
+                                    className="flex-1 sm:flex-none sm:w-20"
                                 />
                                 <span className="text-muted-foreground">—</span>
                                 <Input
@@ -364,11 +363,11 @@ export default function AdminTripsPage() {
                                     placeholder="до"
                                     value={seatsMaxInput}
                                     onChange={(e) => setSeatsMaxInput(e.target.value)}
-                                    className="w-20"
+                                    className="flex-1 sm:flex-none sm:w-20"
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Дата от</span>
                             <Input
                                 type="date"
@@ -377,7 +376,7 @@ export default function AdminTripsPage() {
                                 className="w-full sm:w-40"
                             />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Дата до</span>
                             <Input
                                 type="date"
