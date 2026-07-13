@@ -20,6 +20,7 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     is_passenger_search_enabled: false,
     map_route_preview: false,
     require_verified_phone: false,
+    phone_login_enabled: false,
 }
 
 export function FeatureFlagsSettingsForm() {
@@ -148,6 +149,27 @@ export function FeatureFlagsSettingsForm() {
                             checked={form.require_verified_phone}
                             onCheckedChange={(v) =>
                                 set('require_verified_phone', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                Вход по номеру телефона
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                <code>phone_login_enabled</code>. Показывает
+                                кнопку «Войти по номеру» на экране входа и
+                                открывает эндпоинты SMS-логина. Выключение
+                                закрывает и API, не только кнопку.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.phone_login_enabled}
+                            onCheckedChange={(v) =>
+                                set('phone_login_enabled', v)
                             }
                             disabled={isLoading}
                         />
