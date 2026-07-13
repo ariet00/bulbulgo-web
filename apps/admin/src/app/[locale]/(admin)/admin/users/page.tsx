@@ -97,16 +97,16 @@ export default function UsersPage() {
                     <CardTitle>User Management</CardTitle>
                     <Button
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={() => refetch()}
                         disabled={isFetching}
+                        title="Обновить"
                     >
-                        <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
+                        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex flex-wrap items-end gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
                         <Input
                             placeholder="Поиск по имени/телефону/email/id…"
                             value={qInput}
@@ -161,7 +161,7 @@ export default function UsersPage() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Регистрация от</span>
                             <Input
                                 type="date"
@@ -170,7 +170,7 @@ export default function UsersPage() {
                                 className="w-full sm:w-40"
                             />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">до</span>
                             <Input
                                 type="date"
@@ -189,7 +189,111 @@ export default function UsersPage() {
                     {isLoading ? (
                         <div>Loading...</div>
                     ) : (
-                    <div className="rounded-md border overflow-x-auto">
+                    <>
+                    {/* Mobile: cards */}
+                    <div className="space-y-3 md:hidden">
+                        {users?.items.length === 0 && (
+                            <div className="rounded-md border py-6 text-center text-muted-foreground">
+                                Ничего не найдено
+                            </div>
+                        )}
+                        {users?.items.map((user: any) => (
+                            <div key={user.id} className="rounded-md border p-3 space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                    <Link
+                                        href={`/admin/users/${user.id}`}
+                                        className="flex min-w-0 flex-col hover:underline"
+                                    >
+                                        <span className="truncate font-medium">
+                                            {user.full_name || user.name || '—'}
+                                        </span>
+                                        <span className="truncate text-xs text-muted-foreground">
+                                            @{user.username} · #{user.id}
+                                        </span>
+                                    </Link>
+                                    {user.is_active ? (
+                                        <span className="flex shrink-0 items-center text-xs text-green-600">
+                                            <CheckCircle className="mr-1 h-3 w-3" /> Active
+                                        </span>
+                                    ) : (
+                                        <span className="flex shrink-0 items-center text-xs text-red-600">
+                                            <Ban className="mr-1 h-3 w-3" /> Banned
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-col text-sm">
+                                    {user.phone && (
+                                        <span className="flex items-center">
+                                            <Phone className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
+                                            {user.phone}
+                                        </span>
+                                    )}
+                                    {user.email && (
+                                        <span className="flex items-center text-muted-foreground">
+                                            <Mail className="mr-1 h-3 w-3 shrink-0" />
+                                            <span className="truncate">{user.email}</span>
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                    {!!user.rating && (
+                                        <span className="flex items-center">
+                                            <Star className="mr-1 h-3 w-3 text-yellow-500" />
+                                            {user.rating.toFixed(1)}
+                                            {!!user.review_count && ` (${user.review_count})`}
+                                        </span>
+                                    )}
+                                    {user.gender && <span className="capitalize">{user.gender}</span>}
+                                    {user.provider && <span className="capitalize">{user.provider}</span>}
+                                </div>
+                                <div className="flex items-center justify-between gap-2 border-t pt-2">
+                                    <div className="flex min-w-0 flex-col text-xs text-muted-foreground">
+                                        <span title="Регистрация">
+                                            рег.{' '}
+                                            {user.created_at
+                                                ? format(new Date(user.created_at), 'dd.MM.yyyy')
+                                                : '—'}
+                                        </span>
+                                        <span title="Последний онлайн">
+                                            онлайн{' '}
+                                            {user.last_online_at
+                                                ? format(new Date(user.last_online_at), 'dd.MM.yyyy HH:mm')
+                                                : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="flex shrink-0 space-x-2">
+                                        <Link href={`/admin/users/${user.id}`}>
+                                            <Button variant="outline" size="sm">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                        <Link
+                                            href={`/admin/trips?user_id=${user.id}`}
+                                            title="Поездки пользователя"
+                                        >
+                                            <Button variant="outline" size="sm">
+                                                <Car className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                        <Button
+                                            variant={user.is_active ? 'destructive' : 'default'}
+                                            size="sm"
+                                            onClick={() => handleBan(user.id, !user.is_active)}
+                                            disabled={banUserMutation.isPending}
+                                        >
+                                            {user.is_active ? (
+                                                <Ban className="h-4 w-4" />
+                                            ) : (
+                                                <CheckCircle className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Desktop: table */}
+                    <div className="hidden md:block rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -307,6 +411,7 @@ export default function UsersPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    </>
                     )}
                     {users && (
                         <Pagination
