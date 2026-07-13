@@ -114,11 +114,12 @@ export const adminApi = {
         id: number,
         page: number = 1,
         size: number = 50,
-        opts?: { walletId?: number; type?: string },
+        opts?: { walletId?: number; type?: string; period?: string },
     ) => {
         const qs = new URLSearchParams({ page: String(page), size: String(size) })
         if (opts?.walletId != null) qs.set('wallet_id', String(opts.walletId))
         if (opts?.type) qs.set('type', opts.type)
+        if (opts?.period) qs.set('period', opts.period)
         return requests.get<
             Page<{
                 id: number

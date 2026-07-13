@@ -36,7 +36,12 @@ const fmtAmount = (n: number) =>
 const txTypeLabel = (type: string) =>
     TX_TYPES.find(x => x.value === type)?.label ?? type
 
-// Signed amount string + color/icon driven by transaction type.
+const TX_PERIODS = [
+    { value: '', label: 'Всё время' },
+    { value: '1d', label: 'День' },
+    { value: '7d', label: 'Неделя' },
+    { value: '30d', label: 'Месяц' },
+]
 
 // Signed amount string + color/icon driven by transaction type.
 function txMeta(type: string, amount: number) {
@@ -67,6 +72,7 @@ function txMeta(type: string, amount: number) {
 export function WalletsCard({ uid }: { uid: number }) {
     const [walletFilter, setWalletFilter] = useState<number | null>(null)
     const [txType, setTxType] = useState('')
+    const [txPeriod, setTxPeriod] = useState('')
     const [txPage, setTxPage] = useState(1)
     const [txSize, setTxSize] = useState(10)
 
@@ -74,11 +80,12 @@ export function WalletsCard({ uid }: { uid: number }) {
     const txs = useAdminUserTransactions(uid, txPage, txSize, {
         walletId: walletFilter ?? undefined,
         type: txType || undefined,
+        period: txPeriod || undefined,
     })
 
     useEffect(() => {
         setTxPage(1)
-    }, [walletFilter, txType])
+    }, [walletFilter, txType, txPeriod])
 
     const walletItems = wallets.data?.wallets ?? []
     const balances = wallets.data?.total_balance_by_currency ?? {}
@@ -220,6 +227,19 @@ export function WalletsCard({ uid }: { uid: number }) {
                                     onClick={() => setTxType(t.value)}
                                 >
                                     {t.label}
+                                </Button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
+                            {TX_PERIODS.map(p => (
+                                <Button
+                                    key={p.value || 'all'}
+                                    variant={txPeriod === p.value ? 'default' : 'ghost'}
+                                    size="sm"
+                                    className="h-7 px-2.5"
+                                    onClick={() => setTxPeriod(p.value)}
+                                >
+                                    {p.label}
                                 </Button>
                             ))}
                         </div>

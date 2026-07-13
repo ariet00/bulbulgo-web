@@ -28,6 +28,7 @@ import {
     useAdminScheduleNotification,
 } from '@/hooks/mutations/admin'
 import {
+    BUILT_IN_TEMPLATES,
     loadTemplates,
     saveTemplates,
     type NotificationTemplate,
@@ -361,6 +362,27 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
                         <CardTitle className="text-base">Шаблоны</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Готовые
+                        </p>
+                        {BUILT_IN_TEMPLATES.map((tpl) => (
+                            <button
+                                key={tpl.name}
+                                type="button"
+                                className="block w-full rounded border px-2 py-1 text-left hover:bg-muted/50"
+                                onClick={() => applyTemplate(tpl)}
+                                title={tpl.body}
+                            >
+                                <span className="text-sm">{tpl.name}</span>
+                                <span className="block truncate text-xs text-muted-foreground">
+                                    {tpl.title}
+                                </span>
+                            </button>
+                        ))}
+
+                        <p className="pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Мои
+                        </p>
                         {templates.length === 0 ? (
                             <p className="text-xs text-muted-foreground">
                                 Сохранённых шаблонов нет. Нажмите «Сохранить как шаблон» под

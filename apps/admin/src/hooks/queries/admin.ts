@@ -160,7 +160,7 @@ export const useAdminUserTransactions = (
     id: number,
     page: number = 1,
     size: number = 50,
-    opts?: { walletId?: number; type?: string },
+    opts?: { walletId?: number; type?: string; period?: string },
 ) => {
     return useQuery({
         queryKey: [
@@ -170,6 +170,7 @@ export const useAdminUserTransactions = (
             size,
             opts?.walletId ?? null,
             opts?.type ?? null,
+            opts?.period ?? null,
         ] as const,
         queryFn: () => adminApi.getUserTransactions(id, page, size, opts),
         enabled: !!id,

@@ -38,6 +38,7 @@ import { ArrowLeft, CalendarClock, Save, Send, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 import {
+    BUILT_IN_TEMPLATES,
     loadTemplates,
     saveTemplates,
     type NotificationTemplate as Template,
@@ -189,6 +190,20 @@ export default function AdminSendNotificationPage() {
         setGuestsOnly(!!tpl.filters.guests_only)
         setUserIdsRaw((tpl.filters.user_ids ?? []).join(', '))
         setDeviceIdsRaw((tpl.filters.device_ids ?? []).join('\n'))
+    }
+
+    // Встроенные шаблоны применяют только текстовую часть: активная вкладка
+    // (пользователь/рассылка) и настроенные фильтры аудитории сохраняются.
+    const applyBuiltIn = (tpl: Template) => {
+        setTitle(tpl.title)
+        setBody(tpl.body)
+        setType(tpl.type || 'info')
+        setCategory(tpl.category || '')
+        const isPreset = CLICK_ACTION_PRESETS.some((p) => p.value === tpl.clickAction)
+        setClickActionPreset(isPreset ? tpl.clickAction : ALL)
+        setClickActionCustom(isPreset ? '' : tpl.clickAction || '')
+        setDataJson(tpl.dataJson || '')
+        setIsDataOnly(!!tpl.isDataOnly)
     }
 
     const saveTemplate = () => {
@@ -702,6 +717,27 @@ export default function AdminSendNotificationPage() {
                             <CardTitle className="text-base">Шаблоны</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Готовые
+                            </p>
+                            {BUILT_IN_TEMPLATES.map((tpl) => (
+                                <button
+                                    key={tpl.name}
+                                    type="button"
+                                    className="block w-full rounded border px-2 py-1 text-left hover:bg-muted/50"
+                                    onClick={() => applyBuiltIn(tpl)}
+                                    title={tpl.body}
+                                >
+                                    <span className="text-sm">{tpl.name}</span>
+                                    <span className="block truncate text-xs text-muted-foreground">
+                                        {tpl.title}
+                                    </span>
+                                </button>
+                            ))}
+
+                            <p className="pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Мои
+                            </p>
                             {templates.length === 0 ? (
                                 <p className="text-xs text-muted-foreground">
                                     Сохранённых шаблонов нет. Нажмите «Сохранить как шаблон» под
