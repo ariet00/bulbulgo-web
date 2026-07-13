@@ -1124,6 +1124,25 @@ export const adminApi = {
         }>(
             `/admin/akcha/reports/top-users?period=${period}&metric=${metric}&limit=${limit}`,
         ),
+    getWalletRetention: (granularity: 'week' | 'month' = 'month', cohorts: number = 12) =>
+        requests.get<{
+            granularity: string
+            cohorts: Array<{
+                cohort: string
+                users: number
+                topups_sum: number
+                returned: number[]
+                max_observable: number
+            }>
+            max_offset: number
+            payers: number
+            repeat_payers: number
+            repeat_rate: number
+            avg_topups_per_payer: number
+            median_days_to_second: number | null
+        }>(
+            `/admin/akcha/reports/retention?granularity=${granularity}&cohorts=${cohorts}`,
+        ),
     getRideshareMultiAccountDevices: (
         period: string = '30d',
         page: number = 1,

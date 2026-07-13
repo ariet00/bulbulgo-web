@@ -17,8 +17,13 @@ export async function fetchNewsList(): Promise<NewsListItem[]> {
     return (await r.json()) as NewsListItem[]
 }
 
+// Новости больше нет (удалили/сняли с публикации). Отдельный тип: ретрай тут
+// бессмыслен — 404 не станет 200. Ловится по пуш-диплинку на старую статью.
+export class NewsNotFound extends Error {}
+
 export async function fetchNews(id: string): Promise<NewsArticle> {
     const r = await fetch(`${API_URL}/bulbulgo/news/${id}`)
+    if (r.status === 404) throw new NewsNotFound(`news ${id} not found`)
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     return (await r.json()) as NewsArticle
 }

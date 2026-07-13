@@ -917,6 +917,17 @@ export const useAdminWalletReportTopUsers = (
     })
 }
 
+// Retention is measured over the whole history, so it deliberately takes no period.
+export const useAdminWalletRetention = (
+    granularity: 'week' | 'month' = 'month',
+    cohorts: number = 12,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'wallet-report', 'retention', granularity, cohorts],
+        queryFn: () => adminApi.getWalletRetention(granularity, cohorts),
+    })
+}
+
 export const useAdminRideshareTripsByDay = (
     period: string = '7d',
     groupBy: 'type' | 'role' = 'type',
