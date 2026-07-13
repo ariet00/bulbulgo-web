@@ -9,6 +9,7 @@ import {
     useAdminAnalyticsEventFrequency,
     useAdminAnalyticsEventHeatmap,
     useAdminAnalyticsEventRepeat,
+    useAdminAnalyticsEventSubtypes,
     useAdminAnalyticsEventSummary,
     useAdminAnalyticsEventTimeseries,
     useAdminAnalyticsEventTopUsers,
@@ -115,19 +116,22 @@ export default function AnalyticsEventDetailPage() {
     const [granularity, setGranularity] = useState('day')
     const [product, setProduct] = useState('')
     const [platform, setPlatform] = useState('')
+    const [subtype, setSubtype] = useState('')
 
     const p = product || undefined
     const pl = platform || undefined
+    const st = subtype || undefined
 
-    const summary = useAdminAnalyticsEventSummary(eventType, period, p, pl)
-    const series = useAdminAnalyticsEventTimeseries(eventType, period, granularity, p, pl)
-    const frequency = useAdminAnalyticsEventFrequency(eventType, period, p, pl)
-    const topUsers = useAdminAnalyticsEventTopUsers(eventType, period, TOP_USERS_LIMIT, p, pl)
-    const heatmap = useAdminAnalyticsEventHeatmap(eventType, period, p, pl)
-    const audience = useAdminAnalyticsEventAudience(eventType, period, p, pl)
-    const repeat = useAdminAnalyticsEventRepeat(eventType, period, p, pl)
+    const summary = useAdminAnalyticsEventSummary(eventType, period, p, pl, st)
+    const series = useAdminAnalyticsEventTimeseries(eventType, period, granularity, p, pl, st)
+    const frequency = useAdminAnalyticsEventFrequency(eventType, period, p, pl, st)
+    const topUsers = useAdminAnalyticsEventTopUsers(eventType, period, TOP_USERS_LIMIT, p, pl, st)
+    const heatmap = useAdminAnalyticsEventHeatmap(eventType, period, p, pl, st)
+    const audience = useAdminAnalyticsEventAudience(eventType, period, p, pl, st)
+    const repeat = useAdminAnalyticsEventRepeat(eventType, period, p, pl, st)
     const platforms = useAdminAnalyticsPlatforms(period, p, eventType)
     const versions = useAdminAnalyticsAppVersions(period, p, pl, eventType)
+    const subtypes = useAdminAnalyticsEventSubtypes(eventType, period)
 
     const s = summary.data
     const totalDelta = s ? delta(s.total, s.prev_total) : null
@@ -145,6 +149,7 @@ export default function AnalyticsEventDetailPage() {
         repeat.refetch()
         platforms.refetch()
         versions.refetch()
+        subtypes.refetch()
     }
 
     return (
@@ -194,6 +199,31 @@ export default function AnalyticsEventDetailPage() {
                     </Button>
                 ))}
             </div>
+
+            {/* Подтипы — только у событий, которые их шлют (screen_viewed, auth_failed…) */}
+            {(subtypes.data ?? []).length > 0 && (
+                <div className="flex flex-wrap items-center gap-1">
+                    <span className="mr-1 text-sm text-muted-foreground">Подтип:</span>
+                    <Button
+                        variant={subtype === '' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSubtype('')}
+                    >
+                        Все
+                    </Button>
+                    {(subtypes.data ?? []).map((r) => (
+                        <Button
+                            key={r.subtype}
+                            variant={subtype === r.subtype ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setSubtype(r.subtype)}
+                        >
+                            <span className="font-mono">{r.subtype}</span>
+                            <span className="ml-1.5 text-xs opacity-60">{r.count}</span>
+                        </Button>
+                    ))}
+                </div>
+            )}
 
             {/* KPI cards */}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

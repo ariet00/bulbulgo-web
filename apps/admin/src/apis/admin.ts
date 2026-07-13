@@ -501,12 +501,13 @@ export const adminApi = {
     },
     getEventAnalyticsSummary: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string },
+        params: { period?: string; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<{
             total: number
             users: number
@@ -520,61 +521,66 @@ export const adminApi = {
     },
     getEventAnalyticsTimeseries: (
         eventType: string,
-        params: { period?: string; granularity?: string; product?: string; platform?: string },
+        params: { period?: string; granularity?: string; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.granularity) qs.set('granularity', params.granularity)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<Array<{ bucket: string; events: number; users: number }>>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/timeseries?${qs.toString()}`,
         )
     },
     getEventAnalyticsFrequency: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string },
+        params: { period?: string; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<Array<{ bucket: string; users: number }>>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/frequency?${qs.toString()}`,
         )
     },
     getEventAnalyticsHeatmap: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string },
+        params: { period?: string; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<Array<{ dow: number; hour: number; events: number }>>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/heatmap?${qs.toString()}`,
         )
     },
     getEventAnalyticsAudience: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string },
+        params: { period?: string; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<{ active: number; new: number; returning: number }>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/audience?${qs.toString()}`,
         )
     },
     getEventAnalyticsRepeat: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string },
+        params: { period?: string; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<{
             cohort: number
             repeated_7d: number
@@ -584,13 +590,14 @@ export const adminApi = {
     },
     getEventAnalyticsTopUsers: (
         eventType: string,
-        params: { period?: string; limit?: number; product?: string; platform?: string },
+        params: { period?: string; limit?: number; product?: string; platform?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.limit) qs.set('limit', String(params.limit))
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<
             Array<{
                 user_id: number
@@ -601,6 +608,13 @@ export const adminApi = {
                 last_seen: string
             }>
         >(`/admin/analytics/events/${encodeURIComponent(eventType)}/top-users?${qs.toString()}`)
+    },
+    getEventSubtypes: (eventType: string, params: { period?: string }) => {
+        const qs = new URLSearchParams()
+        if (params.period) qs.set('period', params.period)
+        return requests.get<Array<{ subtype: string; count: number }>>(
+            `/admin/analytics/events/${encodeURIComponent(eventType)}/subtypes?${qs.toString()}`,
+        )
     },
     getActiveUsers: (params: { period?: string; granularity?: string; product?: string }) => {
         const qs = new URLSearchParams()
