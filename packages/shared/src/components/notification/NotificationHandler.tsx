@@ -5,6 +5,7 @@ import { useNotificationStore } from "@doska/shared"
 import { useUserStore } from "@doska/shared"
 
 import { useNotifications, useUnreadCount } from "@doska/shared"
+import { registerDevice, pushPermissionLabel } from "../../apis/notification"
 
 const NotificationHandler = () => {
     const { addNotification, registerToken, setNotifications, setUnreadCount, setLoading } = useNotificationStore();
@@ -18,6 +19,19 @@ const NotificationHandler = () => {
             setUnreadCount(unreadCount);
         }
     }, [unreadCount, setUnreadCount]);
+
+    // Регистрируем устройство ДО и НЕЗАВИСИМО от разрешения на пуш и от логина.
+    // Без этого веб-устройство попадало в БД, только когда Firebase выдал токен,
+    // и веб-сессию не с чем было связать: device_info / app_version теперь живут
+    // на устройстве, а не в сессии.
+    //
+    // Один upsert по X-Device-Id (его шлёт requester). Событие пишет бэкенд и
+    // только при изменении, поэтому дедупить на клиенте нечего.
+    useEffect(() => {
+        registerDevice("web", pushPermissionLabel()).catch(() => {
+            // Не критично: повторится при следующей загрузке страницы.
+        });
+    }, []);
 
     useEffect(() => {
         if (isGuest || !user) return;
