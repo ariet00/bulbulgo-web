@@ -440,34 +440,60 @@ export default function AnalyticsEventDetailPage() {
                         ) : (() => {
                             const totalEvents = (platforms.data ?? []).reduce((acc, r) => acc + r.events, 0)
                             return (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Платформа</TableHead>
-                                        <TableHead className="w-28 text-right">События</TableHead>
-                                        <TableHead className="w-32 text-right">Пользователи</TableHead>
-                                        <TableHead className="w-24 text-right">Доля</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
+                            <>
+                                <div className="space-y-2 md:hidden">
                                     {(platforms.data ?? []).map((r) => (
-                                        <TableRow key={r.platform ?? 'null'}>
-                                            <TableCell className="font-mono text-sm">
-                                                {r.platform ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {r.events.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {r.users.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-right text-muted-foreground">
-                                                {pct(r.events, totalEvents)}
-                                            </TableCell>
-                                        </TableRow>
+                                        <div
+                                            key={r.platform ?? 'null'}
+                                            className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                                        >
+                                            <span className="font-mono text-sm">{r.platform ?? '—'}</span>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">
+                                                    {r.events.toLocaleString()}{' '}
+                                                    <span className="text-xs font-normal text-muted-foreground">
+                                                        событий · {pct(r.events, totalEvents)}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {r.users.toLocaleString()} польз.
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
-                                </TableBody>
-                            </Table>
+                                </div>
+
+                                <div className="hidden md:block">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Платформа</TableHead>
+                                                <TableHead className="w-28 text-right">События</TableHead>
+                                                <TableHead className="w-32 text-right">Пользователи</TableHead>
+                                                <TableHead className="w-24 text-right">Доля</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {(platforms.data ?? []).map((r) => (
+                                                <TableRow key={r.platform ?? 'null'}>
+                                                    <TableCell className="font-mono text-sm">
+                                                        {r.platform ?? '—'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {r.events.toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {r.users.toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-muted-foreground">
+                                                        {pct(r.events, totalEvents)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </>
                             )
                         })()}
                     </CardContent>
@@ -486,39 +512,65 @@ export default function AnalyticsEventDetailPage() {
                         ) : (topUsers.data ?? []).length === 0 ? (
                             <div className="text-muted-foreground">Нет данных</div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Пользователь</TableHead>
-                                        <TableHead className="w-24 text-right">Раз</TableHead>
-                                        <TableHead className="w-40">Первый раз</TableHead>
-                                        <TableHead className="w-40">Последний раз</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
+                            <>
+                                <div className="space-y-2 md:hidden">
                                     {(topUsers.data ?? []).map((u) => (
-                                        <TableRow key={u.user_id}>
-                                            <TableCell>
+                                        <div key={u.user_id} className="rounded-lg border p-3">
+                                            <div className="flex items-center justify-between gap-3">
                                                 <Link
                                                     href={`/admin/users/${u.user_id}`}
-                                                    className="text-primary hover:underline"
+                                                    className="truncate text-sm text-primary hover:underline"
                                                 >
                                                     {u.name || `#${u.user_id}`}
                                                 </Link>
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium">
-                                                {u.count.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                                                {new Date(u.first_seen).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                                <span className="shrink-0 text-sm font-medium">
+                                                    {u.count.toLocaleString()} раз
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 text-xs text-muted-foreground">
+                                                {new Date(u.first_seen).toLocaleString()} →{' '}
                                                 {new Date(u.last_seen).toLocaleString()}
-                                            </TableCell>
-                                        </TableRow>
+                                            </div>
+                                        </div>
                                     ))}
-                                </TableBody>
-                            </Table>
+                                </div>
+
+                                <div className="hidden md:block">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Пользователь</TableHead>
+                                                <TableHead className="w-24 text-right">Раз</TableHead>
+                                                <TableHead className="w-40">Первый раз</TableHead>
+                                                <TableHead className="w-40">Последний раз</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {(topUsers.data ?? []).map((u) => (
+                                                <TableRow key={u.user_id}>
+                                                    <TableCell>
+                                                        <Link
+                                                            href={`/admin/users/${u.user_id}`}
+                                                            className="text-primary hover:underline"
+                                                        >
+                                                            {u.name || `#${u.user_id}`}
+                                                        </Link>
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-medium">
+                                                        {u.count.toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                                        {new Date(u.first_seen).toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                                        {new Date(u.last_seen).toLocaleString()}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </>
                         )}
                     </CardContent>
                 </Card>
@@ -534,34 +586,65 @@ export default function AnalyticsEventDetailPage() {
                         ) : (versions.data ?? []).length === 0 ? (
                             <div className="text-muted-foreground">Нет данных</div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Платформа</TableHead>
-                                        <TableHead>Версия</TableHead>
-                                        <TableHead className="w-28 text-right">События</TableHead>
-                                        <TableHead className="w-32 text-right">Пользователи</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
+                            <>
+                                <div className="space-y-2 md:hidden">
                                     {(versions.data ?? []).map((r, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell className="font-mono text-sm">
-                                                {r.platform ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="font-mono text-sm">
-                                                {r.app_version ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {r.events.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {r.users.toLocaleString()}
-                                            </TableCell>
-                                        </TableRow>
+                                        <div
+                                            key={i}
+                                            className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                                        >
+                                            <span className="font-mono text-sm">
+                                                {r.platform ?? '—'}{' '}
+                                                <span className="text-muted-foreground">
+                                                    {r.app_version ?? '—'}
+                                                </span>
+                                            </span>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">
+                                                    {r.events.toLocaleString()}{' '}
+                                                    <span className="text-xs font-normal text-muted-foreground">
+                                                        событий
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {r.users.toLocaleString()} польз.
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
-                                </TableBody>
-                            </Table>
+                                </div>
+
+                                <div className="hidden md:block">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Платформа</TableHead>
+                                                <TableHead>Версия</TableHead>
+                                                <TableHead className="w-28 text-right">События</TableHead>
+                                                <TableHead className="w-32 text-right">Пользователи</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {(versions.data ?? []).map((r, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell className="font-mono text-sm">
+                                                        {r.platform ?? '—'}
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-sm">
+                                                        {r.app_version ?? '—'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {r.events.toLocaleString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {r.users.toLocaleString()}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </>
                         )}
                     </CardContent>
                 </Card>

@@ -480,6 +480,7 @@ export const adminApi = {
         event_type?: string
         user_id?: number
         platform?: string
+        subtype?: string
         product?: string
         from?: string
         to?: string

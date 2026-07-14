@@ -13,7 +13,8 @@ import {
     Label,
     Switch,
 } from '@doska/ui'
-import { RefreshCw, Trash2 } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Trash2 } from 'lucide-react'
+import { Link } from '@doska/i18n'
 import {
     useAdminAnalyticsCleanupConfig,
     useAdminAnalyticsCleanupPreview,
@@ -73,7 +74,13 @@ export default function AnalyticsCleanupPage() {
         <div className="space-y-6 p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                    <h1 className="text-2xl font-semibold">Аналитика — очистка</h1>
+                    <Link
+                        href="/admin/analytics/events"
+                        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> События
+                    </Link>
+                    <h1 className="mt-1 text-2xl font-semibold">Аналитика — очистка</h1>
                     <p className="text-sm text-muted-foreground mt-1">
                         Автоматическое удаление старых «ненужных» событий из таблицы аналитики.
                         Задача запускается раз в сутки и удаляет события выбранных типов старше

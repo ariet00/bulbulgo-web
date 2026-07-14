@@ -25,7 +25,6 @@ import {
     Settings as SettingsIcon,
     Tags,
     Timer,
-    Trash2,
     Users,
 } from 'lucide-react'
 import { cn } from '@doska/shared'
@@ -73,7 +72,6 @@ const sections: NavSection[] = [
             { name: 'Версии', href: '/admin/analytics/versions', icon: LineChart },
             { name: 'Ошибки', href: '/admin/analytics/errors', icon: AlertTriangle },
             { name: 'События', href: '/admin/analytics/events', icon: Activity },
-            { name: 'Очистка', href: '/admin/analytics/cleanup', icon: Trash2 },
         ],
     },
     {

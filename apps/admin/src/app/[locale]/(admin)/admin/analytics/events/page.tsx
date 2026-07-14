@@ -17,7 +17,7 @@ import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@doska/ui'
 import { Button } from '@doska/ui'
 import { Link } from '@doska/i18n'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Trash2 } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DataCell } from '@/components/admin/analytics/DataCell'
 
@@ -28,6 +28,7 @@ const FILTER_DEFAULTS = {
     event_type: '',
     user_id: 0,
     platform: '',
+    subtype: '',
     product: '',
 }
 
@@ -37,9 +38,11 @@ export default function AnalyticsEventsPage() {
     const [eventTypeInput, setEventTypeInput] = useState(values.event_type)
     const [userIdInput, setUserIdInput] = useState(values.user_id ? String(values.user_id) : '')
     const [platformInput, setPlatformInput] = useState(values.platform)
+    const [subtypeInput, setSubtypeInput] = useState(values.subtype)
     const dEventType = useDebounce(eventTypeInput, 400)
     const dUserId = useDebounce(userIdInput, 400)
     const dPlatform = useDebounce(platformInput, 400)
+    const dSubtype = useDebounce(subtypeInput, 400)
     useEffect(() => {
         if (dEventType !== values.event_type) setValues({ event_type: dEventType })
     }, [dEventType, values.event_type, setValues])
@@ -50,6 +53,9 @@ export default function AnalyticsEventsPage() {
     useEffect(() => {
         if (dPlatform !== values.platform) setValues({ platform: dPlatform })
     }, [dPlatform, values.platform, setValues])
+    useEffect(() => {
+        if (dSubtype !== values.subtype) setValues({ subtype: dSubtype })
+    }, [dSubtype, values.subtype, setValues])
 
     const params = {
         page: values.page,
@@ -57,6 +63,7 @@ export default function AnalyticsEventsPage() {
         event_type: values.event_type || undefined,
         user_id: values.user_id || undefined,
         platform: values.platform || undefined,
+        subtype: values.subtype || undefined,
         product: values.product || undefined,
     }
     const { data, isLoading, isFetching, refetch } = useAdminAnalyticsEvents(params)
@@ -65,15 +72,23 @@ export default function AnalyticsEventsPage() {
         <div className="space-y-4 p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h1 className="text-2xl font-semibold">Аналитика — события</h1>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => refetch()}
-                    disabled={isFetching}
-                >
-                    <RefreshCw className={`mr-1 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                    Обновить
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/admin/analytics/cleanup">
+                            <Trash2 className="mr-1 h-4 w-4" />
+                            Очистка
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => refetch()}
+                        disabled={isFetching}
+                    >
+                        <RefreshCw className={`mr-1 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        Обновить
+                    </Button>
+                </div>
             </div>
 
             <ProductSelector
@@ -86,11 +101,16 @@ export default function AnalyticsEventsPage() {
                     <CardTitle>Фильтры</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-3 md:grid-cols-3">
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                         <Input
                             placeholder="event_type (напр. trip_created)"
                             value={eventTypeInput}
                             onChange={e => setEventTypeInput(e.target.value)}
+                        />
+                        <Input
+                            placeholder="subtype (напр. login)"
+                            value={subtypeInput}
+                            onChange={e => setSubtypeInput(e.target.value)}
                         />
                         <Input
                             placeholder="user_id"
@@ -114,59 +134,123 @@ export default function AnalyticsEventsPage() {
                 <CardContent>
                     {isLoading ? (
                         <div>Загрузка…</div>
+                    ) : (data?.items ?? []).length === 0 ? (
+                        <div className="text-muted-foreground">Нет событий</div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-44">Когда</TableHead>
-                                    <TableHead>Событие</TableHead>
-                                    <TableHead className="w-24">user_id</TableHead>
-                                    <TableHead className="w-32">platform</TableHead>
-                                    <TableHead className="w-24">app_version</TableHead>
-                                    <TableHead className="w-40">device_id</TableHead>
-                                    <TableHead>data</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <>
+                            {/* Мобилка: карточка на событие — таблица из 7 колонок не влезает */}
+                            <div className="space-y-3 md:hidden">
                                 {(data?.items ?? []).map((ev: any) => (
-                                    <TableRow key={ev.id}>
-                                        <TableCell className="text-xs whitespace-nowrap">
-                                            {new Date(ev.created_at).toLocaleString()}
-                                        </TableCell>
-                                        <TableCell className="font-mono text-sm">
-                                            <Link
-                                                href={`/admin/analytics/events/${encodeURIComponent(ev.event_type)}`}
-                                                className="hover:text-primary hover:underline"
-                                            >
-                                                {ev.event_type}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell>
-                                            {ev.user_id ? (
+                                    <div
+                                        key={ev.id}
+                                        className="rounded-lg border p-3 space-y-2"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
                                                 <Link
-                                                    href={`/admin/users/${ev.user_id}`}
-                                                    className="text-primary hover:underline"
+                                                    href={`/admin/analytics/events/${encodeURIComponent(ev.event_type)}`}
+                                                    className="font-mono text-sm break-all hover:text-primary hover:underline"
                                                 >
-                                                    {ev.user_id}
+                                                    {ev.event_type}
                                                 </Link>
-                                            ) : (
-                                                '—'
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{ev.platform ?? '—'}</TableCell>
-                                        <TableCell className="text-xs whitespace-nowrap">
-                                            {ev.app_version ?? '—'}
-                                        </TableCell>
-                                        <TableCell className="font-mono text-xs break-all">
+                                                {ev.event_subtype && (
+                                                    <span className="ml-1.5 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                                                        {ev.event_subtype}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span className="shrink-0 text-xs whitespace-nowrap text-muted-foreground">
+                                                {new Date(ev.created_at).toLocaleString()}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                            <span>
+                                                user:{' '}
+                                                {ev.user_id ? (
+                                                    <Link
+                                                        href={`/admin/users/${ev.user_id}`}
+                                                        className="text-primary hover:underline"
+                                                    >
+                                                        {ev.user_id}
+                                                    </Link>
+                                                ) : (
+                                                    '—'
+                                                )}
+                                            </span>
+                                            <span>platform: {ev.platform ?? '—'}</span>
+                                            <span>v: {ev.app_version ?? '—'}</span>
+                                        </div>
+
+                                        <div className="font-mono text-[11px] break-all text-muted-foreground">
                                             {ev.device_id ?? '—'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <DataCell data={ev.data} eventType={ev.event_type} />
-                                        </TableCell>
-                                    </TableRow>
+                                        </div>
+
+                                        <DataCell data={ev.data} eventType={ev.event_type} />
+                                    </div>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </div>
+
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-44">Когда</TableHead>
+                                            <TableHead>Событие</TableHead>
+                                            <TableHead className="w-24">user_id</TableHead>
+                                            <TableHead className="w-32">platform</TableHead>
+                                            <TableHead className="w-24">app_version</TableHead>
+                                            <TableHead className="w-40">device_id</TableHead>
+                                            <TableHead>data</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {(data?.items ?? []).map((ev: any) => (
+                                            <TableRow key={ev.id}>
+                                                <TableCell className="text-xs whitespace-nowrap">
+                                                    {new Date(ev.created_at).toLocaleString()}
+                                                </TableCell>
+                                                <TableCell className="font-mono text-sm">
+                                                    <Link
+                                                        href={`/admin/analytics/events/${encodeURIComponent(ev.event_type)}`}
+                                                        className="hover:text-primary hover:underline"
+                                                    >
+                                                        {ev.event_type}
+                                                    </Link>
+                                                    {ev.event_subtype && (
+                                                        <span className="ml-1.5 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                                                            {ev.event_subtype}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {ev.user_id ? (
+                                                        <Link
+                                                            href={`/admin/users/${ev.user_id}`}
+                                                            className="text-primary hover:underline"
+                                                        >
+                                                            {ev.user_id}
+                                                        </Link>
+                                                    ) : (
+                                                        '—'
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>{ev.platform ?? '—'}</TableCell>
+                                                <TableCell className="text-xs whitespace-nowrap">
+                                                    {ev.app_version ?? '—'}
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs break-all">
+                                                    {ev.device_id ?? '—'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <DataCell data={ev.data} eventType={ev.event_type} />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </>
                     )}
 
                     {data && data.total > SIZE && (
