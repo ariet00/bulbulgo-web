@@ -25,12 +25,14 @@ export interface AdminRegion {
 
 export const adminApi = {
     // Regions (geo tree, read-only)
-    getRegions: (q?: string) => {
+    getRegions: (q?: string, limit?: number) => {
         const params = new URLSearchParams()
         if (q) params.set('q', q)
+        if (limit) params.set('limit', String(limit))
         const qs = params.toString()
         return requests.get<AdminRegion[]>(`/admin/regions/${qs ? `?${qs}` : ''}`)
     },
+    getRegion: (id: number) => requests.get<AdminRegion>(`/admin/regions/${id}`),
     // Users
     getUsers: (
         page = 1,

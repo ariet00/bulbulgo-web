@@ -38,7 +38,9 @@ export const adminKeys = {
     services: () => [...adminKeys.all, 'services'] as const,
     service: (id: number) => [...adminKeys.services(), id] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
-    regions: (q?: string) => [...adminKeys.all, 'regions', q ?? null] as const,
+    regions: (q?: string, limit?: number) =>
+        [...adminKeys.all, 'regions', q ?? null, limit ?? null] as const,
+    region: (id: number) => [...adminKeys.all, 'region', id] as const,
     complaints: () => [...adminKeys.all, 'complaints'] as const,
     complaint: (id: number) => [...adminKeys.complaints(), id] as const,
     complaintReasons: () => [...adminKeys.all, 'complaint-reasons'] as const,
@@ -46,11 +48,20 @@ export const adminKeys = {
     newsItem: (id: number) => [...adminKeys.news(), id] as const,
 }
 
-export const useAdminRegions = (q?: string) => {
+export const useAdminRegions = (q?: string, limit?: number) => {
     return useQuery({
-        queryKey: adminKeys.regions(q),
-        queryFn: () => adminApi.getRegions(q),
+        queryKey: adminKeys.regions(q, limit),
+        queryFn: () => adminApi.getRegions(q, limit),
         placeholderData: keepPreviousData,
+    })
+}
+
+export const useAdminRegion = (id: number | null) => {
+    return useQuery({
+        queryKey: adminKeys.region(id as number),
+        queryFn: () => adminApi.getRegion(id as number),
+        enabled: id != null,
+        staleTime: 1000 * 60 * 60,
     })
 }
 
