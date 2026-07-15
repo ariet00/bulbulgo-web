@@ -29,6 +29,7 @@ const FILTER_DEFAULTS = {
     user_id: 0,
     platform: '',
     subtype: '',
+    device_id: '',
     product: '',
 }
 
@@ -39,10 +40,12 @@ export default function AnalyticsEventsPage() {
     const [userIdInput, setUserIdInput] = useState(values.user_id ? String(values.user_id) : '')
     const [platformInput, setPlatformInput] = useState(values.platform)
     const [subtypeInput, setSubtypeInput] = useState(values.subtype)
+    const [deviceIdInput, setDeviceIdInput] = useState(values.device_id)
     const dEventType = useDebounce(eventTypeInput, 400)
     const dUserId = useDebounce(userIdInput, 400)
     const dPlatform = useDebounce(platformInput, 400)
     const dSubtype = useDebounce(subtypeInput, 400)
+    const dDeviceId = useDebounce(deviceIdInput, 400)
     useEffect(() => {
         if (dEventType !== values.event_type) setValues({ event_type: dEventType })
     }, [dEventType, values.event_type, setValues])
@@ -56,6 +59,9 @@ export default function AnalyticsEventsPage() {
     useEffect(() => {
         if (dSubtype !== values.subtype) setValues({ subtype: dSubtype })
     }, [dSubtype, values.subtype, setValues])
+    useEffect(() => {
+        if (dDeviceId !== values.device_id) setValues({ device_id: dDeviceId })
+    }, [dDeviceId, values.device_id, setValues])
 
     const params = {
         page: values.page,
@@ -64,6 +70,7 @@ export default function AnalyticsEventsPage() {
         user_id: values.user_id || undefined,
         platform: values.platform || undefined,
         subtype: values.subtype || undefined,
+        device_id: values.device_id || undefined,
         product: values.product || undefined,
     }
     const { data, isLoading, isFetching, refetch } = useAdminAnalyticsEvents(params)
@@ -122,6 +129,11 @@ export default function AnalyticsEventsPage() {
                             placeholder="platform (web / ios / android / popytka / booking …)"
                             value={platformInput}
                             onChange={e => setPlatformInput(e.target.value)}
+                        />
+                        <Input
+                            placeholder="device_id"
+                            value={deviceIdInput}
+                            onChange={e => setDeviceIdInput(e.target.value)}
                         />
                     </div>
                 </CardContent>
@@ -183,7 +195,17 @@ export default function AnalyticsEventsPage() {
                                         </div>
 
                                         <div className="font-mono text-[11px] break-all text-muted-foreground">
-                                            {ev.device_id ?? '—'}
+                                            {ev.device_id ? (
+                                                <button
+                                                    onClick={() => setDeviceIdInput(ev.device_id)}
+                                                    className="break-all text-left hover:text-primary hover:underline"
+                                                    title="Фильтровать по этому устройству"
+                                                >
+                                                    {ev.device_id}
+                                                </button>
+                                            ) : (
+                                                '—'
+                                            )}
                                         </div>
 
                                         <DataCell data={ev.data} eventType={ev.event_type} />
@@ -240,7 +262,17 @@ export default function AnalyticsEventsPage() {
                                                     {ev.app_version ?? '—'}
                                                 </TableCell>
                                                 <TableCell className="font-mono text-xs break-all">
-                                                    {ev.device_id ?? '—'}
+                                                    {ev.device_id ? (
+                                                        <button
+                                                            onClick={() => setDeviceIdInput(ev.device_id)}
+                                                            className="break-all text-left hover:text-primary hover:underline"
+                                                            title="Фильтровать по этому устройству"
+                                                        >
+                                                            {ev.device_id}
+                                                        </button>
+                                                    ) : (
+                                                        '—'
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     <DataCell data={ev.data} eventType={ev.event_type} />

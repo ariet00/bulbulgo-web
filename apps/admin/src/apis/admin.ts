@@ -497,6 +497,7 @@ export const adminApi = {
         user_id?: number
         platform?: string
         subtype?: string
+        device_id?: string
         product?: string
         from?: string
         to?: string
