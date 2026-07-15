@@ -70,14 +70,27 @@ function ParentPicker({ regions, value, onChange }: ParentPickerProps) {
     const matches = useMemo(() => {
         const nq = normalize(q.trim())
         if (nq.length < 2) return []
-        return regions
-            .filter(
-                (r) =>
-                    r.id !== value &&
-                    (normalize(r.name).includes(nq) ||
-                        (r.sub_name ? normalize(r.sub_name).includes(nq) : false)),
-            )
-            .slice(0, 15)
+        // Ранг: имя-префикс < имя-подстрока < только sub_name — иначе сам «Бишкек г.»
+        // вытесняется из топ-15 сотнями его районов с «Бишкек» в sub_name.
+        const ranked: { r: AdminRegion; rank: number }[] = []
+        for (const r of regions) {
+            if (r.id === value) continue
+            const name = normalize(r.name)
+            let rank: number
+            if (name.startsWith(nq)) rank = 0
+            else if (name.includes(nq)) rank = 1
+            else if (r.sub_name && normalize(r.sub_name).includes(nq)) rank = 2
+            else continue
+            ranked.push({ r, rank })
+        }
+        ranked.sort((a, b) => {
+            if (a.rank !== b.rank) return a.rank - b.rank
+            const ka = KIND_ORDER[a.r.kind ?? ''] ?? 99
+            const kb = KIND_ORDER[b.r.kind ?? ''] ?? 99
+            if (ka !== kb) return ka - kb
+            return a.r.name.localeCompare(b.r.name, 'ru')
+        })
+        return ranked.slice(0, 15).map((x) => x.r)
     }, [q, regions, value])
 
     return (
