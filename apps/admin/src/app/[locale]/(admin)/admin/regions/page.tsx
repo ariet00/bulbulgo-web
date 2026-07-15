@@ -82,7 +82,8 @@ export default function AdminRegionsPage() {
             const textOk =
                 !qActive ||
                 normalize(r.name).includes(nq) ||
-                (r.sub_name ? normalize(r.sub_name).includes(nq) : false)
+                (r.sub_name ? normalize(r.sub_name).includes(nq) : false) ||
+                (r.search ? normalize(r.search).includes(nq) : false)
             const kindOk = !kindActive || r.kind === kind
             if (textOk && kindOk) matched.add(r.id)
         }

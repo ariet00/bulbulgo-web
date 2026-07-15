@@ -70,8 +70,9 @@ function ParentPicker({ regions, value, onChange }: ParentPickerProps) {
     const matches = useMemo(() => {
         const nq = normalize(q.trim())
         if (nq.length < 2) return []
-        // Ранг: имя-префикс < имя-подстрока < только sub_name — иначе сам «Бишкек г.»
-        // вытесняется из топ-15 сотнями его районов с «Бишкек» в sub_name.
+        // Ранг: имя-префикс < имя-подстрока < search-ключи < только sub_name —
+        // иначе сам «Бишкек г.» вытесняется из топ-15 сотнями его районов
+        // с «Бишкек» в sub_name.
         const ranked: { r: AdminRegion; rank: number }[] = []
         for (const r of regions) {
             if (r.id === value) continue
@@ -79,7 +80,8 @@ function ParentPicker({ regions, value, onChange }: ParentPickerProps) {
             let rank: number
             if (name.startsWith(nq)) rank = 0
             else if (name.includes(nq)) rank = 1
-            else if (r.sub_name && normalize(r.sub_name).includes(nq)) rank = 2
+            else if (r.search && normalize(r.search).includes(nq)) rank = 2
+            else if (r.sub_name && normalize(r.sub_name).includes(nq)) rank = 3
             else continue
             ranked.push({ r, rank })
         }
