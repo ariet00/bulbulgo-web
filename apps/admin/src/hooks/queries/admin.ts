@@ -1312,6 +1312,13 @@ export const useAdminSubscriptionSettings = () => {
     })
 }
 
+export const useAdminPhoneViewSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'phone-views'] as const,
+        queryFn: () => adminApi.getPhoneViewSettings(),
+    })
+}
+
 export const useAdminServicePricesSettings = () => {
     return useQuery({
         queryKey: [...adminKeys.appSettings(), 'service-prices'] as const,

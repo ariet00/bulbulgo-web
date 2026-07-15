@@ -21,6 +21,8 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     map_route_preview: false,
     require_verified_phone: false,
     phone_login_enabled: false,
+    phone_view_insights_enabled: false,
+    phone_view_show_viewer_phone: false,
 }
 
 export function FeatureFlagsSettingsForm() {
@@ -170,6 +172,48 @@ export function FeatureFlagsSettingsForm() {
                             checked={form.phone_login_enabled}
                             onCheckedChange={(v) =>
                                 set('phone_login_enabled', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                Просмотры номеров
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                <code>phone_view_insights_enabled</code>.
+                                Показывает вкладку «Просмотры» в приложении и
+                                шлёт владельцу пуш при первом открытии его
+                                номера (один пуш на объявление).
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.phone_view_insights_enabled}
+                            onCheckedChange={(v) =>
+                                set('phone_view_insights_enabled', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                Показывать телефон смотрящего
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                <code>phone_view_show_viewer_phone</code>. В
+                                списке «кто смотрел» показывает номер смотрящего,
+                                а не только имя и аватар. Работает только при
+                                включённых «Просмотрах номеров».
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.phone_view_show_viewer_phone}
+                            onCheckedChange={(v) =>
+                                set('phone_view_show_viewer_phone', v)
                             }
                             disabled={isLoading}
                         />

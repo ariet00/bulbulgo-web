@@ -1331,6 +1331,12 @@ export const adminApi = {
     updateSubscriptionSettings: (body: AdminSubscriptionSettings) =>
         requests.put<AdminSubscriptionSettings>('/admin/settings/subscriptions', body),
 
+    // "Просмотры номеров" window in hours (inside Redis dict `app:settings`)
+    getPhoneViewSettings: () =>
+        requests.get<AdminPhoneViewSettings>('/admin/settings/phone-views'),
+    updatePhoneViewSettings: (body: AdminPhoneViewSettings) =>
+        requests.put<AdminPhoneViewSettings>('/admin/settings/phone-views', body),
+
     // Premium-service prices/tariffs (Redis key `app:service_prices`)
     getServicePricesSettings: () =>
         requests.get<AdminServicePrices>('/admin/settings/service-prices'),
@@ -1351,6 +1357,10 @@ export const adminApi = {
 export interface AdminSubscriptionSettings {
     max_count: number
     max_expire_days: number
+}
+
+export interface AdminPhoneViewSettings {
+    window_hours: number
 }
 
 // === Complaints (user reports) ===
@@ -1687,6 +1697,8 @@ export interface AdminAppFeaturesSettings {
     map_route_preview: boolean
     require_verified_phone: boolean
     phone_login_enabled: boolean
+    phone_view_insights_enabled: boolean
+    phone_view_show_viewer_phone: boolean
 }
 
 // Per-user feature-flag overrides. `overrides` holds only the flags explicitly
