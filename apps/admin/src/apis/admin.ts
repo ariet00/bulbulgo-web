@@ -23,8 +23,19 @@ export interface AdminRegion {
     longitude?: number | null
 }
 
+export interface AdminRegionInput {
+    name: string
+    kind?: string | null
+    parent_id?: number | null
+    is_popular?: boolean
+    latitude?: number | null
+    longitude?: number | null
+    slug?: string
+    code?: string
+}
+
 export const adminApi = {
-    // Regions (geo tree, read-only)
+    // Regions (geo tree)
     getRegions: (q?: string, limit?: number) => {
         const params = new URLSearchParams()
         if (q) params.set('q', q)
@@ -33,6 +44,9 @@ export const adminApi = {
         return requests.get<AdminRegion[]>(`/admin/regions/${qs ? `?${qs}` : ''}`)
     },
     getRegion: (id: number) => requests.get<AdminRegion>(`/admin/regions/${id}`),
+    createRegion: (body: AdminRegionInput) => requests.post<AdminRegion>('/admin/regions/', body),
+    updateRegion: (id: number, body: Partial<AdminRegionInput>) =>
+        requests.patch<AdminRegion>(`/admin/regions/${id}`, body),
     // Users
     getUsers: (
         page = 1,

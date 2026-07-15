@@ -6,6 +6,7 @@ import type { AdminRegion } from '@/apis/admin'
 import { useDebounce } from '@doska/shared'
 import {
     Badge,
+    Button,
     Card,
     CardContent,
     CardHeader,
@@ -17,34 +18,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@doska/ui'
-import { ChevronDown, ChevronRight, MapPin } from 'lucide-react'
-
-// Порядок уровней дерева: страна → область → район → аймак → город → село → внутригородские
-const KIND_ORDER: Record<string, number> = {
-    country: 0,
-    region: 1,
-    district: 2,
-    ayil_aimak: 3,
-    city: 4,
-    near_city: 4,
-    village: 5,
-    incity: 6,
-}
-
-const KIND_LABEL: Record<string, string> = {
-    country: 'страна',
-    region: 'область',
-    district: 'район',
-    ayil_aimak: 'аймак',
-    city: 'город',
-    near_city: 'пригород',
-    village: 'село',
-    incity: 'внутри города',
-}
+import { ChevronDown, ChevronRight, MapPin, Pencil, Plus } from 'lucide-react'
+import {
+    KIND_LABEL,
+    KIND_OPTIONS,
+    KIND_ORDER,
+    RegionDialog,
+} from '@/components/admin/regions/RegionDialog'
 
 const ALL_KINDS = 'all'
-// Порядок опций фильтра = порядок уровней дерева
-const KIND_OPTIONS = ['region', 'district', 'ayil_aimak', 'city', 'near_city', 'village', 'incity']
+
+type DialogState =
+    | { mode: 'create'; parent: AdminRegion | null }
+    | { mode: 'edit'; region: AdminRegion }
+    | null
 
 function normalize(s: string) {
     return s.toLowerCase().replace(/ё/g, 'е')
@@ -56,6 +43,7 @@ export default function AdminRegionsPage() {
     const q = useDebounce(search, 250)
     const [kind, setKind] = useState<string>(ALL_KINDS)
     const [expanded, setExpanded] = useState<Set<number>>(new Set())
+    const [dialog, setDialog] = useState<DialogState>(null)
 
     const { childrenByParent, byId, roots } = useMemo(() => {
         const list = regions ?? []
@@ -134,7 +122,7 @@ export default function AdminRegionsPage() {
         return (
             <div key={node.id}>
                 <div
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60"
+                    className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60"
                     style={{ paddingLeft: depth * 18 + 8 }}
                 >
                     {hasChildren ? (
@@ -174,6 +162,27 @@ export default function AdminRegionsPage() {
                             {node.sub_name}
                         </span>
                     )}
+
+                    <span
+                        className={`flex shrink-0 items-center gap-0.5 opacity-0 group-hover:opacity-100 ${node.sub_name ? '' : 'ml-auto'}`}
+                    >
+                        <button
+                            onClick={() => setDialog({ mode: 'edit', region: node })}
+                            className="rounded p-1 hover:bg-muted"
+                            aria-label="Редактировать"
+                            title="Редактировать"
+                        >
+                            <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                            onClick={() => setDialog({ mode: 'create', parent: node })}
+                            className="rounded p-1 hover:bg-muted"
+                            aria-label="Добавить вложенный регион"
+                            title="Добавить вложенный регион"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                        </button>
+                    </span>
                 </div>
 
                 {hasChildren && open && (
@@ -186,10 +195,13 @@ export default function AdminRegionsPage() {
     return (
         <div className="space-y-4 p-4">
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                     <CardTitle className="flex items-center gap-2">
                         <MapPin className="h-5 w-5" /> Регионы
                     </CardTitle>
+                    <Button size="sm" onClick={() => setDialog({ mode: 'create', parent: null })}>
+                        <Plus className="mr-1 h-4 w-4" /> Добавить
+                    </Button>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -235,6 +247,16 @@ export default function AdminRegionsPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <RegionDialog
+                open={dialog != null}
+                onOpenChange={(v) => {
+                    if (!v) setDialog(null)
+                }}
+                region={dialog?.mode === 'edit' ? dialog.region : null}
+                parent={dialog?.mode === 'create' ? dialog.parent : null}
+                regions={regions ?? []}
+            />
         </div>
     )
 }
