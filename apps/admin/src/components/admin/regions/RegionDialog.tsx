@@ -175,6 +175,7 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
     const [isPopular, setIsPopular] = useState(false)
     const [latitude, setLatitude] = useState('')
     const [longitude, setLongitude] = useState('')
+    const [search, setSearch] = useState('')
 
     const create = useCreateAdminRegion()
     const update = useUpdateAdminRegion()
@@ -188,6 +189,7 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
         setIsPopular(region?.is_popular ?? false)
         setLatitude(region?.latitude != null ? String(region.latitude) : '')
         setLongitude(region?.longitude != null ? String(region.longitude) : '')
+        setSearch(region?.search ?? '')
     }, [open, region, parent])
 
     const latNum = latitude.trim() === '' ? null : Number(latitude.replace(',', '.'))
@@ -204,6 +206,7 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
             is_popular: isPopular,
             latitude: latNum,
             longitude: lngNum,
+            search: search.trim() || null,
         }
         if (isEdit) {
             update.mutate({ id: region!.id, body }, { onSuccess: () => onOpenChange(false) })
@@ -275,6 +278,18 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
                     {coordsInvalid && (
                         <p className="text-xs text-destructive">Координаты должны быть числами</p>
                     )}
+
+                    <div className="space-y-1.5">
+                        <Label>Ключевые слова для поиска</Label>
+                        <Input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="напр. Bishkek Фрунзе"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Альтернативные написания и старые названия — регион будет находиться и по ним
+                        </p>
+                    </div>
                 </div>
 
                 <DialogFooter>

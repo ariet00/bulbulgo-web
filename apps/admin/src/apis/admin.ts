@@ -21,6 +21,7 @@ export interface AdminRegion {
     is_popular?: boolean | null
     latitude?: number | null
     longitude?: number | null
+    search?: string | null
 }
 
 export interface AdminRegionInput {
@@ -30,6 +31,7 @@ export interface AdminRegionInput {
     is_popular?: boolean
     latitude?: number | null
     longitude?: number | null
+    search?: string | null
     slug?: string
     code?: string
 }
