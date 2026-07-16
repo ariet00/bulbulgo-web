@@ -17,6 +17,7 @@ import {
     useAdminUnblockAuthor,
     useAdminSetTripServiceUntil,
 } from '@/hooks/mutations/admin'
+import type { TripViewersResponse } from '@/apis/admin'
 import {
     Card,
     CardContent,
@@ -44,6 +45,7 @@ import {
     DialogDescription,
     DialogFooter,
     DialogClose,
+    Pagination,
 } from '@doska/ui'
 import {
     MapPin,
@@ -297,18 +299,7 @@ function SourceAuthorControl({
     )
 }
 
-type ViewersData = {
-    total_viewers: number
-    total_views: number
-    viewers: Array<{
-        user_id: number | null
-        name: string | null
-        phone: string | null
-        avatar_url: string | null
-        views_count: number
-        last_viewed_at: string
-    }>
-}
+const VIEWERS_PAGE_SIZE = 10
 
 function ViewersCard({
     title,
@@ -317,13 +308,19 @@ function ViewersCard({
     emptyText,
     data,
     isLoading,
+    ownerId,
+    page,
+    onPageChange,
 }: {
     title: string
     icon: React.ElementType
     hint: string
     emptyText: string
-    data: ViewersData | undefined
+    data: TripViewersResponse | undefined
     isLoading: boolean
+    ownerId?: number | null
+    page: number
+    onPageChange: (page: number) => void
 }) {
     const viewers = data?.viewers ?? []
 
@@ -350,57 +347,74 @@ function ViewersCard({
                     {emptyText}
                 </p>
             ) : (
-                <div className="divide-y divide-border">
-                    {viewers.map((v, i) => {
-                        const row = (
-                            <div className="flex items-center gap-3 py-2.5">
-                                <Avatar className="h-10 w-10 ring-1 ring-border">
-                                    <AvatarImage src={v.avatar_url || undefined} />
-                                    <AvatarFallback className="bg-zinc-900 text-xs text-white">
-                                        {(v.name || '?').slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-foreground">
-                                        {v.name || (v.user_id ? `user #${v.user_id}` : 'Аноним')}
-                                    </p>
-                                    <p className="truncate text-xs text-muted-foreground">
-                                        {v.phone || '—'}
-                                    </p>
+                <>
+                    <div className="divide-y divide-border">
+                        {viewers.map((v, i) => {
+                            const isOwner = !!ownerId && v.user_id === ownerId
+                            const row = (
+                                <div className="flex items-center gap-3 py-2.5">
+                                    <Avatar className="h-10 w-10 ring-1 ring-border">
+                                        <AvatarImage src={v.avatar_url || undefined} />
+                                        <AvatarFallback className="bg-zinc-900 text-xs text-white">
+                                            {(v.name || '?').slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
+                                            {v.name || (v.user_id ? `user #${v.user_id}` : 'Аноним')}
+                                            {isOwner && (
+                                                <Badge variant="secondary" className="shrink-0">
+                                                    владелец
+                                                </Badge>
+                                            )}
+                                        </p>
+                                        <p className="truncate text-xs text-muted-foreground">
+                                            {v.phone || '—'}
+                                        </p>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-sm font-semibold tabular-nums text-foreground">
+                                            {v.views_count}{' '}
+                                            <span className="text-xs font-normal text-muted-foreground">
+                                                просм.
+                                            </span>
+                                        </p>
+                                        <p className="text-xs text-muted-foreground tabular-nums">
+                                            {fmtDate(v.last_viewed_at, true)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="shrink-0 text-right">
-                                    <p className="text-sm font-semibold tabular-nums text-foreground">
-                                        {v.views_count}{' '}
-                                        <span className="text-xs font-normal text-muted-foreground">
-                                            просм.
-                                        </span>
-                                    </p>
-                                    <p className="text-xs text-muted-foreground tabular-nums">
-                                        {fmtDate(v.last_viewed_at, true)}
-                                    </p>
-                                </div>
-                            </div>
-                        )
-                        return v.user_id ? (
-                            <Link
-                                key={`${v.user_id}-${i}`}
-                                href={`/admin/users/${v.user_id}`}
-                                className="block transition-colors hover:bg-muted/40"
-                            >
-                                {row}
-                            </Link>
-                        ) : (
-                            <div key={`anon-${i}`}>{row}</div>
-                        )
-                    })}
-                </div>
+                            )
+                            return v.user_id ? (
+                                <Link
+                                    key={`${v.user_id}-${i}`}
+                                    href={`/admin/users/${v.user_id}`}
+                                    className="block transition-colors hover:bg-muted/40"
+                                >
+                                    {row}
+                                </Link>
+                            ) : (
+                                <div key={`anon-${i}`}>{row}</div>
+                            )
+                        })}
+                    </div>
+                    {data && data.total_viewers > VIEWERS_PAGE_SIZE && (
+                        <Pagination
+                            page={page}
+                            total={data.total_viewers}
+                            size={VIEWERS_PAGE_SIZE}
+                            onPageChange={onPageChange}
+                        />
+                    )}
+                </>
             )}
         </SectionCard>
     )
 }
 
-function PhoneViewersCard({ tripId }: { tripId: number }) {
-    const { data, isLoading } = useAdminTripPhoneViewers(tripId)
+function PhoneViewersCard({ tripId, ownerId }: { tripId: number; ownerId?: number | null }) {
+    const [page, setPage] = useState(1)
+    const { data, isLoading } = useAdminTripPhoneViewers(tripId, page, VIEWERS_PAGE_SIZE)
     return (
         <ViewersCard
             title="Кто смотрел номер"
@@ -409,12 +423,16 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
             emptyText="Номер ещё никто не смотрел"
             data={data}
             isLoading={isLoading}
+            ownerId={ownerId}
+            page={page}
+            onPageChange={setPage}
         />
     )
 }
 
-function TripViewersCard({ tripId }: { tripId: number }) {
-    const { data, isLoading } = useAdminTripViewers(tripId)
+function TripViewersCard({ tripId, ownerId }: { tripId: number; ownerId?: number | null }) {
+    const [page, setPage] = useState(1)
+    const { data, isLoading } = useAdminTripViewers(tripId, page, VIEWERS_PAGE_SIZE)
     return (
         <ViewersCard
             title="Кто смотрел поездку"
@@ -423,6 +441,9 @@ function TripViewersCard({ tripId }: { tripId: number }) {
             emptyText="Детали поездки ещё никто не открывал"
             data={data}
             isLoading={isLoading}
+            ownerId={ownerId}
+            page={page}
+            onPageChange={setPage}
         />
     )
 }
@@ -1255,9 +1276,9 @@ export default function AdminTripDetailPage() {
                 </SectionCard>
             )}
 
-            {/* ── Trip + phone viewers ── */}
-            <TripViewersCard tripId={id} />
-            <PhoneViewersCard tripId={id} />
+            {/* ── Phone + trip viewers ── */}
+            <PhoneViewersCard tripId={id} ownerId={driver?.id} />
+            <TripViewersCard tripId={id} ownerId={driver?.id} />
 
             {/* ── Delete confirm ── */}
             <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>

@@ -15,9 +15,10 @@ export const adminKeys = {
     company: (id: number) => [...adminKeys.companies(), id] as const,
     trips: () => [...adminKeys.all, 'trips'] as const,
     trip: (id: number) => [...adminKeys.trips(), id] as const,
-    tripPhoneViewers: (id: number) =>
-        [...adminKeys.trips(), id, 'phone-viewers'] as const,
-    tripViewers: (id: number) => [...adminKeys.trips(), id, 'viewers'] as const,
+    tripPhoneViewers: (id: number, page: number, size: number) =>
+        [...adminKeys.trips(), id, 'phone-viewers', page, size] as const,
+    tripViewers: (id: number, page: number, size: number) =>
+        [...adminKeys.trips(), id, 'viewers', page, size] as const,
     blockedAuthors: () => [...adminKeys.trips(), 'blocked-authors'] as const,
     subscriptions: () => [...adminKeys.all, 'subscriptions'] as const,
     vehicles: () => [...adminKeys.all, 'vehicles'] as const,
@@ -389,19 +390,21 @@ export const useAdminTripServicePayments = (id: number) => {
     })
 }
 
-export const useAdminTripPhoneViewers = (id: number) => {
+export const useAdminTripPhoneViewers = (id: number, page = 1, size = 10) => {
     return useQuery({
-        queryKey: adminKeys.tripPhoneViewers(id),
-        queryFn: () => adminApi.getTripPhoneViewers(id),
+        queryKey: adminKeys.tripPhoneViewers(id, page, size),
+        queryFn: () => adminApi.getTripPhoneViewers(id, page, size),
         enabled: !!id,
+        placeholderData: keepPreviousData,
     })
 }
 
-export const useAdminTripViewers = (id: number) => {
+export const useAdminTripViewers = (id: number, page = 1, size = 10) => {
     return useQuery({
-        queryKey: adminKeys.tripViewers(id),
-        queryFn: () => adminApi.getTripViewers(id),
+        queryKey: adminKeys.tripViewers(id, page, size),
+        queryFn: () => adminApi.getTripViewers(id, page, size),
         enabled: !!id,
+        placeholderData: keepPreviousData,
     })
 }
 

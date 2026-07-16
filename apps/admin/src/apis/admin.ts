@@ -12,6 +12,23 @@ const requests = {
     delete: <T>(url: string) => requester.delete<T>(url).then(responseBody),
 }
 
+export interface TripViewersResponse {
+    trip_id: number
+    total_viewers: number
+    total_views: number
+    page: number
+    size: number
+    viewers: Array<{
+        user_id: number | null
+        name: string | null
+        phone: string | null
+        avatar_url: string | null
+        views_count: number
+        first_viewed_at: string
+        last_viewed_at: string
+    }>
+}
+
 export interface AdminRegion {
     id: number
     name: string
@@ -283,36 +300,14 @@ export const adminApi = {
                 created_at: string
             }>
         >(`/admin/trips/${id}/service-payments`),
-    getTripPhoneViewers: (id: number) =>
-        requests.get<{
-            trip_id: number
-            total_viewers: number
-            total_views: number
-            viewers: Array<{
-                user_id: number | null
-                name: string | null
-                phone: string | null
-                avatar_url: string | null
-                views_count: number
-                first_viewed_at: string
-                last_viewed_at: string
-            }>
-        }>(`/admin/rideshare/analytics/trips/${id}/phone-viewers`),
-    getTripViewers: (id: number) =>
-        requests.get<{
-            trip_id: number
-            total_viewers: number
-            total_views: number
-            viewers: Array<{
-                user_id: number | null
-                name: string | null
-                phone: string | null
-                avatar_url: string | null
-                views_count: number
-                first_viewed_at: string
-                last_viewed_at: string
-            }>
-        }>(`/admin/rideshare/analytics/trips/${id}/viewers`),
+    getTripPhoneViewers: (id: number, page = 1, size = 10) =>
+        requests.get<TripViewersResponse>(
+            `/admin/rideshare/analytics/trips/${id}/phone-viewers?page=${page}&size=${size}`,
+        ),
+    getTripViewers: (id: number, page = 1, size = 10) =>
+        requests.get<TripViewersResponse>(
+            `/admin/rideshare/analytics/trips/${id}/viewers?page=${page}&size=${size}`,
+        ),
     updateTripStatus: (id: number, status: string) =>
         requests.patch<any>(`/admin/trips/${id}/status`, { status }),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
