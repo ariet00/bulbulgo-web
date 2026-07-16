@@ -14,6 +14,20 @@ import {
 } from '@doska/ui'
 import { useAdminUserDevices, useAdminUserSessions } from '@/hooks/queries/admin'
 
+function DeviceStatusBadge({ status }: { status: string }) {
+    const map: Record<string, { label: string; cls: string }> = {
+        active: { label: 'активен', cls: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+        logged_out: { label: 'вышел', cls: 'bg-muted text-muted-foreground' },
+        banned: { label: 'забанен', cls: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+    }
+    const { label, cls } = map[status] ?? { label: status, cls: 'bg-muted text-muted-foreground' }
+    return (
+        <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${cls}`}>
+            {label}
+        </span>
+    )
+}
+
 function DeviceTypeBadge({ type }: { type: string }) {
     const cls: Record<string, string> = {
         ios: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100',
@@ -60,17 +74,17 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                     <div className="flex items-center justify-between gap-2">
                                                         <span
                                                             className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                                                                s.is_active
+                                                                s.status === 'active'
                                                                     ? 'text-green-600 dark:text-green-400'
                                                                     : 'text-muted-foreground'
                                                             }`}
                                                         >
                                                             <span
                                                                 className={`h-1.5 w-1.5 rounded-full ${
-                                                                    s.is_active ? 'bg-green-500' : 'bg-muted-foreground/40'
+                                                                    s.status === 'active' ? 'bg-green-500' : 'bg-muted-foreground/40'
                                                                 }`}
                                                             />
-                                                            {s.is_active ? 'активна' : 'неактивна'}
+                                                            {s.status === 'active' ? 'активна' : 'завершена'}
                                                         </span>
                                                         {s.app_version && (
                                                             <span className="font-mono text-xs text-muted-foreground">
@@ -114,12 +128,12 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                             <TableCell>
                                                                 <span
                                                                     className={
-                                                                        s.is_active
+                                                                        s.status === 'active'
                                                                             ? 'text-xs font-medium text-green-600 dark:text-green-400'
                                                                             : 'text-xs text-muted-foreground'
                                                                     }
                                                                 >
-                                                                    {s.is_active ? 'активна' : 'неактивна'}
+                                                                    {s.status === 'active' ? 'активна' : 'завершена'}
                                                                 </span>
                                                             </TableCell>
                                                             <TableCell className="font-mono text-xs break-all">
@@ -173,7 +187,10 @@ export function DevicesTab({ uid }: { uid: number }) {
                                             {devices.data.map(d => (
                                                 <li key={d.id} className="rounded-xl border bg-card p-3 shadow-sm">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <DeviceTypeBadge type={d.device_type} />
+                                                        <span className="flex items-center gap-1.5">
+                                                            <DeviceTypeBadge type={d.device_type} />
+                                                            <DeviceStatusBadge status={d.status} />
+                                                        </span>
                                                         {d.app_version && (
                                                             <span className="font-mono text-xs text-muted-foreground">
                                                                 v{d.app_version}
@@ -206,6 +223,7 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead className="w-24">Тип</TableHead>
+                                                        <TableHead className="w-24">Статус</TableHead>
                                                         <TableHead>device_id</TableHead>
                                                         <TableHead className="w-28">Версия</TableHead>
                                                         <TableHead>Устройство</TableHead>
@@ -218,6 +236,9 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                         <TableRow key={d.id}>
                                                             <TableCell>
                                                                 <DeviceTypeBadge type={d.device_type} />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <DeviceStatusBadge status={d.status} />
                                                             </TableCell>
                                                             <TableCell className="font-mono text-xs break-all">
                                                                 {d.device_id ?? '—'}
