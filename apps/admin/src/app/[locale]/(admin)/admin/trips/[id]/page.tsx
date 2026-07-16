@@ -6,6 +6,7 @@ import { useRouter, Link } from '@doska/i18n'
 import {
     useAdminTrip,
     useAdminTripPhoneViewers,
+    useAdminTripViewers,
     useAdminTripServicePayments,
     useAdminBlockedAuthors,
 } from '@/hooks/queries/admin'
@@ -77,6 +78,7 @@ import {
     Cake,
     MapPinned,
     Eye,
+    MousePointerClick,
     Ban,
     ShieldOff,
 } from 'lucide-react'
@@ -295,14 +297,40 @@ function SourceAuthorControl({
     )
 }
 
-function PhoneViewersCard({ tripId }: { tripId: number }) {
-    const { data, isLoading } = useAdminTripPhoneViewers(tripId)
+type ViewersData = {
+    total_viewers: number
+    total_views: number
+    viewers: Array<{
+        user_id: number | null
+        name: string | null
+        phone: string | null
+        avatar_url: string | null
+        views_count: number
+        last_viewed_at: string
+    }>
+}
+
+function ViewersCard({
+    title,
+    icon,
+    hint,
+    emptyText,
+    data,
+    isLoading,
+}: {
+    title: string
+    icon: React.ElementType
+    hint: string
+    emptyText: string
+    data: ViewersData | undefined
+    isLoading: boolean
+}) {
     const viewers = data?.viewers ?? []
 
     return (
         <SectionCard
-            title="Кто смотрел номер"
-            icon={Eye}
+            title={title}
+            icon={icon}
             action={
                 data ? (
                     <span className="text-sm text-muted-foreground tabular-nums">
@@ -311,10 +339,7 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
                 ) : undefined
             }
         >
-            <p className="mb-4 text-xs text-muted-foreground">
-                Полная история из аналитики — не сбрасывается при поднятии объявления
-                (в отличие от счётчика «Просмотры номера»).
-            </p>
+            <p className="mb-4 text-xs text-muted-foreground">{hint}</p>
             {isLoading ? (
                 <div className="space-y-2">
                     <Skeleton className="h-12 w-full" />
@@ -322,7 +347,7 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
                 </div>
             ) : viewers.length === 0 ? (
                 <p className="py-6 text-center text-sm italic text-muted-foreground">
-                    Номер ещё никто не смотрел
+                    {emptyText}
                 </p>
             ) : (
                 <div className="divide-y divide-border">
@@ -371,6 +396,34 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
                 </div>
             )}
         </SectionCard>
+    )
+}
+
+function PhoneViewersCard({ tripId }: { tripId: number }) {
+    const { data, isLoading } = useAdminTripPhoneViewers(tripId)
+    return (
+        <ViewersCard
+            title="Кто смотрел номер"
+            icon={Eye}
+            hint="Полная история из аналитики — не сбрасывается при поднятии объявления (в отличие от счётчика «Просмотры номера»)."
+            emptyText="Номер ещё никто не смотрел"
+            data={data}
+            isLoading={isLoading}
+        />
+    )
+}
+
+function TripViewersCard({ tripId }: { tripId: number }) {
+    const { data, isLoading } = useAdminTripViewers(tripId)
+    return (
+        <ViewersCard
+            title="Кто смотрел поездку"
+            icon={MousePointerClick}
+            hint="Пользователи, открывавшие детали объявления. Полная история из аналитики — не сбрасывается при поднятии."
+            emptyText="Детали поездки ещё никто не открывал"
+            data={data}
+            isLoading={isLoading}
+        />
     )
 }
 
@@ -1202,7 +1255,8 @@ export default function AdminTripDetailPage() {
                 </SectionCard>
             )}
 
-            {/* ── Phone viewers ── */}
+            {/* ── Trip + phone viewers ── */}
+            <TripViewersCard tripId={id} />
             <PhoneViewersCard tripId={id} />
 
             {/* ── Delete confirm ── */}
