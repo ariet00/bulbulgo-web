@@ -119,6 +119,20 @@ export const adminApi = {
                 last_seen: string | null
                 events: number
             }>
+            // Чужие девайсы с похожим data.profile — подсказка при потере
+            // device_id (factory reset); прямой связи по device_id нет.
+            similar_devices: Array<{
+                device_id: string | null
+                device_info: string | null
+                user_id: number | null
+                user_name: string | null
+                user_phone: string | null
+                user_avatar_url: string | null
+                user_is_active: boolean
+                match_percent: number
+                matched_fields: string[]
+                last_seen: string | null
+            }>
         }>(`/admin/users/${id}/related-accounts`),
     getUserFeatures: (id: number) =>
         requests.get<AdminUserFeatures>(`/admin/users/${id}/features`),

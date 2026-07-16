@@ -53,6 +53,7 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
 
     const devices = data?.devices ?? []
     const related = data?.related ?? []
+    const similar = data?.similar_devices ?? []
 
     return (
         <div className="space-y-6">
@@ -207,6 +208,99 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                                                     </>
                                                 )}
                                             </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Похожие устройства{' '}
+                        <span className="text-sm font-normal text-muted-foreground">
+                            ({similar.length}) — совпадение по модели/прошивке, а не по
+                            device_id
+                        </span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                        Подсказка на случай смены device_id (factory reset): «железо»
+                        совпадает, но это может быть просто такая же модель телефона —
+                        решение принимает человек.
+                    </p>
+                    {isLoading ? (
+                        <div className="text-muted-foreground">Загрузка…</div>
+                    ) : similar.length === 0 ? (
+                        <div className="text-muted-foreground">
+                            Устройств с похожим профилем не найдено
+                        </div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-24">Совпадение</TableHead>
+                                    <TableHead>Пользователь</TableHead>
+                                    <TableHead className="w-36">Телефон</TableHead>
+                                    <TableHead className="w-28">Статус</TableHead>
+                                    <TableHead>Устройство</TableHead>
+                                    <TableHead>device_id</TableHead>
+                                    <TableHead className="w-44">Замечен</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {similar.map((s, i) => (
+                                    <TableRow key={`${s.device_id ?? 'null'}-${i}`}>
+                                        <TableCell>
+                                            <span
+                                                className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
+                                                    s.match_percent >= 90
+                                                        ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                                                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                                }`}
+                                                title={s.matched_fields.join(', ')}
+                                            >
+                                                {s.match_percent}%
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {s.user_id ? (
+                                                <Link
+                                                    href={`/admin/users/${s.user_id}`}
+                                                    className="text-primary hover:underline"
+                                                >
+                                                    {s.user_name || `#${s.user_id}`}
+                                                </Link>
+                                            ) : (
+                                                <span className="text-muted-foreground">гость</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-xs whitespace-nowrap">
+                                            {s.user_phone ?? '—'}
+                                        </TableCell>
+                                        <TableCell>
+                                            {s.user_is_active ? (
+                                                <span className="inline-block rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400">
+                                                    Активен
+                                                </span>
+                                            ) : (
+                                                <span className="inline-block rounded bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
+                                                    Забанен
+                                                </span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-xs">
+                                            {s.device_info ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-xs break-all">
+                                            {s.device_id ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                            {fmtDate(s.last_seen)}
                                         </TableCell>
                                     </TableRow>
                                 ))}
