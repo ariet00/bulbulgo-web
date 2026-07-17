@@ -19,6 +19,8 @@ export const adminKeys = {
         [...adminKeys.trips(), id, 'phone-viewers', page, size] as const,
     tripViewers: (id: number, page: number, size: number) =>
         [...adminKeys.trips(), id, 'viewers', page, size] as const,
+    tripBumps: (id: number, page: number, size: number) =>
+        [...adminKeys.trips(), id, 'bumps', page, size] as const,
     blockedAuthors: () => [...adminKeys.trips(), 'blocked-authors'] as const,
     subscriptions: () => [...adminKeys.all, 'subscriptions'] as const,
     vehicles: () => [...adminKeys.all, 'vehicles'] as const,
@@ -403,6 +405,15 @@ export const useAdminTripViewers = (id: number, page = 1, size = 10) => {
     return useQuery({
         queryKey: adminKeys.tripViewers(id, page, size),
         queryFn: () => adminApi.getTripViewers(id, page, size),
+        enabled: !!id,
+        placeholderData: keepPreviousData,
+    })
+}
+
+export const useAdminTripBumps = (id: number, page = 1, size = 10) => {
+    return useQuery({
+        queryKey: adminKeys.tripBumps(id, page, size),
+        queryFn: () => adminApi.getTripBumps(id, page, size),
         enabled: !!id,
         placeholderData: keepPreviousData,
     })

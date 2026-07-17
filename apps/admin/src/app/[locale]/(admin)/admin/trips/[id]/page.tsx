@@ -7,6 +7,7 @@ import {
     useAdminTrip,
     useAdminTripPhoneViewers,
     useAdminTripViewers,
+    useAdminTripBumps,
     useAdminTripServicePayments,
     useAdminBlockedAuthors,
 } from '@/hooks/queries/admin'
@@ -445,6 +446,90 @@ function TripViewersCard({ tripId, ownerId }: { tripId: number; ownerId?: number
             page={page}
             onPageChange={setPage}
         />
+    )
+}
+
+function TripBumpsCard({ tripId }: { tripId: number }) {
+    const [page, setPage] = useState(1)
+    const { data, isLoading } = useAdminTripBumps(tripId, page, VIEWERS_PAGE_SIZE)
+    const bumps = data?.bumps ?? []
+
+    return (
+        <SectionCard
+            title="История поднятий вручную"
+            icon={TrendingUp}
+            action={
+                data ? (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                        {data.total} поднятий
+                    </span>
+                ) : undefined
+            }
+        >
+            <p className="mb-4 text-xs text-muted-foreground">
+                Каждое ручное поднятие (событие «trip_bumped») из аналитики — не
+                сбрасывается при переносе/репосте объявления.
+            </p>
+            {isLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ) : bumps.length === 0 ? (
+                <p className="py-6 text-center text-sm italic text-muted-foreground">
+                    Объявление ещё не поднимали вручную
+                </p>
+            ) : (
+                <>
+                    <div className="divide-y divide-border">
+                        {bumps.map((b, i) => {
+                            const row = (
+                                <div className="flex items-center gap-3 py-2.5">
+                                    <Avatar className="h-10 w-10 ring-1 ring-border">
+                                        <AvatarImage src={b.avatar_url || undefined} />
+                                        <AvatarFallback className="bg-zinc-900 text-xs text-white">
+                                            {(b.name || '?').slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-medium text-foreground">
+                                            {b.name || (b.user_id ? `user #${b.user_id}` : 'Аноним')}
+                                        </p>
+                                        {b.platform && (
+                                            <p className="truncate text-xs text-muted-foreground">
+                                                {b.platform}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                                        {fmtDate(b.bumped_at, true)}
+                                    </p>
+                                </div>
+                            )
+                            return b.user_id ? (
+                                <Link
+                                    key={`${b.user_id}-${i}`}
+                                    href={`/admin/users/${b.user_id}`}
+                                    className="block transition-colors hover:bg-muted/40"
+                                >
+                                    {row}
+                                </Link>
+                            ) : (
+                                <div key={`anon-${i}`}>{row}</div>
+                            )
+                        })}
+                    </div>
+                    {data && data.total > VIEWERS_PAGE_SIZE && (
+                        <Pagination
+                            page={page}
+                            total={data.total}
+                            size={VIEWERS_PAGE_SIZE}
+                            onPageChange={setPage}
+                        />
+                    )}
+                </>
+            )}
+        </SectionCard>
     )
 }
 
@@ -1279,6 +1364,9 @@ export default function AdminTripDetailPage() {
             {/* ── Phone + trip viewers ── */}
             <PhoneViewersCard tripId={id} ownerId={driver?.id} />
             <TripViewersCard tripId={id} ownerId={driver?.id} />
+
+            {/* ── Manual bump history ── */}
+            <TripBumpsCard tripId={id} />
 
             {/* ── Delete confirm ── */}
             <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>

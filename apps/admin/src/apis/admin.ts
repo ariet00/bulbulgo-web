@@ -29,6 +29,20 @@ export interface TripViewersResponse {
     }>
 }
 
+export interface TripBumpsResponse {
+    trip_id: number
+    total: number
+    page: number
+    size: number
+    bumps: Array<{
+        user_id: number | null
+        name: string | null
+        avatar_url: string | null
+        platform: string | null
+        bumped_at: string
+    }>
+}
+
 export interface AdminRegion {
     id: number
     name: string
@@ -321,6 +335,10 @@ export const adminApi = {
     getTripViewers: (id: number, page = 1, size = 10) =>
         requests.get<TripViewersResponse>(
             `/admin/rideshare/analytics/trips/${id}/viewers?page=${page}&size=${size}`,
+        ),
+    getTripBumps: (id: number, page = 1, size = 10) =>
+        requests.get<TripBumpsResponse>(
+            `/admin/rideshare/analytics/trips/${id}/bumps?page=${page}&size=${size}`,
         ),
     updateTripStatus: (id: number, status: string) =>
         requests.patch<any>(`/admin/trips/${id}/status`, { status }),
