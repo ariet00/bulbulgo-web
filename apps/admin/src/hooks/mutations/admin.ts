@@ -9,6 +9,7 @@ import {
     AdminComplaintReasonInput,
     AdminNewsInput,
     AdminAppFeaturesSettings,
+    AdminUserAppNotice,
     AdminAppVersionSettings,
     AdminMaintenanceSettings,
     AdminContactLimitsSettings,
@@ -89,6 +90,21 @@ export const useUpdateAdminUserPreBlockWarning = () => {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({
                 queryKey: [...adminKeys.user(id), 'pre-block-warning'],
+            })
+            queryClient.invalidateQueries({ queryKey: adminKeys.user(id) })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminUserAppNotice = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: AdminUserAppNotice }) =>
+            adminApi.updateUserAppNotice(id, body),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({
+                queryKey: [...adminKeys.user(id), 'app-notice'],
             })
             queryClient.invalidateQueries({ queryKey: adminKeys.user(id) })
             toast.success('Сохранено')

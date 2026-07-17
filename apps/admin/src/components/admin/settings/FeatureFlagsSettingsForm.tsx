@@ -23,6 +23,7 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     phone_login_enabled: false,
     phone_view_insights_enabled: false,
     phone_view_show_viewer_phone: false,
+    bookings_tab_enabled: false,
 }
 
 export function FeatureFlagsSettingsForm() {
@@ -214,6 +215,26 @@ export function FeatureFlagsSettingsForm() {
                             checked={form.phone_view_show_viewer_phone}
                             onCheckedChange={(v) =>
                                 set('phone_view_show_viewer_phone', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                Вкладка «Брони»
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                <code>bookings_tab_enabled</code>. Показывает
+                                вкладку «Брони» в «Мои поездки». Выключено —
+                                заглушка «Скоро будет доступно».
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.bookings_tab_enabled}
+                            onCheckedChange={(v) =>
+                                set('bookings_tab_enabled', v)
                             }
                             disabled={isLoading}
                         />

@@ -156,6 +156,10 @@ export const adminApi = {
         requests.get<AdminUserPreBlockWarning>(`/admin/users/${id}/pre-block-warning`),
     updateUserPreBlockWarning: (id: number, body: AdminUserPreBlockWarning) =>
         requests.put<AdminUserPreBlockWarning>(`/admin/users/${id}/pre-block-warning`, body),
+    getUserAppNotice: (id: number) =>
+        requests.get<AdminUserAppNotice>(`/admin/users/${id}/notice`),
+    updateUserAppNotice: (id: number, body: AdminUserAppNotice) =>
+        requests.put<AdminUserAppNotice>(`/admin/users/${id}/notice`, body),
     getUserTripsSummary: (id: number) =>
         requests.get<AdminUserTripsSummary>(`/admin/users/${id}/trips-summary`),
     getUserWallets: (id: number) =>
@@ -1759,6 +1763,7 @@ export interface AdminAppFeaturesSettings {
     phone_login_enabled: boolean
     phone_view_insights_enabled: boolean
     phone_view_show_viewer_phone: boolean
+    bookings_tab_enabled: boolean
 }
 
 // Per-user feature-flag overrides. `overrides` holds only the flags explicitly
@@ -1768,10 +1773,27 @@ export interface AdminUserFeatures {
     global_features: Record<string, boolean>
 }
 
+// Legacy: заменено универсальным AdminUserAppNotice; удалить после поднятия
+// минимальной версии приложения.
 export interface AdminUserPreBlockWarning {
     enabled: boolean
     message: string | null
     rules_url: string | null
+}
+
+// Универсальный полноэкранный экран-уведомление в приложении (предупреждение,
+// «заполните данные», «пройдите идентификацию» и т.п.).
+export interface AdminUserAppNotice {
+    enabled: boolean
+    kind: 'warning' | 'info'
+    title: string | null
+    message: string | null
+    action_route: string | null
+    action_label: string | null
+    url: string | null
+    dismissible: boolean
+    max_shows: number | null
+    show_interval_hours: number | null
 }
 
 export interface AdminAutoBumpTariff {

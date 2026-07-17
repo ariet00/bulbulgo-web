@@ -155,6 +155,14 @@ export const useAdminUserPreBlockWarning = (id: number) => {
     })
 }
 
+export const useAdminUserAppNotice = (id: number) => {
+    return useQuery({
+        queryKey: [...adminKeys.user(id), 'app-notice'] as const,
+        queryFn: () => adminApi.getUserAppNotice(id),
+        enabled: !!id,
+    })
+}
+
 export const useAdminUserTripsSummary = (id: number) => {
     return useQuery({
         queryKey: [...adminKeys.user(id), 'trips-summary'] as const,

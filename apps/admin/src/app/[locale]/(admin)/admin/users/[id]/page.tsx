@@ -9,6 +9,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import { useAdminUser, useAdminUserTripsSummary } from '@/hooks/queries/admin'
 import { useAdminBanUser } from '@/hooks/mutations/admin'
 import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
+import { UserAppNoticeForm } from '@/components/admin/users/UserAppNoticeForm'
 import { UserPreBlockWarningForm } from '@/components/admin/users/UserPreBlockWarningForm'
 import { UserSendNotificationForm } from '@/components/admin/users/UserSendNotificationForm'
 import { RelatedAccountsTab } from '@/components/admin/users/RelatedAccountsTab'
@@ -480,7 +481,7 @@ export default function UserDetailPage() {
                         <Route className="h-4 w-4" /> Открыть поездки пользователя →
                     </Link>
 
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         {/* ── Basic info (id/username/provider/role/dates/gender/rating
                              live in the header pills + quick-facts strip) ── */}
                         <SectionCard title="Основное" icon={UserIcon}>
@@ -502,8 +503,18 @@ export default function UserDetailPage() {
                             <UserFeatureOverridesForm userId={id} />
                         </SectionCard>
 
-                        {/* ── Pre-block warning ── */}
-                        <SectionCard title="Предупреждение перед блокировкой" icon={AlertTriangle}>
+                        {/* ── App notice ── */}
+                        <SectionCard title="Уведомление в приложении" icon={Bell}>
+                            <UserAppNoticeForm userId={id} />
+                        </SectionCard>
+
+                        {/* ── Pre-block warning (legacy) ── */}
+                        <SectionCard title="Предупреждение перед блокировкой (Legacy)" icon={AlertTriangle}>
+                            <p className="mb-3 text-xs text-muted-foreground">
+                                Для старых версий приложения — новые показывают
+                                «Уведомление в приложении» выше. Будет удалено
+                                после поднятия минимальной версии.
+                            </p>
                             <UserPreBlockWarningForm userId={id} />
                         </SectionCard>
 
