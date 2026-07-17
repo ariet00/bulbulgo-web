@@ -145,6 +145,8 @@ export const adminApi = {
                 user_is_active: boolean
                 match_percent: number
                 matched_fields: string[]
+                rooted: boolean | null
+                ip_subnets: string[]
                 last_seen: string | null
             }>
         }>(`/admin/users/${id}/related-accounts`),
@@ -1558,6 +1560,8 @@ export interface AdminDeviceToken {
     token: string
     // active | logged_out | banned
     status: string
+    rooted?: boolean | null
+    installer_store?: string | null
     created_at: string
 }
 

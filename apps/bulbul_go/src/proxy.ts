@@ -14,9 +14,30 @@ const protectedPathPrefixes = [
     "/company",
 ];
 
+// Маркетинговый сайт go.bulbul.asia (route-группа (marketing)) — без локали и
+// без next-intl-редиректа. Пути совпадают с оригинальным сайтом (важно для
+// AASA-путей и внешних ссылок).
+const marketingPaths = new Set([
+    "/",
+    "/news",
+    "/faq",
+    "/support",
+    "/privacy",
+    "/terms",
+    "/download",
+]);
+
+function isMarketingPath(pathname: string) {
+    return marketingPaths.has(pathname) || pathname.startsWith("/news/");
+}
+
 export async function proxy(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
     const { device } = userAgent(req)
+
+    if (isMarketingPath(pathname)) {
+        return NextResponse.next();
+    }
 
     // Remove locale prefix to check path
     const pathnameWithoutLocale = pathname.replace(/^\/(en|ru)/, "");
@@ -55,5 +76,6 @@ export const config = {
     // - favicon.ico (favicon file)
     // - images (public images)
     // - webview (страницы для вебвью мобильного приложения — без локали и auth-редиректов)
-    matcher: ["/((?!api|webview|_next/static|_next/image|favicon.ico|images|.*\\..*).*)"],
+    // - rideshare (smart-link /rideshare/trips/:id — App Link-цель, без локали)
+    matcher: ["/((?!api|webview|rideshare|_next/static|_next/image|favicon.ico|images|.*\\..*).*)"],
 };

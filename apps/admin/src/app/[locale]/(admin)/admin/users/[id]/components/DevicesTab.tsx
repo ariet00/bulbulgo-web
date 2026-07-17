@@ -28,6 +28,18 @@ function DeviceStatusBadge({ status }: { status: string }) {
     )
 }
 
+function RootBadge({ rooted }: { rooted?: boolean | null }) {
+    if (!rooted) return null
+    return (
+        <span
+            className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200"
+            title="Root/jailbreak: устройство способно подменять идентификаторы"
+        >
+            root
+        </span>
+    )
+}
+
 function DeviceTypeBadge({ type }: { type: string }) {
     const cls: Record<string, string> = {
         ios: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100',
@@ -190,6 +202,7 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                         <span className="flex items-center gap-1.5">
                                                             <DeviceTypeBadge type={d.device_type} />
                                                             <DeviceStatusBadge status={d.status} />
+                                                            <RootBadge rooted={d.rooted} />
                                                         </span>
                                                         {d.app_version && (
                                                             <span className="font-mono text-xs text-muted-foreground">
@@ -238,7 +251,10 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                                 <DeviceTypeBadge type={d.device_type} />
                                                             </TableCell>
                                                             <TableCell>
-                                                                <DeviceStatusBadge status={d.status} />
+                                                                <span className="flex items-center gap-1">
+                                                                    <DeviceStatusBadge status={d.status} />
+                                                                    <RootBadge rooted={d.rooted} />
+                                                                </span>
                                                             </TableCell>
                                                             <TableCell className="font-mono text-xs break-all">
                                                                 {d.device_id ?? '—'}

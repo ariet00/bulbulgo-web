@@ -244,6 +244,7 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-24">Совпадение</TableHead>
+                                    <TableHead className="w-28">Сигналы</TableHead>
                                     <TableHead>Пользователь</TableHead>
                                     <TableHead className="w-36">Телефон</TableHead>
                                     <TableHead className="w-28">Статус</TableHead>
@@ -265,6 +266,29 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                                                 title={s.matched_fields.join(', ')}
                                             >
                                                 {s.match_percent}%
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="flex flex-wrap gap-1">
+                                                {s.ip_subnets.length > 0 && (
+                                                    <span
+                                                        className="inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400"
+                                                        title={`Общие IP-подсети: ${s.ip_subnets.join(', ')}`}
+                                                    >
+                                                        IP
+                                                    </span>
+                                                )}
+                                                {s.rooted && (
+                                                    <span
+                                                        className="inline-block rounded bg-red-500/15 px-1.5 py-0.5 text-xs font-medium text-red-600 dark:text-red-400"
+                                                        title="Root/jailbreak: устройство способно подменять идентификаторы"
+                                                    >
+                                                        root
+                                                    </span>
+                                                )}
+                                                {s.ip_subnets.length === 0 && !s.rooted && (
+                                                    <span className="text-xs text-muted-foreground">—</span>
+                                                )}
                                             </span>
                                         </TableCell>
                                         <TableCell>

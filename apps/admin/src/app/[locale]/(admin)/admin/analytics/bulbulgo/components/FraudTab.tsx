@@ -70,7 +70,7 @@ export function FraudTab() {
 
             <MultiAccountCard
                 title="Несколько аккаунтов с одного IP"
-                description="IP-адреса, с которых за период заходили под 2+ разными аккаунтами (по ip_address событий)"
+                description="IP-адреса, с которых за период заходили под 3+ разными аккаунтами (по ip_address событий; 2 аккаунта на IP — обычно соседи по CGNAT оператора)"
                 columnLabel="IP"
                 rows={(ips.data?.ips ?? []).map(d => ({ ...d, id: d.ip_address }))}
                 total={ips.data?.total ?? 0}
