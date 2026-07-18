@@ -601,8 +601,7 @@ export default function AdminTripsPage() {
                                     <TableHead>Trip</TableHead>
                                     <TableHead>User</TableHead>
                                     <TableHead>Type / Role</TableHead>
-                                    <TableHead>Price</TableHead>
-                                    <TableHead>Seats</TableHead>
+                                    <TableHead>Price / Seats</TableHead>
                                     <TableHead title="Просмотры номера телефона">
                                         <span className="flex items-center whitespace-nowrap">
                                             <Phone className="h-3 w-3 mr-1" />
@@ -612,13 +611,12 @@ export default function AdminTripsPage() {
                                     <TableHead title="Подключённые платные услуги">Услуги</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Created / Updated</TableHead>
-                                    <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {trips?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={11} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -682,11 +680,17 @@ export default function AdminTripsPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap">
-                                            {trip.price != null
-                                                ? `${trip.price} ${trip.currency?.symbol || trip.currency?.code || ''}`.trim()
-                                                : '—'}
+                                            <div className="flex flex-col text-sm">
+                                                <span>
+                                                    {trip.price != null
+                                                        ? `${trip.price} ${trip.currency?.symbol || trip.currency?.code || ''}`.trim()
+                                                        : '—'}
+                                                </span>
+                                                {trip.seats != null && (
+                                                    <span className="text-xs text-muted-foreground">мест: {trip.seats}</span>
+                                                )}
+                                            </div>
                                         </TableCell>
-                                        <TableCell>{trip.seats ?? '—'}</TableCell>
                                         <TableCell>
                                             {trip.data?.phone_view_count ? (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -720,25 +724,6 @@ export default function AdminTripsPage() {
                                                     <span title="Обновлено">
                                                         ↻ {format(new Date(trip.updated_at), 'dd.MM.yyyy HH:mm')}
                                                     </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex space-x-2">
-                                                <Link href={`/admin/trips/${trip.id}`}>
-                                                    <Button variant="outline" size="sm">
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                                {!trip.is_deleted && (
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(trip.id)}
-                                                        disabled={deleteTripMutation.isPending}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
                                                 )}
                                             </div>
                                         </TableCell>
