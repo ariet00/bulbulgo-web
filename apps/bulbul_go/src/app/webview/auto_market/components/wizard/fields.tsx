@@ -209,15 +209,35 @@ export function RegionField({
     )
 }
 
-/** Атрибуты стороны offer для шага «Параметры» — обязательные сверху. */
-export function useParamAttrs(attrs: EffectiveAttribute[]) {
+/** Проверка условной видимости (visible_when из каталога) по текущим значениям
+ * формы — у электромобиля не спрашиваем объём двигателя и ГБО. */
+export function isAttrVisible(
+    a: EffectiveAttribute,
+    values: Record<string, unknown>,
+): boolean {
+    const cond = a.visible_when
+    if (!cond) return true
+    const v = values[cond.key]
+    if (v === undefined || v === null || v === '') return true // ещё не выбрано
+    if (cond.in) return cond.in.includes(String(v))
+    if (cond.not_in) return !cond.not_in.includes(String(v))
+    return true
+}
+
+/** Атрибуты стороны offer для шага «Параметры» — обязательные сверху;
+ * зависимые (visible_when) отфильтровываются по текущим значениям. */
+export function useParamAttrs(
+    attrs: EffectiveAttribute[],
+    values: Record<string, unknown> = {},
+) {
     return useMemo(() => {
         const skip = new Set(['make', 'model', 'year'])
         const visible = attrs.filter(
             (a) =>
                 a.role !== 'system' &&
                 !skip.has(a.key) &&
-                (a.applies_to === 'offer' || a.applies_to === 'both'),
+                (a.applies_to === 'offer' || a.applies_to === 'both') &&
+                isAttrVisible(a, values),
         )
         const required = visible.filter((a) =>
             a.required_sides.includes('offer'),
@@ -226,5 +246,5 @@ export function useParamAttrs(attrs: EffectiveAttribute[]) {
             (a) => !a.required_sides.includes('offer'),
         )
         return { required, optional }
-    }, [attrs])
+    }, [attrs, values])
 }

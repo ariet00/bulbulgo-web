@@ -6,7 +6,9 @@ import { ensureAuth, initWebviewAuth, trySilentAuth } from '../../auth'
 import * as bridge from '../../bridge'
 import {
     addFavorite,
+    complain,
     fetchCategoryAttributes,
+    fetchComplaintReasons,
     fetchContact,
     fetchFavoriteIds,
     fetchListing,
@@ -17,6 +19,7 @@ import {
     removeFavorite,
     trackShare,
     trackView,
+    type ComplaintReason,
 } from '../lib/api'
 import {
     formatNumber,
@@ -32,6 +35,7 @@ import type {
     ListingContact,
 } from '../lib/types'
 import { navigateTo } from '../lib/nav'
+import { BottomSheet } from './BottomSheet'
 import { ListingCard } from './ListingCard'
 
 // Страница объявления: галерея, цена в обеих валютах, таблица характеристик,
@@ -50,6 +54,10 @@ export function DetailClient({ id }: { id: number }) {
     const [contact, setContact] = useState<ListingContact | null>(null)
     const [contactLoading, setContactLoading] = useState(false)
     const [photoIdx, setPhotoIdx] = useState(0)
+    const [galleryAt, setGalleryAt] = useState<number | null>(null)
+    const [complaintOpen, setComplaintOpen] = useState(false)
+    const [reasons, setReasons] = useState<ComplaintReason[]>([])
+    const [complaintSent, setComplaintSent] = useState(false)
 
     useEffect(() => {
         let alive = true
@@ -183,6 +191,29 @@ export function DetailClient({ id }: { id: number }) {
         else window.open(url, '_blank')
     }
 
+    const openComplaint = async () => {
+        setComplaintOpen(true)
+        if (!reasons.length) {
+            fetchComplaintReasons()
+                .then(setReasons)
+                .catch(() => setReasons([{ id: 0, text: 'Другое' }]))
+        }
+    }
+
+    const sendComplaint = async (reason: string) => {
+        if (!listing) return
+        if (!(await ensureAuth())) return
+        try {
+            await complain(listing.id, reason)
+            setComplaintSent(true)
+            bridge.toast?.('Жалоба отправлена', 'success').catch(() => {})
+        } catch {
+            bridge.toast?.('Не получилось, попробуйте ещё раз', 'warning').catch(() => {})
+        } finally {
+            setComplaintOpen(false)
+        }
+    }
+
     const shareListing = () => {
         if (!listing) return
         trackShare(listing.id)
@@ -243,12 +274,13 @@ export function DetailClient({ id }: { id: number }) {
                             )
                         }}
                     >
-                        {l.photos.map((p) => (
+                        {l.photos.map((p, i) => (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                                 key={p.url}
                                 src={p.url}
                                 alt=""
+                                onClick={() => setGalleryAt(i)}
                                 className="aspect-[4/3] w-full shrink-0 snap-center object-cover"
                             />
                         ))}
@@ -367,6 +399,15 @@ export function DetailClient({ id }: { id: number }) {
                     </div>
                 </section>
 
+                {/* жалоба — канал сигналов пост-модерации */}
+                <button
+                    onClick={openComplaint}
+                    disabled={complaintSent}
+                    className="mt-5 text-[13px] text-muted-foreground underline-offset-2 active:underline disabled:no-underline disabled:opacity-60"
+                >
+                    {complaintSent ? 'Жалоба отправлена' : 'Пожаловаться на объявление'}
+                </button>
+
                 {/* похожие / подходящие */}
                 {related.length > 0 && (
                     <section className="mt-6">
@@ -395,6 +436,72 @@ export function DetailClient({ id }: { id: number }) {
                     </section>
                 )}
             </div>
+
+            {/* полноэкранная галерея */}
+            {galleryAt !== null && l.photos.length > 0 && (
+                <div className="fixed inset-0 z-50 flex flex-col bg-black">
+                    <button
+                        onClick={() => setGalleryAt(null)}
+                        aria-label="Закрыть"
+                        className="absolute right-4 top-[calc(env(safe-area-inset-top)+12px)] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                            <path d="M3 3l10 10M13 3L3 13" />
+                        </svg>
+                    </button>
+                    <div
+                        ref={(el) => {
+                            // открываемся сразу на тапнутом фото
+                            if (el && galleryAt > 0) {
+                                el.scrollLeft = el.clientWidth * galleryAt
+                            }
+                        }}
+                        onScroll={(e) => {
+                            const el = e.currentTarget
+                            setPhotoIdx(Math.round(el.scrollLeft / el.clientWidth))
+                        }}
+                        className="am-chips flex flex-1 snap-x snap-mandatory items-center overflow-x-auto"
+                    >
+                        {l.photos.map((p) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                key={p.url}
+                                src={p.url}
+                                alt=""
+                                className="h-full w-full shrink-0 snap-center object-contain"
+                            />
+                        ))}
+                    </div>
+                    <p className="pb-[calc(env(safe-area-inset-bottom)+14px)] pt-3 text-center font-mono text-[13px] text-white/80">
+                        {photoIdx + 1} / {l.photos.length}
+                    </p>
+                </div>
+            )}
+
+            {/* жалоба: выбор причины */}
+            <BottomSheet
+                open={complaintOpen}
+                onClose={() => setComplaintOpen(false)}
+                title="Пожаловаться"
+            >
+                {reasons.length === 0 ? (
+                    <div className="space-y-3 py-2">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="am-skeleton h-6 rounded" />
+                        ))}
+                    </div>
+                ) : (
+                    reasons.map((r) => (
+                        <button
+                            key={r.id}
+                            onClick={() => sendComplaint(r.text)}
+                            className="block w-full border-t py-3.5 text-left text-[15px] first:border-t-0"
+                        >
+                            {r.text}
+                        </button>
+                    ))
+                )}
+            </BottomSheet>
 
             {/* контактная панель */}
             {!inactive && (

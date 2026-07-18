@@ -214,6 +214,10 @@ export function MyListingsClient() {
                                                     <span> · {expiryLabel(l)}</span>
                                                 )}
                                         </p>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {l.views} просмотров ·{' '}
+                                            {l.contacts} показов номера
+                                        </p>
                                     </div>
                                 </button>
                                 <div className="flex gap-2 border-t px-3 py-2">

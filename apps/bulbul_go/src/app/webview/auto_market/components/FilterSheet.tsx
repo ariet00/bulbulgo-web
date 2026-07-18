@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RegionItem } from '../lib/api'
 import type { EffectiveAttribute, ListingFilters } from '../lib/types'
 import { pickLabel } from '../lib/format'
 import { BottomSheet } from './BottomSheet'
+import { RegionField } from './wizard/fields'
 
 // Полный набор фильтров (bottom-sheet): цена с валютой, диапазоны
 // (год/пробег/объём), enum-атрибуты чипсами (any-of), bool — переключателями.
@@ -15,6 +17,7 @@ export type FilterDraft = {
     priceMin?: number
     priceMax?: number
     priceCurrency: 'USD' | 'KGS'
+    region?: RegionItem
     enums: Record<string, string[]>
     bools: Record<string, boolean>
     ranges: Record<string, { min?: number; max?: number }>
@@ -50,12 +53,14 @@ export function draftToFilters(
         priceMin: draft.priceMin,
         priceMax: draft.priceMax,
         priceCurrency: draft.priceCurrency,
+        regionId: draft.region?.id,
     }
 }
 
 export function countActiveFilters(draft: FilterDraft): number {
     let n = 0
     if (draft.priceMin !== undefined || draft.priceMax !== undefined) n++
+    if (draft.region) n++
     n += Object.values(draft.enums).filter((v) => v.length).length
     n += Object.values(draft.bools).filter(Boolean).length
     n += Object.values(draft.ranges).filter(
@@ -221,6 +226,16 @@ export function FilterSheet({
                     value={{ min: draft.priceMin, max: draft.priceMax }}
                     onChange={(v) =>
                         setDraft((d) => ({ ...d, priceMin: v.min, priceMax: v.max }))
+                    }
+                />
+            </section>
+
+            <section className="border-t py-4">
+                <p className="mb-2 text-[13px] font-semibold">Город / регион</p>
+                <RegionField
+                    region={draft.region ?? null}
+                    onChange={(r) =>
+                        setDraft((d) => ({ ...d, region: r ?? undefined }))
                     }
                 />
             </section>

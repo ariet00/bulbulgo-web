@@ -39,6 +39,9 @@ export interface EffectiveAttribute {
     /** границы значений int/decimal из каталога (для инпутов wizard'а) */
     min_value: number | null
     max_value: number | null
+    /** условная видимость: показывать только при совпадении другого атрибута
+     * (у электро нет объёма двигателя): {key, in?} | {key, not_in?} */
+    visible_when: { key: string; in?: string[]; not_in?: string[] } | null
     sort_order: number
     role: string | null
     group: string | null
@@ -79,6 +82,9 @@ export interface Listing {
     /** скаляры у offer; критерии ({min,max} | список | скаляр) у want */
     attributes: Record<string, unknown>
     photos: Photo[]
+    /** денормализованные счётчики карточки */
+    views: number
+    contacts: number
     created_at: string | null
 }
 

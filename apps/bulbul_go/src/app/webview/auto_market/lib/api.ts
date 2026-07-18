@@ -198,6 +198,16 @@ export async function fetchCurrencies(): Promise<CurrencyItem[]> {
     return ok(await fetch(`${API_URL}/currencies/`))
 }
 
+export interface ComplaintReason {
+    id: number
+    text: string
+}
+
+/** Причины жалоб для экрана «Пожаловаться» (контекст marketplace). */
+export async function fetchComplaintReasons(): Promise<ComplaintReason[]> {
+    return ok(await fetch(`${API_URL}/complaints/reasons?context=marketplace`))
+}
+
 export async function complain(id: number, reason: string, description?: string): Promise<void> {
     await authFetch(`/marketplace/listings/${id}/complain`, {
         method: 'POST',

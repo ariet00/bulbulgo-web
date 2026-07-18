@@ -88,7 +88,9 @@ export function TabBar({ active }: { active: TabKey }) {
 
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-            <div className="flex items-stretch px-2 pb-[env(safe-area-inset-bottom)]">
+            {/* +10px к safe-area: во вьюве приложения inset может быть 0,
+                без запаса кнопки прилипают к нижней кромке/жестовой зоне */}
+            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+10px)]">
                 {left.map(tab)}
 
                 {/* Создать — акцентная центральная кнопка, открывает wizard */}

@@ -29,6 +29,7 @@ import {
     NumberInput,
     RegionField,
     inputCls,
+    isAttrVisible,
     useParamAttrs,
 } from './fields'
 
@@ -131,8 +132,10 @@ export function WizardClient() {
         }
     }
 
+    // зависимые атрибуты (например, объём двигателя у электро) скрываются
+    // по visible_when из каталога в зависимости от уже выбранных значений
     const { required: requiredAttrs, optional: optionalAttrs } =
-        useParamAttrs(attrs)
+        useParamAttrs(attrs, values)
 
     // want-атрибуты для мягких критериев (без make/model/year — они выше)
     const wantExtra = useMemo(
@@ -166,7 +169,12 @@ export function WizardClient() {
             if (kind === 'offer') {
                 Object.assign(attributes, { make, model, year })
                 for (const [k, v] of Object.entries(values)) {
-                    if (v !== undefined && v !== '') attributes[k] = v
+                    if (v === undefined || v === '') continue
+                    // скрытые visible_when значения не отправляем (сменили
+                    // бензин → электро: объём двигателя больше не применим)
+                    const attr = attrs.find((a) => a.key === k)
+                    if (attr && !isAttrVisible(attr, values)) continue
+                    attributes[k] = v
                 }
             } else {
                 attributes.make = make

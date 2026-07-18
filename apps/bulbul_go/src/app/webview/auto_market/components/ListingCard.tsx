@@ -97,6 +97,18 @@ export function ListingCard({
                     {l.region_name && <span>{l.region_name}</span>}
                     {l.region_name && <span aria-hidden>·</span>}
                     <span>{timeAgo(l.created_at)}</span>
+                    {l.views > 0 && (
+                        <>
+                            <span aria-hidden>·</span>
+                            <span className="flex items-center gap-1">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden>
+                                    <path d="M1.5 8S4 3.8 8 3.8 14.5 8 14.5 8 12 12.2 8 12.2 1.5 8 1.5 8Z" />
+                                    <circle cx="8" cy="8" r="1.9" />
+                                </svg>
+                                {l.views}
+                            </span>
+                        </>
+                    )}
                 </p>
             </div>
         </button>

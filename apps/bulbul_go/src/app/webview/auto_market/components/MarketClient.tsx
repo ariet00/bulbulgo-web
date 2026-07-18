@@ -47,6 +47,55 @@ const SORTS: [SortValue, string][] = [
     ['mileage_asc', 'Пробег: меньше'],
 ]
 
+// Пресеты-фильтры (drom-паттерн): один тап = готовый фильтр, повторный — сброс.
+const PRESETS: {
+    label: string
+    match: (d: FilterDraft) => boolean
+    toggle: (d: FilterDraft, on: boolean) => FilterDraft
+}[] = [
+    {
+        label: 'До 10 000 $',
+        match: (d) => d.priceMax === 10000 && d.priceCurrency === 'USD',
+        toggle: (d, on) => ({
+            ...d,
+            priceMax: on ? undefined : 10000,
+            priceCurrency: 'USD',
+        }),
+    },
+    {
+        label: 'Гибрид',
+        match: (d) => (d.enums.fuel ?? []).includes('hybrid'),
+        toggle: (d, on) => ({
+            ...d,
+            enums: { ...d.enums, fuel: on ? [] : ['hybrid'] },
+        }),
+    },
+    {
+        label: 'Электро',
+        match: (d) => (d.enums.fuel ?? []).includes('electric'),
+        toggle: (d, on) => ({
+            ...d,
+            enums: { ...d.enums, fuel: on ? [] : ['electric'] },
+        }),
+    },
+    {
+        label: 'Растаможен',
+        match: (d) => !!d.bools.customs_cleared,
+        toggle: (d, on) => ({
+            ...d,
+            bools: { ...d.bools, customs_cleared: !on },
+        }),
+    },
+    {
+        label: 'Руль слева',
+        match: (d) => (d.enums.steering ?? []).includes('left'),
+        toggle: (d, on) => ({
+            ...d,
+            enums: { ...d.enums, steering: on ? [] : ['left'] },
+        }),
+    },
+]
+
 export function MarketClient() {
     const router = useRouter()
 
@@ -72,6 +121,25 @@ export function MarketClient() {
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(true)
     const [feedError, setFeedError] = useState(false)
+    const [reloadKey, setReloadKey] = useState(0)
+
+    // pull-to-refresh: тянем вниз от верха страницы → перезагрузка первой
+    // страницы ленты (нативного PTR у вебвью нет)
+    const [pullY, setPullY] = useState(0)
+    const pullStart = useRef<number | null>(null)
+    const onTouchStart = (e: React.TouchEvent) => {
+        pullStart.current = window.scrollY <= 0 ? e.touches[0].clientY : null
+    }
+    const onTouchMove = (e: React.TouchEvent) => {
+        if (pullStart.current === null) return
+        const dy = e.touches[0].clientY - pullStart.current
+        setPullY(dy > 0 ? Math.min(dy * 0.4, 70) : 0)
+    }
+    const onTouchEnd = () => {
+        if (pullY >= 55) setReloadKey((k) => k + 1)
+        setPullY(0)
+        pullStart.current = null
+    }
 
     useEffect(() => {
         let alive = true
@@ -116,7 +184,7 @@ export function MarketClient() {
         [draft, kind, make, models, sort],
     )
 
-    // загрузка ленты (сброс при смене фильтров)
+    // загрузка ленты (сброс при смене фильтров и по pull-to-refresh)
     useEffect(() => {
         if (carsId === null) return
         let alive = true
@@ -133,7 +201,7 @@ export function MarketClient() {
         return () => {
             alive = false
         }
-    }, [carsId, filters])
+    }, [carsId, filters, reloadKey])
 
     const loadingMore = useRef(false)
     const loadMore = useCallback(async () => {
@@ -218,7 +286,37 @@ export function MarketClient() {
     } as React.CSSProperties
 
     return (
-        <div className="min-h-dvh pb-24">
+        <div
+            className="min-h-dvh pb-24"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+        >
+            {/* индикатор pull-to-refresh */}
+            {pullY > 0 && (
+                <div
+                    className="flex items-center justify-center overflow-hidden text-muted-foreground transition-none"
+                    style={{ height: pullY }}
+                >
+                    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        style={{
+                            transform: `rotate(${pullY * 3}deg)`,
+                            opacity: Math.min(pullY / 55, 1),
+                        }}
+                        aria-hidden
+                    >
+                        <path d="M8 2a6 6 0 1 1-5.6 3.9" />
+                        <path d="M2 2.6v3.6h3.6" />
+                    </svg>
+                </div>
+            )}
             {/* сегмент рынка */}
             <div className="sticky top-0 z-20 border-b bg-background/95 px-4 pb-2.5 pt-3 backdrop-blur">
                 <div className="flex rounded-xl bg-muted/60 p-1 text-[14px] font-semibold">
@@ -280,6 +378,23 @@ export function MarketClient() {
                     >
                         {SORTS.find(([v]) => v === sort)?.[1]} ▾
                     </button>
+                </div>
+
+                {/* пресеты: готовые фильтры одним тапом */}
+                <div className="am-chips -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4">
+                    {PRESETS.map((p) => {
+                        const on = p.match(draft)
+                        return (
+                            <button
+                                key={p.label}
+                                onClick={() => setDraft(p.toggle(draft, on))}
+                                className="shrink-0 rounded-full border px-3 py-1 text-[12px] transition-colors"
+                                style={on ? chipActive : { opacity: 0.85 }}
+                            >
+                                {p.label}
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
 
