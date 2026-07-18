@@ -10,6 +10,7 @@ import {
     fetchRates,
 } from '../lib/api'
 import { pickLabel } from '../lib/format'
+import { navigateTo } from '../lib/nav'
 import type {
     AttributeOption,
     EffectiveAttribute,
@@ -279,20 +280,6 @@ export function MarketClient() {
                     >
                         {SORTS.find(([v]) => v === sort)?.[1]} ▾
                     </button>
-                    <button
-                        className={chip}
-                        onClick={() =>
-                            router.push('/webview/auto_market/favorites')
-                        }
-                    >
-                        ♥ Избранное
-                    </button>
-                    <button
-                        className={chip}
-                        onClick={() => router.push('/webview/auto_market/my')}
-                    >
-                        Мои
-                    </button>
                 </div>
             </div>
 
@@ -336,31 +323,17 @@ export function MarketClient() {
                             optionLabel={optionLabel}
                             delayMs={Math.min((i % PAGE) * 40, 320)}
                             onOpen={(x) =>
-                                router.push(`/webview/auto_market/${x.id}`)
+                                navigateTo(
+                                    router,
+                                    `/webview/auto_market/${x.id}`,
+                                    typeof x.title === 'string' ? x.title : undefined,
+                                )
                             }
                         />
                     ))
                 )}
                 <div ref={sentinel} />
             </div>
-
-            {/* FAB подачи */}
-            <button
-                onClick={() =>
-                    router.push(
-                        kind === 'want'
-                            ? '/webview/auto_market/new?kind=want'
-                            : '/webview/auto_market/new',
-                    )
-                }
-                className="fixed bottom-6 right-4 z-30 flex items-center gap-2 rounded-full px-5 py-3.5 text-[15px] font-semibold text-white shadow-lg active:scale-95 transition-transform"
-                style={{ background: 'var(--am-accent)' }}
-            >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                    <path d="M8 2v12M2 8h12" />
-                </svg>
-                Подать
-            </button>
 
             {/* шиты */}
             <PickerSheet

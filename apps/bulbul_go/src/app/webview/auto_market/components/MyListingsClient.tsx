@@ -6,6 +6,7 @@ import { ensureAuth, initWebviewAuth } from '../../auth'
 import * as bridge from '../../bridge'
 import { fetchMyListings, renewListing, updateListing } from '../lib/api'
 import { formatPrice, pickLabel, timeAgo } from '../lib/format'
+import { navigateTo } from '../lib/nav'
 import type { Listing } from '../lib/types'
 
 // «Мои объявления»: вкладки по статусу + быстрые действия (снять/вернуть/
@@ -116,7 +117,7 @@ export function MyListingsClient() {
         'rounded-lg border px-3 py-1.5 text-[12px] font-medium active:bg-muted disabled:opacity-50'
 
     return (
-        <div className="min-h-dvh px-4 pb-10 pt-4">
+        <div className="min-h-dvh px-4 pb-28 pt-4">
             <h1 className="text-[20px] font-bold tracking-tight">
                 Мои объявления
             </h1>
@@ -149,7 +150,11 @@ export function MyListingsClient() {
                         {status === 'active' && (
                             <button
                                 onClick={() =>
-                                    router.push('/webview/auto_market/new')
+                                    navigateTo(
+                                        router,
+                                        '/webview/auto_market/new',
+                                        'Подать объявление',
+                                    )
                                 }
                                 className="mt-4 rounded-xl px-5 py-2.5 text-[14px] font-semibold text-white"
                                 style={{ background: 'var(--am-accent)' }}
@@ -172,8 +177,10 @@ export function MyListingsClient() {
                             >
                                 <button
                                     onClick={() =>
-                                        router.push(
+                                        navigateTo(
+                                            router,
                                             `/webview/auto_market/${l.id}`,
+                                            typeof l.title === 'string' ? l.title : undefined,
                                         )
                                     }
                                     className="flex w-full items-center gap-3 px-3 py-3 text-left"

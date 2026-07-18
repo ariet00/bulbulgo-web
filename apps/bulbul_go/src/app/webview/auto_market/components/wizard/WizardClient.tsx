@@ -45,7 +45,9 @@ type Values = Record<string, string | number | boolean | undefined>
 
 export function WizardClient() {
     const router = useRouter()
-    const kind = useSearchParams().get('kind') === 'want' ? 'want' : 'offer'
+    const initialKind =
+        useSearchParams().get('kind') === 'want' ? 'want' : 'offer'
+    const [kind, setKind] = useState<'offer' | 'want'>(initialKind)
 
     const [authed, setAuthed] = useState<boolean | null>(null)
     const [carsId, setCarsId] = useState<number | null>(null)
@@ -189,6 +191,10 @@ export function WizardClient() {
             }
             const created = await createListing(draft)
             bridge.toast?.('Объявление опубликовано', 'success').catch(() => {})
+            // тот же нативный экран становится карточкой — обновляем AppBar
+            if (bridge.bridgeAvailable() && typeof created.title === 'string') {
+                bridge.setTitle(created.title).catch(() => {})
+            }
             router.replace(`/webview/auto_market/${created.id}`)
         } catch {
             setError('Не удалось опубликовать — проверьте поля и попробуйте ещё раз')
@@ -231,8 +237,35 @@ export function WizardClient() {
     return (
         <div className="min-h-dvh px-4 pb-32 pt-4">
             <h1 className="text-[20px] font-bold tracking-tight">
-                {kind === 'want' ? 'Куплю авто' : 'Продать авто'}
+                Новое объявление
             </h1>
+
+            {/* тип объявления: продажа или запрос «куплю» */}
+            <div className="mt-3 flex rounded-xl bg-muted/60 p-1 text-[14px] font-semibold">
+                {(
+                    [
+                        ['offer', 'Продать'],
+                        ['want', 'Куплю'],
+                    ] as const
+                ).map(([k, label]) => (
+                    <button
+                        key={k}
+                        onClick={() => {
+                            setKind(k)
+                            setStep(0)
+                            setError(null)
+                        }}
+                        className="flex-1 rounded-[10px] py-1.5 transition-colors"
+                        style={
+                            kind === k
+                                ? { background: 'var(--am-accent)', color: '#fff' }
+                                : { opacity: 0.7 }
+                        }
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
 
             {kind === 'offer' && (
                 <div className="mt-3 flex items-center gap-1.5">

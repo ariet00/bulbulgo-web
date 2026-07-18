@@ -31,6 +31,7 @@ import type {
     Listing,
     ListingContact,
 } from '../lib/types'
+import { navigateTo } from '../lib/nav'
 import { ListingCard } from './ListingCard'
 
 // Страница объявления: галерея, цена в обеих валютах, таблица характеристик,
@@ -382,8 +383,10 @@ export function DetailClient({ id }: { id: number }) {
                                     rates={rates}
                                     optionLabel={optionLabel}
                                     onOpen={(x) =>
-                                        router.push(
+                                        navigateTo(
+                                            router,
                                             `/webview/auto_market/${x.id}`,
+                                            typeof x.title === 'string' ? x.title : undefined,
                                         )
                                     }
                                 />

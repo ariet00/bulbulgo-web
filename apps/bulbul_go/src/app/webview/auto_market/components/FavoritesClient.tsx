@@ -11,6 +11,7 @@ import {
     removeFavorite,
 } from '../lib/api'
 import { pickLabel } from '../lib/format'
+import { navigateTo } from '../lib/nav'
 import type { EffectiveAttribute, Listing } from '../lib/types'
 import { ListingCard } from './ListingCard'
 
@@ -93,7 +94,7 @@ export function FavoritesClient() {
     }
 
     return (
-        <div className="min-h-dvh px-4 pb-10 pt-4">
+        <div className="min-h-dvh px-4 pb-28 pt-4">
             <h1 className="text-[20px] font-bold tracking-tight">Избранное</h1>
 
             <div className="mt-4 space-y-3">
@@ -113,7 +114,11 @@ export function FavoritesClient() {
                                 rates={rates}
                                 optionLabel={optionLabel}
                                 onOpen={(x) =>
-                                    router.push(`/webview/auto_market/${x.id}`)
+                                    navigateTo(
+                                        router,
+                                        `/webview/auto_market/${x.id}`,
+                                        typeof x.title === 'string' ? x.title : undefined,
+                                    )
                                 }
                             />
                             <button
