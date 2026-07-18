@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 
 
@@ -18,7 +19,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://go.bulbul.asia'),
+  metadataBase: new URL(SITE_URL),
   title: 'BulBul Go',
   description: 'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
   icons: { icon: '/favicon.png' },

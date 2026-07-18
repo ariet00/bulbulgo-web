@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
+import { SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 import Navbar from './_components/Navbar'
 import Footer from './_components/Footer'
@@ -10,7 +11,7 @@ import Footer from './_components/Footer'
 // /terms, /download исключены из intl-миддлвары (см. proxy.ts).
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://go.bulbul.asia'),
+    metadataBase: new URL(SITE_URL),
     title: {
         default: 'BulBul Go — поиск попутчиков по Кыргызстану',
         template: '%s — BulBul Go',
