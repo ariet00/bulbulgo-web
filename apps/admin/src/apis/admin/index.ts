@@ -13,6 +13,7 @@ export * from './analytics'
 export * from './rideshare-analytics'
 export * from './booking'
 export * from './settings'
+export * from './celery'
 
 import { regionsAdminApi } from './regions'
 import { usersAdminApi } from './users'
@@ -28,6 +29,7 @@ import { analyticsAdminApi } from './analytics'
 import { rideshareAnalyticsAdminApi } from './rideshare-analytics'
 import { bookingAdminApi } from './booking'
 import { settingsAdminApi } from './settings'
+import { celeryAdminApi } from './celery'
 
 // Единый объект-агрегат — публичный контракт `adminApi` не изменился.
 export const adminApi = {
@@ -45,4 +47,5 @@ export const adminApi = {
     ...rideshareAnalyticsAdminApi,
     ...bookingAdminApi,
     ...settingsAdminApi,
+    ...celeryAdminApi,
 }

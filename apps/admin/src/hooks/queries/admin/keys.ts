@@ -25,6 +25,13 @@ export const adminKeys = {
     bookingBot: (id: number) => [...adminKeys.all, 'booking-bot', id] as const,
     celeryTasks: () => [...adminKeys.all, 'celery-tasks'] as const,
     celeryTask: (id: number) => [...adminKeys.celeryTasks(), id] as const,
+    celeryWorkers: () => [...adminKeys.all, 'celery-workers'] as const,
+    celeryActive: () => [...adminKeys.all, 'celery-active'] as const,
+    celeryRuns: (filters: unknown) =>
+        [...adminKeys.all, 'celery-runs', filters] as const,
+    celeryRun: (id: number) => [...adminKeys.all, 'celery-run', id] as const,
+    celeryRunsSummary: (windowHours: number) =>
+        [...adminKeys.all, 'celery-runs-summary', windowHours] as const,
     notifications: () => [...adminKeys.all, 'notifications'] as const,
     notification: (id: number) => [...adminKeys.notifications(), id] as const,
     ads: () => [...adminKeys.all, 'ads'] as const,
