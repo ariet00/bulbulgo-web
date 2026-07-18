@@ -12,16 +12,17 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
     Input,
+    Pagination,
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
     Table,
     TableBody,
     TableCell,
@@ -29,37 +30,37 @@ import {
     TableHeader,
     TableRow,
 } from '@doska/ui'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 
 import {
     StatusBadge,
     formatDateTime,
     formatRuntime,
 } from '@/components/admin/celery/shared'
+import { JsonView } from '@/components/admin/celery/JsonView'
 
 const STATUSES = ['SUCCESS', 'FAILURE', 'STARTED', 'RETRY'] as const
 const ALL = '__all__'
-const PAGE_SIZE = 50
 
 export function HistoryTab() {
     const [q, setQ] = useState('')
     const [qInput, setQInput] = useState('')
     const [status, setStatus] = useState<string>(ALL)
     const [page, setPage] = useState(1)
+    const [size, setSize] = useState(50)
     const [detailId, setDetailId] = useState<number | null>(null)
 
     const filters = {
         q: q || undefined,
         status: status === ALL ? undefined : status,
         page,
-        size: PAGE_SIZE,
+        size,
     }
     const { data, isLoading, isFetching } = useAdminCeleryRuns(filters)
     const { data: summary } = useAdminCeleryRunsSummary(24)
     const { data: detail } = useAdminCeleryRun(detailId)
 
     const total = data?.total ?? 0
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
     const applySearch = () => {
         setPage(1)
@@ -194,38 +195,32 @@ export function HistoryTab() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-end gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                >
-                    Назад
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                    {page} / {totalPages}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                >
-                    Вперёд
-                </Button>
-            </div>
+            {total > 0 && (
+                <Pagination
+                    page={page}
+                    total={total}
+                    size={size}
+                    onPageChange={setPage}
+                    onSizeChange={(s) => {
+                        setSize(s)
+                        setPage(1)
+                    }}
+                />
+            )}
 
-            {/* Detail dialog */}
-            <Dialog open={detailId != null} onOpenChange={(o) => !o && setDetailId(null)}>
-                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="font-mono text-sm break-all">
+            {/* Detail — side sheet */}
+            <Sheet open={detailId != null} onOpenChange={(o) => !o && setDetailId(null)}>
+                <SheetContent
+                    side="right"
+                    className="w-full sm:max-w-xl overflow-y-auto"
+                >
+                    <SheetHeader>
+                        <SheetTitle className="font-mono text-sm break-all pr-6">
                             {detail?.name}
-                        </DialogTitle>
-                    </DialogHeader>
+                        </SheetTitle>
+                    </SheetHeader>
                     {detail && (
-                        <div className="space-y-3 text-sm">
+                        <div className="mt-4 space-y-4 text-sm">
                             <div className="flex flex-wrap gap-2 items-center">
                                 <StatusBadge status={detail.status} />
                                 <span className="text-muted-foreground font-mono text-xs">
@@ -247,44 +242,59 @@ export function HistoryTab() {
                                 <dd>{formatRuntime(detail.runtime_ms)}</dd>
                             </dl>
 
-                            <DetailBlock title="Args" value={detail.args} />
-                            <DetailBlock title="Kwargs" value={detail.kwargs} />
+                            <DetailSection title="Args">
+                                <JsonView value={detail.args ?? []} />
+                            </DetailSection>
+                            <DetailSection title="Kwargs">
+                                <JsonView value={detail.kwargs ?? {}} />
+                            </DetailSection>
                             {detail.result && (
-                                <DetailBlock title="Result" value={detail.result} raw />
+                                <DetailSection title="Result">
+                                    <JsonView value={parseMaybeJson(detail.result)} />
+                                </DetailSection>
                             )}
                             {detail.traceback && (
-                                <div>
-                                    <div className="mb-1 font-medium text-destructive">Traceback</div>
-                                    <pre className="rounded-md bg-muted p-2 text-xs overflow-x-auto whitespace-pre-wrap">
+                                <DetailSection title="Traceback" danger>
+                                    <pre className="rounded-md border bg-muted/40 p-3 text-xs overflow-x-auto whitespace-pre-wrap font-mono">
                                         {detail.traceback}
                                     </pre>
-                                </div>
+                                </DetailSection>
                             )}
                         </div>
                     )}
-                </DialogContent>
-            </Dialog>
+                </SheetContent>
+            </Sheet>
         </div>
     )
 }
 
-function DetailBlock({
+// Result is stored as repr/JSON text; show it as parsed JSON when possible,
+// otherwise as the raw string.
+function parseMaybeJson(text: string): unknown {
+    try {
+        return JSON.parse(text)
+    } catch {
+        return text
+    }
+}
+
+function DetailSection({
     title,
-    value,
-    raw,
+    danger,
+    children,
 }: {
     title: string
-    value: unknown
-    raw?: boolean
+    danger?: boolean
+    children: ReactNode
 }) {
-    if (value == null) return null
-    const text = raw ? String(value) : JSON.stringify(value, null, 2)
     return (
         <div>
-            <div className="mb-1 font-medium">{title}</div>
-            <pre className="rounded-md bg-muted p-2 text-xs overflow-x-auto whitespace-pre-wrap">
-                {text}
-            </pre>
+            <div
+                className={`mb-1 font-medium ${danger ? 'text-destructive' : ''}`}
+            >
+                {title}
+            </div>
+            {children}
         </div>
     )
 }
