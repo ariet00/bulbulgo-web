@@ -1,8 +1,10 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Link } from '@doska/i18n'
 import {
+    adminKeys,
     useAdminAd,
     useAdminAdStatsBreakdown,
     useAdminAdStatsDetailed,
@@ -15,6 +17,7 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    Pagination,
     Table,
     TableBody,
     TableCell,
@@ -96,24 +99,19 @@ export default function AdminAdStatsPage({ params }: { params: Promise<{ id: str
 
     const [period, setPeriod] = useState('30d')
     const [granularity, setGranularity] = useState('day')
-    const [usersType, setUsersType] = useState<'click' | 'impression'>('click')
+    const queryClient = useQueryClient()
 
     const { data: ad } = useAdminAd(adId)
     const detailed = useAdminAdStatsDetailed(adId, period)
     const series = useAdminAdStatsTimeseries(adId, period, granularity)
     const byPlatform = useAdminAdStatsBreakdown(adId, 'platform', period)
     const byPlacement = useAdminAdStatsBreakdown(adId, 'placement', period)
-    const users = useAdminAdStatsUsers(adId, usersType, period)
 
     const s = detailed.data
-    const isFetching =
-        detailed.isFetching || series.isFetching || byPlatform.isFetching || users.isFetching
+    const isFetching = detailed.isFetching || series.isFetching || byPlatform.isFetching
+    // инвалидация по префиксу adStats обновляет и обе таблицы пользователей
     const refetchAll = () => {
-        detailed.refetch()
-        series.refetch()
-        byPlatform.refetch()
-        byPlacement.refetch()
-        users.refetch()
+        queryClient.invalidateQueries({ queryKey: adminKeys.adStats(adId) })
     }
 
     return (
@@ -232,78 +230,97 @@ export default function AdminAdStatsPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Who clicked / saw */}
-            <Card>
-                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-                    <CardTitle>
-                        {usersType === 'click' ? 'Кто кликал' : 'Кто видел'}
-                    </CardTitle>
-                    <div className="flex gap-1">
-                        <Button
-                            variant={usersType === 'click' ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setUsersType('click')}
-                        >
-                            Клики
-                        </Button>
-                        <Button
-                            variant={usersType === 'impression' ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setUsersType('impression')}
-                        >
-                            Показы
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {users.isLoading ? (
-                        <div className="text-muted-foreground">Загрузка…</div>
-                    ) : (users.data ?? []).length === 0 ? (
-                        <div className="text-muted-foreground">
-                            Нет идентифицированных пользователей за период
-                        </div>
-                    ) : (
-                        <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Пользователь</TableHead>
-                                        <TableHead className="w-24 text-right">Раз</TableHead>
-                                        <TableHead className="w-44">Первый раз</TableHead>
-                                        <TableHead className="w-44">Последний раз</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {(users.data ?? []).map((u) => (
-                                        <TableRow key={u.user_id}>
-                                            <TableCell>
-                                                <Link
-                                                    href={`/admin/users/${u.user_id}`}
-                                                    className="text-primary hover:underline"
-                                                >
-                                                    {u.name || `#${u.user_id}`}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium">
-                                                {u.count.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                                                {new Date(u.first_seen).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                                                {new Date(u.last_seen).toLocaleString()}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <p className="mt-2 text-xs text-muted-foreground">
-                                Только авторизованные пользователи — анонимные показы/клики в
-                                таблицу не попадают.
-                            </p>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+            <AdUsersCard adId={adId} type="click" title="Кто кликал" period={period} />
+            <AdUsersCard adId={adId} type="impression" title="Кто видел" period={period} />
         </div>
+    )
+}
+
+function AdUsersCard({
+    adId,
+    type,
+    title,
+    period,
+}: {
+    adId: number
+    type: 'click' | 'impression'
+    title: string
+    period: string
+}) {
+    const [page, setPage] = useState(1)
+    const [size, setSize] = useState(10)
+    const users = useAdminAdStatsUsers(adId, type, period, page, size)
+
+    // при смене периода возвращаемся на первую страницу
+    useEffect(() => {
+        setPage(1)
+    }, [period])
+
+    const data = users.data
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {users.isLoading ? (
+                    <div className="text-muted-foreground">Загрузка…</div>
+                ) : !data || data.items.length === 0 ? (
+                    <div className="text-muted-foreground">
+                        Нет идентифицированных пользователей за период
+                    </div>
+                ) : (
+                    <>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Пользователь</TableHead>
+                                    <TableHead className="w-24 text-right">Раз</TableHead>
+                                    <TableHead className="w-44">Первый раз</TableHead>
+                                    <TableHead className="w-44">Последний раз</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {data.items.map((u) => (
+                                    <TableRow key={u.user_id}>
+                                        <TableCell>
+                                            <Link
+                                                href={`/admin/users/${u.user_id}`}
+                                                className="text-primary hover:underline"
+                                            >
+                                                {u.name || `#${u.user_id}`}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                            {u.count.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                            {new Date(u.first_seen).toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                                            {new Date(u.last_seen).toLocaleString()}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Pagination
+                            page={data.page}
+                            total={data.total}
+                            size={data.size}
+                            onPageChange={setPage}
+                            onSizeChange={(s) => {
+                                setSize(s)
+                                setPage(1)
+                            }}
+                        />
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            Только авторизованные пользователи — анонимные показы/клики в
+                            таблицу не попадают.
+                        </p>
+                    </>
+                )}
+            </CardContent>
+        </Card>
     )
 }

@@ -62,12 +62,14 @@ export const useAdminAdStatsUsers = (
     id: number,
     type: 'click' | 'impression',
     period: string = '30d',
-    limit: number = 50,
+    page: number = 1,
+    size: number = 10,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.adStats(id), 'users', type, period, limit],
-        queryFn: () => adminApi.getAdStatsUsers(id, type, period, limit),
+        queryKey: [...adminKeys.adStats(id), 'users', type, period, page, size],
+        queryFn: () => adminApi.getAdStatsUsers(id, type, period, page, size),
         enabled: !!id,
+        placeholderData: keepPreviousData,
     })
 }
 

@@ -61,6 +61,15 @@ export interface AdminAdStats {
     ctr: number
 }
 
+export interface AdminAdStatsUserRow {
+    user_id: number
+    name: string | null
+    avatar_url: string | null
+    count: number
+    first_seen: string
+    last_seen: string
+}
+
 export interface AdminAdListParams {
     placement?: string
     is_active?: boolean
@@ -113,16 +122,10 @@ export const promotionsAdminApi = {
         id: number,
         type: 'click' | 'impression',
         period: string = '30d',
-        limit: number = 50,
+        page: number = 1,
+        size: number = 10,
     ) =>
-        requests.get<
-            Array<{
-                user_id: number
-                name: string | null
-                avatar_url: string | null
-                count: number
-                first_seen: string
-                last_seen: string
-            }>
-        >(`/admin/promotions/${id}/stats/users?type=${type}&period=${period}&limit=${limit}`),
+        requests.get<Page<AdminAdStatsUserRow>>(
+            `/admin/promotions/${id}/stats/users?type=${type}&period=${period}&page=${page}&size=${size}`,
+        ),
 }
