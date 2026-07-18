@@ -20,6 +20,7 @@ import {
     TabsContent,
     TabsList,
     TabsTrigger,
+    Textarea,
 } from '@doska/ui'
 import { useState } from 'react'
 import type { AdminAd, AdminAdColors, AdminAdCreate } from '@/apis/admin'
@@ -353,14 +354,24 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                                     {(ACTION_URL_HINT[actionType] ?? ACTION_URL_HINT.url)
                                         .label}
                                 </Label>
-                                <Input
-                                    placeholder={
-                                        (ACTION_URL_HINT[actionType] ?? ACTION_URL_HINT.url)
-                                            .placeholder
-                                    }
-                                    value={actionUrl}
-                                    onChange={(e) => setActionUrl(e.target.value)}
-                                />
+                                {actionType === 'share' ? (
+                                    <Textarea
+                                        rows={4}
+                                        placeholder={ACTION_URL_HINT.share.placeholder}
+                                        value={actionUrl}
+                                        onChange={(e) => setActionUrl(e.target.value)}
+                                    />
+                                ) : (
+                                    <Input
+                                        placeholder={
+                                            (ACTION_URL_HINT[actionType] ??
+                                                ACTION_URL_HINT.url)
+                                                .placeholder
+                                        }
+                                        value={actionUrl}
+                                        onChange={(e) => setActionUrl(e.target.value)}
+                                    />
+                                )}
                             </div>
                         )}
 
