@@ -212,7 +212,7 @@ export function HistoryTab() {
             <Sheet open={detailId != null} onOpenChange={(o) => !o && setDetailId(null)}>
                 <SheetContent
                     side="right"
-                    className="w-full sm:max-w-xl overflow-y-auto"
+                    className="w-full sm:max-w-3xl lg:max-w-4xl overflow-y-auto"
                 >
                     <SheetHeader>
                         <SheetTitle className="font-mono text-sm break-all pr-6">
