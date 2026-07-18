@@ -14,6 +14,7 @@ export interface AdminAdTargeting {
     trip_types: string[]
     roles: string[]
     platforms: string[]
+    min_app_version?: string | null
 }
 
 export interface AdminAd {

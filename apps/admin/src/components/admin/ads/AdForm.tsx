@@ -219,6 +219,9 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
     const [tripTypes, setTripTypes] = useState<string[]>(initial?.targeting?.trip_types ?? [])
     const [roles, setRoles] = useState<string[]>(initial?.targeting?.roles ?? [])
     const [platforms, setPlatforms] = useState<string[]>(initial?.targeting?.platforms ?? [])
+    const [minAppVersion, setMinAppVersion] = useState(
+        initial?.targeting?.min_app_version ?? '',
+    )
 
     const [previewLang, setPreviewLang] = useState('ru')
     const [previewDark, setPreviewDark] = useState(false)
@@ -248,6 +251,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                 trip_types: tripTypes,
                 roles,
                 platforms,
+                min_app_version: minAppVersion.trim() || null,
             },
             is_active: isActive,
             sort_order: Number(sortOrder) || 0,
@@ -546,6 +550,20 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                                 onChange={(v) => setTripTypes(v as string[])}
                                 placeholder="Все типы"
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Мин. версия приложения</Label>
+                            <Input
+                                placeholder="напр. 1.1.5 — пусто = всем"
+                                value={minAppVersion}
+                                onChange={(e) => setMinAppVersion(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Показывать только клиентам с X-App-Version не ниже.
+                                Клиенты без версии (web, очень старые сборки) рекламу
+                                не увидят. Нужно для типов действия, которых нет в
+                                старых версиях (напр. «Поделиться»).
+                            </p>
                         </div>
                         <div className="space-y-2">
                             <Label>Регионы (ID через запятую)</Label>
