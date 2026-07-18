@@ -107,24 +107,24 @@ function ServiceBadges({ trip }: { trip: any }) {
                 <span
                     key={s.key}
                     title={
-                        s.until
-                            ? `${s.active ? 'до' : 'истекла'} ${format(new Date(s.until), 'dd.MM.yyyy HH:mm')}`
-                            : undefined
+                        s.label +
+                        (s.until
+                            ? ` — ${s.active ? 'до' : 'истекла'} ${format(new Date(s.until), 'dd.MM.yyyy HH:mm')}`
+                            : '')
                     }
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${
+                    className={`inline-flex items-center rounded-full p-1 ${
                         s.active
                             ? s.key === 'urgent'
                                 ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                            : 'bg-muted text-muted-foreground line-through'
+                            : 'bg-muted text-muted-foreground opacity-60'
                     }`}
                 >
                     {s.icon === 'zap' ? (
-                        <Zap className="h-3 w-3" />
+                        <Zap className="h-3.5 w-3.5" />
                     ) : (
-                        <Flame className="h-3 w-3" />
+                        <Flame className="h-3.5 w-3.5" />
                     )}
-                    {s.label}
                 </span>
             ))}
         </div>
