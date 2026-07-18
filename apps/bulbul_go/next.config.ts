@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_PRODUCT: 'bulbulgo',
   },
+  // OG-картинка поездки читает шрифты Montserrat с диска (fs.readFile) — форсим
+  // их включение в serverless-бандл этой функции, иначе на проде ENOENT.
+  outputFileTracingIncludes: {
+    '/rideshare/trips/[id]/opengraph-image': [
+      './src/app/rideshare/trips/[id]/_Montserrat-*.ttf',
+    ],
+  },
   // Dev с реального устройства по LAN-IP (webview-сервисы): разрешаем
   // hot-reload ресурсы Next для приватных адресов. На prod не влияет.
   allowedDevOrigins: ['192.168.75.44', 'localhost', '127.0.0.1', '10.0.2.2', '172.20.10.8'],
