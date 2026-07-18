@@ -17,10 +17,20 @@ export const contentType = 'image/png'
 const FONT_DIR = join(process.cwd(), 'src/app/_og')
 const regularFont = readFile(join(FONT_DIR, '_Montserrat-Regular.ttf'))
 const boldFont = readFile(join(FONT_DIR, '_Montserrat-Bold.ttf'))
+const logoFile = readFile(join(process.cwd(), 'public/favicon.png'))
 
 const ACCENT = '#34d399' // цена/акцент
 const BG_FROM = '#0b0b0f'
 const BG_TO = '#1c1c22'
+
+// Кегль маршрута подбираем под суммарную длину названий, чтобы строка
+// «A → B» влезла в ширину баннера (1200 − 2×80 паддинга) без обрезки.
+// 0.66 — примерная ширина символа Montserrat Bold в долях кегля, +3 — стрелка.
+function routeFontSize(from: string, to: string): number {
+    const len = from.length + to.length + 3
+    const fit = Math.floor(1040 / (0.66 * len))
+    return Math.max(34, Math.min(68, fit))
+}
 
 export default async function Image({
     params,
@@ -28,11 +38,13 @@ export default async function Image({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params
-    const [regular, bold, trip] = await Promise.all([
+    const [regular, bold, logo, trip] = await Promise.all([
         regularFont,
         boldFont,
+        logoFile,
         fetchTripMeta(id),
     ])
+    const logoSrc = `data:image/png;base64,${logo.toString('base64')}`
 
     const chips: string[] = []
     if (trip?.dateLabel) chips.push(trip.dateLabel)
@@ -58,20 +70,12 @@ export default async function Image({
             >
                 {/* Бренд-строка */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 64,
-                            height: 64,
-                            borderRadius: 20,
-                            background: 'rgba(52,211,153,0.15)',
-                            fontSize: 36,
-                        }}
-                    >
-                        🚗
-                    </div>
+                    <img
+                        src={logoSrc}
+                        width={64}
+                        height={64}
+                        style={{ borderRadius: 20 }}
+                    />
                     <div style={{ fontSize: 34, fontWeight: 700 }}>BulBul Go</div>
                 </div>
 
@@ -88,7 +92,8 @@ export default async function Image({
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                fontSize: 76,
+                                overflow: 'hidden',
+                                fontSize: routeFontSize(trip.from, trip.to),
                                 fontWeight: 700,
                                 lineHeight: 1.05,
                             }}
@@ -97,7 +102,7 @@ export default async function Image({
                                 style={{
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
-                                    maxWidth: 460,
+                                    maxWidth: 900,
                                     whiteSpace: 'nowrap',
                                 }}
                             >
@@ -110,7 +115,7 @@ export default async function Image({
                                 style={{
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
-                                    maxWidth: 460,
+                                    maxWidth: 900,
                                     whiteSpace: 'nowrap',
                                 }}
                             >

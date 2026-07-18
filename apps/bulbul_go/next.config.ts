@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   // OG-картинки читают шрифты Montserrat с диска (fs.readFile) — форсим их
   // включение в serverless-бандлы этих функций, иначе на проде ENOENT.
   outputFileTracingIncludes: {
-    '/rideshare/trips/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
+    '/rideshare/trips/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
     '/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
     '/download/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
     '/[locale]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],

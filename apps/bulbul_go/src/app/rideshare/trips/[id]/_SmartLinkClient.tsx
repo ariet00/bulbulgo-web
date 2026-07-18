@@ -54,9 +54,12 @@ export default function SmartLinkClient({ id }: { id: string }) {
     return (
         <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 px-6 text-center">
             <div className="flex flex-col items-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-3xl">
-                    🚗
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src="/favicon.png"
+                    alt="BulBul Go"
+                    className="h-16 w-16 rounded-2xl"
+                />
                 <h1 className="text-xl font-bold">BulBul Go</h1>
                 <p className="max-w-sm text-sm text-muted-foreground">
                     Чтобы открыть поездку, установите приложение BulBul Go или
