@@ -46,17 +46,17 @@ export async function proxy(req: NextRequest) {
     // /download: мобильные сразу получают 307 в стор с edge, не загружая
     // страницу. Боты (превью Telegram/WhatsApp, краулеры) и десктоп получают
     // статичную страницу с OG-тегами; useEffect на ней остаётся фолбэком.
-    if (pathname === "/download") {
-        const { os, isBot } = userAgent(req);
-        if (!isBot) {
-            if (os.name === "iOS") {
-                return NextResponse.redirect(STORE_LINKS.appStore);
-            }
-            if (os.name === "Android") {
-                return NextResponse.redirect(STORE_LINKS.playStore);
-            }
-        }
-    }
+    // if (pathname === "/download") {
+    //     const { os, isBot } = userAgent(req);
+    //     if (!isBot) {
+    //         if (os.name === "iOS") {
+    //             return NextResponse.redirect(STORE_LINKS.appStore);
+    //         }
+    //         if (os.name === "Android") {
+    //             return NextResponse.redirect(STORE_LINKS.playStore);
+    //         }
+    //     }
+    // }
 
     if (isMarketingPath(pathname)) {
         return NextResponse.next();
