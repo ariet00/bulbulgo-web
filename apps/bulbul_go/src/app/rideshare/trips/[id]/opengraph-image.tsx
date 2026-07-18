@@ -12,8 +12,9 @@ export const contentType = 'image/png'
 // Montserrat поддерживает кириллицу (Geist из основного лейаута — нет). Читаем
 // шрифт с диска через fs (fetch(new URL(..., import.meta.url)) ломается в
 // Turbopack — отдаёт относительный путь без origin). Файлы попадают в бандл
-// функции через outputFileTracingIncludes (см. next.config.ts).
-const FONT_DIR = join(process.cwd(), 'src/app/rideshare/trips/[id]')
+// функции через outputFileTracingIncludes (см. next.config.ts). Шрифты общие
+// с бренд-баннером — лежат в src/app/_og/.
+const FONT_DIR = join(process.cwd(), 'src/app/_og')
 const regularFont = readFile(join(FONT_DIR, '_Montserrat-Regular.ttf'))
 const boldFont = readFile(join(FONT_DIR, '_Montserrat-Bold.ttf'))
 

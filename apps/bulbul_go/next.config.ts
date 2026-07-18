@@ -9,12 +9,13 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_PRODUCT: 'bulbulgo',
   },
-  // OG-картинка поездки читает шрифты Montserrat с диска (fs.readFile) — форсим
-  // их включение в serverless-бандл этой функции, иначе на проде ENOENT.
+  // OG-картинки читают шрифты Montserrat с диска (fs.readFile) — форсим их
+  // включение в serverless-бандлы этих функций, иначе на проде ENOENT.
   outputFileTracingIncludes: {
-    '/rideshare/trips/[id]/opengraph-image': [
-      './src/app/rideshare/trips/[id]/_Montserrat-*.ttf',
-    ],
+    '/rideshare/trips/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
+    '/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
+    '/download/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
+    '/[locale]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
   },
   // Dev с реального устройства по LAN-IP (webview-сервисы): разрешаем
   // hot-reload ресурсы Next для приватных адресов. На prod не влияет.

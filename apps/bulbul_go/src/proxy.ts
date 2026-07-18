@@ -28,7 +28,14 @@ const marketingPaths = new Set([
 ]);
 
 function isMarketingPath(pathname: string) {
-    return marketingPaths.has(pathname) || pathname.startsWith("/news/");
+    return (
+        marketingPaths.has(pathname) ||
+        pathname.startsWith("/news/") ||
+        // og-баннеры (marketing)-группы: Next добавляет к роуту хэш-суффикс
+        // (/opengraph-image-<hash>), поэтому матчим по префиксу
+        pathname.startsWith("/opengraph-image") ||
+        pathname.startsWith("/download/opengraph-image")
+    );
 }
 
 export async function proxy(req: NextRequest) {
@@ -36,6 +43,12 @@ export async function proxy(req: NextRequest) {
     const { device } = userAgent(req)
 
     if (isMarketingPath(pathname)) {
+        return NextResponse.next();
+    }
+
+    // og-баннер [locale]-сегмента (/ru/opengraph-image*): мимо intl-миддлвары,
+    // иначе она редиректит, срезая префикс дефолтной локали, и URL ломается
+    if (/^\/(en|ru)\/opengraph-image/.test(pathname)) {
         return NextResponse.next();
     }
 

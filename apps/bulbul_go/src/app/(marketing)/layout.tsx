@@ -10,10 +10,26 @@ import Footer from './_components/Footer'
 // /terms, /download исключены из intl-миддлвары (см. proxy.ts).
 
 export const metadata: Metadata = {
-    title: 'BulBul Go',
+    metadataBase: new URL('https://go.bulbul.asia'),
+    title: {
+        default: 'BulBul Go — поиск попутчиков по Кыргызстану',
+        template: '%s — BulBul Go',
+    },
     description:
         'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
     icons: { icon: '/favicon.png' },
+    openGraph: {
+        type: 'website',
+        siteName: 'BulBul Go',
+        locale: 'ru_RU',
+        url: '/',
+        title: 'BulBul Go — поиск попутчиков по Кыргызстану',
+        description:
+            'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
+    },
+    twitter: {
+        card: 'summary_large_image',
+    },
 }
 
 export const viewport: Viewport = {

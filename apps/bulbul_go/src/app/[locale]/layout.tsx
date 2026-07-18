@@ -18,8 +18,20 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Doska',
-  description: 'Bulletin Board',
+  metadataBase: new URL('https://go.bulbul.asia'),
+  title: 'BulBul Go',
+  description: 'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
+  icons: { icon: '/favicon.png' },
+  openGraph: {
+    type: 'website',
+    siteName: 'BulBul Go',
+    locale: 'ru_RU',
+    title: 'BulBul Go — поиск попутчиков по Кыргызстану',
+    description: 'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 }
 
 
