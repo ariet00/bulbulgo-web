@@ -17,13 +17,18 @@ export const ogContentType = 'image/png'
 const FONT_DIR = join(process.cwd(), 'src/app/_og')
 const regularFont = readFile(join(FONT_DIR, '_Montserrat-Regular.ttf'))
 const boldFont = readFile(join(FONT_DIR, '_Montserrat-Bold.ttf'))
+const logoFile = readFile(join(process.cwd(), 'public/favicon.png'))
 
-const ACCENT_BG = 'rgba(52,211,153,0.15)'
 const BG_FROM = '#0b0b0f'
 const BG_TO = '#1c1c22'
 
 export async function renderBrandOgImage() {
-    const [regular, bold] = await Promise.all([regularFont, boldFont])
+    const [regular, bold, logo] = await Promise.all([
+        regularFont,
+        boldFont,
+        logoFile,
+    ])
+    const logoSrc = `data:image/png;base64,${logo.toString('base64')}`
 
     return new ImageResponse(
         (
@@ -41,20 +46,12 @@ export async function renderBrandOgImage() {
                     fontFamily: 'Montserrat',
                 }}
             >
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 128,
-                        height: 128,
-                        borderRadius: 36,
-                        background: ACCENT_BG,
-                        fontSize: 68,
-                    }}
-                >
-                    🚗
-                </div>
+                <img
+                    src={logoSrc}
+                    width={128}
+                    height={128}
+                    style={{ borderRadius: 36 }}
+                />
                 <div
                     style={{
                         display: 'flex',

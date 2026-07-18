@@ -13,9 +13,9 @@ const nextConfig: NextConfig = {
   // включение в serverless-бандлы этих функций, иначе на проде ENOENT.
   outputFileTracingIncludes: {
     '/rideshare/trips/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
-    '/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
-    '/download/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
-    '/[locale]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf'],
+    '/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/download/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/[locale]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
   },
   // Dev с реального устройства по LAN-IP (webview-сервисы): разрешаем
   // hot-reload ресурсы Next для приватных адресов. На prod не влияет.
