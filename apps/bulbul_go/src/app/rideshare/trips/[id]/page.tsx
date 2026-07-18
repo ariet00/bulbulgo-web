@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import SmartLinkClient from './_SmartLinkClient'
-import { fetchTripMeta, seatsLabel } from './_trip'
+import { fetchTripMeta, roleLabel, seatsLabel } from './_trip'
 
 const SITE_URL = 'https://go.bulbul.asia'
 
@@ -32,6 +32,8 @@ export async function generateMetadata({
 
     const title = `${trip.from} → ${trip.to}`
     const parts: string[] = []
+    const role = roleLabel(trip.role)
+    if (role) parts.push(role)
     if (trip.dateLabel) parts.push(trip.dateLabel)
     if (trip.price != null) parts.push(`${trip.price.toLocaleString('ru-RU')} сом`)
     if (trip.role !== 'parcel' && trip.seats != null) {

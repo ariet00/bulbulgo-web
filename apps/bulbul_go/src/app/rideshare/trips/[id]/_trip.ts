@@ -14,6 +14,20 @@ export interface TripMeta {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
+// Подписи ролей — как в web/.../components/trips/TripCard.tsx.
+export function roleLabel(role: TripMeta['role']): string | null {
+    switch (role) {
+        case 'driver':
+            return 'Водитель'
+        case 'passenger':
+            return 'Пассажир'
+        case 'parcel':
+            return 'Посылка'
+        default:
+            return null
+    }
+}
+
 // «1 место / 2 места / 5 мест» — русская плюрализация для чипсов превью.
 export function seatsLabel(n: number): string {
     const mod10 = n % 10

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ImageResponse } from 'next/og'
-import { fetchTripMeta, seatsLabel } from './_trip'
+import { fetchTripMeta, roleLabel, seatsLabel } from './_trip'
 
 // Динамическая OG-картинка под конкретную поездку (маршрут/дата/цена/места).
 // Next автоматически подставляет её в og:image / twitter:image страницы.
@@ -79,15 +79,32 @@ export default async function Image({
                     <div style={{ fontSize: 34, fontWeight: 700 }}>BulBul Go</div>
                 </div>
 
-                {/* Маршрут */}
+                {/* Роль + маршрут */}
                 {trip ? (
                     <div
                         style={{
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 8,
+                            gap: 20,
                         }}
                     >
+                        {roleLabel(trip.role) && (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignSelf: 'flex-start',
+                                    padding: '10px 22px',
+                                    borderRadius: 999,
+                                    background: 'rgba(52,211,153,0.15)',
+                                    border: '1px solid rgba(52,211,153,0.4)',
+                                    color: ACCENT,
+                                    fontSize: 30,
+                                    fontWeight: 700,
+                                }}
+                            >
+                                {roleLabel(trip.role)}
+                            </div>
+                        )}
                         <div
                             style={{
                                 display: 'flex',

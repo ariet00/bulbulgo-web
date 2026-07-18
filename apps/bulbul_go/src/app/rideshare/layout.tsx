@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 
 // Smart-link страница «открыть в приложении». Загружается ТОЛЬКО когда
@@ -9,6 +10,9 @@ import '../globals.css'
 // исключён из intl-миддлвары (см. proxy.ts).
 
 export const metadata: Metadata = {
+    // Каноничная база для абсолютных og:image (важно для превью в WhatsApp/
+    // Telegram — иначе URL картинки уедет на vercel-домен или localhost).
+    metadataBase: new URL(SITE_URL),
     title: 'BulBul Go',
     robots: { index: false, follow: false },
 }
