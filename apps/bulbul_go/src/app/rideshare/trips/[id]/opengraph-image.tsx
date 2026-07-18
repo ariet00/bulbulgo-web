@@ -180,6 +180,14 @@ export default async function Image({
                 { name: 'Montserrat', data: regular, weight: 400, style: 'normal' },
                 { name: 'Montserrat', data: bold, weight: 700, style: 'normal' },
             ],
+            headers: {
+                // Кэшируем на CDN, чтобы повторные шеринги поездки отдавались
+                // мгновенно (WhatsApp собирает превью на устройстве отправителя
+                // и должен успеть скачать картинку до нажатия «Отправить»).
+                // s-maxage — общий кэш (Vercel/CDN), SWR обновляет в фоне.
+                'Cache-Control':
+                    'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
+            },
         },
     )
 }
