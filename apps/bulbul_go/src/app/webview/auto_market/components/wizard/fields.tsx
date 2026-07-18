@@ -1,0 +1,230 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { fetchRegions, type RegionItem } from '../../lib/api'
+import { pickLabel } from '../../lib/format'
+import type { EffectiveAttribute } from '../../lib/types'
+import { BottomSheet } from '../BottomSheet'
+
+// Поля формы подачи: подпись + чипсы-enum / переключатель / числовой инпут,
+// плюс пикер региона с поиском. Рендер атрибутов — по метаданным каталога.
+
+export function FieldLabel({
+    attr,
+    required,
+}: {
+    attr: EffectiveAttribute
+    required: boolean
+}) {
+    return (
+        <p className="mb-2 text-[13px] font-semibold">
+            {pickLabel(attr.label)}
+            {attr.unit ? (
+                <span className="font-normal text-muted-foreground">
+                    , {pickLabel(attr.unit)}
+                </span>
+            ) : null}
+            {required && <span style={{ color: 'var(--am-accent)' }}> *</span>}
+        </p>
+    )
+}
+
+export function EnumChips({
+    attr,
+    value,
+    onChange,
+}: {
+    attr: EffectiveAttribute
+    value: string | undefined
+    onChange: (v: string | undefined) => void
+}) {
+    return (
+        <div className="flex flex-wrap gap-1.5">
+            {attr.options.map((o) => {
+                const active = value === o.value
+                return (
+                    <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => onChange(active ? undefined : o.value)}
+                        className="rounded-full border px-3 py-1.5 text-[13px] transition-colors"
+                        style={
+                            active
+                                ? {
+                                      background: 'var(--am-accent-soft)',
+                                      borderColor: 'var(--am-accent-border)',
+                                      color: 'var(--am-accent)',
+                                      fontWeight: 600,
+                                  }
+                                : undefined
+                        }
+                    >
+                        {pickLabel(o.label)}
+                    </button>
+                )
+            })}
+        </div>
+    )
+}
+
+export function BoolToggle({
+    label,
+    value,
+    onChange,
+}: {
+    label: string
+    value: boolean
+    onChange: (v: boolean) => void
+}) {
+    return (
+        <button
+            type="button"
+            onClick={() => onChange(!value)}
+            className="flex w-full items-center justify-between py-1"
+        >
+            <span className="text-[14px]">{label}</span>
+            <span
+                aria-hidden
+                className="relative h-6 w-10 rounded-full transition-colors"
+                style={{
+                    background: value
+                        ? 'var(--am-accent)'
+                        : 'color-mix(in srgb, currentColor 20%, transparent)',
+                }}
+            >
+                <span
+                    className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all"
+                    style={{
+                        left: value ? 'calc(100% - 1.375rem)' : '0.125rem',
+                    }}
+                />
+            </span>
+        </button>
+    )
+}
+
+export const inputCls =
+    'w-full rounded-xl border bg-muted/40 px-3.5 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--am-accent-border)]'
+
+export function NumberInput({
+    value,
+    onChange,
+    placeholder,
+    decimal = false,
+}: {
+    value: number | undefined
+    onChange: (v: number | undefined) => void
+    placeholder?: string
+    decimal?: boolean
+}) {
+    return (
+        <input
+            inputMode={decimal ? 'decimal' : 'numeric'}
+            placeholder={placeholder}
+            defaultValue={value ?? ''}
+            onChange={(e) => {
+                const raw = e.target.value.replace(/\s/g, '').replace(',', '.')
+                const n = decimal ? parseFloat(raw) : parseInt(raw, 10)
+                onChange(Number.isNaN(n) ? undefined : n)
+            }}
+            className={inputCls}
+        />
+    )
+}
+
+export function RegionField({
+    region,
+    onChange,
+}: {
+    region: RegionItem | null
+    onChange: (r: RegionItem | null) => void
+}) {
+    const [open, setOpen] = useState(false)
+    const [query, setQuery] = useState('')
+    const [items, setItems] = useState<RegionItem[]>([])
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        if (!open) return
+        setLoading(true)
+        const t = setTimeout(() => {
+            fetchRegions(query)
+                .then(setItems)
+                .catch(() => setItems([]))
+                .finally(() => setLoading(false))
+        }, 250)
+        return () => clearTimeout(t)
+    }, [open, query])
+
+    return (
+        <>
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className={`${inputCls} flex items-center justify-between text-left`}
+            >
+                <span className={region ? '' : 'text-muted-foreground'}>
+                    {region?.name ?? 'Город / регион'}
+                </span>
+                <span aria-hidden className="text-muted-foreground">
+                    ▾
+                </span>
+            </button>
+            <BottomSheet
+                open={open}
+                onClose={() => setOpen(false)}
+                title="Город / регион"
+            >
+                <div className="sticky top-0 z-10 -mx-4 bg-background px-4 pb-2">
+                    <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Поиск"
+                        className={inputCls}
+                    />
+                </div>
+                {loading ? (
+                    <div className="space-y-3 py-2">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="am-skeleton h-6 rounded" />
+                        ))}
+                    </div>
+                ) : (
+                    items.map((r) => (
+                        <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => {
+                                onChange(r)
+                                setOpen(false)
+                            }}
+                            className="block w-full border-t py-3 text-left text-[15px] first:border-t-0"
+                        >
+                            {r.name}
+                        </button>
+                    ))
+                )}
+            </BottomSheet>
+        </>
+    )
+}
+
+/** Атрибуты стороны offer для шага «Параметры» — обязательные сверху. */
+export function useParamAttrs(attrs: EffectiveAttribute[]) {
+    return useMemo(() => {
+        const skip = new Set(['make', 'model', 'year'])
+        const visible = attrs.filter(
+            (a) =>
+                a.role !== 'system' &&
+                !skip.has(a.key) &&
+                (a.applies_to === 'offer' || a.applies_to === 'both'),
+        )
+        const required = visible.filter((a) =>
+            a.required_sides.includes('offer'),
+        )
+        const optional = visible.filter(
+            (a) => !a.required_sides.includes('offer'),
+        )
+        return { required, optional }
+    }, [attrs])
+}

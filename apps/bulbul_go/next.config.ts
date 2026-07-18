@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   // включение в serverless-бандлы этих функций, иначе на проде ENOENT.
   outputFileTracingIncludes: {
     '/rideshare/trips/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/auto/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
     '/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
     '/download/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
     '/[locale]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],

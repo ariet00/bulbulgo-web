@@ -1,0 +1,77 @@
+/* Авторынок: акцент сервиса + примитивы (шиты, скелетоны, чипсы).
+   Все цвета — поверх токенов темы, акцент задаётся здесь. */
+
+.am-root {
+    --am-accent: #e8603c;
+    --am-accent-soft: color-mix(in srgb, var(--am-accent) 12%, transparent);
+    --am-accent-border: color-mix(in srgb, var(--am-accent) 36%, transparent);
+}
+
+/* появление карточек ленты */
+@keyframes am-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+.am-rise {
+    animation: am-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--am-delay, 0ms);
+}
+
+/* скелетон */
+@keyframes am-shimmer {
+    from {
+        background-position: -200% 0;
+    }
+    to {
+        background-position: 200% 0;
+    }
+}
+.am-skeleton {
+    background: linear-gradient(
+        100deg,
+        color-mix(in srgb, currentColor 7%, transparent) 40%,
+        color-mix(in srgb, currentColor 14%, transparent) 50%,
+        color-mix(in srgb, currentColor 7%, transparent) 60%
+    );
+    background-size: 200% 100%;
+    animation: am-shimmer 1.4s linear infinite;
+    color: inherit;
+}
+
+/* bottom-sheet */
+@keyframes am-sheet-in {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: none;
+    }
+}
+@keyframes am-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.am-sheet-backdrop {
+    animation: am-fade-in 0.2s ease both;
+}
+.am-sheet-panel {
+    animation: am-sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* горизонтальная лента чипсов без скроллбара */
+.am-chips {
+    scrollbar-width: none;
+}
+.am-chips::-webkit-scrollbar {
+    display: none;
+}
