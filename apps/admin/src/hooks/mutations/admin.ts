@@ -31,6 +31,7 @@ import {
     CeleryPeriodicTaskCreate,
     CeleryPeriodicTaskUpdate,
     AnalyticsCleanupConfigInput,
+    AnalyticsPurgeInput,
     AdminRegionInput,
 } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
@@ -668,6 +669,23 @@ export const useRunAnalyticsCleanup = () => {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.analytics() })
             toast.success('Очистка запущена')
+        },
+    })
+}
+
+export const useAnalyticsPurgePreview = () => {
+    return useMutation({
+        mutationFn: (body: AnalyticsPurgeInput) => adminApi.previewAnalyticsPurge(body),
+    })
+}
+
+export const useRunAnalyticsPurge = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AnalyticsPurgeInput) => adminApi.runAnalyticsPurge(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.analytics() })
+            toast.success('Удаление запущено')
         },
     })
 }

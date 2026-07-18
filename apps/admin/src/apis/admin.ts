@@ -981,9 +981,15 @@ export const adminApi = {
     setAnalyticsCleanupConfig: (body: AnalyticsCleanupConfigInput) =>
         requests.put<AnalyticsCleanupConfig>('/admin/analytics/cleanup/config', body),
     getAnalyticsCleanupPreview: () =>
-        requests.get<{ matching: number }>('/admin/analytics/cleanup/preview'),
+        requests.get<{ matching: number; fast_matching: number }>(
+            '/admin/analytics/cleanup/preview',
+        ),
     runAnalyticsCleanup: () =>
         requests.post<{ task_id: string }>('/admin/analytics/cleanup/run', {}),
+    previewAnalyticsPurge: (body: AnalyticsPurgeInput) =>
+        requests.post<{ matching: number }>('/admin/analytics/cleanup/purge/preview', body),
+    runAnalyticsPurge: (body: AnalyticsPurgeInput) =>
+        requests.post<{ task_id: string }>('/admin/analytics/cleanup/purge', body),
 
     // Rideshare (bulbul go) — product-specific analytics
     getRideshareFunnel: (period: string = '7d') =>
@@ -1736,10 +1742,18 @@ export interface AnalyticsCleanupConfigInput {
     enabled: boolean
     retention_days: number
     event_types: string[]
+    // Быстрый уровень — шумные события с меньшим сроком хранения.
+    fast_retention_days: number
+    fast_event_types: string[]
 }
 
 export interface AnalyticsCleanupConfig extends AnalyticsCleanupConfigInput {
     available_event_types: string[]
+}
+
+export interface AnalyticsPurgeInput {
+    event_types: string[]
+    before: string // ISO-дата: удалить события старше этой даты
 }
 
 export interface AdminAppVersionSettings {
