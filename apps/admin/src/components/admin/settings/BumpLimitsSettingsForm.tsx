@@ -20,6 +20,7 @@ const DEFAULT_FORM: AdminBumpLimitsSettings = {
     enabled: true,
     max_count: 3,
     window_seconds: 3600,
+    dedup_window_seconds: 300,
 }
 
 export function BumpLimitsSettingsForm() {
@@ -101,6 +102,26 @@ export function BumpLimitsSettingsForm() {
                             />
                             <p className="text-[10px] text-muted-foreground">
                                 window_seconds — длина окна в секундах. 3600 = 1 час.
+                            </p>
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label>Дедуп одного объявления, сек</Label>
+                            <Input
+                                type="number"
+                                value={form.dedup_window_seconds}
+                                onChange={(e) =>
+                                    set(
+                                        'dedup_window_seconds',
+                                        parseInt(e.target.value) || 0,
+                                    )
+                                }
+                                disabled={isLoading}
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                                dedup_window_seconds — повторные поднятия одного
+                                объявления в этот интервал считаются одним
+                                поднятием. 0 — каждое нажатие тратит лимит.
                             </p>
                         </div>
                     </div>

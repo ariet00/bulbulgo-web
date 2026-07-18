@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@doska/ui'
 import { TopActiveUsersCard } from './TopActiveUsersCard'
+import { TopBumpersCard, TopServiceBuyersCard } from './TopActivityCards'
 import { TopDriversCard } from './TopDriversCard'
 import { TopRoutesCard } from './TopRoutesCard'
 import { TopViewedTripsCard } from './TopViewedTripsCard'
@@ -19,6 +20,7 @@ export function TopsTab({ period, resetNonce }: TabSectionProps) {
                     <TabsTrigger value="trips">Поездки</TabsTrigger>
                     <TabsTrigger value="drivers">Водители</TabsTrigger>
                     <TabsTrigger value="users">Пользователи</TabsTrigger>
+                    <TabsTrigger value="activity">Подъёмы и услуги</TabsTrigger>
                     <TabsTrigger value="routes">Маршруты</TabsTrigger>
                 </TabsList>
             </div>
@@ -50,6 +52,11 @@ export function TopsTab({ period, resetNonce }: TabSectionProps) {
 
             <TabsContent value="users" className="mt-0 space-y-6">
                 <TopActiveUsersCard period={period} resetNonce={resetNonce} />
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-0 space-y-6">
+                <TopBumpersCard period={period} resetNonce={resetNonce} />
+                <TopServiceBuyersCard period={period} resetNonce={resetNonce} />
             </TabsContent>
 
             <TabsContent value="routes" className="mt-0 space-y-6">

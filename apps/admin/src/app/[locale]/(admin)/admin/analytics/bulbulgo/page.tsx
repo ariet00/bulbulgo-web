@@ -9,6 +9,10 @@ import { PERIODS, useTabParam } from './components/shared'
 import { OverviewTab } from './components/OverviewTab'
 import { TrendsTab } from './components/TrendsTab'
 import { TopsTab } from './components/TopsTab'
+import { MarketplaceTab } from './components/MarketplaceTab'
+import { ServicesTab } from './components/ServicesTab'
+import { OnboardingTab } from './components/OnboardingTab'
+import { PushesTab } from './components/PushesTab'
 import { WalletsTab } from './components/WalletsTab'
 import { LimitsTab } from './components/LimitsTab'
 import { FraudTab } from './components/FraudTab'
@@ -83,6 +87,10 @@ export default function BulbulGoAnalyticsPage() {
                         <TabsTrigger value="overview">Обзор</TabsTrigger>
                         <TabsTrigger value="trends">Динамика</TabsTrigger>
                         <TabsTrigger value="tops">Топы</TabsTrigger>
+                        <TabsTrigger value="marketplace">Спрос</TabsTrigger>
+                        <TabsTrigger value="services">Услуги</TabsTrigger>
+                        <TabsTrigger value="onboarding">Онбординг</TabsTrigger>
+                        <TabsTrigger value="pushes">Пуши</TabsTrigger>
                         <TabsTrigger value="wallets">Кошельки</TabsTrigger>
                         <TabsTrigger value="limits">Лимиты</TabsTrigger>
                         <TabsTrigger value="fraud">Антифрод</TabsTrigger>
@@ -99,6 +107,22 @@ export default function BulbulGoAnalyticsPage() {
 
                 <TabsContent value="tops" className="mt-0">
                     <TopsTab {...tabProps} />
+                </TabsContent>
+
+                <TabsContent value="marketplace" className="mt-0 space-y-6">
+                    <MarketplaceTab {...tabProps} />
+                </TabsContent>
+
+                <TabsContent value="services" className="mt-0 space-y-6">
+                    <ServicesTab {...tabProps} />
+                </TabsContent>
+
+                <TabsContent value="onboarding" className="mt-0 space-y-6">
+                    <OnboardingTab {...tabProps} />
+                </TabsContent>
+
+                <TabsContent value="pushes" className="mt-0 space-y-6">
+                    <PushesTab {...tabProps} />
                 </TabsContent>
 
                 <TabsContent value="wallets" className="mt-0 space-y-6">

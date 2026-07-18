@@ -24,7 +24,7 @@ import {
     SelectValue,
     Switch,
 } from "@doska/ui"
-import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban } from 'lucide-react'
+import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Zap, Flame } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
@@ -62,6 +62,73 @@ const FILTER_DEFAULTS = {
     service: ALL,
     only_real: true,
     include_deleted: true,
+}
+
+// Подключённые платные услуги объявления (живут в trip.data). Услуга с
+// истёкшим `*_until` показывается погашенной.
+const tripServices = (trip: any) => {
+    const now = Date.now()
+    const services: Array<{
+        key: string
+        label: string
+        icon: 'zap' | 'flame'
+        active: boolean
+        until: string | null
+    }> = []
+    if (trip.data?.is_auto_bump) {
+        const until = trip.data.auto_bump_until ?? null
+        services.push({
+            key: 'auto_bump',
+            label: 'авто-подъём',
+            icon: 'zap',
+            active: !until || new Date(until).getTime() > now,
+            until,
+        })
+    }
+    if (trip.data?.is_urgent) {
+        const until = trip.data.urgent_until ?? null
+        services.push({
+            key: 'urgent',
+            label: 'срочно',
+            icon: 'flame',
+            active: !until || new Date(until).getTime() > now,
+            until,
+        })
+    }
+    return services
+}
+
+function ServiceBadges({ trip }: { trip: any }) {
+    const services = tripServices(trip)
+    if (services.length === 0) return <span className="text-muted-foreground">—</span>
+    return (
+        <div className="flex flex-wrap gap-1">
+            {services.map(s => (
+                <span
+                    key={s.key}
+                    title={
+                        s.until
+                            ? `${s.active ? 'до' : 'истекла'} ${format(new Date(s.until), 'dd.MM.yyyy HH:mm')}`
+                            : undefined
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${
+                        s.active
+                            ? s.key === 'urgent'
+                                ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                            : 'bg-muted text-muted-foreground line-through'
+                    }`}
+                >
+                    {s.icon === 'zap' ? (
+                        <Zap className="h-3 w-3" />
+                    ) : (
+                        <Flame className="h-3 w-3" />
+                    )}
+                    {s.label}
+                </span>
+            ))}
+        </div>
+    )
 }
 
 const statusClass = (status: string) => {
@@ -180,6 +247,12 @@ export default function AdminTripsPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Trip Management</CardTitle>
                     <div className="flex items-center gap-2">
+                        <Link href="/admin/analytics/bulbulgo">
+                            <Button variant="outline" size="sm" title="Аналитика BulBul Go">
+                                <BarChart3 className="h-4 w-4 mr-1" />
+                                Аналитика
+                            </Button>
+                        </Link>
                         <Link href="/admin/trips/blocked-authors">
                             <Button variant="outline" size="icon" title="Заблокированные ТГ аккаунты">
                                 <Ban className="h-4 w-4" />
@@ -459,6 +532,7 @@ export default function AdminTripsPage() {
                                         <Phone className="h-3 w-3" />
                                         {trip.data?.phone_view_count ?? 0}
                                     </span>
+                                    {tripServices(trip).length > 0 && <ServiceBadges trip={trip} />}
                                 </div>
                                 <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                                     <span title="Создано">
@@ -535,6 +609,7 @@ export default function AdminTripsPage() {
                                             Views
                                         </span>
                                     </TableHead>
+                                    <TableHead title="Подключённые платные услуги">Услуги</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Created / Updated</TableHead>
                                     <TableHead>Actions</TableHead>
@@ -543,7 +618,7 @@ export default function AdminTripsPage() {
                             <TableBody>
                                 {trips?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={11} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -621,6 +696,9 @@ export default function AdminTripsPage() {
                                             ) : (
                                                 <span className="text-muted-foreground">0</span>
                                             )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <ServiceBadges trip={trip} />
                                         </TableCell>
                                         <TableCell>
                                             {trip.is_deleted ? (
