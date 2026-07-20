@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { navigateTo } from '../lib/nav'
 
@@ -58,6 +59,13 @@ const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[
 export function TabBar({ active }: { active: TabKey }) {
     const router = useRouter()
     const [left, right] = [TABS.slice(0, 2), TABS.slice(2)]
+
+    // кнопки (в отличие от Link) не префетчат роуты — без этого тап по табу
+    // ждёт загрузку чанка/RSC целевой страницы и переход ощущается с задержкой
+    useEffect(() => {
+        for (const t of TABS) router.prefetch(t.path)
+        router.prefetch(`${BASE}/new`)
+    }, [router])
 
     const tab = (t: (typeof TABS)[number]) => {
         const isActive = t.key === active
