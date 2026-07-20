@@ -1,12 +1,15 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { navigateTo } from '../lib/nav'
 
 // Нижние табы сервиса: Поиск · Мои · Создать · Избранные · Профиль.
+// Живёт в layout сегмента (не перемонтируется), активный таб определяет по
+// pathname, подсветка — оптимистично сразу по тапу, пока Next грузит страницу.
 // Табы переключаются SPA-заменой (один нативный экран, история не растёт);
 // «Создать» — не таб, а действие: открывает wizard нативным экраном поверх.
+// На глубоких роутах (карточка, wizard, владелец) скрывается сам.
 
 export type TabKey = 'search' | 'my' | 'favorites' | 'profile'
 
@@ -56,9 +59,15 @@ const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[
     },
 ]
 
-export function TabBar({ active }: { active: TabKey }) {
+export function TabBar() {
     const router = useRouter()
+    const pathname = usePathname()
     const [left, right] = [TABS.slice(0, 2), TABS.slice(2)]
+
+    // оптимистичная подсветка: тап красит таб сразу; когда навигация
+    // завершилась (pathname сменился) — источником истины снова становится URL
+    const [pending, setPending] = useState<TabKey | null>(null)
+    useEffect(() => setPending(null), [pathname])
 
     // кнопки (в отличие от Link) не префетчат роуты — без этого тап по табу
     // ждёт загрузку чанка/RSC целевой страницы и переход ощущается с задержкой
@@ -67,12 +76,23 @@ export function TabBar({ active }: { active: TabKey }) {
         router.prefetch(`${BASE}/new`)
     }, [router])
 
+    // глубокие роуты (карточка, wizard, владелец) — без таббара
+    const isTabRoute = TABS.some((t) => t.path === pathname)
+    if (!isTabRoute) return null
+
+    const active =
+        pending ?? TABS.find((t) => t.path === pathname)?.key ?? 'search'
+
     const tab = (t: (typeof TABS)[number]) => {
         const isActive = t.key === active
         return (
             <button
                 key={t.key}
-                onClick={() => !isActive && router.replace(t.path)}
+                onClick={() => {
+                    if (isActive) return
+                    setPending(t.key)
+                    router.replace(t.path)
+                }}
                 className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
                 style={isActive ? { color: 'var(--am-accent)' } : { opacity: 0.55 }}
             >
