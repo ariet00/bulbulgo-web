@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ensureAuth, initWebviewAuth } from '../../../auth'
 import * as bridge from '../../../bridge'
@@ -13,7 +13,13 @@ import {
     useListingInvalidation,
     useModelOptions,
 } from '../../lib/queries'
-import type { AttributeOption, ListingDraft, Photo } from '../../lib/types'
+import type {
+    AttributeOption,
+    CategoryNode,
+    EffectiveAttribute,
+    ListingDraft,
+    Photo,
+} from '../../lib/types'
 import { PickerSheet } from '../PickerSheet'
 import { PhotosStep } from './PhotosStep'
 import {
@@ -29,43 +35,53 @@ import {
     useParamAttrs,
 } from './fields'
 
-// Wizard подачи. Продажа — 4 шага (марка/модель/год → параметры → фото →
-// цена и контакты), «Куплю» — одна мягкая форма (обязательна только марка
-// и бюджет). Заголовок не спрашиваем — бэк собирает его сам из справочника.
+// Wizard подачи, управляемый категорией. Шаг 0 — выбор ветки (Легковые/
+// Грузовые/Мото/Запчасти/Сервисы), затем сторона (Продать/Куплю — только если
+// у ветки обе). Шаги формы порождаются метаданными категории: «Авто/Основное»
+// (make/model/year — где есть), «Параметры», «Название» (если нет strict_title),
+// «Фото» (по min_photos_offer), «Публикация». Услуги — только offer, цена
+// договорная.
 
 const YEARS: AttributeOption[] = Array.from({ length: 2026 - 1950 + 1 }, (_, i) => {
     const y = 2026 - i
     return {
-        id: y,
-        value: String(y),
-        label: { ru: String(y) },
-        sort_order: i,
-        brand: null,
-        popular: false,
-        constraints: null,
+        id: y, value: String(y), label: { ru: String(y) },
+        sort_order: i, brand: null, popular: false, constraints: null,
     }
 })
 
+const CAT_DESC: Record<string, string> = {
+    cars: 'Легковые автомобили',
+    trucks: 'Грузовики и коммерческий транспорт',
+    moto: 'Мотоциклы, скутеры, квадроциклы',
+    parts: 'Запчасти и аксессуары',
+    services: 'Автосервисы и услуги',
+}
+
 type Values = Record<string, string | number | boolean | undefined>
+type StepKey = 'main' | 'params' | 'photos' | 'publish'
 
 export function WizardClient() {
     const router = useRouter()
-    // диплинк с ?kind= пропускает экран выбора типа объявления
     const kindParam = useSearchParams().get('kind')
-    const [kind, setKind] = useState<'offer' | 'want'>(
-        kindParam === 'want' ? 'want' : 'offer',
-    )
-    const [kindChosen, setKindChosen] = useState(kindParam !== null)
+    const invalidate = useListingInvalidation()
 
     const [authed, setAuthed] = useState<boolean | null>(null)
-    const [step, setStep] = useState(0)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // ── общее состояние формы ──
+    // ── выбор ветки и стороны ──
+    const [catId, setCatId] = useState<number | null>(null)
+    const [kind, setKind] = useState<'offer' | 'want'>(
+        kindParam === 'want' ? 'want' : 'offer',
+    )
+    const [kindChosen, setKindChosen] = useState(false)
+    const [step, setStep] = useState(0)
+
+    // ── состояние формы ──
     const [make, setMake] = useState<string>()
     const [model, setModel] = useState<string>()
-    const [models, setModels] = useState<string[]>([]) // want: несколько моделей
+    const [models, setModels] = useState<string[]>([])
     const [year, setYear] = useState<number>()
     const [yearFrom, setYearFrom] = useState<number>()
     const [values, setValues] = useState<Values>({})
@@ -76,10 +92,8 @@ export function WizardClient() {
     const [region, setRegion] = useState<RegionItem | null>(null)
     const [phone, setPhone] = useState('')
     const [whatsapp, setWhatsapp] = useState(false)
-
     const [picker, setPicker] = useState<'make' | 'model' | 'year' | null>(null)
 
-    // авторизация + префилл телефона; каталог/валюты — из общего RQ-кэша
     useEffect(() => {
         let alive = true
         ;(async () => {
@@ -97,13 +111,20 @@ export function WizardClient() {
         }
     }, [])
 
-    const invalidate = useListingInvalidation()
+    // ── каталог: ветки (дети auto под скоупом сервиса) ──
     const { data: tree } = useCatalog()
-    const carsId = useMemo(() => {
+    const tabs = useMemo(() => {
         const auto = tree?.find((c) => c.slug === 'auto')
-        return auto?.children.find((c) => c.slug === 'cars')?.id ?? null
+        return (auto?.children ?? [])
+            .filter((c) => c.is_active)
+            .sort((a, b) => a.sort_order - b.sort_order)
     }, [tree])
-    const { data: attrs = [] } = useCategoryAttributes(carsId)
+    const category = tabs.find((t) => t.id === catId) ?? null
+
+    const { data: attrs = [] } = useCategoryAttributes(
+        catId,
+        kind === 'want' ? 'want' : 'offer',
+    )
     const { data: currencies = [] } = useCurrencies()
     const currencyIds = useMemo(
         () => Object.fromEntries(currencies.map((c) => [c.code, c.id])),
@@ -112,30 +133,21 @@ export function WizardClient() {
     const { data: modelOptions = [], isLoading: modelsLoading } =
         useModelOptions(make)
 
-    const makeOptions = useMemo(
-        () => attrs.find((a) => a.key === 'make')?.options ?? [],
-        [attrs],
-    )
-    const attrByKey = useCallback(
-        (key: string) => attrs.find((a) => a.key === key),
-        [attrs],
-    )
+    const makeOptions = attrs.find((a) => a.key === 'make')?.options ?? []
+    const hasMake = attrs.some((a) => a.key === 'make')
+    const hasModel = attrs.some((a) => a.key === 'model')
+    const hasYear = attrs.some((a) => a.key === 'year')
     const makeLabel = make
         ? pickLabel(makeOptions.find((o) => o.value === make)?.label) || make
         : undefined
     const modelLabelOf = (v: string) =>
         pickLabel(modelOptions.find((o) => o.value === v)?.label) || v
 
-    const openModelPicker = () => {
-        if (make) setPicker('model')
-    }
+    const { required: requiredAttrs, optional: optionalAttrs } = useParamAttrs(
+        attrs,
+        values,
+    )
 
-    // зависимые атрибуты (например, объём двигателя у электро) скрываются
-    // по visible_when из каталога в зависимости от уже выбранных значений
-    const { required: requiredAttrs, optional: optionalAttrs } =
-        useParamAttrs(attrs, values)
-
-    // constraints выбранной модели: реальные годы выпуска / кузова / топливо
     const modelConstraints = useMemo(
         () =>
             (kind === 'offer' && model
@@ -158,8 +170,8 @@ export function WizardClient() {
         [yearRange],
     )
 
-    // смена модели: чистим значения, ставшие недопустимыми, и автозаполняем
-    // поля с единственным вариантом (у Camry кузов один — «Седан»)
+    // смена модели: чистим ставшие недопустимыми значения + автозаполняем поля
+    // с единственным вариантом
     useEffect(() => {
         if (kind !== 'offer') return
         setValues((prev) => {
@@ -168,8 +180,7 @@ export function WizardClient() {
                 const narrowed = applyModelConstraints(a, modelConstraints)
                 if (narrowed === a || a.type !== 'enum') continue
                 const ok = new Set(narrowed.options.map((o) => o.value))
-                const cur = next[a.key]
-                if (typeof cur === 'string' && !ok.has(cur)) {
+                if (typeof next[a.key] === 'string' && !ok.has(next[a.key] as string)) {
                     delete next[a.key]
                 }
                 if (next[a.key] === undefined && narrowed.options.length === 1) {
@@ -190,47 +201,89 @@ export function WizardClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [modelConstraints, kind])
 
-    // want-атрибуты для мягких критериев (без make/model/year — они выше)
+    // want-критерии (мягкие): фильтруемые enum/bool ветки, без make/model/year
     const wantExtra = useMemo(
         () =>
             attrs.filter(
                 (a) =>
-                    ['fuel', 'transmission', 'steering', 'body'].includes(a.key) ||
-                    (a.key === 'customs_cleared' && a.type === 'bool'),
+                    a.role !== 'system' &&
+                    a.is_filterable &&
+                    !['make', 'model', 'year'].includes(a.key) &&
+                    (a.type === 'enum' || a.type === 'bool'),
             ),
         [attrs],
     )
 
+    // ── шаги формы, порождённые категорией (offer) ──
+    const steps: { key: StepKey; label: string }[] = useMemo(() => {
+        if (!category) return []
+        const s: { key: StepKey; label: string }[] = []
+        if (hasMake || hasYear)
+            s.push({ key: 'main', label: hasMake ? 'Авто' : 'Основное' })
+        s.push({ key: 'params', label: 'Параметры' })
+        s.push({ key: 'photos', label: 'Фото' })
+        s.push({ key: 'publish', label: 'Публикация' })
+        return s
+    }, [category, hasMake, hasYear])
+    const currentStep = steps[step]?.key
+
+    const pickCategory = (c: CategoryNode) => {
+        setCatId(c.id)
+        setStep(0)
+        setError(null)
+        // услуги (одна сторона) — сразу offer, экран выбора стороны пропускаем
+        if (c.kinds.length === 1) {
+            setKind(c.kinds[0])
+            setKindChosen(true)
+        } else {
+            setKindChosen(kindParam !== null && c.kinds.includes(kind))
+        }
+    }
+
+    const openModelPicker = () => {
+        if (make) setPicker('model')
+    }
+
     const stepValid = (): boolean => {
-        if (kind === 'want') return !!make && !!price
-        if (step === 0) return !!make && !!model && !!year
-        if (step === 1)
+        if (kind === 'want')
+            return (!hasMake || !!make) && (!!price || !!category?.price_optional)
+        if (currentStep === 'main')
+            return (
+                (!hasMake || !!make) &&
+                (!hasModel || !!model) &&
+                (!hasYear || !!year)
+            )
+        if (currentStep === 'params')
             return requiredAttrs.every((a) => {
                 const v = values[a.key]
                 return v !== undefined && v !== '' && v !== null
             })
-        if (step === 2) return photos.length >= 1
-        return !!price && phone.trim().length >= 9
+        if (currentStep === 'photos')
+            return photos.length >= (category?.min_photos_offer ?? 0)
+        // publish
+        return (
+            (!!price || !!category?.price_optional) && phone.trim().length >= 9
+        )
     }
 
     const submit = async () => {
-        if (carsId === null || submitting) return
+        if (catId === null || submitting) return
         setSubmitting(true)
         setError(null)
         try {
             const attributes: Record<string, unknown> = {}
             if (kind === 'offer') {
-                Object.assign(attributes, { make, model, year })
+                if (make) attributes.make = make
+                if (model) attributes.model = model
+                if (year) attributes.year = year
                 for (const [k, v] of Object.entries(values)) {
                     if (v === undefined || v === '') continue
-                    // скрытые visible_when значения не отправляем (сменили
-                    // бензин → электро: объём двигателя больше не применим)
                     const attr = attrs.find((a) => a.key === k)
                     if (attr && !isAttrVisible(attr, values)) continue
                     attributes[k] = v
                 }
             } else {
-                attributes.make = make
+                if (make) attributes.make = make
                 if (models.length) attributes.model = models
                 if (yearFrom) attributes.year = { min: yearFrom }
                 for (const [k, v] of Object.entries(values)) {
@@ -238,11 +291,11 @@ export function WizardClient() {
                 }
             }
             const draft: ListingDraft = {
-                category_id: carsId,
+                category_id: catId,
                 kind,
                 deal_type: 'sale',
                 price,
-                currency_id: currencyIds[currency],
+                currency_id: price ? currencyIds[currency] : undefined,
                 region_id: region?.id,
                 description: description.trim() || undefined,
                 attributes,
@@ -251,9 +304,8 @@ export function WizardClient() {
                 whatsapp,
             }
             const created = await createListing(draft)
-            invalidate(created) // лента/«Мои» подтянут новое объявление
+            invalidate(created)
             bridge.toast?.('Объявление опубликовано', 'success').catch(() => {})
-            // тот же нативный экран становится карточкой — обновляем AppBar
             if (bridge.bridgeAvailable() && typeof created.title === 'string') {
                 bridge.setTitle(created.title).catch(() => {})
             }
@@ -264,6 +316,7 @@ export function WizardClient() {
         }
     }
 
+    // ── экраны ──
     if (authed === false) {
         return (
             <div className="flex min-h-dvh flex-col items-center justify-center px-8 text-center">
@@ -282,7 +335,107 @@ export function WizardClient() {
         )
     }
 
-    if (authed === null || (authed && attrs.length === 0)) {
+    const selectBtn = `${inputCls} flex items-center justify-between text-left`
+    const accent = (on: boolean): React.CSSProperties =>
+        on ? { background: 'var(--am-accent)', color: '#fff' } : { opacity: 0.7 }
+
+    // шаг 0 — выбор ветки
+    if (catId === null) {
+        if (authed === null || tabs.length === 0) {
+            return (
+                <div className="space-y-3 p-4">
+                    <div className="am-skeleton h-8 w-52 rounded" />
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="am-skeleton h-16 rounded-2xl" />
+                    ))}
+                </div>
+            )
+        }
+        return (
+            <div className="min-h-dvh px-4 pt-4">
+                <h1 className="text-[20px] font-bold tracking-tight">
+                    Новое объявление
+                </h1>
+                <p className="mt-1 text-[14px] text-muted-foreground">
+                    Что размещаете?
+                </p>
+                <div className="mt-5 space-y-2.5">
+                    {tabs.map((c) => (
+                        <button
+                            key={c.id}
+                            onClick={() => pickCategory(c)}
+                            className="flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left active:bg-muted"
+                        >
+                            <span>
+                                <span className="block text-[15px] font-semibold">
+                                    {pickLabel(c.label)}
+                                </span>
+                                <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                                    {CAT_DESC[c.slug] ?? ''}
+                                </span>
+                            </span>
+                            <span aria-hidden className="text-muted-foreground">›</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    // шаг 0.5 — выбор стороны (только если у ветки обе)
+    if (!kindChosen) {
+        const choose = (k: 'offer' | 'want') => {
+            setKind(k)
+            setStep(0)
+            setError(null)
+            setKindChosen(true)
+        }
+        const card =
+            'flex w-full items-start gap-3.5 rounded-2xl border px-4 py-4 text-left active:bg-muted'
+        return (
+            <div className="min-h-dvh px-4 pt-4">
+                <h1 className="text-[20px] font-bold tracking-tight">
+                    {category ? pickLabel(category.label) : 'Объявление'}
+                </h1>
+                <p className="mt-1 text-[14px] text-muted-foreground">
+                    Что хотите разместить?
+                </p>
+                <div className="mt-5 space-y-3">
+                    <button onClick={() => choose('offer')} className={card}>
+                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: 'var(--am-accent)' }}>
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+                                <path d="M2 8.5 8 2l6 6.5M3.5 7v6.5h9V7" />
+                            </svg>
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-[16px] font-semibold">Продать</span>
+                            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+                                Разместите объявление: фото, характеристики, цена.
+                                Покупатели найдут его в ленте.
+                            </span>
+                        </span>
+                    </button>
+                    <button onClick={() => choose('want')} className={card}>
+                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border" style={{ color: 'var(--am-accent)', borderColor: 'var(--am-accent-border)', background: 'var(--am-accent-soft)' }}>
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+                                <circle cx="7" cy="7" r="4.6" />
+                                <path d="m10.6 10.6 3.4 3.4" />
+                            </svg>
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-[16px] font-semibold">Куплю</span>
+                            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+                                Оставьте запрос: что ищете и бюджет. Покажем
+                                подходящее, продавцы увидят запрос.
+                            </span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    if (attrs.length === 0) {
         return (
             <div className="space-y-4 p-4">
                 <div className="am-skeleton h-8 w-52 rounded" />
@@ -293,92 +446,51 @@ export function WizardClient() {
         )
     }
 
-    const selectBtn = `${inputCls} flex items-center justify-between text-left`
-    const steps = ['Авто', 'Параметры', 'Фото', 'Публикация']
-
-    // ── шаг 0: что за объявление — продажа или запрос «куплю» ──
-    if (!kindChosen) {
-        const choose = (k: 'offer' | 'want') => {
-            setKind(k)
-            setStep(0)
-            setError(null)
-            setKindChosen(true)
-        }
-        const card =
-            'flex w-full items-start gap-3.5 rounded-2xl border px-4 py-4 text-left active:bg-muted transition-colors'
-        return (
-            <div className="min-h-dvh px-4 pt-4">
-                <h1 className="text-[20px] font-bold tracking-tight">
-                    Новое объявление
-                </h1>
-                <p className="mt-1 text-[14px] text-muted-foreground">
-                    Что хотите разместить?
-                </p>
-
-                <div className="mt-5 space-y-3">
-                    <button onClick={() => choose('offer')} className={card}>
-                        <span
-                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
-                            style={{ background: 'var(--am-accent)' }}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                                <path d="M5 17h14M4 17v-4.2a2 2 0 0 1 .2-.9l1.9-3.8A2 2 0 0 1 7.9 7h8.2a2 2 0 0 1 1.8 1.1l1.9 3.8a2 2 0 0 1 .2.9V17" />
-                                <circle cx="8" cy="14.5" r="1" />
-                                <circle cx="16" cy="14.5" r="1" />
-                            </svg>
-                        </span>
-                        <span className="min-w-0">
-                            <span className="block text-[16px] font-semibold">
-                                Продать авто
-                            </span>
-                            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
-                                Разместите объявление: фото, характеристики,
-                                цена. Покупатели увидят его в ленте и свяжутся
-                                с вами.
-                            </span>
-                        </span>
-                    </button>
-
-                    <button onClick={() => choose('want')} className={card}>
-                        <span
-                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
-                            style={{
-                                color: 'var(--am-accent)',
-                                borderColor: 'var(--am-accent-border)',
-                                background: 'var(--am-accent-soft)',
-                            }}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                                <circle cx="7" cy="7" r="4.6" />
-                                <path d="m10.6 10.6 3.4 3.4" />
-                            </svg>
-                        </span>
-                        <span className="min-w-0">
-                            <span className="block text-[16px] font-semibold">
-                                Куплю авто
-                            </span>
-                            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
-                                Оставьте запрос: какую машину ищете и бюджет.
-                                Мы покажем подходящие объявления, а продавцы
-                                увидят ваш запрос.
-                            </span>
-                        </span>
-                    </button>
-                </div>
+    // рендер одного enum/number/bool-поля (params, want-критерии)
+    const renderAttr = (a: EffectiveAttribute, wantMode = false) =>
+        a.type === 'bool' ? (
+            <BoolToggle
+                key={a.key}
+                label={pickLabel(a.label)}
+                value={!!values[a.key]}
+                onChange={(v) =>
+                    setValues((s) => ({ ...s, [a.key]: v || undefined }))
+                }
+            />
+        ) : (
+            <div key={a.key}>
+                <FieldLabel
+                    attr={a}
+                    required={!wantMode && a.required_sides.includes('offer')}
+                />
+                {a.type === 'enum' ? (
+                    <EnumChips
+                        attr={a}
+                        value={values[a.key] as string | undefined}
+                        onChange={(v) => setValues((s) => ({ ...s, [a.key]: v }))}
+                    />
+                ) : (
+                    <NumberInput
+                        decimal={a.type === 'decimal'}
+                        value={values[a.key] as number | undefined}
+                        onChange={(v) => setValues((s) => ({ ...s, [a.key]: v }))}
+                    />
+                )}
             </div>
         )
-    }
 
     return (
         <div className="min-h-dvh px-4 pb-32 pt-4">
             <h1 className="text-[20px] font-bold tracking-tight">
-                {kind === 'want' ? 'Куплю авто' : 'Продать авто'}
+                {category ? pickLabel(category.label) : 'Объявление'}
+                {kind === 'want' ? ' — куплю' : ''}
             </h1>
 
-            {kind === 'offer' && (
+            {/* прогресс шагов (offer) */}
+            {kind === 'offer' && steps.length > 1 && (
                 <div className="mt-3 flex items-center gap-1.5">
-                    {steps.map((label, i) => (
-                        <div key={label} className="flex-1">
+                    {steps.map((s, i) => (
+                        <div key={s.key} className="flex-1">
                             <div
                                 className="h-1 rounded-full"
                                 style={{
@@ -391,14 +503,11 @@ export function WizardClient() {
                             <p
                                 className="mt-1 text-[10px] font-medium"
                                 style={{
-                                    color:
-                                        i === step
-                                            ? 'var(--am-accent)'
-                                            : 'var(--muted-foreground, inherit)',
+                                    color: i === step ? 'var(--am-accent)' : undefined,
                                     opacity: i === step ? 1 : 0.6,
                                 }}
                             >
-                                {label}
+                                {s.label}
                             </p>
                         </div>
                     ))}
@@ -406,134 +515,109 @@ export function WizardClient() {
             )}
 
             <div className="mt-5 space-y-5">
-                {/* ── ПРОДАЖА: шаг 1 / КУПЛЮ: марка-модели-год ── */}
-                {(kind === 'want' || step === 0) && (
+                {/* ── main: марка/модель/год (offer) или критерии (want) ── */}
+                {(kind === 'want' || currentStep === 'main') && (
                     <>
-                        <div>
-                            <p className="mb-2 text-[13px] font-semibold">
-                                Марка{' '}
-                                <span style={{ color: 'var(--am-accent)' }}>*</span>
-                            </p>
-                            <button type="button" onClick={() => setPicker('make')} className={selectBtn}>
-                                <span className={make ? '' : 'text-muted-foreground'}>
-                                    {makeLabel ?? 'Выберите марку'}
-                                </span>
-                                <span aria-hidden className="text-muted-foreground">▾</span>
-                            </button>
-                        </div>
-                        <div>
-                            <p className="mb-2 text-[13px] font-semibold">
-                                {kind === 'want' ? 'Модели (можно несколько)' : 'Модель '}
-                                {kind === 'offer' && (
+                        {hasMake && (
+                            <div>
+                                <p className="mb-2 text-[13px] font-semibold">
+                                    Марка{' '}
                                     <span style={{ color: 'var(--am-accent)' }}>*</span>
-                                )}
-                            </p>
-                            <button
-                                type="button"
-                                onClick={openModelPicker}
-                                disabled={!make}
-                                className={`${selectBtn} disabled:opacity-40`}
-                            >
-                                <span
-                                    className={
-                                        (kind === 'want' ? models.length : model)
-                                            ? ''
-                                            : 'text-muted-foreground'
-                                    }
-                                >
-                                    {kind === 'want'
-                                        ? models.length
-                                          ? models.map(modelLabelOf).join(', ')
-                                          : 'Любая'
-                                        : model
-                                          ? modelLabelOf(model)
-                                          : 'Выберите модель'}
-                                </span>
-                                <span aria-hidden className="text-muted-foreground">▾</span>
-                            </button>
-                        </div>
-                        <div>
-                            <p className="mb-2 text-[13px] font-semibold">
-                                {kind === 'want' ? 'Год, от' : 'Год выпуска '}
-                                {kind === 'offer' && (
-                                    <span style={{ color: 'var(--am-accent)' }}>*</span>
-                                )}
-                            </p>
-                            {kind === 'want' ? (
-                                <NumberInput value={yearFrom} onChange={setYearFrom} placeholder="например, 2015" />
-                            ) : (
-                                <button type="button" onClick={() => setPicker('year')} className={selectBtn}>
-                                    <span className={year ? '' : 'text-muted-foreground'}>
-                                        {year ?? 'Выберите год'}
+                                </p>
+                                <button type="button" onClick={() => setPicker('make')} className={selectBtn}>
+                                    <span className={make ? '' : 'text-muted-foreground'}>
+                                        {makeLabel ?? 'Выберите марку'}
                                     </span>
                                     <span aria-hidden className="text-muted-foreground">▾</span>
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
+                        {hasModel && (
+                            <div>
+                                <p className="mb-2 text-[13px] font-semibold">
+                                    {kind === 'want' ? 'Модели (можно несколько)' : 'Модель '}
+                                    {kind === 'offer' && (
+                                        <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                    )}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={openModelPicker}
+                                    disabled={!make}
+                                    className={`${selectBtn} disabled:opacity-40`}
+                                >
+                                    <span className={(kind === 'want' ? models.length : model) ? '' : 'text-muted-foreground'}>
+                                        {kind === 'want'
+                                            ? models.length ? models.map(modelLabelOf).join(', ') : 'Любая'
+                                            : model ? modelLabelOf(model) : 'Выберите модель'}
+                                    </span>
+                                    <span aria-hidden className="text-muted-foreground">▾</span>
+                                </button>
+                            </div>
+                        )}
+                        {hasYear && (
+                            <div>
+                                <p className="mb-2 text-[13px] font-semibold">
+                                    {kind === 'want' ? 'Год, от' : 'Год выпуска '}
+                                    {kind === 'offer' && (
+                                        <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                    )}
+                                </p>
+                                {kind === 'want' ? (
+                                    <NumberInput value={yearFrom} onChange={setYearFrom} placeholder="например, 2015" />
+                                ) : (
+                                    <button type="button" onClick={() => setPicker('year')} className={selectBtn}>
+                                        <span className={year ? '' : 'text-muted-foreground'}>
+                                            {year ?? 'Выберите год'}
+                                        </span>
+                                        <span aria-hidden className="text-muted-foreground">▾</span>
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </>
                 )}
 
-                {/* ── ПРОДАЖА: шаг 2 — параметры ── */}
-                {kind === 'offer' && step === 1 && (
+                {/* ── params (offer) ── */}
+                {kind === 'offer' && currentStep === 'params' && (
                     <>
                         {[...requiredAttrs, ...optionalAttrs]
                             .map((a) => applyModelConstraints(a, modelConstraints))
-                            .map((a) => (
-                            <div key={a.key}>
-                                {a.type !== 'bool' && (
-                                    <FieldLabel
-                                        attr={a}
-                                        required={a.required_sides.includes('offer')}
-                                    />
-                                )}
-                                {a.type === 'enum' ? (
-                                    <EnumChips
-                                        attr={a}
-                                        value={values[a.key] as string | undefined}
-                                        onChange={(v) =>
-                                            setValues((s) => ({ ...s, [a.key]: v }))
-                                        }
-                                    />
-                                ) : a.type === 'bool' ? (
-                                    <BoolToggle
-                                        label={pickLabel(a.label)}
-                                        value={!!values[a.key]}
-                                        onChange={(v) =>
-                                            setValues((s) => ({ ...s, [a.key]: v }))
-                                        }
-                                    />
-                                ) : (
-                                    <NumberInput
-                                        decimal={a.type === 'decimal'}
-                                        value={values[a.key] as number | undefined}
-                                        onChange={(v) =>
-                                            setValues((s) => ({ ...s, [a.key]: v }))
-                                        }
-                                    />
-                                )}
-                            </div>
-                        ))}
+                            .map((a) => renderAttr(a))}
                     </>
                 )}
 
-                {/* ── ПРОДАЖА: шаг 3 — фото ── */}
-                {kind === 'offer' && step === 2 && (
-                    <PhotosStep photos={photos} onChange={setPhotos} />
+                {/* ── photos (offer) ── */}
+                {kind === 'offer' && currentStep === 'photos' && (
+                    <>
+                        <PhotosStep photos={photos} onChange={setPhotos} />
+                        {category?.min_photos_offer === 0 && (
+                            <p className="text-[12px] text-muted-foreground">
+                                Фото по желанию, но с ними откликаются чаще.
+                            </p>
+                        )}
+                    </>
                 )}
 
-                {/* ── финальный шаг (offer) / хвост формы (want) ── */}
-                {(kind === 'want' || step === 3) && (
+                {/* ── publish (offer) / хвост формы (want) ── */}
+                {(kind === 'want' || currentStep === 'publish') && (
                     <>
                         <div>
                             <p className="mb-2 text-[13px] font-semibold">
-                                {kind === 'want' ? 'Бюджет, до' : 'Цена'}{' '}
-                                <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                {kind === 'want' ? 'Бюджет, до' : 'Цена'}
+                                {!category?.price_optional && (
+                                    <span style={{ color: 'var(--am-accent)' }}> *</span>
+                                )}
                             </p>
                             <div className="flex gap-2">
                                 <NumberInput
                                     value={price}
                                     onChange={setPrice}
-                                    placeholder={currency === 'USD' ? '15 000' : '1 300 000'}
+                                    placeholder={
+                                        category?.price_optional
+                                            ? 'Договорная'
+                                            : currency === 'USD' ? '15 000' : '1 300 000'
+                                    }
                                 />
                                 <div className="flex shrink-0 overflow-hidden rounded-xl border text-[13px] font-semibold">
                                     {(['USD', 'KGS'] as const).map((c) => (
@@ -542,46 +626,22 @@ export function WizardClient() {
                                             type="button"
                                             onClick={() => setCurrency(c)}
                                             className="px-3"
-                                            style={
-                                                currency === c
-                                                    ? { background: 'var(--am-accent)', color: '#fff' }
-                                                    : undefined
-                                            }
+                                            style={currency === c ? accent(true) : undefined}
                                         >
                                             {c === 'USD' ? '$' : 'сом'}
                                         </button>
                                     ))}
                                 </div>
                             </div>
+                            {category?.price_optional && (
+                                <p className="mt-1 text-[12px] text-muted-foreground">
+                                    Оставьте пустым — покажем «Договорная».
+                                </p>
+                            )}
                         </div>
 
-                        {kind === 'want' && (
-                            <div className="space-y-4">
-                                {wantExtra.map((a) =>
-                                    a.type === 'bool' ? (
-                                        <BoolToggle
-                                            key={a.key}
-                                            label={pickLabel(a.label)}
-                                            value={!!values[a.key]}
-                                            onChange={(v) =>
-                                                setValues((s) => ({ ...s, [a.key]: v || undefined }))
-                                            }
-                                        />
-                                    ) : (
-                                        <div key={a.key}>
-                                            <FieldLabel attr={a} required={false} />
-                                            <EnumChips
-                                                attr={a}
-                                                value={values[a.key] as string | undefined}
-                                                onChange={(v) =>
-                                                    setValues((s) => ({ ...s, [a.key]: v }))
-                                                }
-                                            />
-                                        </div>
-                                    ),
-                                )}
-                            </div>
-                        )}
+                        {kind === 'want' &&
+                            wantExtra.map((a) => renderAttr(a, true))}
 
                         <div>
                             <p className="mb-2 text-[13px] font-semibold">Город / регион</p>
@@ -600,7 +660,7 @@ export function WizardClient() {
                                 placeholder={
                                     kind === 'want'
                                         ? 'Что важно: состояние, комплектация…'
-                                        : 'Состояние, комплектация, что менялось…'
+                                        : 'Состояние, детали, что важно знать…'
                                 }
                                 className={`${inputCls} resize-none`}
                             />
@@ -632,15 +692,14 @@ export function WizardClient() {
                 {error && <p className="text-[13px] text-red-500">{error}</p>}
             </div>
 
-            {/* нижняя панель навигации */}
-            {/* +22px к safe-area: во вьюве приложения inset = 0, панель не
-                должна прилипать к нижней кромке */}
+            {/* нижняя панель: +22px к safe-area (во вьюве inset = 0) */}
             <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2.5 border-t bg-background/95 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+22px)] backdrop-blur">
                 <button
                     onClick={() => {
-                        // с первого шага ветки — обратно к выбору типа
                         if (kind === 'offer' && step > 0) setStep((s) => s - 1)
-                        else setKindChosen(false)
+                        else if (category && category.kinds.length > 1)
+                            setKindChosen(false) // назад к выбору стороны
+                        else setCatId(null) // назад к выбору ветки
                     }}
                     className="rounded-xl border px-5 py-3 text-[14px] font-medium active:bg-muted"
                 >
@@ -649,7 +708,7 @@ export function WizardClient() {
                 <button
                     disabled={!stepValid() || submitting}
                     onClick={() =>
-                        kind === 'offer' && step < 3
+                        kind === 'offer' && step < steps.length - 1
                             ? setStep((s) => s + 1)
                             : submit()
                     }
@@ -658,7 +717,7 @@ export function WizardClient() {
                 >
                     {submitting
                         ? 'Публикуем…'
-                        : kind === 'offer' && step < 3
+                        : kind === 'offer' && step < steps.length - 1
                           ? 'Далее'
                           : 'Опубликовать'}
                 </button>

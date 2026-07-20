@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { fetchListings } from '../lib/api'
 import { pickLabel } from '../lib/format'
 import { navigateTo } from '../lib/nav'
+import { useFeedStore } from '../lib/feedStore'
 import {
     PAGE,
     useCatalog,
@@ -13,7 +14,7 @@ import {
     useModelOptions,
     useRates,
 } from '../lib/queries'
-import type { ListingFilters, ListingKind } from '../lib/types'
+import type { ListingFilters } from '../lib/types'
 import { BottomSheet } from './BottomSheet'
 import { ListingCard, ListingCardSkeleton } from './ListingCard'
 import { PickerSheet } from './PickerSheet'
@@ -21,7 +22,6 @@ import {
     FilterSheet,
     countActiveFilters,
     draftToFilters,
-    emptyDraft,
     type FilterDraft,
 } from './FilterSheet'
 
@@ -93,26 +93,52 @@ const PRESETS: {
 export function MarketClient() {
     const router = useRouter()
 
-    // ── каталог (кэш React Query, общий со всеми экранами) ──
+    // ── каталог (под X-Service-Slug возвращает только корень auto) ──
     const catalogQ = useCatalog()
-    const carsId = useMemo(() => {
+    const tabs = useMemo(() => {
         const auto = catalogQ.data?.find((c) => c.slug === 'auto')
-        return auto?.children.find((c) => c.slug === 'cars')?.id ?? null
+        return (auto?.children ?? [])
+            .filter((c) => c.is_active)
+            .sort((a, b) => a.sort_order - b.sort_order)
     }, [catalogQ.data])
     const catalogError =
-        catalogQ.isError || (catalogQ.isSuccess && carsId === null)
-    const { data: attrs = [] } = useCategoryAttributes(carsId)
-    const { data: rates = {} } = useRates()
+        catalogQ.isError || (catalogQ.isSuccess && tabs.length === 0)
 
-    // ── фильтры ──
-    const [kind, setKind] = useState<ListingKind>('offer')
-    const [make, setMake] = useState<string | undefined>()
-    const [models, setModels] = useState<string[]>([])
-    const [draft, setDraft] = useState<FilterDraft>(emptyDraft())
-    const [sort, setSort] = useState<SortValue>('fresh')
+    // ── фильтры: zustand-стор (переживает уход на карточку и «назад») ──
+    const {
+        tabId,
+        kind,
+        make,
+        models,
+        draft,
+        sort,
+        setKind,
+        setMake,
+        setModels,
+        setDraft,
+        setSort,
+        changeTab,
+    } = useFeedStore()
+
+    // активная подкатегория-таб (Легковые/Грузовые/Мото/Запчасти/Сервисы)
+    const activeTab = tabId ?? tabs[0]?.id ?? null
+    const activeCat = tabs.find((t) => t.id === activeTab)
+    // стороны рынка ветки (услуги — только offer)
+    const tabKinds = activeCat?.kinds ?? ['offer', 'want']
+
+    const { data: attrs = [] } = useCategoryAttributes(activeTab)
+    const { data: rates = {} } = useRates()
+    const hasMake = attrs.some((a) => a.key === 'make')
+    const hasModel = attrs.some((a) => a.key === 'model')
+
     const [sheet, setSheet] = useState<SheetName>(null)
     const { data: modelOptions = [], isLoading: modelsLoading } =
         useModelOptions(make)
+
+    // ветка без «куплю» (услуги): принудительно offer
+    useEffect(() => {
+        if (!tabKinds.includes(kind)) setKind('offer')
+    }, [tabKinds, kind, setKind])
 
     // pull-to-refresh: тянем вниз от верха страницы → рефетч ленты
     // (нативного PTR у вебвью нет)
@@ -154,15 +180,15 @@ export function MarketClient() {
         [draft, kind, make, models, sort],
     )
 
-    // ── лента: infinite query, ключ = фильтры (смена фильтров = новый ключ,
-    // возврат к старым — мгновенно из кэша) ──
-    const feedQ = useListingsInfinite(carsId, filters)
+    // ── лента: infinite query, ключ = категория + фильтры ──
+    const feedQ = useListingsInfinite(activeTab, filters)
     const items = useMemo(
         () => feedQ.data?.pages.flatMap((p) => p.items) ?? [],
         [feedQ.data],
     )
     const total = feedQ.data?.pages[0]?.total ?? 0
-    const loading = feedQ.isLoading
+    // ждём и каталог, и ленту — иначе между ними мелькает «нет объявлений»
+    const loading = catalogQ.isLoading || activeTab === null || feedQ.isLoading
     const feedError = feedQ.isError
 
     // бесконечная прокрутка
@@ -185,16 +211,16 @@ export function MarketClient() {
 
     const countResults = useCallback(
         async (d: FilterDraft) => {
-            if (carsId === null) return 0
+            if (activeTab === null) return 0
             const page = await fetchListings(
-                carsId,
+                activeTab,
                 draftToFilters(d, kind, { make, models }),
                 0,
                 1,
             )
             return page.total
         },
-        [carsId, kind, make, models],
+        [activeTab, kind, make, models],
     )
 
     const activeCount = countActiveFilters(draft)
@@ -253,51 +279,89 @@ export function MarketClient() {
             )}
             {/* сегмент рынка */}
             <div className="sticky top-0 z-20 border-b bg-background/95 px-4 pb-2.5 pt-3 backdrop-blur">
-                <div className="flex rounded-xl bg-muted/60 p-1 text-[14px] font-semibold">
-                    {(
-                        [
-                            ['offer', 'Продажа'],
-                            ['want', 'Куплю'],
-                        ] as const
-                    ).map(([k, label]) => (
-                        <button
-                            key={k}
-                            onClick={() => setKind(k)}
-                            className="flex-1 rounded-[10px] py-1.5 transition-colors"
-                            style={
-                                kind === k
-                                    ? {
-                                          background: 'var(--am-accent)',
-                                          color: '#fff',
-                                      }
-                                    : { color: 'inherit', opacity: 0.7 }
-                            }
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
+                {/* табы подкатегорий (Легковые/Грузовые/Мото/Запчасти/Сервисы) */}
+                {tabs.length > 1 && (
+                    <div className="am-chips -mx-4 mb-2.5 flex gap-2 overflow-x-auto px-4">
+                        {tabs.map((t) => {
+                            const on = t.id === activeTab
+                            return (
+                                <button
+                                    key={t.id}
+                                    onClick={() => changeTab(t.id)}
+                                    className="shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors"
+                                    style={
+                                        on
+                                            ? {
+                                                  background: 'var(--am-accent)',
+                                                  color: '#fff',
+                                              }
+                                            : {
+                                                  background:
+                                                      'color-mix(in srgb, currentColor 8%, transparent)',
+                                                  opacity: 0.8,
+                                              }
+                                    }
+                                >
+                                    {pickLabel(t.label)}
+                                </button>
+                            )
+                        })}
+                    </div>
+                )}
 
-                {/* чипсы фильтров */}
+                {/* сегмент Продажа/Куплю — только у веток с обеими сторонами */}
+                {tabKinds.length > 1 && (
+                    <div className="flex rounded-xl bg-muted/60 p-1 text-[14px] font-semibold">
+                        {(
+                            [
+                                ['offer', 'Продажа'],
+                                ['want', 'Куплю'],
+                            ] as const
+                        ).map(([k, label]) => (
+                            <button
+                                key={k}
+                                onClick={() => setKind(k)}
+                                className="flex-1 rounded-[10px] py-1.5 transition-colors"
+                                style={
+                                    kind === k
+                                        ? {
+                                              background: 'var(--am-accent)',
+                                              color: '#fff',
+                                          }
+                                        : { color: 'inherit', opacity: 0.7 }
+                                }
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* чипсы фильтров (Марка/Модель — только у веток с этими
+                    атрибутами: легковые/грузовые; у запчастей/услуг их нет) */}
                 <div className="am-chips -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4">
-                    <button
-                        className={chip}
-                        style={make ? chipActive : undefined}
-                        onClick={() => setSheet('make')}
-                    >
-                        {makeLabel ?? 'Марка'} ▾
-                    </button>
-                    <button
-                        className={`${chip} disabled:opacity-40`}
-                        style={models.length ? chipActive : undefined}
-                        disabled={!make}
-                        onClick={() => setSheet('model')}
-                    >
-                        {models.length
-                            ? `Модель (${models.length})`
-                            : 'Модель'}{' '}
-                        ▾
-                    </button>
+                    {hasMake && (
+                        <button
+                            className={chip}
+                            style={make ? chipActive : undefined}
+                            onClick={() => setSheet('make')}
+                        >
+                            {makeLabel ?? 'Марка'} ▾
+                        </button>
+                    )}
+                    {hasModel && (
+                        <button
+                            className={`${chip} disabled:opacity-40`}
+                            style={models.length ? chipActive : undefined}
+                            disabled={!make}
+                            onClick={() => setSheet('model')}
+                        >
+                            {models.length
+                                ? `Модель (${models.length})`
+                                : 'Модель'}{' '}
+                            ▾
+                        </button>
+                    )}
                     <button
                         className={chip}
                         style={activeCount ? chipActive : undefined}

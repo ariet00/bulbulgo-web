@@ -11,6 +11,12 @@ export interface CategoryNode {
     is_active: boolean
     label: LabelMap
     icon: string | null
+    /** разрешённые стороны рынка ветки (услуги — только ['offer']) */
+    kinds: ListingKind[]
+    /** минимум фото для offer (0 — фото опциональны, как у услуг) */
+    min_photos_offer: number
+    /** цена необязательна (услуги — «Договорная») */
+    price_optional: boolean
     children: CategoryNode[]
 }
 
