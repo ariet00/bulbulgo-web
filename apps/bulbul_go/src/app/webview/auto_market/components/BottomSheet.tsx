@@ -63,12 +63,13 @@ export function BottomSheet({
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
                     {children}
                 </div>
+                {/* +отступ к safe-area: во вьюве приложения inset = 0 */}
                 {footer ? (
-                    <div className="shrink-0 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+                    <div className="shrink-0 border-t px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+22px)]">
                         {footer}
                     </div>
                 ) : (
-                    <div className="pb-[env(safe-area-inset-bottom)]" />
+                    <div className="pb-[calc(env(safe-area-inset-bottom)+14px)]" />
                 )}
             </div>
         </div>

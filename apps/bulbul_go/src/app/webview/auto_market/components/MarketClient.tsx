@@ -2,22 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-    fetchCategories,
-    fetchCategoryAttributes,
-    fetchListings,
-    fetchModelOptions,
-    fetchRates,
-} from '../lib/api'
+import { fetchListings } from '../lib/api'
 import { pickLabel } from '../lib/format'
 import { navigateTo } from '../lib/nav'
-import type {
-    AttributeOption,
-    EffectiveAttribute,
-    Listing,
-    ListingFilters,
-    ListingKind,
-} from '../lib/types'
+import {
+    PAGE,
+    useCatalog,
+    useCategoryAttributes,
+    useListingsInfinite,
+    useModelOptions,
+    useRates,
+} from '../lib/queries'
+import type { ListingFilters, ListingKind } from '../lib/types'
 import { BottomSheet } from './BottomSheet'
 import { ListingCard, ListingCardSkeleton } from './ListingCard'
 import { PickerSheet } from './PickerSheet'
@@ -30,10 +26,8 @@ import {
 } from './FilterSheet'
 
 // Экран ленты авторынка: сегмент Продажа|Куплю, чипсы Марка/Модель/Фильтры,
-// бесконечная лента карточек, FAB подачи. Каталог (категория auto.cars,
-// атрибуты, курсы) грузится один раз при входе.
-
-const PAGE = 20
+// бесконечная лента карточек. Данные — React Query: справочники из общего
+// кэша (staleTime 1ч), лента — SWR (возврат на экран без скелетона).
 
 type SheetName = 'make' | 'model' | 'filters' | 'sort' | null
 
@@ -99,11 +93,16 @@ const PRESETS: {
 export function MarketClient() {
     const router = useRouter()
 
-    // ── каталог ──
-    const [carsId, setCarsId] = useState<number | null>(null)
-    const [attrs, setAttrs] = useState<EffectiveAttribute[]>([])
-    const [rates, setRates] = useState<Record<string, number>>({})
-    const [catalogError, setCatalogError] = useState(false)
+    // ── каталог (кэш React Query, общий со всеми экранами) ──
+    const catalogQ = useCatalog()
+    const carsId = useMemo(() => {
+        const auto = catalogQ.data?.find((c) => c.slug === 'auto')
+        return auto?.children.find((c) => c.slug === 'cars')?.id ?? null
+    }, [catalogQ.data])
+    const catalogError =
+        catalogQ.isError || (catalogQ.isSuccess && carsId === null)
+    const { data: attrs = [] } = useCategoryAttributes(carsId)
+    const { data: rates = {} } = useRates()
 
     // ── фильтры ──
     const [kind, setKind] = useState<ListingKind>('offer')
@@ -112,19 +111,11 @@ export function MarketClient() {
     const [draft, setDraft] = useState<FilterDraft>(emptyDraft())
     const [sort, setSort] = useState<SortValue>('fresh')
     const [sheet, setSheet] = useState<SheetName>(null)
-    const modelCache = useRef<Record<string, AttributeOption[]>>({})
-    const [modelOptions, setModelOptions] = useState<AttributeOption[]>([])
-    const [modelsLoading, setModelsLoading] = useState(false)
+    const { data: modelOptions = [], isLoading: modelsLoading } =
+        useModelOptions(make)
 
-    // ── лента ──
-    const [items, setItems] = useState<Listing[]>([])
-    const [total, setTotal] = useState(0)
-    const [loading, setLoading] = useState(true)
-    const [feedError, setFeedError] = useState(false)
-    const [reloadKey, setReloadKey] = useState(0)
-
-    // pull-to-refresh: тянем вниз от верха страницы → перезагрузка первой
-    // страницы ленты (нативного PTR у вебвью нет)
+    // pull-to-refresh: тянем вниз от верха страницы → рефетч ленты
+    // (нативного PTR у вебвью нет)
     const [pullY, setPullY] = useState(0)
     const pullStart = useRef<number | null>(null)
     const onTouchStart = (e: React.TouchEvent) => {
@@ -136,31 +127,10 @@ export function MarketClient() {
         setPullY(dy > 0 ? Math.min(dy * 0.4, 70) : 0)
     }
     const onTouchEnd = () => {
-        if (pullY >= 55) setReloadKey((k) => k + 1)
+        if (pullY >= 55) void feedQ.refetch()
         setPullY(0)
         pullStart.current = null
     }
-
-    useEffect(() => {
-        let alive = true
-        Promise.all([fetchCategories(), fetchRates()])
-            .then(async ([tree, r]) => {
-                if (!alive) return
-                setRates(r)
-                const auto = tree.find((c) => c.slug === 'auto')
-                const cars = auto?.children.find((c) => c.slug === 'cars')
-                if (!cars) {
-                    setCatalogError(true)
-                    return
-                }
-                setCarsId(cars.id)
-                setAttrs(await fetchCategoryAttributes(cars.id))
-            })
-            .catch(() => alive && setCatalogError(true))
-        return () => {
-            alive = false
-        }
-    }, [])
 
     const makeOptions = useMemo(
         () => attrs.find((a) => a.key === 'make')?.options ?? [],
@@ -184,70 +154,34 @@ export function MarketClient() {
         [draft, kind, make, models, sort],
     )
 
-    // загрузка ленты (сброс при смене фильтров и по pull-to-refresh)
-    useEffect(() => {
-        if (carsId === null) return
-        let alive = true
-        setLoading(true)
-        setFeedError(false)
-        fetchListings(carsId, filters, 0, PAGE)
-            .then((page) => {
-                if (!alive) return
-                setItems(page.items)
-                setTotal(page.total)
-            })
-            .catch(() => alive && setFeedError(true))
-            .finally(() => alive && setLoading(false))
-        return () => {
-            alive = false
-        }
-    }, [carsId, filters, reloadKey])
-
-    const loadingMore = useRef(false)
-    const loadMore = useCallback(async () => {
-        if (carsId === null || loadingMore.current) return
-        if (items.length >= total) return
-        loadingMore.current = true
-        try {
-            const page = await fetchListings(carsId, filters, items.length, PAGE)
-            setItems((prev) => [...prev, ...page.items])
-            setTotal(page.total)
-        } catch {
-            /* тихо: следующий скролл повторит */
-        } finally {
-            loadingMore.current = false
-        }
-    }, [carsId, filters, items.length, total])
+    // ── лента: infinite query, ключ = фильтры (смена фильтров = новый ключ,
+    // возврат к старым — мгновенно из кэша) ──
+    const feedQ = useListingsInfinite(carsId, filters)
+    const items = useMemo(
+        () => feedQ.data?.pages.flatMap((p) => p.items) ?? [],
+        [feedQ.data],
+    )
+    const total = feedQ.data?.pages[0]?.total ?? 0
+    const loading = feedQ.isLoading
+    const feedError = feedQ.isError
 
     // бесконечная прокрутка
     const sentinel = useRef<HTMLDivElement>(null)
+    const { fetchNextPage, hasNextPage, isFetchingNextPage } = feedQ
     useEffect(() => {
         const el = sentinel.current
         if (!el) return
         const io = new IntersectionObserver(
-            (entries) => entries[0].isIntersecting && loadMore(),
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    void fetchNextPage()
+                }
+            },
             { rootMargin: '600px' },
         )
         io.observe(el)
         return () => io.disconnect()
-    }, [loadMore])
-
-    const openModelPicker = async () => {
-        if (!make) return
-        setSheet('model')
-        if (modelCache.current[make]) {
-            setModelOptions(modelCache.current[make])
-            return
-        }
-        setModelsLoading(true)
-        try {
-            const opts = await fetchModelOptions(make)
-            modelCache.current[make] = opts
-            setModelOptions(opts)
-        } finally {
-            setModelsLoading(false)
-        }
-    }
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
     const countResults = useCallback(
         async (d: FilterDraft) => {
@@ -357,7 +291,7 @@ export function MarketClient() {
                         className={`${chip} disabled:opacity-40`}
                         style={models.length ? chipActive : undefined}
                         disabled={!make}
-                        onClick={openModelPicker}
+                        onClick={() => setSheet('model')}
                     >
                         {models.length
                             ? `Модель (${models.length})`

@@ -2,59 +2,52 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { ensureAuth, initWebviewAuth } from '../../auth'
-import {
-    fetchCategories,
-    fetchCategoryAttributes,
-    fetchFavorites,
-    fetchRates,
-    removeFavorite,
-} from '../lib/api'
+import { removeFavorite } from '../lib/api'
 import { pickLabel } from '../lib/format'
 import { navigateTo } from '../lib/nav'
-import type { EffectiveAttribute, Listing } from '../lib/types'
+import {
+    qk,
+    useCatalog,
+    useCategoryAttributes,
+    useFavorites,
+    useRates,
+} from '../lib/queries'
+import type { ListingPage } from '../lib/types'
 import { ListingCard } from './ListingCard'
 
 // «Избранное»: сохранённые объявления карточками ленты + снятие с избранного.
+// Данные — React Query (общий кэш справочников, SWR списка).
 
 export function FavoritesClient() {
     const router = useRouter()
+    const qc = useQueryClient()
     const [authed, setAuthed] = useState<boolean | null>(null)
-    const [items, setItems] = useState<Listing[]>([])
-    const [attrs, setAttrs] = useState<EffectiveAttribute[]>([])
-    const [rates, setRates] = useState<Record<string, number>>({})
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         let alive = true
         ;(async () => {
             await initWebviewAuth()
             const ok = await ensureAuth()
-            if (!alive) return
-            setAuthed(ok)
-            if (!ok) return
-            const [page, tree, r] = await Promise.all([
-                fetchFavorites(),
-                fetchCategories().catch(() => []),
-                fetchRates(),
-            ])
-            if (!alive) return
-            setItems(page.items)
-            setRates(r)
-            const cars = tree
-                .find((c) => c.slug === 'auto')
-                ?.children.find((c) => c.slug === 'cars')
-            if (cars) {
-                fetchCategoryAttributes(cars.id)
-                    .then((a) => alive && setAttrs(a))
-                    .catch(() => {})
-            }
-            setLoading(false)
+            if (alive) setAuthed(ok)
         })()
         return () => {
             alive = false
         }
     }, [])
+
+    const favQ = useFavorites(authed === true)
+    const items = favQ.data?.items ?? []
+    const loading = authed === null || favQ.isLoading
+
+    const { data: tree } = useCatalog()
+    const carsId = useMemo(() => {
+        const auto = tree?.find((c) => c.slug === 'auto')
+        return auto?.children.find((c) => c.slug === 'cars')?.id ?? null
+    }, [tree])
+    const { data: attrs = [] } = useCategoryAttributes(carsId)
+    const { data: rates = {} } = useRates()
 
     const optionLabel = useMemo(() => {
         const map: Record<string, Record<string, string>> = {}
@@ -66,14 +59,25 @@ export function FavoritesClient() {
         return (key: string, value: string) => map[key]?.[value] ?? value
     }, [attrs])
 
-    const unfavorite = useCallback(async (id: number) => {
-        setItems((prev) => prev.filter((l) => l.id !== id))
-        try {
-            await removeFavorite(id)
-        } catch {
-            /* список уже перезагрузится при следующем входе */
-        }
-    }, [])
+    const unfavorite = useCallback(
+        async (id: number) => {
+            // оптимистично убираем из кэша; при ошибке рефетч вернёт
+            qc.setQueryData<ListingPage>(qk.favorites, (page) =>
+                page
+                    ? {
+                          total: page.total - 1,
+                          items: page.items.filter((l) => l.id !== id),
+                      }
+                    : page,
+            )
+            try {
+                await removeFavorite(id)
+            } catch {
+                void qc.invalidateQueries({ queryKey: qk.favorites })
+            }
+        },
+        [qc],
+    )
 
     if (authed === false) {
         return (

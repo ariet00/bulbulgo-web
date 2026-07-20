@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureAuth, initWebviewAuth, trySilentAuth } from '../../auth'
 import { authFetch } from '../../auth'
-import { fetchMyListings } from '../lib/api'
 import { navigateTo } from '../lib/nav'
+import { useMyListings } from '../lib/queries'
 
 // Профиль в сервисе: кто вы + сводка по объявлениям. Сам аккаунт (имя,
 // телефон, выход) управляется в нативном профиле приложения — здесь только
@@ -21,7 +21,8 @@ export function ProfileClient() {
     const router = useRouter()
     const [authed, setAuthed] = useState<boolean | null>(null)
     const [me, setMe] = useState<Me | null>(null)
-    const [activeCount, setActiveCount] = useState<number | null>(null)
+    // из общего кэша «Моих» — счётчик совпадает со вкладкой «Активные»
+    const activeCount = useMyListings('active', authed === true).data?.total ?? null
 
     useEffect(() => {
         let alive = true
@@ -34,9 +35,6 @@ export function ProfileClient() {
             authFetch('/users/me')
                 .then((r) => r.json())
                 .then((u) => alive && setMe(u))
-                .catch(() => {})
-            fetchMyListings('active', 0, 1)
-                .then((p) => alive && setActiveCount(p.total))
                 .catch(() => {})
         })()
         return () => {

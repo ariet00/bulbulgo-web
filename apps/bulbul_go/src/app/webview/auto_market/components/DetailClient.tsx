@@ -7,15 +7,10 @@ import * as bridge from '../../bridge'
 import {
     addFavorite,
     complain,
-    fetchCategoryAttributes,
     fetchComplaintReasons,
     fetchContact,
     fetchFavoriteIds,
-    fetchListing,
-    fetchMatches,
-    fetchModelOptions,
-    fetchRates,
-    fetchSimilar,
+    fetchMe,
     removeFavorite,
     trackShare,
     trackView,
@@ -28,12 +23,14 @@ import {
     pickLabel,
     timeAgo,
 } from '../lib/format'
-import type {
-    AttributeOption,
-    EffectiveAttribute,
-    Listing,
-    ListingContact,
-} from '../lib/types'
+import {
+    useCategoryAttributes,
+    useListing,
+    useModelOptions,
+    useRates,
+    useRelated,
+} from '../lib/queries'
+import type { EffectiveAttribute, ListingContact } from '../lib/types'
 import { navigateTo } from '../lib/nav'
 import { BottomSheet } from './BottomSheet'
 import { ListingCard } from './ListingCard'
@@ -41,62 +38,59 @@ import { ListingCard } from './ListingCard'
 // Страница объявления: галерея, цена в обеих валютах, таблица характеристик,
 // описание, контакты за кнопкой («Показать контакты» = наш contact-эндпоинт
 // со счётчиком), избранное, похожие (offer) / подходящие предложения (want).
+// Данные — React Query: карточка рисуется мгновенно из кэша ленты (SWR),
+// справочники — из общего кэша.
 
 export function DetailClient({ id }: { id: number }) {
     const router = useRouter()
-    const [listing, setListing] = useState<Listing | null>(null)
-    const [attrs, setAttrs] = useState<EffectiveAttribute[]>([])
-    const [modelOpts, setModelOpts] = useState<AttributeOption[]>([])
-    const [rates, setRates] = useState<Record<string, number>>({})
-    const [related, setRelated] = useState<Listing[]>([])
-    const [error, setError] = useState(false)
+    const listingQ = useListing(id)
+    const listing = listingQ.data ?? null
+    const error = listingQ.isError
+    const { data: attrs = [] } = useCategoryAttributes(
+        listing?.category_id ?? null,
+    )
+    const make = listing?.attributes?.make
+    const { data: modelOpts = [] } = useModelOptions(
+        typeof make === 'string' ? make : undefined,
+    )
+    const { data: rates = {} } = useRates()
+    const { data: related = [] } = useRelated(id, listing?.kind)
+
     const [fav, setFav] = useState(false)
     const [contact, setContact] = useState<ListingContact | null>(null)
     const [contactLoading, setContactLoading] = useState(false)
     const [photoIdx, setPhotoIdx] = useState(0)
     const [galleryAt, setGalleryAt] = useState<number | null>(null)
+    const [isOwner, setIsOwner] = useState(false)
+    const [menuOpen, setMenuOpen] = useState(false)
     const [complaintOpen, setComplaintOpen] = useState(false)
     const [reasons, setReasons] = useState<ComplaintReason[]>([])
     const [complaintSent, setComplaintSent] = useState(false)
 
+    // просмотр — один раз на открытие
+    useEffect(() => trackView(id), [id])
+
+    // избранное/владелец — тихо, если есть сессия (imperативно: зависит от
+    // асинхронной авторизации через мост)
+    const ownerOf = listing?.user_id
     useEffect(() => {
         let alive = true
         ;(async () => {
-            try {
-                const l = await fetchListing(id)
-                if (!alive) return
-                setListing(l)
-                trackView(id)
-                fetchRates().then((r) => alive && setRates(r))
-                fetchCategoryAttributes(l.category_id)
-                    .then((a) => alive && setAttrs(a))
+            await initWebviewAuth()
+            if (!(await trySilentAuth()) || !alive) return
+            fetchFavoriteIds()
+                .then((ids) => alive && setFav(ids.includes(id)))
+                .catch(() => {})
+            if (ownerOf !== undefined) {
+                fetchMe()
+                    .then((me) => alive && setIsOwner(me.id === ownerOf))
                     .catch(() => {})
-                const make = l.attributes?.make
-                if (typeof make === 'string') {
-                    fetchModelOptions(make)
-                        .then((o) => alive && setModelOpts(o))
-                        .catch(() => {})
-                }
-                const rel =
-                    l.kind === 'offer'
-                        ? fetchSimilar(id, 6)
-                        : fetchMatches(id, 6)
-                rel.then((p) => alive && setRelated(p.items)).catch(() => {})
-                // избранное — тихо, если есть сессия
-                await initWebviewAuth()
-                if ((await trySilentAuth()) && alive) {
-                    fetchFavoriteIds()
-                        .then((ids) => alive && setFav(ids.includes(id)))
-                        .catch(() => {})
-                }
-            } catch {
-                if (alive) setError(true)
             }
         })()
         return () => {
             alive = false
         }
-    }, [id])
+    }, [id, ownerOf])
 
     const optionLabel = useMemo(() => {
         const map: Record<string, Record<string, string>> = {}
@@ -294,6 +288,26 @@ export function DetailClient({ id }: { id: number }) {
             )}
 
             <div className="px-4 pt-4">
+                {isOwner && (
+                    <button
+                        onClick={() =>
+                            navigateTo(
+                                router,
+                                `/webview/auto_market/my/${l.id}`,
+                                'Управление объявлением',
+                            )
+                        }
+                        className="mb-3 flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-[13px] font-medium"
+                        style={{
+                            color: 'var(--am-accent)',
+                            borderColor: 'var(--am-accent-border)',
+                            background: 'var(--am-accent-soft)',
+                        }}
+                    >
+                        Это ваше объявление — управлять
+                        <span aria-hidden>›</span>
+                    </button>
+                )}
                 {inactive && (
                     <div className="mb-3 rounded-xl border px-3.5 py-2.5 text-[13px] font-medium text-muted-foreground">
                         Объявление снято с публикации
@@ -326,15 +340,19 @@ export function DetailClient({ id }: { id: number }) {
                         )}
                     </div>
                     <div className="flex gap-2">
-                        <IconBtn onClick={shareListing} label="Поделиться">
-                            <path d="M12 5.5a2 2 0 1 0-1.9-2.6L5.9 5a2 2 0 1 0 0 3l4.2 2.1a2 2 0 1 0 .7-1.4L6.9 6.9a2 2 0 0 0 0-.8l3.9-2a2 2 0 0 0 1.2.4Z" />
-                        </IconBtn>
                         <IconBtn
                             onClick={toggleFav}
                             label="В избранное"
                             active={fav}
                         >
                             <path d="M8 13.6C5 11.4 1.8 8.9 1.8 5.9a3.4 3.4 0 0 1 6.2-2 3.4 3.4 0 0 1 6.2 2c0 3-3.2 5.5-6.2 7.7Z" />
+                        </IconBtn>
+                        <IconBtn onClick={() => setMenuOpen(true)} label="Ещё">
+                            <>
+                                <circle cx="3" cy="8" r="1.3" fill="currentColor" stroke="none" />
+                                <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
+                                <circle cx="13" cy="8" r="1.3" fill="currentColor" stroke="none" />
+                            </>
                         </IconBtn>
                     </div>
                 </div>
@@ -399,14 +417,16 @@ export function DetailClient({ id }: { id: number }) {
                     </div>
                 </section>
 
-                {/* жалоба — канал сигналов пост-модерации */}
-                <button
-                    onClick={openComplaint}
-                    disabled={complaintSent}
-                    className="mt-5 text-[13px] text-muted-foreground underline-offset-2 active:underline disabled:no-underline disabled:opacity-60"
-                >
-                    {complaintSent ? 'Жалоба отправлена' : 'Пожаловаться на объявление'}
-                </button>
+                {/* жалоба — канал сигналов пост-модерации (не на своё) */}
+                {!isOwner && (
+                    <button
+                        onClick={openComplaint}
+                        disabled={complaintSent}
+                        className="mx-auto mt-6 block rounded-xl border border-red-500/30 px-6 py-2.5 text-center text-[14px] font-medium text-red-500 active:bg-red-500/10 disabled:opacity-60"
+                    >
+                        {complaintSent ? 'Жалоба отправлена' : 'Пожаловаться'}
+                    </button>
+                )}
 
                 {/* похожие / подходящие */}
                 {related.length > 0 && (
@@ -478,6 +498,41 @@ export function DetailClient({ id }: { id: number }) {
                 </div>
             )}
 
+            {/* меню «⋯»: доп. действия */}
+            <BottomSheet
+                open={menuOpen}
+                onClose={() => setMenuOpen(false)}
+                title="Действия"
+            >
+                <button
+                    onClick={() => {
+                        setMenuOpen(false)
+                        shareListing()
+                    }}
+                    className="flex w-full items-center gap-3 py-3.5 text-left text-[15px]"
+                >
+                    <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden>
+                        <path d="M12 5.5a2 2 0 1 0-1.9-2.6L5.9 5a2 2 0 1 0 0 3l4.2 2.1a2 2 0 1 0 .7-1.4L6.9 6.9a2 2 0 0 0 0-.8l3.9-2a2 2 0 0 0 1.2.4Z" />
+                    </svg>
+                    Поделиться
+                </button>
+                {!isOwner && (
+                    <button
+                        onClick={() => {
+                            setMenuOpen(false)
+                            void openComplaint()
+                        }}
+                        disabled={complaintSent}
+                        className="flex w-full items-center gap-3 border-t py-3.5 text-left text-[15px] text-red-500 disabled:opacity-60"
+                    >
+                        <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M3 14.5V2.3M3 2.5c2.8-1.6 5.4 1.4 8.6 0v6.4c-3.2 1.4-5.8-1.6-8.6 0" />
+                        </svg>
+                        {complaintSent ? 'Жалоба отправлена' : 'Пожаловаться'}
+                    </button>
+                )}
+            </BottomSheet>
+
             {/* жалоба: выбор причины */}
             <BottomSheet
                 open={complaintOpen}
@@ -505,7 +560,7 @@ export function DetailClient({ id }: { id: number }) {
 
             {/* контактная панель */}
             {!inactive && (
-                <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
+                <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+22px)] backdrop-blur">
                     {contact?.phone && (
                         <p className="pb-2 text-center font-mono text-[15px] font-semibold">
                             {contact.phone}

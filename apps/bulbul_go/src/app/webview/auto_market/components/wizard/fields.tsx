@@ -132,14 +132,17 @@ export function NumberInput({
     )
 }
 
-export function RegionField({
-    region,
-    onChange,
+/** Шит выбора региона с поиском — используется и формой подачи, и
+ * пополевым редактированием на странице владельца. */
+export function RegionSheet({
+    open,
+    onClose,
+    onPick,
 }: {
-    region: RegionItem | null
-    onChange: (r: RegionItem | null) => void
+    open: boolean
+    onClose: () => void
+    onPick: (r: RegionItem) => void
 }) {
-    const [open, setOpen] = useState(false)
     const [query, setQuery] = useState('')
     const [items, setItems] = useState<RegionItem[]>([])
     const [loading, setLoading] = useState(false)
@@ -157,6 +160,49 @@ export function RegionField({
     }, [open, query])
 
     return (
+        <BottomSheet open={open} onClose={onClose} title="Город / регион">
+            <div className="sticky top-0 z-10 -mx-4 bg-background px-4 pb-2">
+                <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Поиск"
+                    className={inputCls}
+                />
+            </div>
+            {loading ? (
+                <div className="space-y-3 py-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="am-skeleton h-6 rounded" />
+                    ))}
+                </div>
+            ) : (
+                items.map((r) => (
+                    <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => {
+                            onPick(r)
+                            onClose()
+                        }}
+                        className="block w-full border-t py-3 text-left text-[15px] first:border-t-0"
+                    >
+                        {r.name}
+                    </button>
+                ))
+            )}
+        </BottomSheet>
+    )
+}
+
+export function RegionField({
+    region,
+    onChange,
+}: {
+    region: RegionItem | null
+    onChange: (r: RegionItem | null) => void
+}) {
+    const [open, setOpen] = useState(false)
+    return (
         <>
             <button
                 type="button"
@@ -170,41 +216,11 @@ export function RegionField({
                     ▾
                 </span>
             </button>
-            <BottomSheet
+            <RegionSheet
                 open={open}
                 onClose={() => setOpen(false)}
-                title="Город / регион"
-            >
-                <div className="sticky top-0 z-10 -mx-4 bg-background px-4 pb-2">
-                    <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Поиск"
-                        className={inputCls}
-                    />
-                </div>
-                {loading ? (
-                    <div className="space-y-3 py-2">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="am-skeleton h-6 rounded" />
-                        ))}
-                    </div>
-                ) : (
-                    items.map((r) => (
-                        <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => {
-                                onChange(r)
-                                setOpen(false)
-                            }}
-                            className="block w-full border-t py-3 text-left text-[15px] first:border-t-0"
-                        >
-                            {r.name}
-                        </button>
-                    ))
-                )}
-            </BottomSheet>
+                onPick={(r) => onChange(r)}
+            />
         </>
     )
 }

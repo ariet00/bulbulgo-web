@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import '../globals.css'
 import { BridgeNav } from './BridgeNav'
+import { QueryProvider } from './QueryProvider'
 import { ThemeSync } from './ThemeSync'
 import { WebviewErrorBoundary } from './WebviewErrorBoundary'
 
@@ -64,7 +65,9 @@ export default function WebviewLayout({
             <body className="overflow-x-hidden max-w-[100vw] bg-background text-foreground antialiased">
                 <ThemeSync />
                 <BridgeNav />
-                <WebviewErrorBoundary>{children}</WebviewErrorBoundary>
+                <WebviewErrorBoundary>
+                    <QueryProvider>{children}</QueryProvider>
+                </WebviewErrorBoundary>
             </body>
         </html>
     )

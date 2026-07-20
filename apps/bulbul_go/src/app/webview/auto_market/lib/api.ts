@@ -203,8 +203,9 @@ export async function fetchRegions(q?: string): Promise<RegionItem[]> {
     return ok(await fetch(`${API_URL}/regions/?${qs}`))
 }
 
-/** Профиль — префилл контактного телефона в форме подачи. */
-export async function fetchMe(): Promise<{ phone: string | null }> {
+/** Профиль — префилл телефона в подаче, проверка владельца на странице
+ * управления объявлением. */
+export async function fetchMe(): Promise<{ id: number; phone: string | null }> {
     return ok(await mpAuthFetch('/users/me'))
 }
 

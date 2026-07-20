@@ -4,22 +4,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ensureAuth, initWebviewAuth } from '../../../auth'
 import * as bridge from '../../../bridge'
-import {
-    createListing,
-    fetchCategories,
-    fetchCategoryAttributes,
-    fetchCurrencies,
-    fetchMe,
-    fetchModelOptions,
-    type RegionItem,
-} from '../../lib/api'
+import { createListing, fetchMe, type RegionItem } from '../../lib/api'
 import { pickLabel } from '../../lib/format'
-import type {
-    AttributeOption,
-    EffectiveAttribute,
-    ListingDraft,
-    Photo,
-} from '../../lib/types'
+import {
+    useCatalog,
+    useCategoryAttributes,
+    useCurrencies,
+    useListingInvalidation,
+    useModelOptions,
+} from '../../lib/queries'
+import type { AttributeOption, ListingDraft, Photo } from '../../lib/types'
 import { PickerSheet } from '../PickerSheet'
 import { PhotosStep } from './PhotosStep'
 import {
@@ -64,9 +58,6 @@ export function WizardClient() {
     const [kindChosen, setKindChosen] = useState(kindParam !== null)
 
     const [authed, setAuthed] = useState<boolean | null>(null)
-    const [carsId, setCarsId] = useState<number | null>(null)
-    const [attrs, setAttrs] = useState<EffectiveAttribute[]>([])
-    const [currencyIds, setCurrencyIds] = useState<Record<string, number>>({})
     const [step, setStep] = useState(0)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -87,9 +78,8 @@ export function WizardClient() {
     const [whatsapp, setWhatsapp] = useState(false)
 
     const [picker, setPicker] = useState<'make' | 'model' | 'year' | null>(null)
-    const [modelOptions, setModelOptions] = useState<AttributeOption[]>([])
-    const [modelsLoading, setModelsLoading] = useState(false)
 
+    // авторизация + префилл телефона; каталог/валюты — из общего RQ-кэша
     useEffect(() => {
         let alive = true
         ;(async () => {
@@ -98,27 +88,29 @@ export function WizardClient() {
             if (!alive) return
             setAuthed(ok)
             if (!ok) return
-            const [tree, currencies, me] = await Promise.all([
-                fetchCategories(),
-                fetchCurrencies().catch(() => []),
-                fetchMe().catch(() => ({ phone: null })),
-            ])
-            if (!alive) return
-            setCurrencyIds(
-                Object.fromEntries(currencies.map((c) => [c.code, c.id])),
-            )
-            if (me.phone) setPhone(me.phone)
-            const cars = tree
-                .find((c) => c.slug === 'auto')
-                ?.children.find((c) => c.slug === 'cars')
-            if (!cars) return
-            setCarsId(cars.id)
-            setAttrs(await fetchCategoryAttributes(cars.id))
+            fetchMe()
+                .then((me) => alive && me.phone && setPhone(me.phone))
+                .catch(() => {})
         })()
         return () => {
             alive = false
         }
     }, [])
+
+    const invalidate = useListingInvalidation()
+    const { data: tree } = useCatalog()
+    const carsId = useMemo(() => {
+        const auto = tree?.find((c) => c.slug === 'auto')
+        return auto?.children.find((c) => c.slug === 'cars')?.id ?? null
+    }, [tree])
+    const { data: attrs = [] } = useCategoryAttributes(carsId)
+    const { data: currencies = [] } = useCurrencies()
+    const currencyIds = useMemo(
+        () => Object.fromEntries(currencies.map((c) => [c.code, c.id])),
+        [currencies],
+    )
+    const { data: modelOptions = [], isLoading: modelsLoading } =
+        useModelOptions(make)
 
     const makeOptions = useMemo(
         () => attrs.find((a) => a.key === 'make')?.options ?? [],
@@ -134,15 +126,8 @@ export function WizardClient() {
     const modelLabelOf = (v: string) =>
         pickLabel(modelOptions.find((o) => o.value === v)?.label) || v
 
-    const openModelPicker = async () => {
-        if (!make) return
-        setPicker('model')
-        setModelsLoading(true)
-        try {
-            setModelOptions(await fetchModelOptions(make))
-        } finally {
-            setModelsLoading(false)
-        }
+    const openModelPicker = () => {
+        if (make) setPicker('model')
     }
 
     // зависимые атрибуты (например, объём двигателя у электро) скрываются
@@ -266,6 +251,7 @@ export function WizardClient() {
                 whatsapp,
             }
             const created = await createListing(draft)
+            invalidate(created) // лента/«Мои» подтянут новое объявление
             bridge.toast?.('Объявление опубликовано', 'success').catch(() => {})
             // тот же нативный экран становится карточкой — обновляем AppBar
             if (bridge.bridgeAvailable() && typeof created.title === 'string') {
@@ -647,7 +633,9 @@ export function WizardClient() {
             </div>
 
             {/* нижняя панель навигации */}
-            <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2.5 border-t bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
+            {/* +22px к safe-area: во вьюве приложения inset = 0, панель не
+                должна прилипать к нижней кромке */}
+            <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2.5 border-t bg-background/95 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+22px)] backdrop-blur">
                 <button
                     onClick={() => {
                         // с первого шага ветки — обратно к выбору типа

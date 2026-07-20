@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureAuth, initWebviewAuth } from '../../auth'
 import * as bridge from '../../bridge'
-import { fetchMyListings, renewListing, updateListing } from '../lib/api'
+import { renewListing, updateListing } from '../lib/api'
 import { formatPrice, pickLabel, timeAgo } from '../lib/format'
 import { navigateTo } from '../lib/nav'
+import { useListingInvalidation, useMyListings } from '../lib/queries'
 import type { Listing } from '../lib/types'
 
 // «Мои объявления»: вкладки по статусу + быстрые действия (снять/вернуть/
@@ -25,9 +26,8 @@ export function MyListingsClient() {
     const router = useRouter()
     const [authed, setAuthed] = useState<boolean | null>(null)
     const [status, setStatus] = useState<Status>('active')
-    const [items, setItems] = useState<Listing[]>([])
-    const [loading, setLoading] = useState(true)
     const [busyId, setBusyId] = useState<number | null>(null)
+    const invalidate = useListingInvalidation()
 
     useEffect(() => {
         ;(async () => {
@@ -36,27 +36,15 @@ export function MyListingsClient() {
         })()
     }, [])
 
-    const load = useCallback(async () => {
-        setLoading(true)
-        try {
-            const page = await fetchMyListings(status)
-            setItems(page.items)
-        } catch {
-            setItems([])
-        } finally {
-            setLoading(false)
-        }
-    }, [status])
-
-    useEffect(() => {
-        if (authed) void load()
-    }, [authed, load])
+    const mineQ = useMyListings(status, authed === true)
+    const items = mineQ.data?.items ?? []
+    const loading = authed === null || mineQ.isLoading
 
     const setListingStatus = async (l: Listing, next: string) => {
         setBusyId(l.id)
         try {
-            await updateListing(l.id, { status: next })
-            setItems((prev) => prev.filter((x) => x.id !== l.id))
+            const updated = await updateListing(l.id, { status: next })
+            invalidate(updated)
             bridge.haptic?.('light').catch(() => {})
         } catch {
             bridge.toast?.('Не получилось, попробуйте ещё раз', 'warning').catch(() => {})
@@ -69,14 +57,7 @@ export function MyListingsClient() {
     const renew = async (l: Listing) => {
         setBusyId(l.id)
         try {
-            const updated = await renewListing(l.id)
-            if (status === 'active') {
-                setItems((prev) =>
-                    prev.map((x) => (x.id === l.id ? updated : x)),
-                )
-            } else {
-                setItems((prev) => prev.filter((x) => x.id !== l.id))
-            }
+            invalidate(await renewListing(l.id))
             bridge.toast?.('Срок продлён', 'success').catch(() => {})
         } catch {
             bridge.toast?.('Не получилось, попробуйте ещё раз', 'warning').catch(() => {})
@@ -179,7 +160,7 @@ export function MyListingsClient() {
                                     onClick={() =>
                                         navigateTo(
                                             router,
-                                            `/webview/auto_market/${l.id}`,
+                                            `/webview/auto_market/my/${l.id}`,
                                             typeof l.title === 'string' ? l.title : undefined,
                                         )
                                     }
