@@ -394,6 +394,15 @@ export function WizardClient() {
             'flex w-full items-start gap-3.5 rounded-2xl border px-4 py-4 text-left active:bg-muted'
         return (
             <div className="min-h-dvh px-4 pt-4">
+                <button
+                    onClick={() => setCatId(null)}
+                    className="mb-2 -ml-1 flex items-center gap-1 text-[14px] text-muted-foreground active:opacity-70"
+                >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M10 3 5 8l5 5" />
+                    </svg>
+                    Ветка
+                </button>
                 <h1 className="text-[20px] font-bold tracking-tight">
                     {category ? pickLabel(category.label) : 'Объявление'}
                 </h1>
