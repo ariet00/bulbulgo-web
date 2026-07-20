@@ -2,6 +2,27 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/apis/admin'
 import { adminKeys } from './keys'
 
+export const useAdminDevices = (
+    page: number = 1,
+    size: number = 40,
+    filters?: { q?: string; status?: string; device_type?: string },
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.devices(),
+            {
+                page,
+                size,
+                q: filters?.q ?? null,
+                status: filters?.status ?? null,
+                device_type: filters?.device_type ?? null,
+            },
+        ],
+        queryFn: () => adminApi.getDevices(page, size, filters),
+        placeholderData: keepPreviousData,
+    })
+}
+
 export const useAdminUsers = (
     page: number = 1,
     size: number = 40,

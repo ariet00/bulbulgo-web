@@ -30,7 +30,15 @@ export function BottomSheet({
 
     if (!open) return null
     return (
-        <div className="fixed inset-0 z-50">
+        <div
+            className="fixed inset-0 z-50"
+            // тачи шита не должны всплывать к странице: под ним живут свои
+            // жесты (pull-to-refresh ленты), которые ложно срабатывают при
+            // скролле контента шита
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+        >
             <button
                 aria-label="Закрыть"
                 className="am-sheet-backdrop absolute inset-0 bg-black/45"

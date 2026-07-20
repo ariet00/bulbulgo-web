@@ -15,6 +15,25 @@ export interface AdminDeviceToken {
     created_at: string
 }
 
+// Строка глобального реестра устройств (страница «Устройства»).
+export interface AdminDeviceListItem {
+    id: number
+    user_id: number | null
+    user_name: string | null
+    user_phone: string | null
+    device_id: string | null
+    device_type: string
+    device_info: string | null
+    app_version: string | null
+    token: string | null
+    push_permission: string | null
+    // active | logged_out | banned
+    status: string
+    rooted: boolean | null
+    installer_store: string | null
+    created_at: string
+}
+
 export interface AdminUserSession {
     id: number
     device_id: string | null
@@ -109,6 +128,17 @@ export const usersAdminApi = {
         return requests.get<Page<any>>(`/admin/users/?${params.toString()}`)
     },
     getUser: (id: number) => requests.get<any>(`/admin/users/${id}`),
+    getDevices: (
+        page = 1,
+        size = 40,
+        filters?: { q?: string; status?: string; device_type?: string },
+    ) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (filters?.q) params.set('q', filters.q)
+        if (filters?.status) params.set('status', filters.status)
+        if (filters?.device_type) params.set('device_type', filters.device_type)
+        return requests.get<Page<AdminDeviceListItem>>(`/admin/users/devices?${params.toString()}`)
+    },
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     banUser: (id: number, isActive: boolean) =>

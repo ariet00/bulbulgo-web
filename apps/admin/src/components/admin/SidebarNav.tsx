@@ -23,6 +23,7 @@ import {
     Newspaper,
     Radio,
     Settings as SettingsIcon,
+    Smartphone,
     Tags,
     Timer,
     Users,
@@ -48,6 +49,7 @@ const sections: NavSection[] = [
         label: 'Common',
         items: [
             { name: 'Users', href: '/admin/users', icon: Users },
+            { name: 'Устройства', href: '/admin/devices', icon: Smartphone },
             { name: 'Companies', href: '/admin/companies', icon: BarChart },
             { name: 'Regions', href: '/admin/regions', icon: MapPin },
             { name: 'Notifications', href: '/admin/notifications', icon: Bell },

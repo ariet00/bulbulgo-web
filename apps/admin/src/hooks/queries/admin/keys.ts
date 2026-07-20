@@ -2,6 +2,7 @@ export const adminKeys = {
     all: ['admin'] as const,
     users: () => [...adminKeys.all, 'users'] as const,
     user: (id: number) => [...adminKeys.users(), id] as const,
+    devices: () => [...adminKeys.all, 'devices'] as const,
     companies: () => [...adminKeys.all, 'companies'] as const,
     company: (id: number) => [...adminKeys.companies(), id] as const,
     trips: () => [...adminKeys.all, 'trips'] as const,

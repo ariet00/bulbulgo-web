@@ -209,6 +209,33 @@ export function RegionField({
     )
 }
 
+export type ModelConstraints = NonNullable<
+    import('../../lib/types').AttributeOption['constraints']
+>
+
+/** Сужение enum-атрибута по constraints выбранной модели: у Camry остаётся
+ * только седан, у электро-модели — только electric. ГБО-вариант (gas_petrol)
+ * допустим у всех бензиновых — его не вырезаем. */
+export function applyModelConstraints(
+    attr: EffectiveAttribute,
+    constraints: ModelConstraints | null,
+): EffectiveAttribute {
+    const allowed = constraints?.[attr.key]
+    if (!Array.isArray(allowed) || attr.options.length === 0) return attr
+    const ok = new Set(allowed)
+    if (attr.key === 'fuel' && ok.has('petrol')) ok.add('gas_petrol')
+    const options = attr.options.filter((o) => ok.has(o.value))
+    return options.length ? { ...attr, options } : attr
+}
+
+/** Границы года из constraints модели ({min,max}), null — нет данных. */
+export function modelYearRange(
+    constraints: ModelConstraints | null,
+): { min?: number; max?: number } | null {
+    const y = constraints?.year
+    return y && !Array.isArray(y) ? y : null
+}
+
 /** Проверка условной видимости (visible_when из каталога) по текущим значениям
  * формы — у электромобиля не спрашиваем объём двигателя и ГБО. */
 export function isAttrVisible(

@@ -18,6 +18,24 @@ import type {
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 const MP = `${API_URL}/marketplace`
 
+// Сервис-скоупинг: бэкенд по слагу сервиса сам ограничивает каталог/ленту/
+// «Мои»/«Избранное» поддеревом auto и валидирует категорию при подаче —
+// клиенту не нужно знать category_id корня.
+const SVC = { 'X-Service-Slug': 'auto_market' }
+
+/** fetch к marketplace с заголовком сервиса. */
+function mpFetch(url: string, init: RequestInit = {}): Promise<Response> {
+    return fetch(url, { ...init, headers: { ...SVC, ...(init.headers ?? {}) } })
+}
+
+/** authFetch с заголовком сервиса (подача, мои, избранное, контакты). */
+function mpAuthFetch(path: string, init: RequestInit = {}): Promise<Response> {
+    return authFetch(path, {
+        ...init,
+        headers: { ...SVC, ...(init.headers ?? {}) },
+    })
+}
+
 async function ok<T>(r: Response): Promise<T> {
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     return (await r.json()) as T
@@ -26,7 +44,7 @@ async function ok<T>(r: Response): Promise<T> {
 // ── каталог ──
 
 export async function fetchCategories(): Promise<CategoryNode[]> {
-    return ok(await fetch(`${MP}/categories`))
+    return ok(await mpFetch(`${MP}/categories`))
 }
 
 /** Курсы {code: сомов за единицу} (НБКР через бэк); {} пока не обновлялись. */
@@ -46,12 +64,12 @@ export async function fetchCategoryAttributes(
 ): Promise<EffectiveAttribute[]> {
     const qs = new URLSearchParams({ omit_options: 'model' })
     if (side) qs.set('side', side)
-    return ok(await fetch(`${MP}/categories/${categoryId}/attributes?${qs}`))
+    return ok(await mpFetch(`${MP}/categories/${categoryId}/attributes?${qs}`))
 }
 
 export async function fetchModelOptions(brand: string): Promise<AttributeOption[]> {
     const qs = new URLSearchParams({ key: 'model', brand })
-    return ok(await fetch(`${MP}/options?${qs}`))
+    return ok(await mpFetch(`${MP}/options?${qs}`))
 }
 
 // ── лента ──
@@ -85,20 +103,20 @@ export async function fetchListings(
 ): Promise<ListingPage> {
     const qs = filtersToQuery(filters, skip, limit)
     qs.set('category_id', String(categoryId))
-    return ok(await fetch(`${MP}/listings?${qs}`))
+    return ok(await mpFetch(`${MP}/listings?${qs}`))
 }
 
 export async function fetchListing(id: number): Promise<Listing> {
-    return ok(await fetch(`${MP}/listings/${id}`))
+    return ok(await mpFetch(`${MP}/listings/${id}`))
 }
 
 export async function fetchSimilar(id: number, limit = 10): Promise<ListingPage> {
-    return ok(await fetch(`${MP}/listings/${id}/similar?limit=${limit}`))
+    return ok(await mpFetch(`${MP}/listings/${id}/similar?limit=${limit}`))
 }
 
 /** Подходящие противоположные объявления (want ↔ offer). */
 export async function fetchMatches(id: number, limit = 20): Promise<ListingPage> {
-    return ok(await fetch(`${MP}/listings/${id}/matches?limit=${limit}`))
+    return ok(await mpFetch(`${MP}/listings/${id}/matches?limit=${limit}`))
 }
 
 /** Счётчик просмотров — fire-and-forget. */
@@ -113,11 +131,11 @@ export function trackShare(id: number): void {
 // ── действия пользователя (auth) ──
 
 export async function fetchContact(id: number): Promise<ListingContact> {
-    return ok(await authFetch(`/marketplace/listings/${id}/contact`))
+    return ok(await mpAuthFetch(`/marketplace/listings/${id}/contact`))
 }
 
 export async function createListing(draft: ListingDraft): Promise<Listing> {
-    return ok(await authFetch('/marketplace/listings', {
+    return ok(await mpAuthFetch('/marketplace/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
@@ -128,7 +146,7 @@ export async function updateListing(
     id: number,
     patch: Partial<ListingDraft> & { status?: string; expire_at?: string },
 ): Promise<Listing> {
-    return ok(await authFetch(`/marketplace/listings/${id}`, {
+    return ok(await mpAuthFetch(`/marketplace/listings/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
@@ -137,35 +155,37 @@ export async function updateListing(
 
 /** Продлить срок (и вернуть в публикацию, если снято по сроку). */
 export async function renewListing(id: number): Promise<Listing> {
-    return ok(await authFetch(`/marketplace/listings/${id}/renew`, { method: 'POST' }))
+    return ok(await mpAuthFetch(`/marketplace/listings/${id}/renew`, { method: 'POST' }))
 }
+
+// «Мои»/«Избранное» скоупятся разделом на бэке — по X-Service-Slug.
 
 export async function fetchMyListings(status?: string, skip = 0, limit = 50): Promise<ListingPage> {
     const qs = new URLSearchParams({ skip: String(skip), limit: String(limit) })
     if (status) qs.set('status', status)
-    return ok(await authFetch(`/marketplace/listings/mine?${qs}`))
+    return ok(await mpAuthFetch(`/marketplace/listings/mine?${qs}`))
 }
 
 export async function fetchFavorites(skip = 0, limit = 50): Promise<ListingPage> {
-    return ok(await authFetch(`/marketplace/favorites?skip=${skip}&limit=${limit}`))
+    return ok(await mpAuthFetch(`/marketplace/favorites?skip=${skip}&limit=${limit}`))
 }
 
 export async function fetchFavoriteIds(): Promise<number[]> {
-    return ok(await authFetch('/marketplace/favorites/ids'))
+    return ok(await mpAuthFetch('/marketplace/favorites/ids'))
 }
 
 export async function addFavorite(id: number): Promise<void> {
-    await authFetch(`/marketplace/listings/${id}/favorite`, { method: 'POST' })
+    await mpAuthFetch(`/marketplace/listings/${id}/favorite`, { method: 'POST' })
 }
 
 export async function removeFavorite(id: number): Promise<void> {
-    await authFetch(`/marketplace/listings/${id}/favorite`, { method: 'DELETE' })
+    await mpAuthFetch(`/marketplace/listings/${id}/favorite`, { method: 'DELETE' })
 }
 
 export async function uploadPhoto(file: File): Promise<Photo> {
     const form = new FormData()
     form.append('file', file)
-    return ok(await authFetch('/marketplace/upload-photo', { method: 'POST', body: form }))
+    return ok(await mpAuthFetch('/marketplace/upload-photo', { method: 'POST', body: form }))
 }
 
 // ── справочники и профиль (для wizard'а) ──
@@ -185,7 +205,7 @@ export async function fetchRegions(q?: string): Promise<RegionItem[]> {
 
 /** Профиль — префилл контактного телефона в форме подачи. */
 export async function fetchMe(): Promise<{ phone: string | null }> {
-    return ok(await authFetch('/users/me'))
+    return ok(await mpAuthFetch('/users/me'))
 }
 
 export interface CurrencyItem {
@@ -209,7 +229,7 @@ export async function fetchComplaintReasons(): Promise<ComplaintReason[]> {
 }
 
 export async function complain(id: number, reason: string, description?: string): Promise<void> {
-    await authFetch(`/marketplace/listings/${id}/complain`, {
+    await mpAuthFetch(`/marketplace/listings/${id}/complain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason, description }),

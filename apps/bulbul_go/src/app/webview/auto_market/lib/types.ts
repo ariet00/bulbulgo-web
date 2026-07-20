@@ -23,6 +23,9 @@ export interface AttributeOption {
     brand: string | null
     /** показывать в начале пикера (топовые марки рынка) */
     popular: boolean
+    /** факты о модели, сужающие другие поля: {attr_key: [значения] | {min,max}}
+     * (реальные годы выпуска, кузова, топливо) */
+    constraints: Record<string, string[] | { min?: number; max?: number }> | null
 }
 
 export interface EffectiveAttribute {

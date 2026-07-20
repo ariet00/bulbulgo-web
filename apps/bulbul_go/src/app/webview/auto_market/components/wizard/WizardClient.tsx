@@ -28,8 +28,10 @@ import {
     FieldLabel,
     NumberInput,
     RegionField,
+    applyModelConstraints,
     inputCls,
     isAttrVisible,
+    modelYearRange,
     useParamAttrs,
 } from './fields'
 
@@ -39,16 +41,27 @@ import {
 
 const YEARS: AttributeOption[] = Array.from({ length: 2026 - 1950 + 1 }, (_, i) => {
     const y = 2026 - i
-    return { id: y, value: String(y), label: { ru: String(y) }, sort_order: i, brand: null, popular: false }
+    return {
+        id: y,
+        value: String(y),
+        label: { ru: String(y) },
+        sort_order: i,
+        brand: null,
+        popular: false,
+        constraints: null,
+    }
 })
 
 type Values = Record<string, string | number | boolean | undefined>
 
 export function WizardClient() {
     const router = useRouter()
-    const initialKind =
-        useSearchParams().get('kind') === 'want' ? 'want' : 'offer'
-    const [kind, setKind] = useState<'offer' | 'want'>(initialKind)
+    // диплинк с ?kind= пропускает экран выбора типа объявления
+    const kindParam = useSearchParams().get('kind')
+    const [kind, setKind] = useState<'offer' | 'want'>(
+        kindParam === 'want' ? 'want' : 'offer',
+    )
+    const [kindChosen, setKindChosen] = useState(kindParam !== null)
 
     const [authed, setAuthed] = useState<boolean | null>(null)
     const [carsId, setCarsId] = useState<number | null>(null)
@@ -136,6 +149,61 @@ export function WizardClient() {
     // по visible_when из каталога в зависимости от уже выбранных значений
     const { required: requiredAttrs, optional: optionalAttrs } =
         useParamAttrs(attrs, values)
+
+    // constraints выбранной модели: реальные годы выпуска / кузова / топливо
+    const modelConstraints = useMemo(
+        () =>
+            (kind === 'offer' && model
+                ? modelOptions.find((o) => o.value === model)?.constraints
+                : null) ?? null,
+        [kind, model, modelOptions],
+    )
+    const yearRange = modelYearRange(modelConstraints)
+    const yearOptions = useMemo(
+        () =>
+            !yearRange
+                ? YEARS
+                : YEARS.filter((y) => {
+                      const n = Number(y.value)
+                      return (
+                          (yearRange.min === undefined || n >= yearRange.min) &&
+                          (yearRange.max === undefined || n <= yearRange.max)
+                      )
+                  }),
+        [yearRange],
+    )
+
+    // смена модели: чистим значения, ставшие недопустимыми, и автозаполняем
+    // поля с единственным вариантом (у Camry кузов один — «Седан»)
+    useEffect(() => {
+        if (kind !== 'offer') return
+        setValues((prev) => {
+            const next = { ...prev }
+            for (const a of attrs) {
+                const narrowed = applyModelConstraints(a, modelConstraints)
+                if (narrowed === a || a.type !== 'enum') continue
+                const ok = new Set(narrowed.options.map((o) => o.value))
+                const cur = next[a.key]
+                if (typeof cur === 'string' && !ok.has(cur)) {
+                    delete next[a.key]
+                }
+                if (next[a.key] === undefined && narrowed.options.length === 1) {
+                    next[a.key] = narrowed.options[0].value
+                }
+            }
+            return next
+        })
+        if (yearRange) {
+            setYear((y) =>
+                y !== undefined &&
+                ((yearRange.min !== undefined && y < yearRange.min) ||
+                    (yearRange.max !== undefined && y > yearRange.max))
+                    ? undefined
+                    : y,
+            )
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [modelConstraints, kind])
 
     // want-атрибуты для мягких критериев (без make/model/year — они выше)
     const wantExtra = useMemo(
@@ -242,38 +310,84 @@ export function WizardClient() {
     const selectBtn = `${inputCls} flex items-center justify-between text-left`
     const steps = ['Авто', 'Параметры', 'Фото', 'Публикация']
 
+    // ── шаг 0: что за объявление — продажа или запрос «куплю» ──
+    if (!kindChosen) {
+        const choose = (k: 'offer' | 'want') => {
+            setKind(k)
+            setStep(0)
+            setError(null)
+            setKindChosen(true)
+        }
+        const card =
+            'flex w-full items-start gap-3.5 rounded-2xl border px-4 py-4 text-left active:bg-muted transition-colors'
+        return (
+            <div className="min-h-dvh px-4 pt-4">
+                <h1 className="text-[20px] font-bold tracking-tight">
+                    Новое объявление
+                </h1>
+                <p className="mt-1 text-[14px] text-muted-foreground">
+                    Что хотите разместить?
+                </p>
+
+                <div className="mt-5 space-y-3">
+                    <button onClick={() => choose('offer')} className={card}>
+                        <span
+                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
+                            style={{ background: 'var(--am-accent)' }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                <path d="M5 17h14M4 17v-4.2a2 2 0 0 1 .2-.9l1.9-3.8A2 2 0 0 1 7.9 7h8.2a2 2 0 0 1 1.8 1.1l1.9 3.8a2 2 0 0 1 .2.9V17" />
+                                <circle cx="8" cy="14.5" r="1" />
+                                <circle cx="16" cy="14.5" r="1" />
+                            </svg>
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-[16px] font-semibold">
+                                Продать авто
+                            </span>
+                            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+                                Разместите объявление: фото, характеристики,
+                                цена. Покупатели увидят его в ленте и свяжутся
+                                с вами.
+                            </span>
+                        </span>
+                    </button>
+
+                    <button onClick={() => choose('want')} className={card}>
+                        <span
+                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
+                            style={{
+                                color: 'var(--am-accent)',
+                                borderColor: 'var(--am-accent-border)',
+                                background: 'var(--am-accent-soft)',
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+                                <circle cx="7" cy="7" r="4.6" />
+                                <path d="m10.6 10.6 3.4 3.4" />
+                            </svg>
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-[16px] font-semibold">
+                                Куплю авто
+                            </span>
+                            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+                                Оставьте запрос: какую машину ищете и бюджет.
+                                Мы покажем подходящие объявления, а продавцы
+                                увидят ваш запрос.
+                            </span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-dvh px-4 pb-32 pt-4">
             <h1 className="text-[20px] font-bold tracking-tight">
-                Новое объявление
+                {kind === 'want' ? 'Куплю авто' : 'Продать авто'}
             </h1>
-
-            {/* тип объявления: продажа или запрос «куплю» */}
-            <div className="mt-3 flex rounded-xl bg-muted/60 p-1 text-[14px] font-semibold">
-                {(
-                    [
-                        ['offer', 'Продать'],
-                        ['want', 'Куплю'],
-                    ] as const
-                ).map(([k, label]) => (
-                    <button
-                        key={k}
-                        onClick={() => {
-                            setKind(k)
-                            setStep(0)
-                            setError(null)
-                        }}
-                        className="flex-1 rounded-[10px] py-1.5 transition-colors"
-                        style={
-                            kind === k
-                                ? { background: 'var(--am-accent)', color: '#fff' }
-                                : { opacity: 0.7 }
-                        }
-                    >
-                        {label}
-                    </button>
-                ))}
-            </div>
 
             {kind === 'offer' && (
                 <div className="mt-3 flex items-center gap-1.5">
@@ -376,7 +490,9 @@ export function WizardClient() {
                 {/* ── ПРОДАЖА: шаг 2 — параметры ── */}
                 {kind === 'offer' && step === 1 && (
                     <>
-                        {[...requiredAttrs, ...optionalAttrs].map((a) => (
+                        {[...requiredAttrs, ...optionalAttrs]
+                            .map((a) => applyModelConstraints(a, modelConstraints))
+                            .map((a) => (
                             <div key={a.key}>
                                 {a.type !== 'bool' && (
                                     <FieldLabel
@@ -532,14 +648,16 @@ export function WizardClient() {
 
             {/* нижняя панель навигации */}
             <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2.5 border-t bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-                {kind === 'offer' && step > 0 && (
-                    <button
-                        onClick={() => setStep((s) => s - 1)}
-                        className="rounded-xl border px-5 py-3 text-[14px] font-medium active:bg-muted"
-                    >
-                        Назад
-                    </button>
-                )}
+                <button
+                    onClick={() => {
+                        // с первого шага ветки — обратно к выбору типа
+                        if (kind === 'offer' && step > 0) setStep((s) => s - 1)
+                        else setKindChosen(false)
+                    }}
+                    className="rounded-xl border px-5 py-3 text-[14px] font-medium active:bg-muted"
+                >
+                    Назад
+                </button>
                 <button
                     disabled={!stepValid() || submitting}
                     onClick={() =>
@@ -589,7 +707,7 @@ export function WizardClient() {
                 open={picker === 'year'}
                 onClose={() => setPicker(null)}
                 title="Год выпуска"
-                options={YEARS}
+                options={yearOptions}
                 selected={year ? [String(year)] : []}
                 onApply={([v]) => setYear(Number(v))}
             />
