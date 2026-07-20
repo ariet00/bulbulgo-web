@@ -34,6 +34,22 @@ export interface AdminDeviceListItem {
     created_at: string
 }
 
+export interface AdminDeviceSessionItem {
+    id: number
+    user_id: number
+    ip_address: string | null
+    last_used_at: string | null
+    // active | revoked
+    status: string
+    created_at: string
+}
+
+// Полная карточка устройства (детальная страница).
+export interface AdminDeviceDetail extends AdminDeviceListItem {
+    data: Record<string, unknown>
+    sessions: AdminDeviceSessionItem[]
+}
+
 export interface AdminUserSession {
     id: number
     device_id: string | null
@@ -139,6 +155,8 @@ export const usersAdminApi = {
         if (filters?.device_type) params.set('device_type', filters.device_type)
         return requests.get<Page<AdminDeviceListItem>>(`/admin/users/devices?${params.toString()}`)
     },
+    getDevice: (id: number) =>
+        requests.get<AdminDeviceDetail>(`/admin/users/devices/${id}`),
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     banUser: (id: number, isActive: boolean) =>

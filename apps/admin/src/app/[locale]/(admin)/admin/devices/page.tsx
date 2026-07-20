@@ -179,7 +179,14 @@ export default function DevicesPage() {
                                     )}
                                     {data?.items.map((d: AdminDeviceListItem) => (
                                         <TableRow key={d.id}>
-                                            <TableCell>{d.id}</TableCell>
+                                            <TableCell>
+                                                <Link
+                                                    href={`/admin/devices/${d.id}`}
+                                                    className="text-blue-600 hover:underline"
+                                                >
+                                                    {d.id}
+                                                </Link>
+                                            </TableCell>
                                             <TableCell>
                                                 {d.user_id ? (
                                                     <Link

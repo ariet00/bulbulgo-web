@@ -23,6 +23,14 @@ export const useAdminDevices = (
     })
 }
 
+export const useAdminDevice = (id: number) => {
+    return useQuery({
+        queryKey: adminKeys.device(id),
+        queryFn: () => adminApi.getDevice(id),
+        enabled: !!id,
+    })
+}
+
 export const useAdminUsers = (
     page: number = 1,
     size: number = 40,
