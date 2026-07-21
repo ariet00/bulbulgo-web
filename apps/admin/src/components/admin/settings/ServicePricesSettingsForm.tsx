@@ -4,6 +4,7 @@ import {
     type AdminAutoBumpTariff,
     type AdminUrgentTariff,
     type AdminServicePrices,
+    type ServiceRole,
 } from '@/apis/admin'
 import { useAdminServicePricesSettings } from '@/hooks/queries/admin'
 import { useUpdateAdminServicePricesSettings } from '@/hooks/mutations/admin'
@@ -42,6 +43,7 @@ const DEFAULT_FORM: AdminServicePrices = {
             price: 300,
         },
     ],
+    auto_bump_roles: ['driver'],
     urgent_enabled: false,
     urgent_title: 'Срочно',
     urgent_short_description: '',
@@ -50,8 +52,55 @@ const DEFAULT_FORM: AdminServicePrices = {
         { id: 'd1', label: '1 день', duration_days: 1, price: 100 },
         { id: 'd3', label: '3 дня', duration_days: 3, price: 200 },
     ],
+    urgent_roles: ['driver'],
     urgent_price: 50,
     urgent_duration_days: 1,
+}
+
+const ROLE_OPTIONS: { value: ServiceRole; label: string }[] = [
+    { value: 'driver', label: 'Водитель' },
+    { value: 'passenger', label: 'Пассажир' },
+    { value: 'parcel', label: 'Посылка' },
+]
+
+function RolesField({
+    value,
+    onToggle,
+    disabled,
+}: {
+    value: ServiceRole[]
+    onToggle: (role: ServiceRole) => void
+    disabled?: boolean
+}) {
+    return (
+        <div className="space-y-1">
+            <Label>Кому показывать</Label>
+            <div className="flex flex-wrap gap-2">
+                {ROLE_OPTIONS.map((opt) => {
+                    const active = value.includes(opt.value)
+                    return (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => onToggle(opt.value)}
+                            className={`rounded-full border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+                                active
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'border-input bg-background text-muted-foreground hover:bg-accent'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    )
+                })}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+                Роли объявлений, для которых видна услуга. Пусто — не видна
+                никому.
+            </p>
+        </div>
+    )
 }
 
 const newTariff = (): AdminAutoBumpTariff => ({
@@ -98,6 +147,18 @@ export function ServicePricesSettingsForm() {
         key: 'auto_bump_enabled' | 'urgent_enabled',
         value: boolean,
     ) => setForm((prev) => ({ ...prev, [key]: value }))
+
+    const toggleRole = (
+        key: 'auto_bump_roles' | 'urgent_roles',
+        role: ServiceRole,
+    ) =>
+        setForm((prev) => {
+            const current = prev[key]
+            const next = current.includes(role)
+                ? current.filter((r) => r !== role)
+                : [...current, role]
+            return { ...prev, [key]: next }
+        })
 
     const setTariff = <K extends keyof AdminAutoBumpTariff>(
         idx: number,
@@ -180,6 +241,11 @@ export function ServicePricesSettingsForm() {
                             disabled={isLoading}
                         />
                     </div>
+                    <RolesField
+                        value={form.urgent_roles}
+                        onToggle={(role) => toggleRole('urgent_roles', role)}
+                        disabled={isLoading}
+                    />
                     <div className="space-y-1">
                         <Label>Заголовок</Label>
                         <Input
@@ -369,6 +435,11 @@ export function ServicePricesSettingsForm() {
                             disabled={isLoading}
                         />
                     </div>
+                    <RolesField
+                        value={form.auto_bump_roles}
+                        onToggle={(role) => toggleRole('auto_bump_roles', role)}
+                        disabled={isLoading}
+                    />
                     <div className="space-y-1">
                         <Label>Заголовок</Label>
                         <Input

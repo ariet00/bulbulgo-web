@@ -57,17 +57,22 @@ export interface AdminUrgentTariff {
     price: number
 }
 
+/** Роли объявлений, для которых услуга доступна. */
+export type ServiceRole = 'driver' | 'passenger' | 'parcel'
+
 export interface AdminServicePrices {
     auto_bump_enabled: boolean
     auto_bump_title: string
     auto_bump_short_description: string
     auto_bump_description: string
     auto_bump_tariffs: AdminAutoBumpTariff[]
+    auto_bump_roles: ServiceRole[]
     urgent_enabled: boolean
     urgent_title: string
     urgent_short_description: string
     urgent_description: string
     urgent_tariffs: AdminUrgentTariff[]
+    urgent_roles: ServiceRole[]
     urgent_price: number
     urgent_duration_days: number
 }
