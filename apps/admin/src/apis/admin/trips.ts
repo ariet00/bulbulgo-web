@@ -140,6 +140,8 @@ export const tripsAdminApi = {
         ),
     updateTripStatus: (id: number, status: string) =>
         requests.patch<any>(`/admin/trips/${id}/status`, { status }),
+    bumpTrip: (id: number) =>
+        requests.post<{ message: string; id: number }>(`/admin/trips/${id}/bump`, {}),
     deleteTrip: (id: number) => requests.delete<any>(`/admin/trips/${id}`),
 
     // Parser author blocklist (Telegram accounts the chat parser skips)

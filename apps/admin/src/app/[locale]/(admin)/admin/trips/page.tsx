@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAdminTrips } from '@/hooks/queries/admin'
 import { useDebounce } from '@doska/shared'
 import { useFilterParams } from '@/hooks/useFilterParams'
-import { useAdminDeleteTrip } from '@/hooks/mutations/admin'
+import { useAdminBumpTrip, useAdminDeleteTrip } from '@/hooks/mutations/admin'
 import {
     Table,
     TableBody,
@@ -24,7 +24,7 @@ import {
     SelectValue,
     Switch,
 } from "@doska/ui"
-import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Zap, Flame } from 'lucide-react'
+import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Zap, Flame, ArrowUp } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
@@ -206,10 +206,17 @@ export default function AdminTripsPage() {
         },
     )
     const deleteTripMutation = useAdminDeleteTrip()
+    const bumpTripMutation = useAdminBumpTrip()
 
     const handleDelete = (id: number) => {
         if (confirm(`Are you sure you want to delete this trip (ID: ${id})?`)) {
             deleteTripMutation.mutate(id)
+        }
+    }
+
+    const handleBump = (id: number) => {
+        if (confirm(`Поднять объявление #${id}? Оно станет активным и будет репостнуто в группы.`)) {
+            bumpTripMutation.mutate(id)
         }
     }
 
@@ -579,6 +586,17 @@ export default function AdminTripsPage() {
                                         </Link>
                                         {!trip.is_deleted && (
                                             <Button
+                                                variant="outline"
+                                                size="sm"
+                                                title="Поднять (без лимитов)"
+                                                onClick={() => handleBump(trip.id)}
+                                                disabled={bumpTripMutation.isPending}
+                                            >
+                                                <ArrowUp className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                        {!trip.is_deleted && (
+                                            <Button
                                                 variant="destructive"
                                                 size="sm"
                                                 onClick={() => handleDelete(trip.id)}
@@ -611,12 +629,13 @@ export default function AdminTripsPage() {
                                     <TableHead title="Подключённые платные услуги">Услуги</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Created / Updated</TableHead>
+                                    <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {trips?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -724,6 +743,36 @@ export default function AdminTripsPage() {
                                                     <span title="Обновлено">
                                                         ↻ {format(new Date(trip.updated_at), 'dd.MM.yyyy HH:mm')}
                                                     </span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex space-x-2">
+                                                <Link href={`/admin/trips/${trip.id}`}>
+                                                    <Button variant="outline" size="sm">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
+                                                {!trip.is_deleted && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        title="Поднять (без лимитов)"
+                                                        onClick={() => handleBump(trip.id)}
+                                                        disabled={bumpTripMutation.isPending}
+                                                    >
+                                                        <ArrowUp className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {!trip.is_deleted && (
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleDelete(trip.id)}
+                                                        disabled={deleteTripMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
                                                 )}
                                             </div>
                                         </TableCell>

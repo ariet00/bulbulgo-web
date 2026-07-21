@@ -35,6 +35,18 @@ export const useAdminSetTripServiceUntil = () => {
     })
 }
 
+export const useAdminBumpTrip = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.bumpTrip(id),
+        onSuccess: (_data, id) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.trips() })
+            queryClient.invalidateQueries({ queryKey: adminKeys.trip(id) })
+            toast.success('Объявление поднято')
+        },
+    })
+}
+
 export const useAdminUpdateTripStatus = () => {
     const queryClient = useQueryClient()
     return useMutation({
