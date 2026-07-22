@@ -32,6 +32,8 @@ function isMarketingPath(pathname: string) {
     return (
         marketingPaths.has(pathname) ||
         pathname.startsWith("/news/") ||
+        // Реферальные инвайт-ссылки /i/<code> — без локали и intl-редиректа.
+        pathname.startsWith("/i/") ||
         // og-баннеры (marketing)-группы: Next добавляет к роуту хэш-суффикс
         // (/opengraph-image-<hash>), поэтому матчим по префиксу
         pathname.startsWith("/opengraph-image") ||
