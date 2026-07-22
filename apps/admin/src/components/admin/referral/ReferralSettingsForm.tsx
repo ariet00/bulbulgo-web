@@ -17,6 +17,7 @@ import {
 import { useEffect, useState } from 'react'
 
 const DEFAULT_FORM: AdminReferralSettings = {
+    program_enabled: false,
     capture_enabled: false,
     rewards_enabled: false,
     referrer_reward: 0,
@@ -35,7 +36,7 @@ export function ReferralSettingsForm() {
     }, [data])
 
     const setBool = (
-        key: 'capture_enabled' | 'rewards_enabled',
+        key: 'program_enabled' | 'capture_enabled' | 'rewards_enabled',
         value: boolean,
     ) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -65,13 +66,35 @@ export function ReferralSettingsForm() {
                     <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
                         <div className="space-y-0.5">
                             <Label className="cursor-pointer">
+                                Реферальная программа
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                Главный рубильник. Выкл — программы «не
+                                существует»: в приложении заглушка «скоро будет
+                                доступна», коды не принимаются, выплаты стоят.
+                                Остальные переключатели действуют только при
+                                включённой программе.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.program_enabled}
+                            onCheckedChange={(v) =>
+                                setBool('program_enabled', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
                                 Приём новых приглашений
                             </Label>
                             <p className="text-xs text-muted-foreground">
                                 Вкл — выдаём коды и привязываем новых
-                                приглашённых. Выкл — «остановить реферал»: новые
-                                не привязываются (уже привязанных решает второй
-                                флаг).
+                                приглашённых. Выкл — пауза: в приложении
+                                скрываются код и «Поделиться» (статистика
+                                остаётся), новые не привязываются; уже
+                                привязанных решает переключатель наград.
                             </p>
                         </div>
                         <Switch

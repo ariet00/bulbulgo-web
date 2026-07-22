@@ -3,6 +3,8 @@ import { requests } from './base'
 /** Роли объявлений на бэке: driver | passenger | parcel — тут не нужны. */
 
 export interface AdminReferralSettings {
+    /** Главный рубильник: выкл = в приложении заглушка «скоро будет доступна». */
+    program_enabled: boolean
     /** Приём новых приглашений (выдача кодов + привязка нового юзера). */
     capture_enabled: boolean
     /** Начисление наград по уже привязанным (pending) рефералам. */
