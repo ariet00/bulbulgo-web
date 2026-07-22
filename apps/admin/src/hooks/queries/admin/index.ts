@@ -1,6 +1,7 @@
 export * from './keys'
 export * from './analytics'
 export * from './celery'
+export * from './seeders'
 export * from './app-services'
 export * from './booking'
 export * from './companies'

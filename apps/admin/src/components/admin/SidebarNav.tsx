@@ -10,6 +10,7 @@ import {
     BellRing,
     CalendarCheck,
     Car,
+    Database,
     ClipboardList,
     Flag,
     FolderTree,
@@ -44,6 +45,7 @@ const sections: NavSection[] = [
         label: 'Ops',
         items: [
             { name: 'Celery', href: '/admin/celery', icon: Timer },
+            { name: 'Сидеры', href: '/admin/seeders', icon: Database },
         ],
     },
     {
