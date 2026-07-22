@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react'
 import { Smartphone, Download, ArrowRight, Copy, Check, Gift } from 'lucide-react'
 import { STORE_LINKS as links } from '@/lib/store-links'
 
-/// Инвайт-лендинг: показывает промокод, кладёт его в буфер обмена (приложение
-/// подставит на экране подтверждения номера) и ведёт в стор.
+/// Инвайт-лендинг: показывает промокод, кладёт его в буфер обмена (в приложении
+/// человек вставит его в поле «У меня есть промокод» на экране номера) и ведёт
+/// в стор. `/i/*` исключён из universal/app links (AASA + AndroidManifest), так
+/// что страница открывается в браузере и с установленным приложением.
 export default function InviteClient({ code }: { code: string }) {
     const [copied, setCopied] = useState(false)
 
@@ -37,8 +39,8 @@ export default function InviteClient({ code }: { code: string }) {
                 </h1>
 
                 <p className="text-lg text-gray-600 mb-10 max-w-xl mx-auto leading-relaxed">
-                    Установите приложение и введите промокод при подтверждении
-                    номера телефона — и находите попутчиков по всему
+                    Установите приложение и введите промокод при входе по
+                    номеру телефона — и находите попутчиков по всему
                     Кыргызстану.
                 </p>
 
@@ -99,8 +101,8 @@ export default function InviteClient({ code }: { code: string }) {
                 </div>
 
                 <p className="mt-12 text-sm text-gray-400 max-w-md mx-auto">
-                    Промокод сохранён в буфере обмена — при регистрации в
-                    приложении он подставится автоматически.
+                    Промокод скопирован в буфер обмена — вставьте его в поле
+                    «У меня есть промокод» на экране входа.
                 </p>
             </div>
         </div>
