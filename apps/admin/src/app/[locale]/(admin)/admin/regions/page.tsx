@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@doska/ui'
 import { ChevronDown, ChevronRight, MapPin, Pencil, Plus } from 'lucide-react'
+import { MapLinks } from '@/components/admin/regions/MapLinks'
 import {
     KIND_LABEL,
     KIND_OPTIONS,
@@ -151,7 +152,7 @@ export default function AdminRegionsPage() {
                     )}
 
                     {hasCoords && (
-                        <MapPin className="h-3.5 w-3.5 text-emerald-600" aria-label="есть координаты" />
+                        <MapLinks lat={node.latitude!} lng={node.longitude!} />
                     )}
 
                     {hasChildren && (

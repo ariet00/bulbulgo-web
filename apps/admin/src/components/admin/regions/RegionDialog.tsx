@@ -20,6 +20,7 @@ import {
 } from '@doska/ui'
 import { X } from 'lucide-react'
 import type { AdminRegion } from '@/apis/admin'
+import { MapLinks } from '@/components/admin/regions/MapLinks'
 import { useCreateAdminRegion, useUpdateAdminRegion } from '@/hooks/mutations/admin'
 
 // Порядок уровней дерева: страна → область → район → аймак → город → село → внутригородские
@@ -279,6 +280,12 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
                     </div>
                     {coordsInvalid && (
                         <p className="text-xs text-destructive">Координаты должны быть числами</p>
+                    )}
+                    {!coordsInvalid && latNum != null && lngNum != null && (
+                        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            Проверить точку:
+                            <MapLinks lat={latNum} lng={lngNum} />
+                        </p>
                     )}
 
                     <div className="space-y-1.5">
