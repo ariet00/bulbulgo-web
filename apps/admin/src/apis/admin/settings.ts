@@ -37,6 +37,7 @@ export interface AdminAppFeaturesSettings {
     phone_view_insights_enabled: boolean
     phone_view_show_viewer_phone: boolean
     bookings_tab_enabled: boolean
+    sort_trips_by_distance: boolean
 }
 
 // Per-user feature-flag overrides. `overrides` holds only the flags explicitly

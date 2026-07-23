@@ -24,6 +24,7 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     phone_view_insights_enabled: false,
     phone_view_show_viewer_phone: false,
     bookings_tab_enabled: false,
+    sort_trips_by_distance: true,
 }
 
 export function FeatureFlagsSettingsForm() {
@@ -235,6 +236,28 @@ export function FeatureFlagsSettingsForm() {
                             checked={form.bookings_tab_enabled}
                             onCheckedChange={(v) =>
                                 set('bookings_tab_enabled', v)
+                            }
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                Сортировка поездок по расстоянию
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                <code>sort_trips_by_distance</code>. Ленты и
+                                списки поездок при наличии геопозиции клиента
+                                показывают ближние первыми. Выключено —
+                                сортировка только по свежести. Включено по
+                                умолчанию.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.sort_trips_by_distance}
+                            onCheckedChange={(v) =>
+                                set('sort_trips_by_distance', v)
                             }
                             disabled={isLoading}
                         />
