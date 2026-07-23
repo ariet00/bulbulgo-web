@@ -39,6 +39,7 @@ export const useAdminUsers = (
         is_active?: boolean
         gender?: string
         provider?: string
+        phone_verified?: boolean
         date_from?: string
         date_to?: string
     },
@@ -53,6 +54,7 @@ export const useAdminUsers = (
                 is_active: filters?.is_active ?? null,
                 gender: filters?.gender ?? null,
                 provider: filters?.provider ?? null,
+                phone_verified: filters?.phone_verified ?? null,
                 date_from: filters?.date_from ?? null,
                 date_to: filters?.date_to ?? null,
             },

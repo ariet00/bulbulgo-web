@@ -22,7 +22,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@doska/ui"
-import { Ban, CheckCircle, Eye, Phone, Mail, Star, X, RefreshCw, Car } from 'lucide-react'
+import {
+    Ban,
+    CheckCircle,
+    Eye,
+    Phone,
+    Mail,
+    ShieldAlert,
+    ShieldCheck,
+    X,
+    RefreshCw,
+    Car,
+} from 'lucide-react'
 import Link from 'next/link'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
@@ -36,6 +47,11 @@ const STATUS_OPTIONS = [
 const GENDERS = ['male', 'female']
 const PROVIDERS = ['google', 'apple', 'telegram', 'phone']
 
+const PHONE_VERIFIED_OPTIONS = [
+    { value: 'yes', label: 'Подтверждён' },
+    { value: 'no', label: 'Не подтверждён' },
+]
+
 const FILTER_DEFAULTS = {
     page: 1,
     size: 40,
@@ -43,8 +59,24 @@ const FILTER_DEFAULTS = {
     status: ALL,
     gender: ALL,
     provider: ALL,
+    phone_verified: ALL,
     date_from: '',
     date_to: '',
+}
+
+/** Бейдж «номер подтверждён/нет» рядом с телефоном. */
+function PhoneVerifiedBadge({ verified }: { verified: boolean }) {
+    return verified ? (
+        <ShieldCheck
+            className="ml-1 h-3.5 w-3.5 shrink-0 text-green-600"
+            aria-label="Номер подтверждён"
+        />
+    ) : (
+        <ShieldAlert
+            className="ml-1 h-3.5 w-3.5 shrink-0 text-muted-foreground"
+            aria-label="Номер не подтверждён"
+        />
+    )
 }
 
 export default function UsersPage() {
@@ -64,6 +96,10 @@ export default function UsersPage() {
             is_active: values.status === ALL ? undefined : values.status === 'active',
             gender: values.gender === ALL ? undefined : values.gender,
             provider: values.provider === ALL ? undefined : values.provider,
+            phone_verified:
+                values.phone_verified === ALL
+                    ? undefined
+                    : values.phone_verified === 'yes',
             date_from: values.date_from || undefined,
             date_to: values.date_to || undefined,
         },
@@ -86,6 +122,7 @@ export default function UsersPage() {
         values.status !== ALL ||
         values.gender !== ALL ||
         values.provider !== ALL ||
+        values.phone_verified !== ALL ||
         !!values.date_from ||
         !!values.date_to
 
@@ -161,6 +198,22 @@ export default function UsersPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Select
+                            value={values.phone_verified}
+                            onValueChange={(v) => setValues({ phone_verified: v })}
+                        >
+                            <SelectTrigger className="w-full sm:w-44">
+                                <SelectValue placeholder="Номер" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>Номер: любой</SelectItem>
+                                {PHONE_VERIFIED_OPTIONS.map((o) => (
+                                    <SelectItem key={o.value} value={o.value}>
+                                        {o.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Регистрация от</span>
                             <Input
@@ -226,6 +279,7 @@ export default function UsersPage() {
                                         <span className="flex items-center">
                                             <Phone className="mr-1 h-3 w-3 shrink-0 text-muted-foreground" />
                                             {user.phone}
+                                            <PhoneVerifiedBadge verified={!!user.phone_verified} />
                                         </span>
                                     )}
                                     {user.email && (
@@ -235,17 +289,11 @@ export default function UsersPage() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                                    {!!user.rating && (
-                                        <span className="flex items-center">
-                                            <Star className="mr-1 h-3 w-3 text-yellow-500" />
-                                            {user.rating.toFixed(1)}
-                                            {!!user.review_count && ` (${user.review_count})`}
-                                        </span>
-                                    )}
-                                    {user.gender && <span className="capitalize">{user.gender}</span>}
-                                    {user.provider && <span className="capitalize">{user.provider}</span>}
-                                </div>
+                                {user.gender && (
+                                    <div className="text-xs capitalize text-muted-foreground">
+                                        {user.gender}
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between gap-2 border-t pt-2">
                                     <div className="flex min-w-0 flex-col text-xs text-muted-foreground">
                                         <span title="Регистрация">
@@ -301,10 +349,7 @@ export default function UsersPage() {
                                     <TableHead>User</TableHead>
                                     <TableHead>Contacts</TableHead>
                                     <TableHead>Gender</TableHead>
-                                    <TableHead>Rating</TableHead>
-                                    <TableHead>Provider</TableHead>
-                                    <TableHead>Registered</TableHead>
-                                    <TableHead>Last online</TableHead>
+                                    <TableHead>Рег. / онлайн</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
@@ -312,7 +357,7 @@ export default function UsersPage() {
                             <TableBody>
                                 {users?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -339,6 +384,7 @@ export default function UsersPage() {
                                                     <span className="flex items-center">
                                                         <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
                                                         {user.phone}
+                                                        <PhoneVerifiedBadge verified={!!user.phone_verified} />
                                                     </span>
                                                 )}
                                                 {user.email && (
@@ -351,27 +397,21 @@ export default function UsersPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="capitalize">{user.gender || '—'}</TableCell>
-                                        <TableCell>
-                                            {user.rating ? (
-                                                <span className="flex items-center">
-                                                    <Star className="h-3 w-3 mr-1 text-yellow-500" />
-                                                    {user.rating.toFixed(1)}
-                                                    {!!user.review_count && (
-                                                        <span className="text-xs text-muted-foreground ml-1">
-                                                            ({user.review_count})
-                                                        </span>
-                                                    )}
+                                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                            <div className="flex flex-col">
+                                                <span title="Регистрация">
+                                                    рег.{' '}
+                                                    {user.created_at
+                                                        ? format(new Date(user.created_at), 'dd.MM.yyyy HH:mm')
+                                                        : '—'}
                                                 </span>
-                                            ) : (
-                                                '—'
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="capitalize">{user.provider || '—'}</TableCell>
-                                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                            {user.created_at ? format(new Date(user.created_at), 'dd.MM.yyyy HH:mm') : '—'}
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                            {user.last_online_at ? format(new Date(user.last_online_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                                <span title="Последний онлайн">
+                                                    онлайн{' '}
+                                                    {user.last_online_at
+                                                        ? format(new Date(user.last_online_at), 'dd.MM.yyyy HH:mm')
+                                                        : '—'}
+                                                </span>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             {user.is_active ? (

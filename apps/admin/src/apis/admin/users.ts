@@ -130,6 +130,7 @@ export const usersAdminApi = {
             is_active?: boolean
             gender?: string
             provider?: string
+            phone_verified?: boolean
             date_from?: string
             date_to?: string
         },
@@ -139,6 +140,8 @@ export const usersAdminApi = {
         if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
         if (filters?.gender) params.set('gender', filters.gender)
         if (filters?.provider) params.set('provider', filters.provider)
+        if (filters?.phone_verified !== undefined)
+            params.set('phone_verified', String(filters.phone_verified))
         if (filters?.date_from) params.set('date_from', filters.date_from)
         if (filters?.date_to) params.set('date_to', filters.date_to)
         return requests.get<Page<any>>(`/admin/users/?${params.toString()}`)
