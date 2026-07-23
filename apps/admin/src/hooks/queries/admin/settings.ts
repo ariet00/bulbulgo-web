@@ -52,6 +52,13 @@ export const useAdminBumpLimitsSettings = () => {
     })
 }
 
+export const useAdminTripCreateRulesSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'trip-create-rules'] as const,
+        queryFn: () => adminApi.getTripCreateRulesSettings(),
+    })
+}
+
 export const useAdminActiveLimitsSettings = () => {
     return useQuery({
         queryKey: [...adminKeys.appSettings(), 'active-limits'] as const,

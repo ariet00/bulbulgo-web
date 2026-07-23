@@ -131,6 +131,19 @@ export interface AdminActiveLimitsSettings {
     max_active_per_direction: number
 }
 
+export interface AdminTripCreateRoleRules {
+    max_duration_hours: number
+    default_duration_hours: number
+    price_required: boolean
+    time_required: boolean
+}
+
+export interface AdminTripCreateRulesSettings {
+    driver: AdminTripCreateRoleRules
+    passenger: AdminTripCreateRoleRules
+    parcel: AdminTripCreateRoleRules
+}
+
 export interface CeleryCrontab {
     id?: number | null
     minute: string
@@ -235,6 +248,12 @@ export const settingsAdminApi = {
         requests.get<AdminBumpLimitsSettings>('/admin/settings/bump-limits'),
     updateBumpLimitsSettings: (body: AdminBumpLimitsSettings) =>
         requests.put<AdminBumpLimitsSettings>('/admin/settings/bump-limits', body),
+
+    // Trip-create form rules per role (Redis key `app:trip_create_rules`)
+    getTripCreateRulesSettings: () =>
+        requests.get<AdminTripCreateRulesSettings>('/admin/settings/trip-create-rules'),
+    updateTripCreateRulesSettings: (body: AdminTripCreateRulesSettings) =>
+        requests.put<AdminTripCreateRulesSettings>('/admin/settings/trip-create-rules', body),
 
     // Per-user active-listings limit (Redis key `app:active_limits`)
     getActiveLimitsSettings: () =>

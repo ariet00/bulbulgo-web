@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi, AdminAppFeaturesSettings, AdminAppVersionSettings, AdminMaintenanceSettings, AdminContactLimitsSettings, AdminBumpLimitsSettings, AdminActiveLimitsSettings, AdminServicePrices, AdminParcelTypesSettings, AdminAttractivePricesSettings, AdminSubscriptionSettings, AdminPhoneViewSettings, CeleryPeriodicTaskCreate, CeleryPeriodicTaskUpdate } from '@/apis/admin'
+import { adminApi, AdminAppFeaturesSettings, AdminAppVersionSettings, AdminMaintenanceSettings, AdminContactLimitsSettings, AdminBumpLimitsSettings, AdminActiveLimitsSettings, AdminTripCreateRulesSettings, AdminServicePrices, AdminParcelTypesSettings, AdminAttractivePricesSettings, AdminSubscriptionSettings, AdminPhoneViewSettings, CeleryPeriodicTaskCreate, CeleryPeriodicTaskUpdate } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
@@ -106,6 +106,18 @@ export const useUpdateAdminBumpLimitsSettings = () => {
     return useMutation({
         mutationFn: (body: AdminBumpLimitsSettings) =>
             adminApi.updateBumpLimitsSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminTripCreateRulesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminTripCreateRulesSettings) =>
+            adminApi.updateTripCreateRulesSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')
