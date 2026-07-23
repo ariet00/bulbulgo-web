@@ -99,7 +99,7 @@ export function ProfileClient() {
             <div className="mt-4 rounded-2xl border px-4">
                 <button
                     className={row}
-                    onClick={() => router.replace('/webview/auto_market/my')}
+                    onClick={() => router.replace('/webview/auto/my')}
                 >
                     <span>Мои объявления</span>
                     <span className="text-muted-foreground">
@@ -109,7 +109,7 @@ export function ProfileClient() {
                 <button
                     className={row}
                     onClick={() =>
-                        router.replace('/webview/auto_market/favorites')
+                        router.replace('/webview/auto/favorites')
                     }
                 >
                     <span>Избранное</span>
@@ -120,7 +120,7 @@ export function ProfileClient() {
                     onClick={() =>
                         navigateTo(
                             router,
-                            '/webview/auto_market/new',
+                            '/webview/auto/new',
                             'Подать объявление',
                         )
                     }

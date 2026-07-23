@@ -309,7 +309,7 @@ export function WizardClient() {
             if (bridge.bridgeAvailable() && typeof created.title === 'string') {
                 bridge.setTitle(created.title).catch(() => {})
             }
-            router.replace(`/webview/auto_market/${created.id}`)
+            router.replace(`/webview/auto/${created.id}`)
         } catch {
             setError('Не удалось опубликовать — проверьте поля и попробуйте ещё раз')
             setSubmitting(false)

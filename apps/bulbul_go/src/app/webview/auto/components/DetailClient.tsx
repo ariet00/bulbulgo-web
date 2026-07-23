@@ -293,7 +293,7 @@ export function DetailClient({ id }: { id: number }) {
                         onClick={() =>
                             navigateTo(
                                 router,
-                                `/webview/auto_market/my/${l.id}`,
+                                `/webview/auto/my/${l.id}`,
                                 'Управление объявлением',
                             )
                         }
@@ -446,7 +446,7 @@ export function DetailClient({ id }: { id: number }) {
                                     onOpen={(x) =>
                                         navigateTo(
                                             router,
-                                            `/webview/auto_market/${x.id}`,
+                                            `/webview/auto/${x.id}`,
                                             typeof x.title === 'string' ? x.title : undefined,
                                         )
                                     }

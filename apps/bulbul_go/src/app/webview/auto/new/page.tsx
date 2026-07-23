@@ -2,8 +2,8 @@ import { Suspense } from 'react'
 import '../auto-market.css'
 import { WizardClient } from '../components/wizard/WizardClient'
 
-// Подача объявления: /webview/auto_market/new (продажа, 4 шага) и
-// /webview/auto_market/new?kind=want («куплю», одна форма).
+// Подача объявления: /webview/auto/new (продажа, 4 шага) и
+// /webview/auto/new?kind=want («куплю», одна форма).
 
 export default function NewListingPage() {
     return (

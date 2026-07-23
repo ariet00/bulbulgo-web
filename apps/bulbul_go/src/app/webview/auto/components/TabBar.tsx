@@ -13,7 +13,7 @@ import { navigateTo } from '../lib/nav'
 
 export type TabKey = 'search' | 'my' | 'favorites' | 'profile'
 
-const BASE = '/webview/auto_market'
+const BASE = '/webview/auto'
 
 const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[] = [
     {

@@ -109,7 +109,7 @@ export function OwnerClient({ id }: { id: number }) {
                 if (!alive) return
                 if (l.user_id !== me.id) {
                     // не владелец — на публичную карточку
-                    router.replace(`/webview/auto_market/${id}`)
+                    router.replace(`/webview/auto/${id}`)
                     return
                 }
                 setListing(l)
@@ -320,7 +320,7 @@ export function OwnerClient({ id }: { id: number }) {
                     </button>
                     <button
                         onClick={() =>
-                            navigateTo(router, `/webview/auto_market/${l.id}`, title)
+                            navigateTo(router, `/webview/auto/${l.id}`, title)
                         }
                         className={actionBtn}
                     >

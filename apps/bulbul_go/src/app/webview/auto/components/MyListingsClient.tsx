@@ -133,7 +133,7 @@ export function MyListingsClient() {
                                 onClick={() =>
                                     navigateTo(
                                         router,
-                                        '/webview/auto_market/new',
+                                        '/webview/auto/new',
                                         'Подать объявление',
                                     )
                                 }
@@ -160,7 +160,7 @@ export function MyListingsClient() {
                                     onClick={() =>
                                         navigateTo(
                                             router,
-                                            `/webview/auto_market/my/${l.id}`,
+                                            `/webview/auto/my/${l.id}`,
                                             typeof l.title === 'string' ? l.title : undefined,
                                         )
                                     }

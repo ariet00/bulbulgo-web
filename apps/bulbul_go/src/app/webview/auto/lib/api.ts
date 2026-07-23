@@ -21,7 +21,7 @@ const MP = `${API_URL}/marketplace`
 // Сервис-скоупинг: бэкенд по слагу сервиса сам ограничивает каталог/ленту/
 // «Мои»/«Избранное» поддеревом auto и валидирует категорию при подаче —
 // клиенту не нужно знать category_id корня.
-const SVC = { 'X-Service-Slug': 'auto_market' }
+const SVC = { 'X-Service-Slug': 'auto' }
 
 /** fetch к marketplace с заголовком сервиса. */
 function mpFetch(url: string, init: RequestInit = {}): Promise<Response> {

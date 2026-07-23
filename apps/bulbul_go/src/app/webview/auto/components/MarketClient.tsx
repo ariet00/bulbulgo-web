@@ -438,7 +438,7 @@ export function MarketClient() {
                             onOpen={(x) =>
                                 navigateTo(
                                     router,
-                                    `/webview/auto_market/${x.id}`,
+                                    `/webview/auto/${x.id}`,
                                     typeof x.title === 'string' ? x.title : undefined,
                                 )
                             }
