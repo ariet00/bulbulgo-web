@@ -25,13 +25,6 @@ export default function DownloadPage() {
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
                     Скачайте <span className="text-blue-600">BulBul Go</span>
                 </h1>
-
-                <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-                    Мы перенаправляем вас в магазин приложений... Если
-                    перенаправление не произошло автоматически, выберите вашу
-                    платформу ниже.
-                </p>
-
                 <div className="flex flex-col md:flex-row items-center justify-center gap-6">
                     <a
                         href={links.playStore}
