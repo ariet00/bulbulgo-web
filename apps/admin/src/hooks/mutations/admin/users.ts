@@ -16,6 +16,32 @@ export const useAdminBanUser = () => {
     })
 }
 
+export const useAdminBanIdentifier = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (body: { type: string; value: string; reason?: string }) =>
+            adminApi.banIdentifier(body),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.users() })
+            toast.success('Идентификатор забанен')
+        },
+        onError: (e: any) => {
+            toast.error(e?.response?.data?.detail ?? 'Не удалось забанить')
+        },
+    })
+}
+
+export const useAdminUnbanIdentifier = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => adminApi.unbanIdentifier(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.users() })
+            toast.success('Идентификатор разбанен')
+        },
+    })
+}
+
 export const useUpdateAdminUserFeatures = () => {
     const queryClient = useQueryClient()
     return useMutation({

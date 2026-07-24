@@ -64,6 +64,22 @@ export const useAdminUsers = (
     })
 }
 
+export const useAdminBannedIdentifiers = (
+    page: number = 1,
+    size: number = 40,
+    filters?: { q?: string; type?: string },
+) => {
+    return useQuery({
+        queryKey: [
+            ...adminKeys.users(),
+            'banned-identifiers',
+            { page, size, q: filters?.q ?? null, type: filters?.type ?? null },
+        ],
+        queryFn: () => adminApi.getBannedIdentifiers(page, size, filters),
+        placeholderData: keepPreviousData,
+    })
+}
+
 export const useAdminUserSearch = (q: string, size: number = 20) => {
     return useQuery({
         queryKey: [...adminKeys.users(), 'search', { q, size }],

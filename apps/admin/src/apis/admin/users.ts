@@ -120,6 +120,17 @@ export interface AdminUserAppNotice {
     show_interval_hours: number | null
 }
 
+// Строка реестра забаненных идентификаторов (номера/почты).
+export interface AdminBannedIdentifier {
+    id: number
+    // phone | email
+    type: string
+    value: string
+    // banned_for_user_id (бан вместе с аккаунтом) либо banned_by_admin_id + reason
+    data: Record<string, any>
+    created_at: string
+}
+
 export const usersAdminApi = {
     // Users
     getUsers: (
@@ -165,6 +176,22 @@ export const usersAdminApi = {
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     banUser: (id: number, status: 'active' | 'banned') =>
         requests.put<any>(`/admin/users/${id}/ban?status=${status}`, {}),
+    getBannedIdentifiers: (
+        page = 1,
+        size = 40,
+        filters?: { q?: string; type?: string },
+    ) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (filters?.q) params.set('q', filters.q)
+        if (filters?.type) params.set('type', filters.type)
+        return requests.get<Page<AdminBannedIdentifier>>(
+            `/admin/users/banned-identifiers?${params.toString()}`,
+        )
+    },
+    banIdentifier: (body: { type: string; value: string; reason?: string }) =>
+        requests.post<AdminBannedIdentifier>('/admin/users/banned-identifiers', body),
+    unbanIdentifier: (id: number) =>
+        requests.delete<{ success: boolean }>(`/admin/users/banned-identifiers/${id}`),
     getUserDevices: (id: number) =>
         requests.get<AdminDeviceToken[]>(`/admin/users/${id}/devices`),
     getUserSessions: (id: number) =>

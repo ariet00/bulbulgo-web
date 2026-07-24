@@ -132,15 +132,22 @@ export default function UsersPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>User Management</CardTitle>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => refetch()}
-                        disabled={isFetching}
-                        title="Обновить"
-                    >
-                        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Link href="/admin/users/banned-identifiers">
+                            <Button variant="outline" className="gap-1">
+                                <Ban className="h-4 w-4" /> Забаненные контакты
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                            title="Обновить"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
