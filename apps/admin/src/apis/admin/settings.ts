@@ -38,6 +38,11 @@ export interface AdminAppFeaturesSettings {
     phone_view_show_viewer_phone: boolean
     bookings_tab_enabled: boolean
     sort_trips_by_distance: boolean
+    /**
+     * Мин. версии приложения per-флаг, например {"phone_login_enabled": "1.0.92"}.
+     * Мобильный клиент ниже версии видит флаг выключенным; нет ключа = все версии.
+     */
+    min_versions: Record<string, string>
 }
 
 // Per-user feature-flag overrides. `overrides` holds only the flags explicitly
