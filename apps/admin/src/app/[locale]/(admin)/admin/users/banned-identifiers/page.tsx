@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Mail, Phone, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { Mail, Phone, Plus, RefreshCw, Trash2, User, X } from 'lucide-react'
 import { useDebounce } from '@doska/shared'
 import {
     BackButton,
@@ -27,7 +27,7 @@ import {
     TableHeader,
     TableRow,
 } from '@doska/ui'
-import type { AdminBannedIdentifier } from '@/apis/admin/users'
+import type { AdminBannedIdentifier, AdminBannedIdentifierGroup } from '@/apis/admin/users'
 import { useAdminBannedIdentifiers } from '@/hooks/queries/admin'
 import { useAdminBanIdentifier, useAdminUnbanIdentifier } from '@/hooks/mutations/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
@@ -53,19 +53,27 @@ function TypeBadge({ type }: { type: string }) {
     )
 }
 
-/** Откуда бан: вместе с аккаунтом (ссылка на юзера) или вручную админом. */
-function SourceCell({ row }: { row: AdminBannedIdentifier }) {
-    const userId = row.data?.banned_for_user_id
-    if (userId) {
+/** Заголовок группы: юзер (ссылка; имя может отсутствовать — аккаунт уже
+ * удалён, бан переживает purge) либо ручной бан. */
+function GroupHeader({ group }: { group: AdminBannedIdentifierGroup }) {
+    if (group.user_id) {
         return (
-            <Link href={`/admin/users/${userId}`} className="text-sm hover:underline">
-                бан юзера #{userId}
+            <Link
+                href={`/admin/users/${group.user_id}`}
+                className="flex items-center gap-1.5 font-medium hover:underline"
+            >
+                <User className="h-4 w-4 text-muted-foreground" />
+                {group.user_name || `юзер #${group.user_id}`}
+                <span className="font-normal text-muted-foreground">
+                    #{group.user_id} · бан аккаунта
+                </span>
             </Link>
         )
     }
+    const adminId = group.identifiers[0]?.data?.banned_by_admin_id
     return (
-        <span className="text-sm text-muted-foreground">
-            вручную{row.data?.banned_by_admin_id ? ` (админ #${row.data.banned_by_admin_id})` : ''}
+        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            Вручную{adminId ? ` (админ #${adminId})` : ''}
         </span>
     )
 }
@@ -217,7 +225,6 @@ export default function BannedIdentifiersPage() {
                                     <TableRow>
                                         <TableHead>Тип</TableHead>
                                         <TableHead>Значение</TableHead>
-                                        <TableHead>Источник</TableHead>
                                         <TableHead>Причина</TableHead>
                                         <TableHead>Дата</TableHead>
                                         <TableHead className="text-right">Действия</TableHead>
@@ -227,40 +234,46 @@ export default function BannedIdentifiersPage() {
                                     {data?.items.length === 0 && (
                                         <TableRow>
                                             <TableCell
-                                                colSpan={6}
+                                                colSpan={5}
                                                 className="py-6 text-center text-muted-foreground"
                                             >
                                                 Ничего не найдено
                                             </TableCell>
                                         </TableRow>
                                     )}
-                                    {data?.items.map((row) => (
-                                        <TableRow key={row.id}>
-                                            <TableCell>
-                                                <TypeBadge type={row.type} />
-                                            </TableCell>
-                                            <TableCell className="font-mono">{row.value}</TableCell>
-                                            <TableCell>
-                                                <SourceCell row={row} />
-                                            </TableCell>
-                                            <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                                                {row.data?.reason || '—'}
-                                            </TableCell>
-                                            <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                                {format(new Date(row.created_at), 'dd.MM.yyyy HH:mm')}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleUnban(row)}
-                                                    disabled={unbanMutation.isPending}
-                                                    title="Разбанить"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
+                                    {data?.items.map((group, gi) => (
+                                        <Fragment key={group.user_id ?? `manual-${group.identifiers[0]?.id ?? gi}`}>
+                                            <TableRow className="bg-muted/50 hover:bg-muted/50">
+                                                <TableCell colSpan={5} className="py-2">
+                                                    <GroupHeader group={group} />
+                                                </TableCell>
+                                            </TableRow>
+                                            {group.identifiers.map((row) => (
+                                                <TableRow key={row.id}>
+                                                    <TableCell>
+                                                        <TypeBadge type={row.type} />
+                                                    </TableCell>
+                                                    <TableCell className="font-mono">{row.value}</TableCell>
+                                                    <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                                                        {row.data?.reason || '—'}
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                                        {format(new Date(row.created_at), 'dd.MM.yyyy HH:mm')}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleUnban(row)}
+                                                            disabled={unbanMutation.isPending}
+                                                            title="Разбанить"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </Fragment>
                                     ))}
                                 </TableBody>
                             </Table>

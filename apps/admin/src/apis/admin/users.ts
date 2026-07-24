@@ -131,6 +131,15 @@ export interface AdminBannedIdentifier {
     created_at: string
 }
 
+// Группа реестра: идентификаторы одного забаненного аккаунта (user_id может
+// указывать на уже удалённый — тогда user_name null) либо один ручной бан
+// (user_id null). Пагинация списка — по группам.
+export interface AdminBannedIdentifierGroup {
+    user_id: number | null
+    user_name: string | null
+    identifiers: AdminBannedIdentifier[]
+}
+
 export const usersAdminApi = {
     // Users
     getUsers: (
@@ -184,7 +193,7 @@ export const usersAdminApi = {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (filters?.q) params.set('q', filters.q)
         if (filters?.type) params.set('type', filters.type)
-        return requests.get<Page<AdminBannedIdentifier>>(
+        return requests.get<Page<AdminBannedIdentifierGroup>>(
             `/admin/users/banned-identifiers?${params.toString()}`,
         )
     },
