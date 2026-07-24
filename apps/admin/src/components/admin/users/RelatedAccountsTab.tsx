@@ -38,7 +38,8 @@ type RelatedAccount = {
     user_id: number
     name: string | null
     phone: string | null
-    is_active: boolean
+    // active | banned
+    status: string
     registered_at: string | null
     shared_devices: string[]
     first_seen: string | null
@@ -171,7 +172,7 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                                             {r.phone ?? '—'}
                                         </TableCell>
                                         <TableCell>
-                                            {r.is_active ? (
+                                            {r.status !== 'banned' ? (
                                                 <span className="inline-block rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400">
                                                     Активен
                                                 </span>
@@ -192,12 +193,12 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button
-                                                variant={r.is_active ? 'destructive' : 'outline'}
+                                                variant={r.status !== 'banned' ? 'destructive' : 'outline'}
                                                 size="sm"
                                                 onClick={() => setBanTarget(r)}
                                                 disabled={banUser.isPending}
                                             >
-                                                {r.is_active ? (
+                                                {r.status !== 'banned' ? (
                                                     <>
                                                         <Ban className="mr-1 h-4 w-4" /> Забанить
                                                     </>
@@ -307,7 +308,7 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                                             {s.user_phone ?? '—'}
                                         </TableCell>
                                         <TableCell>
-                                            {s.user_is_active ? (
+                                            {s.user_status !== 'banned' ? (
                                                 <span className="inline-block rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400">
                                                     Активен
                                                 </span>
@@ -338,7 +339,7 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            {banTarget?.is_active ? 'Забанить' : 'Разбанить'}{' '}
+                            {banTarget?.status !== 'banned' ? 'Забанить' : 'Разбанить'}{' '}
                             {banTarget?.name || `#${banTarget?.user_id}`}?
                         </DialogTitle>
                     </DialogHeader>
@@ -351,12 +352,15 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                             Отмена
                         </Button>
                         <Button
-                            variant={banTarget?.is_active ? 'destructive' : 'default'}
+                            variant={banTarget?.status !== 'banned' ? 'destructive' : 'default'}
                             disabled={banUser.isPending}
                             onClick={() => {
                                 if (!banTarget) return
                                 banUser.mutate(
-                                    { id: banTarget.user_id, isActive: !banTarget.is_active },
+                                    {
+                                        id: banTarget.user_id,
+                                        status: banTarget.status === 'banned' ? 'active' : 'banned',
+                                    },
                                     {
                                         onSuccess: () => {
                                             setBanTarget(null)
@@ -366,7 +370,7 @@ export function RelatedAccountsTab({ userId }: { userId: number }) {
                                 )
                             }}
                         >
-                            {banTarget?.is_active ? 'Забанить' : 'Разбанить'}
+                            {banTarget?.status !== 'banned' ? 'Забанить' : 'Разбанить'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

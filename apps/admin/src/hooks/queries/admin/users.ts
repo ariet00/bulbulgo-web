@@ -36,7 +36,8 @@ export const useAdminUsers = (
     size: number = 40,
     q?: string,
     filters?: {
-        is_active?: boolean
+        // active | banned
+        status?: string
         gender?: string
         provider?: string
         phone_verified?: boolean
@@ -51,7 +52,7 @@ export const useAdminUsers = (
                 page,
                 size,
                 q: q ?? null,
-                is_active: filters?.is_active ?? null,
+                status: filters?.status ?? null,
                 gender: filters?.gender ?? null,
                 provider: filters?.provider ?? null,
                 phone_verified: filters?.phone_verified ?? null,

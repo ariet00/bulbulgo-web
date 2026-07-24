@@ -49,7 +49,7 @@ function filtersSummary(f: AdminScheduledNotification['filters']): string {
     const parts: string[] = []
     if (f.role_id) parts.push(`role=${f.role_id}`)
     if (f.device_type) parts.push(f.device_type)
-    if (f.is_active != null) parts.push(f.is_active ? 'активные' : 'неактивные')
+    if (f.status) parts.push(f.status === 'banned' ? 'забаненные' : 'активные')
     if (f.min_version) parts.push(`≥${f.min_version}`)
     if (f.max_version) parts.push(`≤${f.max_version}`)
     return parts.length ? parts.join(', ') : 'все'

@@ -86,7 +86,7 @@ export default function AdminSendNotificationPage() {
     // Broadcast filters
     const [roleId, setRoleId] = useState<string>(ALL)
     const [deviceType, setDeviceType] = useState<string>(ALL)
-    const [isActive, setIsActive] = useState<string>(ALL)
+    const [userStatus, setUserStatus] = useState<string>(ALL)
     const [minVersion, setMinVersion] = useState('')
     const [maxVersion, setMaxVersion] = useState('')
     const [guestsOnly, setGuestsOnly] = useState(false)
@@ -146,7 +146,7 @@ export default function AdminSendNotificationPage() {
     const broadcastFilters: AdminBroadcastFilters = useMemo(
         () => ({
             role_id: guestsOnly ? null : roleId === ALL ? null : Number(roleId),
-            is_active: guestsOnly ? null : isActive === ALL ? null : isActive === 'true',
+            status: guestsOnly ? null : userStatus === ALL ? null : userStatus,
             device_type: deviceType === ALL ? null : deviceType,
             min_version: minVersion.trim() || null,
             max_version: maxVersion.trim() || null,
@@ -154,7 +154,7 @@ export default function AdminSendNotificationPage() {
             user_ids: userIds.length > 0 ? userIds : null,
             device_ids: deviceIds.length > 0 ? deviceIds : null,
         }),
-        [roleId, isActive, deviceType, minVersion, maxVersion, guestsOnly, userIds, deviceIds],
+        [roleId, userStatus, deviceType, minVersion, maxVersion, guestsOnly, userIds, deviceIds],
     )
 
     const {
@@ -182,9 +182,7 @@ export default function AdminSendNotificationPage() {
         setIsDataOnly(!!tpl.isDataOnly)
         setRoleId(tpl.filters.role_id != null ? String(tpl.filters.role_id) : ALL)
         setDeviceType(tpl.filters.device_type ?? ALL)
-        setIsActive(
-            tpl.filters.is_active == null ? ALL : tpl.filters.is_active ? 'true' : 'false',
-        )
+        setUserStatus(tpl.filters.status ?? ALL)
         setMinVersion(tpl.filters.min_version ?? '')
         setMaxVersion(tpl.filters.max_version ?? '')
         setGuestsOnly(!!tpl.filters.guests_only)
@@ -381,10 +379,10 @@ export default function AdminSendNotificationPage() {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label>Активность</Label>
+                                        <Label>Статус</Label>
                                         <Select
-                                            value={isActive}
-                                            onValueChange={setIsActive}
+                                            value={userStatus}
+                                            onValueChange={setUserStatus}
                                             disabled={guestsOnly}
                                         >
                                             <SelectTrigger>
@@ -392,8 +390,8 @@ export default function AdminSendNotificationPage() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value={ALL}>Все</SelectItem>
-                                                <SelectItem value="true">Только активные</SelectItem>
-                                                <SelectItem value="false">Только неактивные</SelectItem>
+                                                <SelectItem value="active">Только активные</SelectItem>
+                                                <SelectItem value="banned">Только забаненные</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

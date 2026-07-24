@@ -273,7 +273,7 @@ export default function UserDetailPage() {
 
     const handleBan = () => {
         banUser.mutate(
-            { id: user.id, isActive: !user.is_active },
+            { id: user.id, status: user.status === 'banned' ? 'active' : 'banned' },
             { onSettled: () => setConfirmBan(false) },
         )
     }
@@ -308,7 +308,7 @@ export default function UserDetailPage() {
                             </h1>
                             <p className="text-sm text-muted-foreground">@{user.username}</p>
                             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                {user.is_active ? (
+                                {user.status !== 'banned' ? (
                                     <Pill tone="emerald">
                                         <CheckCircle2 className="h-3 w-3" /> Активен
                                     </Pill>
@@ -345,11 +345,11 @@ export default function UserDetailPage() {
                             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
                         </Button>
                         <Button
-                            variant={user.is_active ? 'destructive' : 'default'}
+                            variant={user.status !== 'banned' ? 'destructive' : 'default'}
                             className="gap-2"
                             onClick={() => setConfirmBan(true)}
                         >
-                            {user.is_active ? (
+                            {user.status !== 'banned' ? (
                                 <>
                                     <Ban className="h-4 w-4" /> Забанить
                                 </>
@@ -557,10 +557,10 @@ export default function UserDetailPage() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            {user.is_active ? 'Забанить' : 'Разбанить'} {user.username}?
+                            {user.status !== 'banned' ? 'Забанить' : 'Разбанить'} {user.username}?
                         </DialogTitle>
                         <DialogDescription>
-                            {user.is_active
+                            {user.status !== 'banned'
                                 ? 'Пользователь потеряет доступ к аккаунту до разбана.'
                                 : 'Пользователю вернётся доступ к аккаунту.'}
                         </DialogDescription>
@@ -570,19 +570,19 @@ export default function UserDetailPage() {
                             <Button variant="outline">Отмена</Button>
                         </DialogClose>
                         <Button
-                            variant={user.is_active ? 'destructive' : 'default'}
+                            variant={user.status !== 'banned' ? 'destructive' : 'default'}
                             onClick={handleBan}
                             disabled={banUser.isPending}
                             className="gap-2"
                         >
                             {banUser.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : user.is_active ? (
+                            ) : user.status !== 'banned' ? (
                                 <Ban className="h-4 w-4" />
                             ) : (
                                 <CheckCircle2 className="h-4 w-4" />
                             )}
-                            {user.is_active ? 'Забанить' : 'Разбанить'}
+                            {user.status !== 'banned' ? 'Забанить' : 'Разбанить'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

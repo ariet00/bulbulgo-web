@@ -24,7 +24,8 @@ export interface AdminSendNotification {
 
 export interface AdminBroadcastFilters {
     role_id?: number | null
-    is_active?: boolean | null
+    // users.status: active | banned
+    status?: string | null
     device_type?: string | null
     min_version?: string | null
     max_version?: string | null

@@ -127,7 +127,8 @@ export const usersAdminApi = {
         size = 40,
         q?: string,
         filters?: {
-            is_active?: boolean
+            // active | banned
+            status?: string
             gender?: string
             provider?: string
             phone_verified?: boolean
@@ -137,7 +138,7 @@ export const usersAdminApi = {
     ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
         if (q) params.set('q', q)
-        if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
+        if (filters?.status) params.set('status', filters.status)
         if (filters?.gender) params.set('gender', filters.gender)
         if (filters?.provider) params.set('provider', filters.provider)
         if (filters?.phone_verified !== undefined)
@@ -162,8 +163,8 @@ export const usersAdminApi = {
         requests.get<AdminDeviceDetail>(`/admin/users/devices/${id}`),
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
-    banUser: (id: number, isActive: boolean) =>
-        requests.put<any>(`/admin/users/${id}/ban?is_active=${isActive}`, {}),
+    banUser: (id: number, status: 'active' | 'banned') =>
+        requests.put<any>(`/admin/users/${id}/ban?status=${status}`, {}),
     getUserDevices: (id: number) =>
         requests.get<AdminDeviceToken[]>(`/admin/users/${id}/devices`),
     getUserSessions: (id: number) =>
@@ -183,7 +184,8 @@ export const usersAdminApi = {
                 name: string | null
                 phone: string | null
                 avatar_url: string | null
-                is_active: boolean
+                // active | banned
+                status: string
                 registered_at: string | null
                 shared_devices: string[]
                 first_seen: string | null
@@ -199,7 +201,8 @@ export const usersAdminApi = {
                 user_name: string | null
                 user_phone: string | null
                 user_avatar_url: string | null
-                user_is_active: boolean
+                // active | banned
+                user_status: string
                 match_percent: number
                 matched_fields: string[]
                 rooted: boolean | null

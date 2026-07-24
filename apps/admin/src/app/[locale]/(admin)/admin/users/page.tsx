@@ -93,7 +93,7 @@ export default function UsersPage() {
         values.size,
         values.q || undefined,
         {
-            is_active: values.status === ALL ? undefined : values.status === 'active',
+            status: values.status === ALL ? undefined : values.status,
             gender: values.gender === ALL ? undefined : values.gender,
             provider: values.provider === ALL ? undefined : values.provider,
             phone_verified:
@@ -106,9 +106,9 @@ export default function UsersPage() {
     )
     const banUserMutation = useAdminBanUser()
 
-    const handleBan = (id: number, isActive: boolean) => {
-        if (confirm(`Are you sure you want to ${isActive ? 'unban' : 'ban'} this user?`)) {
-            banUserMutation.mutate({ id, isActive })
+    const handleBan = (id: number, ban: boolean) => {
+        if (confirm(`Are you sure you want to ${ban ? 'ban' : 'unban'} this user?`)) {
+            banUserMutation.mutate({ id, status: ban ? 'banned' : 'active' })
         }
     }
 
@@ -264,7 +264,7 @@ export default function UsersPage() {
                                             @{user.username} · #{user.id}
                                         </span>
                                     </Link>
-                                    {user.is_active ? (
+                                    {user.status !== 'banned' ? (
                                         <span className="flex shrink-0 items-center text-xs text-green-600">
                                             <CheckCircle className="mr-1 h-3 w-3" /> Active
                                         </span>
@@ -324,12 +324,12 @@ export default function UsersPage() {
                                             </Button>
                                         </Link>
                                         <Button
-                                            variant={user.is_active ? 'destructive' : 'default'}
+                                            variant={user.status !== 'banned' ? 'destructive' : 'default'}
                                             size="sm"
-                                            onClick={() => handleBan(user.id, !user.is_active)}
+                                            onClick={() => handleBan(user.id, user.status !== 'banned')}
                                             disabled={banUserMutation.isPending}
                                         >
-                                            {user.is_active ? (
+                                            {user.status !== 'banned' ? (
                                                 <Ban className="h-4 w-4" />
                                             ) : (
                                                 <CheckCircle className="h-4 w-4" />
@@ -414,7 +414,7 @@ export default function UsersPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {user.is_active ? (
+                                            {user.status !== 'banned' ? (
                                                 <span className="text-green-600 flex items-center">
                                                     <CheckCircle className="h-4 w-4 mr-1" /> Active
                                                 </span>
@@ -437,12 +437,12 @@ export default function UsersPage() {
                                                     </Button>
                                                 </Link>
                                                 <Button
-                                                    variant={user.is_active ? "destructive" : "default"}
+                                                    variant={user.status !== 'banned' ? "destructive" : "default"}
                                                     size="sm"
-                                                    onClick={() => handleBan(user.id, !user.is_active)}
+                                                    onClick={() => handleBan(user.id, user.status !== 'banned')}
                                                     disabled={banUserMutation.isPending}
                                                 >
-                                                    {user.is_active ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                                                    {user.status !== 'banned' ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                                                 </Button>
                                             </div>
                                         </TableCell>

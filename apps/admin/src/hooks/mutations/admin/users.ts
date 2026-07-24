@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 export const useAdminBanUser = () => {
     const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-            adminApi.banUser(id, isActive),
+        mutationFn: ({ id, status }: { id: number; status: 'active' | 'banned' }) =>
+            adminApi.banUser(id, status),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: adminKeys.users() })
             queryClient.invalidateQueries({ queryKey: adminKeys.user(id) })
