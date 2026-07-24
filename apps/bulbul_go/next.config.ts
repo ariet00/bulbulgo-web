@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_PRODUCT: 'bulbulgo',
   },
+  // /service/{slug}/* и алиас /s/{slug}/* — App Link-префиксы webview-сервисов
+  // (манифест Android + AASA ловят только их). В браузере (нет приложения /
+  // десктоп) разворачиваем на обычную страницу сайта: /service/auto/133 →
+  // /auto/133 (share-страница с OG; Telegram/WhatsApp следуют редиректу).
+  async redirects() {
+    return [
+      { source: '/service/:path*', destination: '/:path*', permanent: false },
+      { source: '/s/:path*', destination: '/:path*', permanent: false },
+    ]
+  },
   // OG-картинки читают шрифты Montserrat с диска (fs.readFile) — форсим их
   // включение в serverless-бандлы этих функций, иначе на проде ENOENT.
   outputFileTracingIncludes: {

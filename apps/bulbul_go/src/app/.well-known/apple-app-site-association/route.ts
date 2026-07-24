@@ -1,9 +1,23 @@
 // iOS Universal Links для go.bulbul.asia. Отдаётся как application/json без
-// расширения в URL. appID = <TeamID>.<bundleId>. paths: все ссылки открывают
-// приложение, кроме /download (там web, чтобы можно было установить апп) и
-// инвайт-лендинга /i/* (человек должен увидеть страницу с промокодом и сам
-// ввести его в приложении на экране входа).
+// расширения в URL. appID = <TeamID>.<bundleId>. paths — whitelist (зеркало
+// intent-filter в AndroidManifest): нативные роуты приложения + префиксы
+// webview-сервисов /service/ и /s/ (слаг динамический, поэтому общий
+// префикс). Всё остальное (/download, инвайт-лендинг /i/*, маркетинг) открыто
+// в браузере и в приложение не ведёт.
 export const dynamic = 'force-static'
+
+const NATIVE_PREFIXES = [
+    '/rideshare',
+    '/freight',
+    '/bus',
+    '/real_estate',
+    '/home',
+    '/users',
+    '/profile',
+    '/login',
+    '/messages',
+    '/tab-settings',
+]
 
 const AASA = {
     applinks: {
@@ -11,7 +25,11 @@ const AASA = {
         details: [
             {
                 appID: 'LH54VCD83H.com.bakasov.bulbulgo',
-                paths: ['NOT /download', 'NOT /i/*', '*'],
+                paths: [
+                    ...NATIVE_PREFIXES.flatMap((p) => [p, `${p}/*`]),
+                    '/service/*',
+                    '/s/*',
+                ],
             },
         ],
     },

@@ -201,7 +201,7 @@ export function OwnerClient({ id }: { id: number }) {
     const share = () => {
         if (!listing) return
         trackShare(listing.id)
-        const url = `https://go.bulbul.asia/auto/${listing.id}`
+        const url = `https://go.bulbul.asia/service/auto/${listing.id}`
         if (bridge.bridgeAvailable()) bridge.share(url).catch(() => {})
         else navigator.clipboard?.writeText(url)
     }

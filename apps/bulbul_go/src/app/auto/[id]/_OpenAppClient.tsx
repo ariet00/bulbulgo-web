@@ -25,7 +25,7 @@ export default function OpenAppClient({ id }: { id: string }) {
     useEffect(() => setPlatform(detectPlatform()), [])
 
     const androidIntent =
-        `intent://go.bulbul.asia/auto/${id}` +
+        `intent://go.bulbul.asia/service/auto/${id}` +
         `#Intent;scheme=https;package=com.bakasov.bulbul_go;` +
         `S.browser_fallback_url=${encodeURIComponent(PLAY_URL)};end`
 

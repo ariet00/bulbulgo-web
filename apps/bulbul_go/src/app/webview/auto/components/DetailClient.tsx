@@ -212,7 +212,7 @@ export function DetailClient({ id }: { id: number }) {
         if (!listing) return
         trackShare(listing.id)
         // публичная share-страница с OG-превью (см. src/app/auto/[id])
-        const url = `https://go.bulbul.asia/auto/${listing.id}`
+        const url = `https://go.bulbul.asia/service/auto/${listing.id}`
         if (bridge.bridgeAvailable()) bridge.share(url).catch(() => {})
         else if (navigator.share) navigator.share({ url }).catch(() => {})
         else navigator.clipboard?.writeText(url)
