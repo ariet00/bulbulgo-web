@@ -181,6 +181,8 @@ export const usersAdminApi = {
     },
     getDevice: (id: number) =>
         requests.get<AdminDeviceDetail>(`/admin/users/devices/${id}`),
+    banDevice: (id: number, status: 'active' | 'banned') =>
+        requests.put<AdminDeviceToken>(`/admin/users/devices/${id}/ban?status=${status}`, {}),
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     banUser: (id: number, status: 'active' | 'banned') =>

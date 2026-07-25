@@ -17,8 +17,9 @@ import {
     TableHeader,
     TableRow,
 } from '@doska/ui'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Ban, CheckCircle2 } from 'lucide-react'
 import { useAdminDevice } from '@/hooks/queries/admin'
+import { useAdminBanDevice } from '@/hooks/mutations/admin'
 import type { AdminDeviceSessionItem } from '@/apis/admin'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -48,6 +49,7 @@ export default function DeviceDetailPage() {
     const id = Number(params.id)
 
     const { data: device, isLoading } = useAdminDevice(id)
+    const banDevice = useAdminBanDevice()
 
     if (isLoading) return <div className="p-4">Загрузка...</div>
     if (!device)
@@ -72,6 +74,27 @@ export default function DeviceDetailPage() {
                     <h1 className="text-2xl font-bold">Устройство #{device.id}</h1>
                     <StatusBadge status={device.status} />
                 </div>
+                <Button
+                    variant={device.status === 'banned' ? 'default' : 'destructive'}
+                    className="gap-2"
+                    disabled={banDevice.isPending}
+                    onClick={() => {
+                        const ban = device.status !== 'banned'
+                        if (confirm(`${ban ? 'Забанить' : 'Разбанить'} это устройство?`)) {
+                            banDevice.mutate({ id: device.id, status: ban ? 'banned' : 'active' })
+                        }
+                    }}
+                >
+                    {device.status === 'banned' ? (
+                        <>
+                            <CheckCircle2 className="h-4 w-4" /> Разбанить
+                        </>
+                    ) : (
+                        <>
+                            <Ban className="h-4 w-4" /> Забанить
+                        </>
+                    )}
+                </Button>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">

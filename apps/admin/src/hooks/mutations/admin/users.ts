@@ -16,6 +16,19 @@ export const useAdminBanUser = () => {
     })
 }
 
+export const useAdminBanDevice = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, status }: { id: number; status: 'active' | 'banned' }) =>
+            adminApi.banDevice(id, status),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.devices() })
+            queryClient.invalidateQueries({ queryKey: adminKeys.device(id) })
+            toast.success('Статус устройства обновлён')
+        },
+    })
+}
+
 export const useAdminBanIdentifier = () => {
     const queryClient = useQueryClient()
     return useMutation({
