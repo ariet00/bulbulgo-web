@@ -61,8 +61,6 @@ export interface ParserChannelBlock {
     bot_username: string
     /** Trip roles to keep when parsing this channel. Empty = keep all. */
     allowed_roles: TripRole[]
-    /** Per-channel trip lifetime in hours. null = use the global parser setting. */
-    trip_expire_hours: number | null
     /**
      * Per-channel content filters (free-form JSON, extensible). Currently:
      * `{ price: { <role>: { enabled: boolean; min: number|null; max: number|null } } }`.
