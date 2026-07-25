@@ -67,6 +67,7 @@ import {
     Phone,
     RefreshCw,
     Route,
+    ShieldAlert,
     ShieldCheck,
     Smartphone,
     Star,
@@ -103,6 +104,21 @@ function isOnline(lastOnline?: string | null) {
 
 function copy(text?: string | null) {
     if (text) navigator.clipboard?.writeText(text)
+}
+
+/** Бейдж «номер подтверждён/нет» рядом с телефоном (как в списке юзеров). */
+function PhoneVerifiedBadge({ verified }: { verified: boolean }) {
+    return verified ? (
+        <ShieldCheck
+            className="h-3.5 w-3.5 shrink-0 text-green-600"
+            aria-label="Номер подтверждён"
+        />
+    ) : (
+        <ShieldAlert
+            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+            aria-label="Номер не подтверждён"
+        />
+    )
 }
 
 function Pill({
@@ -408,6 +424,7 @@ export default function UserDetailPage() {
                             title="Скопировать телефон"
                         >
                             <Phone className="h-3.5 w-3.5" /> {user.phone}
+                            <PhoneVerifiedBadge verified={!!user.phone_verified} />
                             <Copy className="h-3 w-3 opacity-50" />
                         </button>
                     )}
@@ -490,7 +507,17 @@ export default function UserDetailPage() {
                                     {[user.surname, user.name, user.patronymic].filter(Boolean).join(' ') || '—'}
                                 </InfoRow>
                                 <InfoRow icon={Phone} label="Телефон" onCopy={user.phone ? () => copy(user.phone) : undefined}>
-                                    {user.phone || '—'}
+                                    <span className="inline-flex items-center gap-1.5">
+                                        {user.phone || '—'}
+                                        {user.phone && (
+                                            <>
+                                                <PhoneVerifiedBadge verified={!!user.phone_verified} />
+                                                <span className="text-xs text-muted-foreground">
+                                                    {user.phone_verified ? 'подтверждён' : 'не подтверждён'}
+                                                </span>
+                                            </>
+                                        )}
+                                    </span>
                                 </InfoRow>
                                 <InfoRow icon={Mail} label="Email" onCopy={user.email ? () => copy(user.email) : undefined}>
                                     {user.email || '—'}
