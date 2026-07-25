@@ -14,7 +14,7 @@ export interface AdminRegion {
 
 export interface AdminRegionInput {
     name: string
-    kind?: string | null
+    kind: string
     parent_id?: number | null
     is_popular?: boolean
     latitude?: number | null

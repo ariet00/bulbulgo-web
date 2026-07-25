@@ -49,8 +49,6 @@ export const KIND_LABEL: Record<string, string> = {
 // Порядок опций = порядок уровней дерева (country не предлагаем)
 export const KIND_OPTIONS = ['region', 'district', 'ayil_aimak', 'city', 'near_city', 'village', 'incity']
 
-const NO_KIND = 'none'
-
 function normalize(s: string) {
     return s.toLowerCase().replace(/ё/g, 'е')
 }
@@ -173,7 +171,7 @@ type Props = {
 export function RegionDialog({ open, onOpenChange, region, parent, regions }: Props) {
     const isEdit = !!region
     const [name, setName] = useState('')
-    const [kind, setKind] = useState<string>(NO_KIND)
+    const [kind, setKind] = useState<string>('')
     const [parentId, setParentId] = useState<number | null>(null)
     const [isPopular, setIsPopular] = useState(false)
     const [latitude, setLatitude] = useState('')
@@ -187,7 +185,7 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
     useEffect(() => {
         if (!open) return
         setName(region?.name ?? '')
-        setKind(region?.kind ?? NO_KIND)
+        setKind(region?.kind ?? '')
         setParentId(region?.parent_id ?? parent?.id ?? null)
         setIsPopular(region?.is_popular ?? false)
         setLatitude(region?.latitude != null ? String(region.latitude) : '')
@@ -200,11 +198,17 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
     const coordsInvalid =
         (latNum != null && Number.isNaN(latNum)) || (lngNum != null && Number.isNaN(lngNum))
 
+    // kind у корня — 'country', его нет в KIND_OPTIONS: показываем как опцию при редактировании
+    const kindOptions =
+        region?.kind && !KIND_OPTIONS.includes(region.kind)
+            ? [region.kind, ...KIND_OPTIONS]
+            : KIND_OPTIONS
+
     const submit = () => {
-        if (!name.trim() || coordsInvalid) return
+        if (!name.trim() || !kind || coordsInvalid) return
         const body = {
             name: name.trim(),
-            kind: kind === NO_KIND ? null : kind,
+            kind,
             parent_id: parentId,
             is_popular: isPopular,
             latitude: latNum,
@@ -240,13 +244,12 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
                             <Label>Тип</Label>
                             <Select value={kind} onValueChange={setKind}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Тип" />
+                                    <SelectValue placeholder="Выберите тип" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value={NO_KIND}>— не указан —</SelectItem>
-                                    {KIND_OPTIONS.map((k) => (
+                                    {kindOptions.map((k) => (
                                         <SelectItem key={k} value={k}>
-                                            {KIND_LABEL[k]}
+                                            {KIND_LABEL[k] ?? k}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -305,7 +308,7 @@ export function RegionDialog({ open, onOpenChange, region, parent, regions }: Pr
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Отмена
                     </Button>
-                    <Button onClick={submit} disabled={pending || !name.trim() || coordsInvalid}>
+                    <Button onClick={submit} disabled={pending || !name.trim() || !kind || coordsInvalid}>
                         {isEdit ? 'Сохранить' : 'Создать'}
                     </Button>
                 </DialogFooter>
