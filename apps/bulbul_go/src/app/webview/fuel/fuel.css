@@ -1,0 +1,104 @@
+/* «Где заправка»: акцент сервиса + светофор статусов + примитивы.
+   Все цвета — поверх токенов темы; статусные переменные читает format.ts. */
+
+.fl-root {
+    --fl-accent: #1f6ff0; /* козырёк АЗС — синий */
+    --fl-accent-soft: color-mix(in srgb, var(--fl-accent) 12%, transparent);
+    --fl-accent-border: color-mix(in srgb, var(--fl-accent) 36%, transparent);
+
+    /* светофор статусов топлива */
+    --fl-ok: #189a58; /* есть топливо */
+    --fl-soon: #2f7fd1; /* ждём подвоз */
+    --fl-warn: #d9840a; /* очередь */
+    --fl-bad: #d3372f; /* закончилось */
+}
+
+.dark .fl-root {
+    --fl-ok: #2fbf74;
+    --fl-soon: #5aa2e8;
+    --fl-warn: #f0a12f;
+    --fl-bad: #ef5a50;
+}
+
+/* появление строк списка */
+@keyframes fl-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+.fl-rise {
+    animation: fl-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--fl-delay, 0ms);
+}
+
+/* пульс точки «свежий статус» */
+@keyframes fl-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 3px transparent;
+    }
+}
+.fl-pulse {
+    animation: fl-pulse 2.4s ease-out infinite;
+}
+
+/* скелетон */
+@keyframes fl-shimmer {
+    from {
+        background-position: -200% 0;
+    }
+    to {
+        background-position: 200% 0;
+    }
+}
+.fl-skeleton {
+    background: linear-gradient(
+        100deg,
+        color-mix(in srgb, currentColor 7%, transparent) 40%,
+        color-mix(in srgb, currentColor 14%, transparent) 50%,
+        color-mix(in srgb, currentColor 7%, transparent) 60%
+    );
+    background-size: 200% 100%;
+    animation: fl-shimmer 1.4s linear infinite;
+    color: inherit;
+}
+
+/* bottom-sheet (классы читает общий BottomSheet из auto) */
+@keyframes fl-sheet-in {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: none;
+    }
+}
+@keyframes fl-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.am-sheet-backdrop {
+    animation: fl-fade-in 0.2s ease both;
+}
+.am-sheet-panel {
+    animation: fl-sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* горизонтальная лента чипсов без скроллбара */
+.fl-chips {
+    scrollbar-width: none;
+}
+.fl-chips::-webkit-scrollbar {
+    display: none;
+}
