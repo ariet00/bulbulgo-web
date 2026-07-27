@@ -116,9 +116,9 @@ export function TabBar() {
 
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-            {/* +10px к safe-area: во вьюве приложения inset может быть 0,
-                без запаса кнопки прилипают к нижней кромке/жестовой зоне */}
-            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+10px)]">
+            {/* +26px к safe-area (как в fuel): во вьюве приложения inset
+                может быть 0, с меньшим запасом кнопки липнут к жестовой зоне */}
+            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+26px)]">
                 {left.map(tab)}
 
                 {/* Создать — акцентная центральная кнопка, открывает wizard */}
