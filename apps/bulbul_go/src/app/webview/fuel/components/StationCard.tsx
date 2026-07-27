@@ -83,7 +83,7 @@ export function StationCard({
                         <p className="min-w-0 truncate text-[15px] font-semibold leading-tight">
                             {station.name}
                         </p>
-                        <span className="shrink-0 text-[13px] font-medium tabular-nums text-[var(--fl-accent)]">
+                        <span className="shrink-0 text-[13px] font-medium tabular-nums text-[var(--wv-accent)]">
                             {formatDistance(station.distance_km)}
                         </span>
                     </div>
@@ -119,7 +119,7 @@ export function StationCard({
                                     <span
                                         className={
                                             'h-1.5 w-1.5 rounded-full ' +
-                                            (st.is_stale ? '' : 'fl-pulse')
+                                            (st.is_stale ? '' : 'wv-pulse')
                                         }
                                         style={{ backgroundColor: color, color }}
                                     />

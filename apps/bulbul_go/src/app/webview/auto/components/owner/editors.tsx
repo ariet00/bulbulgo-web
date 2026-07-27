@@ -22,7 +22,7 @@ function SaveButton({
             onClick={onClick}
             disabled={saving || disabled}
             className="w-full rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90 disabled:opacity-40"
-            style={{ background: 'var(--am-accent)' }}
+            style={{ background: 'var(--wv-accent)' }}
         >
             {saving ? 'Сохраняем…' : 'Сохранить'}
         </button>
@@ -163,7 +163,7 @@ export function PriceEditSheet({
                             className="px-3"
                             style={
                                 currency === c
-                                    ? { background: 'var(--am-accent)', color: '#fff' }
+                                    ? { background: 'var(--wv-accent)', color: '#fff' }
                                     : undefined
                             }
                         >
@@ -303,7 +303,7 @@ export function ContactEditSheet({
                     className="relative h-6 w-10 rounded-full transition-colors"
                     style={{
                         background: whatsapp
-                            ? 'var(--am-accent)'
+                            ? 'var(--wv-accent)'
                             : 'color-mix(in srgb, currentColor 20%, transparent)',
                     }}
                 >

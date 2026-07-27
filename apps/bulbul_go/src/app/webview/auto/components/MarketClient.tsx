@@ -253,9 +253,9 @@ export function MarketClient() {
     const chip =
         'shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-medium active:bg-muted transition-colors'
     const chipActive = {
-        background: 'var(--am-accent-soft)',
-        borderColor: 'var(--am-accent-border)',
-        color: 'var(--am-accent)',
+        background: 'var(--wv-accent-soft)',
+        borderColor: 'var(--wv-accent-border)',
+        color: 'var(--wv-accent)',
     } as React.CSSProperties
 
     return (
@@ -301,7 +301,7 @@ export function MarketClient() {
             >
                 {/* табы подкатегорий (Легковые/Грузовые/Мото/Запчасти/Сервисы) */}
                 {tabs.length > 1 && (
-                    <div className="am-chips -mx-4 mb-2.5 flex gap-2 overflow-x-auto px-4">
+                    <div className="wv-chips -mx-4 mb-2.5 flex gap-2 overflow-x-auto px-4">
                         {tabs.map((t) => {
                             const on = t.id === activeTab
                             return (
@@ -312,7 +312,7 @@ export function MarketClient() {
                                     style={
                                         on
                                             ? {
-                                                  background: 'var(--am-accent)',
+                                                  background: 'var(--wv-accent)',
                                                   color: '#fff',
                                               }
                                             : {
@@ -345,7 +345,7 @@ export function MarketClient() {
                                 style={
                                     kind === k
                                         ? {
-                                              background: 'var(--am-accent)',
+                                              background: 'var(--wv-accent)',
                                               color: '#fff',
                                           }
                                         : { color: 'inherit', opacity: 0.7 }
@@ -359,7 +359,7 @@ export function MarketClient() {
 
                 {/* чипсы фильтров (Марка/Модель — только у веток с этими
                     атрибутами: легковые/грузовые; у запчастей/услуг их нет) */}
-                <div className="am-chips -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4">
+                <div className="wv-chips -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4">
                     {hasMake && (
                         <button
                             className={chip}
@@ -399,7 +399,7 @@ export function MarketClient() {
                 </div>
 
                 {/* пресеты: готовые фильтры одним тапом */}
-                <div className="am-chips -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4">
+                <div className="wv-chips -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4">
                     {PRESETS.map((p) => {
                         const on = p.match(draft)
                         return (
@@ -513,7 +513,7 @@ export function MarketClient() {
                         className="flex w-full items-center justify-between border-t py-3 text-left text-[15px] first:border-t-0"
                         style={
                             sort === value
-                                ? { color: 'var(--am-accent)', fontWeight: 600 }
+                                ? { color: 'var(--wv-accent)', fontWeight: 600 }
                                 : undefined
                         }
                     >

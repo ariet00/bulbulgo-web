@@ -1,0 +1,70 @@
+/* Стандартная тема webview-сервисов: токены акцента + общие utility-классы.
+   Подключается в webview/layout.tsx — доступна всем сервисам.
+   Переменные на :root (не на класс сервиса): шиты/модалки рендерятся
+   порталом в body, вне сервисного дерева. Сервис может переопределить
+   --wv-accent своим блоком :root в собственном css (грузится позже). */
+
+:root {
+    --wv-accent: #1f6ff0;
+    --wv-accent-soft: color-mix(in srgb, var(--wv-accent) 12%, transparent);
+    --wv-accent-border: color-mix(in srgb, var(--wv-accent) 36%, transparent);
+}
+
+/* каскадное появление строк списка: --wv-delay задаётся по индексу */
+@keyframes wv-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+.wv-rise {
+    animation: wv-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--wv-delay, 0ms);
+}
+
+/* пульс точки «живого» статуса (цвет — currentColor) */
+@keyframes wv-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 3px transparent;
+    }
+}
+.wv-pulse {
+    animation: wv-pulse 2.4s ease-out infinite;
+}
+
+/* скелетон-шиммер */
+@keyframes wv-shimmer {
+    from {
+        background-position: -200% 0;
+    }
+    to {
+        background-position: 200% 0;
+    }
+}
+.wv-skeleton {
+    background: linear-gradient(
+        100deg,
+        color-mix(in srgb, currentColor 7%, transparent) 40%,
+        color-mix(in srgb, currentColor 14%, transparent) 50%,
+        color-mix(in srgb, currentColor 7%, transparent) 60%
+    );
+    background-size: 200% 100%;
+    animation: wv-shimmer 1.4s linear infinite;
+    color: inherit;
+}
+
+/* горизонтальная лента чипсов без скроллбара */
+.wv-chips {
+    scrollbar-width: none;
+}
+.wv-chips::-webkit-scrollbar {
+    display: none;
+}

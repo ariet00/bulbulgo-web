@@ -1,11 +1,10 @@
-import '../auto-market.css'
 import { ProfileClient } from '../components/ProfileClient'
 
 // Таб «Профиль» авторынка.
 
 export default function ProfilePage() {
     return (
-        <main className="am-root">
+        <main>
             <ProfileClient />
         </main>
     )

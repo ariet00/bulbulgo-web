@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import '../auto-market.css'
 import { WizardClient } from '../components/wizard/WizardClient'
 
 // Подача объявления: /webview/auto/new (продажа, 4 шага) и
@@ -7,7 +6,7 @@ import { WizardClient } from '../components/wizard/WizardClient'
 
 export default function NewListingPage() {
     return (
-        <main className="am-root">
+        <main>
             {/* useSearchParams в клиенте требует Suspense-границу */}
             <Suspense>
                 <WizardClient />

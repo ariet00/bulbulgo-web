@@ -4,7 +4,7 @@
 export default function FuelMapPage() {
     return (
         <main className="mx-auto flex max-w-lg flex-col items-center px-6 pt-24 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--fl-accent-soft)] text-[var(--fl-accent)]">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--wv-accent-soft)] text-[var(--wv-accent)]">
                 <svg
                     width="26"
                     height="26"
@@ -20,7 +20,7 @@ export default function FuelMapPage() {
                     <path d="M6 2.8v9.2M10 4.4v9.2" opacity="0.5" />
                 </svg>
             </div>
-            <span className="mb-2 rounded-full bg-[var(--fl-accent-soft)] px-3 py-1 text-[12px] font-semibold text-[var(--fl-accent)]">
+            <span className="mb-2 rounded-full bg-[var(--wv-accent-soft)] px-3 py-1 text-[12px] font-semibold text-[var(--wv-accent)]">
                 Скоро
             </span>
             <h1 className="text-[18px] font-bold">Карта заправок</h1>

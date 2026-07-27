@@ -1,4 +1,3 @@
-import './auto-market.css'
 import { MarketClient } from './components/MarketClient'
 
 // Webview-сервис «Авторынок» (карточка на «Главной»): лента объявлений
@@ -7,7 +6,7 @@ import { MarketClient } from './components/MarketClient'
 
 export default function AutoMarketPage() {
     return (
-        <main className="am-root">
+        <main>
             <MarketClient />
         </main>
     )

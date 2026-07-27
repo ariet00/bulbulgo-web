@@ -37,8 +37,8 @@ export function ListingCard({
     return (
         <button
             onClick={() => onOpen(l)}
-            className="am-rise block w-full overflow-hidden rounded-2xl border bg-card text-left active:scale-[0.99] transition-transform"
-            style={{ '--am-delay': `${delayMs}ms` } as React.CSSProperties}
+            className="wv-rise block w-full overflow-hidden rounded-2xl border bg-card text-left active:scale-[0.99] transition-transform"
+            style={{ '--wv-delay': `${delayMs}ms` } as React.CSSProperties}
         >
             {cover ? (
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
@@ -74,9 +74,9 @@ export function ListingCard({
                     {isWant && (
                         <span className="shrink-0 rounded-md border px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider"
                             style={{
-                                color: 'var(--am-accent)',
-                                borderColor: 'var(--am-accent-border)',
-                                background: 'var(--am-accent-soft)',
+                                color: 'var(--wv-accent)',
+                                borderColor: 'var(--wv-accent-border)',
+                                background: 'var(--wv-accent-soft)',
                             }}
                         >
                             Куплю
@@ -118,11 +118,11 @@ export function ListingCard({
 export function ListingCardSkeleton() {
     return (
         <div className="overflow-hidden rounded-2xl border bg-card">
-            <div className="am-skeleton aspect-[4/3] w-full" />
+            <div className="wv-skeleton aspect-[4/3] w-full" />
             <div className="space-y-2 px-3.5 py-3">
-                <div className="am-skeleton h-5 w-28 rounded" />
-                <div className="am-skeleton h-4 w-44 rounded" />
-                <div className="am-skeleton h-3 w-36 rounded" />
+                <div className="wv-skeleton h-5 w-28 rounded" />
+                <div className="wv-skeleton h-4 w-44 rounded" />
+                <div className="wv-skeleton h-3 w-36 rounded" />
             </div>
         </div>
     )

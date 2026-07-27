@@ -11,7 +11,7 @@ export default function FuelLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="fl-root">
+        <div>
             {children}
             <TabBar />
         </div>

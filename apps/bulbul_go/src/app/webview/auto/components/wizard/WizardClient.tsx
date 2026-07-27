@@ -327,7 +327,7 @@ export function WizardClient() {
                 <button
                     onClick={async () => setAuthed(await ensureAuth())}
                     className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--am-accent)' }}
+                    style={{ background: 'var(--wv-accent)' }}
                 >
                     Войти
                 </button>
@@ -337,16 +337,16 @@ export function WizardClient() {
 
     const selectBtn = `${inputCls} flex items-center justify-between text-left`
     const accent = (on: boolean): React.CSSProperties =>
-        on ? { background: 'var(--am-accent)', color: '#fff' } : { opacity: 0.7 }
+        on ? { background: 'var(--wv-accent)', color: '#fff' } : { opacity: 0.7 }
 
     // шаг 0 — выбор ветки
     if (catId === null) {
         if (authed === null || tabs.length === 0) {
             return (
                 <div className="space-y-3 p-4">
-                    <div className="am-skeleton h-8 w-52 rounded" />
+                    <div className="wv-skeleton h-8 w-52 rounded" />
                     {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="am-skeleton h-16 rounded-2xl" />
+                        <div key={i} className="wv-skeleton h-16 rounded-2xl" />
                     ))}
                 </div>
             )
@@ -411,7 +411,7 @@ export function WizardClient() {
                 </p>
                 <div className="mt-5 space-y-3">
                     <button onClick={() => choose('offer')} className={card}>
-                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: 'var(--am-accent)' }}>
+                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: 'var(--wv-accent)' }}>
                             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
                                 <path d="M2 8.5 8 2l6 6.5M3.5 7v6.5h9V7" />
                             </svg>
@@ -425,7 +425,7 @@ export function WizardClient() {
                         </span>
                     </button>
                     <button onClick={() => choose('want')} className={card}>
-                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border" style={{ color: 'var(--am-accent)', borderColor: 'var(--am-accent-border)', background: 'var(--am-accent-soft)' }}>
+                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border" style={{ color: 'var(--wv-accent)', borderColor: 'var(--wv-accent-border)', background: 'var(--wv-accent-soft)' }}>
                             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
                                 <circle cx="7" cy="7" r="4.6" />
                                 <path d="m10.6 10.6 3.4 3.4" />
@@ -447,10 +447,10 @@ export function WizardClient() {
     if (attrs.length === 0) {
         return (
             <div className="space-y-4 p-4">
-                <div className="am-skeleton h-8 w-52 rounded" />
-                <div className="am-skeleton h-12 rounded-xl" />
-                <div className="am-skeleton h-12 rounded-xl" />
-                <div className="am-skeleton h-40 rounded-xl" />
+                <div className="wv-skeleton h-8 w-52 rounded" />
+                <div className="wv-skeleton h-12 rounded-xl" />
+                <div className="wv-skeleton h-12 rounded-xl" />
+                <div className="wv-skeleton h-40 rounded-xl" />
             </div>
         )
     }
@@ -505,14 +505,14 @@ export function WizardClient() {
                                 style={{
                                     background:
                                         i <= step
-                                            ? 'var(--am-accent)'
+                                            ? 'var(--wv-accent)'
                                             : 'color-mix(in srgb, currentColor 15%, transparent)',
                                 }}
                             />
                             <p
                                 className="mt-1 text-[10px] font-medium"
                                 style={{
-                                    color: i === step ? 'var(--am-accent)' : undefined,
+                                    color: i === step ? 'var(--wv-accent)' : undefined,
                                     opacity: i === step ? 1 : 0.6,
                                 }}
                             >
@@ -531,7 +531,7 @@ export function WizardClient() {
                             <div>
                                 <p className="mb-2 text-[13px] font-semibold">
                                     Марка{' '}
-                                    <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                    <span style={{ color: 'var(--wv-accent)' }}>*</span>
                                 </p>
                                 <button type="button" onClick={() => setPicker('make')} className={selectBtn}>
                                     <span className={make ? '' : 'text-muted-foreground'}>
@@ -546,7 +546,7 @@ export function WizardClient() {
                                 <p className="mb-2 text-[13px] font-semibold">
                                     {kind === 'want' ? 'Модели (можно несколько)' : 'Модель '}
                                     {kind === 'offer' && (
-                                        <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                        <span style={{ color: 'var(--wv-accent)' }}>*</span>
                                     )}
                                 </p>
                                 <button
@@ -569,7 +569,7 @@ export function WizardClient() {
                                 <p className="mb-2 text-[13px] font-semibold">
                                     {kind === 'want' ? 'Год, от' : 'Год выпуска '}
                                     {kind === 'offer' && (
-                                        <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                        <span style={{ color: 'var(--wv-accent)' }}>*</span>
                                     )}
                                 </p>
                                 {kind === 'want' ? (
@@ -615,7 +615,7 @@ export function WizardClient() {
                             <p className="mb-2 text-[13px] font-semibold">
                                 {kind === 'want' ? 'Бюджет, до' : 'Цена'}
                                 {!category?.price_optional && (
-                                    <span style={{ color: 'var(--am-accent)' }}> *</span>
+                                    <span style={{ color: 'var(--wv-accent)' }}> *</span>
                                 )}
                             </p>
                             <div className="flex gap-2">
@@ -678,7 +678,7 @@ export function WizardClient() {
                         <div>
                             <p className="mb-2 text-[13px] font-semibold">
                                 Телефон для связи{' '}
-                                <span style={{ color: 'var(--am-accent)' }}>*</span>
+                                <span style={{ color: 'var(--wv-accent)' }}>*</span>
                             </p>
                             <input
                                 inputMode="tel"
@@ -722,7 +722,7 @@ export function WizardClient() {
                             : submit()
                     }
                     className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90 disabled:opacity-40"
-                    style={{ background: 'var(--am-accent)' }}
+                    style={{ background: 'var(--wv-accent)' }}
                 >
                     {submitting
                         ? 'Публикуем…'

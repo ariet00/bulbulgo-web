@@ -6,6 +6,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { getLocation, waitForBridge } from '../../bridge'
+import { Chip } from '../../components/Chip'
+import { EmptyState } from '../../components/EmptyState'
 import { metaLabel } from '../lib/format'
 import { useFuelMeta, useStations } from '../lib/queries'
 import type { FuelType, LatLng, Station } from '../lib/types'
@@ -77,15 +79,15 @@ export function FuelClient() {
             {/* фильтр прикреплён к верху fixed'ом: sticky здесь не работает —
                 его ломает overflow-x-hidden на html/body вебвью-layout */}
             <div className="fixed inset-x-0 top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
-                <div className="fl-chips mx-auto flex max-w-lg gap-2 overflow-x-auto px-3 py-2.5">
-                    <FilterChip
+                <div className="wv-chips mx-auto flex max-w-lg gap-2 overflow-x-auto px-3 py-2.5">
+                    <Chip
                         active={fuelType === null}
                         onClick={() => setFuelType(null)}
                     >
                         Все
-                    </FilterChip>
+                    </Chip>
                     {chips.map((opt) => (
-                        <FilterChip
+                        <Chip
                             key={opt.value}
                             active={fuelType === opt.value}
                             onClick={() =>
@@ -97,13 +99,13 @@ export function FuelClient() {
                             }
                         >
                             {metaLabel(chips, opt.value)}
-                        </FilterChip>
+                        </Chip>
                     ))}
                 </div>
             </div>
 
             {geoDenied && (
-                <div className="fl-rise mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-snug text-amber-700 dark:text-amber-400">
+                <div className="wv-rise mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-snug text-amber-700 dark:text-amber-400">
                     Геолокация недоступна — показаны АЗС Бишкека. Разрешите
                     доступ к местоположению, чтобы видеть заправки рядом.
                 </div>
@@ -113,11 +115,12 @@ export function FuelClient() {
                 <ListSkeleton />
             ) : stations.isError ? (
                 <EmptyState
+                    icon={<PumpIcon />}
                     title="Не удалось загрузить"
                     text="Проверьте соединение и попробуйте ещё раз."
                     action={
                         <button
-                            className="mt-3 rounded-full bg-[var(--fl-accent)] px-5 py-2 text-[14px] font-semibold text-white active:opacity-80"
+                            className="mt-3 rounded-full bg-[var(--wv-accent)] px-5 py-2 text-[14px] font-semibold text-white active:opacity-80"
                             onClick={() => void stations.refetch()}
                         >
                             Повторить
@@ -126,6 +129,7 @@ export function FuelClient() {
                 />
             ) : !visible.length ? (
                 <EmptyState
+                    icon={<PumpIcon />}
                     title="Рядом АЗС не нашлось"
                     text={
                         fuelType
@@ -138,8 +142,8 @@ export function FuelClient() {
                     {visible.map((station, i) => (
                         <li
                             key={station.id}
-                            className="fl-rise"
-                            style={{ '--fl-delay': `${Math.min(i, 8) * 40}ms` } as React.CSSProperties}
+                            className="wv-rise"
+                            style={{ '--wv-delay': `${Math.min(i, 8) * 40}ms` } as React.CSSProperties}
                         >
                             <StationCard
                                 station={station}
@@ -172,29 +176,6 @@ export function FuelClient() {
     )
 }
 
-function FilterChip({
-    active,
-    onClick,
-    children,
-}: {
-    active: boolean
-    onClick: () => void
-    children: React.ReactNode
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={
-                'shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ' +
-                (active
-                    ? 'border-[var(--fl-accent-border)] bg-[var(--fl-accent-soft)] text-[var(--fl-accent)]'
-                    : 'border-border bg-background text-muted-foreground active:bg-muted')
-            }
-        >
-            {children}
-        </button>
-    )
-}
 
 function ListSkeleton() {
     return (
@@ -204,12 +185,12 @@ function ListSkeleton() {
                     key={i}
                     className="rounded-2xl border border-border p-3.5"
                 >
-                    <div className="fl-skeleton mb-2 h-4 w-2/3 rounded" />
-                    <div className="fl-skeleton mb-3 h-3 w-1/3 rounded" />
+                    <div className="wv-skeleton mb-2 h-4 w-2/3 rounded" />
+                    <div className="wv-skeleton mb-3 h-3 w-1/3 rounded" />
                     <div className="flex gap-1.5">
-                        <div className="fl-skeleton h-6 w-16 rounded-full" />
-                        <div className="fl-skeleton h-6 w-16 rounded-full" />
-                        <div className="fl-skeleton h-6 w-16 rounded-full" />
+                        <div className="wv-skeleton h-6 w-16 rounded-full" />
+                        <div className="wv-skeleton h-6 w-16 rounded-full" />
+                        <div className="wv-skeleton h-6 w-16 rounded-full" />
                     </div>
                 </div>
             ))}
@@ -217,28 +198,6 @@ function ListSkeleton() {
     )
 }
 
-function EmptyState({
-    title,
-    text,
-    action,
-}: {
-    title: string
-    text: string
-    action?: React.ReactNode
-}) {
-    return (
-        <div className="fl-rise flex flex-col items-center px-6 py-16 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--fl-accent-soft)] text-[var(--fl-accent)]">
-                <PumpIcon />
-            </div>
-            <p className="text-[16px] font-semibold">{title}</p>
-            <p className="mt-1 text-[13.5px] leading-snug text-muted-foreground">
-                {text}
-            </p>
-            {action}
-        </div>
-    )
-}
 
 export function PumpIcon() {
     return (

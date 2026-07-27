@@ -240,10 +240,10 @@ export function DetailClient({ id }: { id: number }) {
     if (!listing) {
         return (
             <div className="space-y-4 p-4">
-                <div className="am-skeleton aspect-[4/3] w-full rounded-2xl" />
-                <div className="am-skeleton h-7 w-40 rounded" />
-                <div className="am-skeleton h-5 w-64 rounded" />
-                <div className="am-skeleton h-40 w-full rounded-2xl" />
+                <div className="wv-skeleton aspect-[4/3] w-full rounded-2xl" />
+                <div className="wv-skeleton h-7 w-40 rounded" />
+                <div className="wv-skeleton h-5 w-64 rounded" />
+                <div className="wv-skeleton h-40 w-full rounded-2xl" />
             </div>
         )
     }
@@ -260,7 +260,7 @@ export function DetailClient({ id }: { id: number }) {
             {l.photos.length > 0 && (
                 <div className="relative">
                     <div
-                        className="am-chips flex snap-x snap-mandatory overflow-x-auto"
+                        className="wv-chips flex snap-x snap-mandatory overflow-x-auto"
                         onScroll={(e) => {
                             const el = e.currentTarget
                             setPhotoIdx(
@@ -299,9 +299,9 @@ export function DetailClient({ id }: { id: number }) {
                         }
                         className="mb-3 flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-[13px] font-medium"
                         style={{
-                            color: 'var(--am-accent)',
-                            borderColor: 'var(--am-accent-border)',
-                            background: 'var(--am-accent-soft)',
+                            color: 'var(--wv-accent)',
+                            borderColor: 'var(--wv-accent-border)',
+                            background: 'var(--wv-accent-soft)',
                         }}
                     >
                         Это ваше объявление — управлять
@@ -318,9 +318,9 @@ export function DetailClient({ id }: { id: number }) {
                     <span
                         className="mb-2 inline-block rounded-md border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider"
                         style={{
-                            color: 'var(--am-accent)',
-                            borderColor: 'var(--am-accent-border)',
-                            background: 'var(--am-accent-soft)',
+                            color: 'var(--wv-accent)',
+                            borderColor: 'var(--wv-accent-border)',
+                            background: 'var(--wv-accent-soft)',
                         }}
                     >
                         Куплю
@@ -403,7 +403,7 @@ export function DetailClient({ id }: { id: number }) {
                 <section className="mt-5 flex items-center gap-3 rounded-2xl border px-4 py-3">
                     <div
                         className="flex h-10 w-10 items-center justify-center rounded-full text-[15px] font-bold text-white"
-                        style={{ background: 'var(--am-accent)' }}
+                        style={{ background: 'var(--wv-accent)' }}
                     >
                         {(l.user_name ?? '·').slice(0, 1).toUpperCase()}
                     </div>
@@ -480,7 +480,7 @@ export function DetailClient({ id }: { id: number }) {
                             const el = e.currentTarget
                             setPhotoIdx(Math.round(el.scrollLeft / el.clientWidth))
                         }}
-                        className="am-chips flex flex-1 snap-x snap-mandatory items-center overflow-x-auto"
+                        className="wv-chips flex flex-1 snap-x snap-mandatory items-center overflow-x-auto"
                     >
                         {l.photos.map((p) => (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -542,7 +542,7 @@ export function DetailClient({ id }: { id: number }) {
                 {reasons.length === 0 ? (
                     <div className="space-y-3 py-2">
                         {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="am-skeleton h-6 rounded" />
+                            <div key={i} className="wv-skeleton h-6 rounded" />
                         ))}
                     </div>
                 ) : (
@@ -571,7 +571,7 @@ export function DetailClient({ id }: { id: number }) {
                             onClick={callSeller}
                             disabled={contactLoading}
                             className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90 disabled:opacity-60"
-                            style={{ background: 'var(--am-accent)' }}
+                            style={{ background: 'var(--wv-accent)' }}
                         >
                             {contact
                                 ? 'Позвонить'
@@ -617,9 +617,9 @@ function IconBtn({
             style={
                 active
                     ? {
-                          color: 'var(--am-accent)',
-                          borderColor: 'var(--am-accent-border)',
-                          background: 'var(--am-accent-soft)',
+                          color: 'var(--wv-accent)',
+                          borderColor: 'var(--wv-accent-border)',
+                          background: 'var(--wv-accent-soft)',
                       }
                     : undefined
             }

@@ -76,7 +76,7 @@ export function PickerSheet({
                     className={`flex h-5 w-5 items-center justify-center rounded-full border text-white transition-colors ${
                         active ? 'border-transparent' : 'border-muted-foreground/40'
                     }`}
-                    style={active ? { background: 'var(--am-accent)' } : undefined}
+                    style={active ? { background: 'var(--wv-accent)' } : undefined}
                 >
                     {active && (
                         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -101,7 +101,7 @@ export function PickerSheet({
                             onClose()
                         }}
                         className="w-full rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90"
-                        style={{ background: 'var(--am-accent)' }}
+                        style={{ background: 'var(--wv-accent)' }}
                     >
                         Выбрать{picked.length ? ` (${picked.length})` : ''}
                     </button>
@@ -113,14 +113,14 @@ export function PickerSheet({
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Поиск"
-                    className="w-full rounded-xl border bg-muted/40 px-3.5 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--am-accent-border)]"
+                    className="w-full rounded-xl border bg-muted/40 px-3.5 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--wv-accent-border)]"
                 />
             </div>
 
             {loading ? (
                 <div className="space-y-3 py-2">
                     {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="am-skeleton h-6 w-full rounded" />
+                        <div key={i} className="wv-skeleton h-6 w-full rounded" />
                     ))}
                 </div>
             ) : (

@@ -98,7 +98,7 @@ export function PhotosStep({
                         {i === 0 ? (
                             <span
                                 className="absolute left-1 top-1 rounded px-1.5 py-px text-[10px] font-semibold text-white"
-                                style={{ background: 'var(--am-accent)' }}
+                                style={{ background: 'var(--wv-accent)' }}
                             >
                                 Обложка
                             </span>
@@ -125,7 +125,7 @@ export function PhotosStep({
                 {Array.from({ length: uploading }).map((_, i) => (
                     <div
                         key={`u${i}`}
-                        className="am-skeleton aspect-square rounded-xl"
+                        className="wv-skeleton aspect-square rounded-xl"
                     />
                 ))}
 

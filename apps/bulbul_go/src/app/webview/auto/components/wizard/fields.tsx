@@ -24,7 +24,7 @@ export function FieldLabel({
                     , {pickLabel(attr.unit)}
                 </span>
             ) : null}
-            {required && <span style={{ color: 'var(--am-accent)' }}> *</span>}
+            {required && <span style={{ color: 'var(--wv-accent)' }}> *</span>}
         </p>
     )
 }
@@ -51,9 +51,9 @@ export function EnumChips({
                         style={
                             active
                                 ? {
-                                      background: 'var(--am-accent-soft)',
-                                      borderColor: 'var(--am-accent-border)',
-                                      color: 'var(--am-accent)',
+                                      background: 'var(--wv-accent-soft)',
+                                      borderColor: 'var(--wv-accent-border)',
+                                      color: 'var(--wv-accent)',
                                       fontWeight: 600,
                                   }
                                 : undefined
@@ -88,7 +88,7 @@ export function BoolToggle({
                 className="relative h-6 w-10 rounded-full transition-colors"
                 style={{
                     background: value
-                        ? 'var(--am-accent)'
+                        ? 'var(--wv-accent)'
                         : 'color-mix(in srgb, currentColor 20%, transparent)',
                 }}
             >
@@ -104,7 +104,7 @@ export function BoolToggle({
 }
 
 export const inputCls =
-    'w-full rounded-xl border bg-muted/40 px-3.5 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--am-accent-border)]'
+    'w-full rounded-xl border bg-muted/40 px-3.5 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--wv-accent-border)]'
 
 export function NumberInput({
     value,
@@ -172,7 +172,7 @@ export function RegionSheet({
             {loading ? (
                 <div className="space-y-3 py-2">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="am-skeleton h-6 rounded" />
+                        <div key={i} className="wv-skeleton h-6 rounded" />
                     ))}
                 </div>
             ) : (

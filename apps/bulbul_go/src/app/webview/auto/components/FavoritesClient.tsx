@@ -89,7 +89,7 @@ export function FavoritesClient() {
                 <button
                     onClick={async () => setAuthed(await ensureAuth())}
                     className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--am-accent)' }}
+                    style={{ background: 'var(--wv-accent)' }}
                 >
                     Войти
                 </button>
@@ -104,7 +104,7 @@ export function FavoritesClient() {
             <div className="mt-4 space-y-3">
                 {loading || authed === null ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="am-skeleton h-40 rounded-2xl" />
+                        <div key={i} className="wv-skeleton h-40 rounded-2xl" />
                     ))
                 ) : items.length === 0 ? (
                     <p className="py-16 text-center text-[14px] text-muted-foreground">

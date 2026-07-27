@@ -220,9 +220,9 @@ export function OwnerClient({ id }: { id: number }) {
     if (!listing) {
         return (
             <div className="space-y-4 p-4">
-                <div className="am-skeleton h-7 w-52 rounded" />
-                <div className="am-skeleton h-24 rounded-2xl" />
-                <div className="am-skeleton h-40 rounded-2xl" />
+                <div className="wv-skeleton h-7 w-52 rounded" />
+                <div className="wv-skeleton h-24 rounded-2xl" />
+                <div className="wv-skeleton h-40 rounded-2xl" />
             </div>
         )
     }
@@ -269,7 +269,7 @@ export function OwnerClient({ id }: { id: number }) {
                     <span
                         style={
                             l.status === 'active'
-                                ? { color: 'var(--am-accent)', fontWeight: 600 }
+                                ? { color: 'var(--wv-accent)', fontWeight: 600 }
                                 : undefined
                         }
                     >
@@ -285,7 +285,7 @@ export function OwnerClient({ id }: { id: number }) {
                 </p>
 
                 {/* действия */}
-                <div className="am-chips -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
+                <div className="wv-chips -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
                     {l.status === 'active' ? (
                         <>
                             <button disabled={busy} onClick={renew} className={actionBtn}>
@@ -296,8 +296,8 @@ export function OwnerClient({ id }: { id: number }) {
                                 onClick={() => setStatus('sold')}
                                 className={actionBtn}
                                 style={{
-                                    color: 'var(--am-accent)',
-                                    borderColor: 'var(--am-accent-border)',
+                                    color: 'var(--wv-accent)',
+                                    borderColor: 'var(--wv-accent-border)',
                                 }}
                             >
                                 Продано
@@ -427,7 +427,7 @@ export function OwnerClient({ id }: { id: number }) {
                                         className="relative h-6 w-10 shrink-0 rounded-full transition-colors"
                                         style={{
                                             background: attrValue(a.key)
-                                                ? 'var(--am-accent)'
+                                                ? 'var(--wv-accent)'
                                                 : 'color-mix(in srgb, currentColor 20%, transparent)',
                                         }}
                                     >

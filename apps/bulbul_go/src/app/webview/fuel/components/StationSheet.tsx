@@ -42,7 +42,7 @@ export function StationSheet({
                 station && (
                     <button
                         onClick={() => onReport(station)}
-                        className="w-full rounded-xl bg-[var(--fl-accent)] py-3 text-[15px] font-semibold text-white active:opacity-80"
+                        className="w-full rounded-xl bg-[var(--wv-accent)] py-3 text-[15px] font-semibold text-white active:opacity-80"
                     >
                         Сообщить о наличии
                     </button>
@@ -117,7 +117,7 @@ export function StationSheet({
                             {data.working_hours && <p>Режим: {data.working_hours}</p>}
                             {data.phone && (
                                 <button
-                                    className="w-fit font-medium text-[var(--fl-accent)] active:opacity-70"
+                                    className="w-fit font-medium text-[var(--wv-accent)] active:opacity-70"
                                     onClick={() =>
                                         bridgeAvailable()
                                             ? void callPhone(data.phone!)

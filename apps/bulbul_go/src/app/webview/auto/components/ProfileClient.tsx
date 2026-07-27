@@ -53,7 +53,7 @@ export function ProfileClient() {
                 <button
                     onClick={async () => setAuthed(await ensureAuth())}
                     className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--am-accent)' }}
+                    style={{ background: 'var(--wv-accent)' }}
                 >
                     Войти
                 </button>
@@ -71,7 +71,7 @@ export function ProfileClient() {
             <div className="mt-4 flex items-center gap-3.5 rounded-2xl border px-4 py-4">
                 <div
                     className="flex h-14 w-14 items-center justify-center rounded-full text-[20px] font-bold text-white"
-                    style={{ background: 'var(--am-accent)' }}
+                    style={{ background: 'var(--wv-accent)' }}
                 >
                     {(me?.full_name ?? '·').slice(0, 1).toUpperCase()}
                 </div>
@@ -89,8 +89,8 @@ export function ProfileClient() {
                         </>
                     ) : (
                         <div className="space-y-2">
-                            <div className="am-skeleton h-5 w-36 rounded" />
-                            <div className="am-skeleton h-4 w-28 rounded" />
+                            <div className="wv-skeleton h-5 w-36 rounded" />
+                            <div className="wv-skeleton h-4 w-28 rounded" />
                         </div>
                     )}
                 </div>

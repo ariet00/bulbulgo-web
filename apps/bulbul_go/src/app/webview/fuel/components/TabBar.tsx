@@ -82,7 +82,7 @@ export function TabBar() {
                             className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
                             style={
                                 isActive
-                                    ? { color: 'var(--fl-accent)' }
+                                    ? { color: 'var(--wv-accent)' }
                                     : { opacity: 0.55 }
                             }
                         >

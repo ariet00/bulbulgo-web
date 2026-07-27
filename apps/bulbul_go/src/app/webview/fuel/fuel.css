@@ -1,15 +1,9 @@
-/* «Где Бензин»: акцент сервиса + светофор статусов + примитивы.
-   Все цвета — поверх токенов темы; статусные переменные читает format.ts.
-   Переменные — на :root, НЕ на .fl-root: шиты (vaul) рендерятся порталом в
-   body, вне сервисного дерева — там var(--fl-*) с .fl-root не резолвился
-   (кнопка «сливалась с фоном»). */
+/* «Где Бензин»: только специфика сервиса — светофор статусов топлива.
+   Акцент и общие utility-классы (wv-*) — в ../theme.css.
+   Переменные на :root: шиты рендерятся порталом в body, вне сервисного
+   дерева — там var(--fl-*) с класса-обёртки не резолвится. */
 
 :root {
-    --fl-accent: #1f6ff0; /* козырёк АЗС — синий */
-    --fl-accent-soft: color-mix(in srgb, var(--fl-accent) 12%, transparent);
-    --fl-accent-border: color-mix(in srgb, var(--fl-accent) 36%, transparent);
-
-    /* светофор статусов топлива */
     --fl-ok: #189a58; /* есть топливо */
     --fl-low: #a88a0b; /* мало топлива */
     --fl-soon: #2f7fd1; /* ждём подвоз */
@@ -23,63 +17,4 @@
     --fl-soon: #5aa2e8;
     --fl-warn: #f0a12f;
     --fl-bad: #ef5a50;
-}
-
-/* появление строк списка */
-@keyframes fl-rise {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: none;
-    }
-}
-.fl-rise {
-    animation: fl-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: var(--fl-delay, 0ms);
-}
-
-/* пульс точки «свежий статус» */
-@keyframes fl-pulse {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
-    }
-    50% {
-        box-shadow: 0 0 0 3px transparent;
-    }
-}
-.fl-pulse {
-    animation: fl-pulse 2.4s ease-out infinite;
-}
-
-/* скелетон */
-@keyframes fl-shimmer {
-    from {
-        background-position: -200% 0;
-    }
-    to {
-        background-position: 200% 0;
-    }
-}
-.fl-skeleton {
-    background: linear-gradient(
-        100deg,
-        color-mix(in srgb, currentColor 7%, transparent) 40%,
-        color-mix(in srgb, currentColor 14%, transparent) 50%,
-        color-mix(in srgb, currentColor 7%, transparent) 60%
-    );
-    background-size: 200% 100%;
-    animation: fl-shimmer 1.4s linear infinite;
-    color: inherit;
-}
-
-/* горизонтальная лента чипсов без скроллбара */
-.fl-chips {
-    scrollbar-width: none;
-}
-.fl-chips::-webkit-scrollbar {
-    display: none;
 }

@@ -19,6 +19,7 @@ import {
     waitForBridge,
 } from '../../bridge'
 import { BottomSheet } from '../../components/BottomSheet'
+import { Chip } from '../../components/Chip'
 import { ReportRateLimited, submitReport } from '../lib/api'
 import { STATUS_COLOR, metaLabel } from '../lib/format'
 import { useFuelInvalidation } from '../lib/queries'
@@ -144,7 +145,7 @@ export function ReportSheet({
                 <button
                     disabled={!canSubmit}
                     onClick={() => void submit()}
-                    className="w-full rounded-xl bg-[var(--fl-accent)] py-3 text-[15px] font-semibold text-white transition-opacity active:opacity-80 disabled:opacity-40"
+                    className="w-full rounded-xl bg-[var(--wv-accent)] py-3 text-[15px] font-semibold text-white transition-opacity active:opacity-80 disabled:opacity-40"
                 >
                     {sending ? 'Отправляем…' : 'Отправить отметку'}
                 </button>
@@ -226,7 +227,7 @@ export function ReportSheet({
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
                                 placeholder="Напр. 62.5"
-                                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[14px] outline-none placeholder:text-muted-foreground/60 focus:border-[var(--fl-accent-border)]"
+                                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[14px] outline-none placeholder:text-muted-foreground/60 focus:border-[var(--wv-accent-border)]"
                             />
                         </Field>
                     )}
@@ -273,26 +274,3 @@ function Field({
     )
 }
 
-function Chip({
-    active,
-    onClick,
-    children,
-}: {
-    active: boolean
-    onClick: () => void
-    children: React.ReactNode
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={
-                'rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ' +
-                (active
-                    ? 'border-[var(--fl-accent-border)] bg-[var(--fl-accent-soft)] text-[var(--fl-accent)]'
-                    : 'border-border bg-background text-muted-foreground active:bg-muted')
-            }
-        >
-            {children}
-        </button>
-    )
-}

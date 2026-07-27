@@ -1,4 +1,3 @@
-import '../../auto-market.css'
 import { OwnerClient } from '../../components/owner/OwnerClient'
 
 // Страница управления объявлением (только владелец): статус, статистика,
@@ -11,7 +10,7 @@ export default async function OwnerListingPage({
 }) {
     const { id } = await params
     return (
-        <main className="am-root">
+        <main>
             <OwnerClient id={Number(id)} />
         </main>
     )

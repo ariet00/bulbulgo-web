@@ -1,4 +1,3 @@
-import './auto-market.css'
 import { TabBar } from './components/TabBar'
 
 // Layout сегмента авторынка: таббар живёт здесь, а не в страницах — layout
@@ -13,7 +12,7 @@ export default function AutoMarketLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="am-root">
+        <div>
             {children}
             <TabBar />
         </div>

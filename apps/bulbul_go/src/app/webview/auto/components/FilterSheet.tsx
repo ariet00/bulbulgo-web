@@ -86,7 +86,7 @@ function RangeInputs({
     placeholderMax?: string
 }) {
     const cls =
-        'w-full rounded-xl border bg-muted/40 px-3 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--am-accent-border)]'
+        'w-full rounded-xl border bg-muted/40 px-3 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[var(--wv-accent-border)]'
     return (
         <div className="flex gap-2">
             <input
@@ -189,7 +189,7 @@ export function FilterSheet({
                             onClose()
                         }}
                         className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90"
-                        style={{ background: 'var(--am-accent)' }}
+                        style={{ background: 'var(--wv-accent)' }}
                     >
                         {count === null ? 'Показать' : `Показать ${count}`}
                     </button>
@@ -211,7 +211,7 @@ export function FilterSheet({
                                 style={
                                     draft.priceCurrency === c
                                         ? {
-                                              background: 'var(--am-accent)',
+                                              background: 'var(--wv-accent)',
                                               color: '#fff',
                                           }
                                         : undefined
@@ -266,10 +266,10 @@ export function FilterSheet({
                                             active
                                                 ? {
                                                       background:
-                                                          'var(--am-accent-soft)',
+                                                          'var(--wv-accent-soft)',
                                                       borderColor:
-                                                          'var(--am-accent-border)',
-                                                      color: 'var(--am-accent)',
+                                                          'var(--wv-accent-border)',
+                                                      color: 'var(--wv-accent)',
                                                       fontWeight: 600,
                                                   }
                                                 : undefined
@@ -301,7 +301,7 @@ export function FilterSheet({
                                 className="relative h-6 w-10 rounded-full transition-colors"
                                 style={{
                                     background: draft.bools[a.key]
-                                        ? 'var(--am-accent)'
+                                        ? 'var(--wv-accent)'
                                         : 'color-mix(in srgb, currentColor 20%, transparent)',
                                 }}
                             >

@@ -1,4 +1,3 @@
-import '../auto-market.css'
 import { DetailClient } from '../components/DetailClient'
 
 // Страница объявления авторынка (внутренний переход из ленты либо диплинк).
@@ -10,7 +9,7 @@ export default async function ListingPage({
 }) {
     const { id } = await params
     return (
-        <main className="am-root">
+        <main>
             <DetailClient id={Number(id)} />
         </main>
     )

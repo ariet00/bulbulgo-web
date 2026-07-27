@@ -94,7 +94,7 @@ export function TabBar() {
                     router.replace(t.path)
                 }}
                 className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
-                style={isActive ? { color: 'var(--am-accent)' } : { opacity: 0.55 }}
+                style={isActive ? { color: 'var(--wv-accent)' } : { opacity: 0.55 }}
             >
                 <svg
                     width="20"
@@ -135,13 +135,13 @@ export function TabBar() {
                 >
                     <span
                         className="flex h-9 w-9 -translate-y-2.5 items-center justify-center rounded-full text-white shadow-lg"
-                        style={{ background: 'var(--am-accent)' }}
+                        style={{ background: 'var(--wv-accent)' }}
                     >
                         <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                             <path d="M8 3v10M3 8h10" />
                         </svg>
                     </span>
-                    <span className="-mt-2 text-[10px] font-medium" style={{ color: 'var(--am-accent)' }}>
+                    <span className="-mt-2 text-[10px] font-medium" style={{ color: 'var(--wv-accent)' }}>
                         Создать
                     </span>
                 </button>
