@@ -71,31 +71,35 @@ export function FuelClient() {
     )
 
     return (
-        // +92px снизу: фиксированный таббар сегмента
-        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+92px)]">
-            {/* стики-фильтр: прилипает к верху, список подъезжает под него */}
-            <div className="fl-chips sticky top-0 z-30 -mx-3 mb-3 flex gap-2 overflow-x-auto border-b border-border/60 bg-background/95 px-3 py-2.5 backdrop-blur">
-                <FilterChip
-                    active={fuelType === null}
-                    onClick={() => setFuelType(null)}
-                >
-                    Все
-                </FilterChip>
-                {chips.map((opt) => (
+        // +92px снизу: фиксированный таббар сегмента; +60px сверху:
+        // фиксированная полоса фильтра
+        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+92px)] pt-[60px]">
+            {/* фильтр прикреплён к верху fixed'ом: sticky здесь не работает —
+                его ломает overflow-x-hidden на html/body вебвью-layout */}
+            <div className="fixed inset-x-0 top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
+                <div className="fl-chips mx-auto flex max-w-lg gap-2 overflow-x-auto px-3 py-2.5">
                     <FilterChip
-                        key={opt.value}
-                        active={fuelType === opt.value}
-                        onClick={() =>
-                            setFuelType(
-                                fuelType === opt.value
-                                    ? null
-                                    : (opt.value as FuelType),
-                            )
-                        }
+                        active={fuelType === null}
+                        onClick={() => setFuelType(null)}
                     >
-                        {metaLabel(chips, opt.value)}
+                        Все
                     </FilterChip>
-                ))}
+                    {chips.map((opt) => (
+                        <FilterChip
+                            key={opt.value}
+                            active={fuelType === opt.value}
+                            onClick={() =>
+                                setFuelType(
+                                    fuelType === opt.value
+                                        ? null
+                                        : (opt.value as FuelType),
+                                )
+                            }
+                        >
+                            {metaLabel(chips, opt.value)}
+                        </FilterChip>
+                    ))}
+                </div>
             </div>
 
             {geoDenied && (
