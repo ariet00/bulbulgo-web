@@ -3,8 +3,9 @@
 import { type ReactNode } from 'react'
 import { Drawer } from 'vaul'
 // vaul ≥1.0 НЕ инжектит стили сам — без этого импорта нет анимаций
-// появления/закрытия и touch-action для жеста
-import 'vaul/style.css'
+// появления/закрытия и touch-action для жеста. Копия style.css лежит рядом:
+// npm-пакет не экспортирует './style.css' (см. шапку vaul.css)
+import './vaul.css'
 
 // Общий bottom-sheet webview-сервисов поверх vaul (drawer-примитив на базе
 // Radix Dialog): свайп-вниз с корректным разруливанием против внутреннего
