@@ -66,9 +66,9 @@ export function TabBar() {
 
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-            {/* +18px к safe-area: во вьюве приложения inset может быть 0,
+            {/* +26px к safe-area: во вьюве приложения inset может быть 0,
                 с меньшим запасом кнопки липнут к жестовой зоне */}
-            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+26px)]">
                 {TABS.map((t) => {
                     const isActive = t.key === active
                     return (

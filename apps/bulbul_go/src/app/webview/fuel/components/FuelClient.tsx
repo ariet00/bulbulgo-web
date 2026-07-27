@@ -71,8 +71,8 @@ export function FuelClient() {
     )
 
     return (
-        // +84px снизу: фиксированный таббар сегмента
-        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+84px)]">
+        // +92px снизу: фиксированный таббар сегмента
+        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+92px)]">
             {/* стики-фильтр: прилипает к верху, список подъезжает под него */}
             <div className="fl-chips sticky top-0 z-30 -mx-3 mb-3 flex gap-2 overflow-x-auto border-b border-border/60 bg-background/95 px-3 py-2.5 backdrop-blur">
                 <FilterChip
