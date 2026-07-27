@@ -1,7 +1,9 @@
 /* Авторынок: акцент сервиса + примитивы (шиты, скелетоны, чипсы).
-   Все цвета — поверх токенов темы, акцент задаётся здесь. */
+   Все цвета — поверх токенов темы, акцент задаётся здесь.
+   Переменные — на :root, НЕ на .am-root: шиты (vaul) рендерятся порталом в
+   body, вне сервисного дерева — там var(--am-*) с .am-root не резолвится. */
 
-.am-root {
+:root {
     --am-accent: #e8603c;
     --am-accent-soft: color-mix(in srgb, var(--am-accent) 12%, transparent);
     --am-accent-border: color-mix(in srgb, var(--am-accent) 36%, transparent);
