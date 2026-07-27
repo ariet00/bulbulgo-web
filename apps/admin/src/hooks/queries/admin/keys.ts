@@ -55,4 +55,6 @@ export const adminKeys = {
     referralSettings: () => [...adminKeys.all, 'referral', 'settings'] as const,
     referralReport: (limit: number) =>
         [...adminKeys.all, 'referral', 'report', limit] as const,
+    fuelStations: () => [...adminKeys.all, 'fuel', 'stations'] as const,
+    fuelReports: () => [...adminKeys.all, 'fuel', 'reports'] as const,
 }

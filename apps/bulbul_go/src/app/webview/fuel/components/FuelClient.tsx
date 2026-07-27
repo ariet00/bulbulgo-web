@@ -63,17 +63,18 @@ export function FuelClient() {
         [meta.data],
     )
 
-    return (
-        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+22px)] pt-3">
-            {geoDenied && (
-                <div className="fl-rise mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-snug text-amber-700 dark:text-amber-400">
-                    Геолокация недоступна — показаны АЗС Бишкека. Разрешите
-                    доступ к местоположению, чтобы видеть заправки рядом.
-                </div>
-            )}
+    // АЗС без размеченных марок в ленте не показываем (справочник дозаполняется
+    // сидером/админкой; фикстура уже обогащена — это страховка на края)
+    const visible = useMemo(
+        () => (stations.data ?? []).filter((s) => s.fuel_types.length > 0),
+        [stations.data],
+    )
 
-            {/* фильтр по маркам топлива */}
-            <div className="fl-chips -mx-3 mb-3 flex gap-2 overflow-x-auto px-3">
+    return (
+        // +76px снизу: фиксированный таббар сегмента
+        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+76px)]">
+            {/* стики-фильтр: прилипает к верху, список подъезжает под него */}
+            <div className="fl-chips sticky top-0 z-30 -mx-3 mb-3 flex gap-2 overflow-x-auto border-b border-border/60 bg-background/95 px-3 py-2.5 backdrop-blur">
                 <FilterChip
                     active={fuelType === null}
                     onClick={() => setFuelType(null)}
@@ -97,6 +98,13 @@ export function FuelClient() {
                 ))}
             </div>
 
+            {geoDenied && (
+                <div className="fl-rise mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-snug text-amber-700 dark:text-amber-400">
+                    Геолокация недоступна — показаны АЗС Бишкека. Разрешите
+                    доступ к местоположению, чтобы видеть заправки рядом.
+                </div>
+            )}
+
             {stations.isLoading || origin === null ? (
                 <ListSkeleton />
             ) : stations.isError ? (
@@ -112,7 +120,7 @@ export function FuelClient() {
                         </button>
                     }
                 />
-            ) : !stations.data?.length ? (
+            ) : !visible.length ? (
                 <EmptyState
                     title="Рядом АЗС не нашлось"
                     text={
@@ -123,7 +131,7 @@ export function FuelClient() {
                 />
             ) : (
                 <ul className="flex flex-col gap-2.5">
-                    {stations.data.map((station, i) => (
+                    {visible.map((station, i) => (
                         <li
                             key={station.id}
                             className="fl-rise"
@@ -152,6 +160,8 @@ export function FuelClient() {
             <ReportSheet
                 station={reportStation}
                 meta={meta.data}
+                origin={origin}
+                geoKnown={!geoDenied}
                 onClose={() => setReportStation(null)}
             />
         </div>

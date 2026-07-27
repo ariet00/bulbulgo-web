@@ -1,14 +1,23 @@
 'use client'
 
-// Форма репорта: марка → статус → очередь → цена/ограничение → отправить.
-// Поля порождаются из /fuel/meta (enum'ы бэка) — RHF-схема тут ни к чему,
-// локальный useState с ручной проверкой обязательных шагов.
-// Отправка гейтится ensureAuth(): в приложении без логина откроется нативный
-// экран входа, вне приложения — тост.
+// Форма репорта: марки (мультивыбор) → статус → очередь → цена/ограничение →
+// отправить. Поля порождаются из /fuel/meta (enum'ы бэка) — RHF-схема тут ни
+// к чему, локальный useState с ручной проверкой обязательных шагов.
+// Цена доступна только при одной выбранной марке (общая цена на несколько
+// марок бессмысленна). Отправка гейтится ensureAuth(); позиция репортёра —
+// если не была получена при загрузке, запрашивается у моста в момент
+// сабмита и уходит в payload.location (провенанс метки). Отказ от гео
+// отправку не блокирует.
 
 import { useEffect, useState } from 'react'
 import { ensureAuth } from '../../auth'
-import { bridgeAvailable, haptic, toast } from '../../bridge'
+import {
+    bridgeAvailable,
+    getLocation,
+    haptic,
+    toast,
+    waitForBridge,
+} from '../../bridge'
 import { BottomSheet } from '../../auto/components/BottomSheet'
 import { ReportRateLimited, submitReport } from '../lib/api'
 import { STATUS_COLOR, metaLabel } from '../lib/format'
@@ -17,6 +26,7 @@ import type {
     FuelMeta,
     FuelStatus,
     FuelType,
+    LatLng,
     QueueBucket,
     Restriction,
     Station,
@@ -30,14 +40,20 @@ async function notify(text: string, type: 'success' | 'error' | 'warning') {
 export function ReportSheet({
     station,
     meta,
+    origin,
+    geoKnown,
     onClose,
 }: {
     station: Station | null
     meta: FuelMeta | undefined
+    /** позиция, полученная при загрузке ленты (null — не удалось) */
+    origin: LatLng | null
+    /** false — пользователь уже отказал в гео (origin — фолбэк-центр) */
+    geoKnown: boolean
     onClose: () => void
 }) {
     const invalidate = useFuelInvalidation()
-    const [fuelType, setFuelType] = useState<FuelType | null>(null)
+    const [fuelTypes, setFuelTypes] = useState<FuelType[]>([])
     const [status, setStatus] = useState<FuelStatus | null>(null)
     const [queue, setQueue] = useState<QueueBucket | null>(null)
     const [price, setPrice] = useState('')
@@ -47,8 +63,8 @@ export function ReportSheet({
     // сброс формы при открытии по новой станции
     useEffect(() => {
         if (station) {
-            setFuelType(
-                station.fuel_types.length === 1 ? station.fuel_types[0] : null,
+            setFuelTypes(
+                station.fuel_types.length === 1 ? [...station.fuel_types] : [],
             )
             setStatus(null)
             setQueue(null)
@@ -64,23 +80,43 @@ export function ReportSheet({
             : (meta?.fuel_types.map((o) => o.value as FuelType) ?? [])
         : []
 
-    const canSubmit = !!fuelType && !!status && !sending
+    const toggleGrade = (g: FuelType) =>
+        setFuelTypes((prev) =>
+            prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g],
+        )
+
+    const priceAllowed = fuelTypes.length === 1 && status !== null && status !== 'out'
+    const canSubmit = fuelTypes.length > 0 && !!status && !sending
+
+    /** Позиция репортёра: из ленты, а если её нет — свежий запрос у моста
+     * (нативный диалог разрешения появится здесь, в момент отметки). */
+    const resolveLocation = async (): Promise<LatLng | null> => {
+        if (geoKnown && origin) return origin
+        if (!(await waitForBridge(1500))) return null
+        const loc = await getLocation().catch(() => null)
+        return loc ? { lat: loc.latitude, lng: loc.longitude } : null
+    }
 
     const submit = async () => {
-        if (!station || !fuelType || !status || sending) return
+        if (!station || !fuelTypes.length || !status || sending) return
         setSending(true)
         try {
             if (!(await ensureAuth())) {
                 await notify('Войдите в приложение, чтобы отмечать статус', 'warning')
                 return
             }
+            const location = await resolveLocation()
             const parsedPrice = parseFloat(price.replace(',', '.'))
             await submitReport(station.id, {
-                fuel_type: fuelType,
+                fuel_types: fuelTypes,
                 status,
                 queue: status === 'out' ? null : queue,
-                price: Number.isFinite(parsedPrice) ? parsedPrice : null,
+                price:
+                    priceAllowed && Number.isFinite(parsedPrice)
+                        ? parsedPrice
+                        : null,
                 restriction,
+                location,
             })
             invalidate(station.id)
             void haptic('success').catch(() => {})
@@ -120,13 +156,13 @@ export function ReportSheet({
                         {station.name}
                     </p>
 
-                    <Field label="Марка топлива">
+                    <Field label="Марки топлива (можно несколько)">
                         <div className="flex flex-wrap gap-1.5">
                             {grades.map((g) => (
                                 <Chip
                                     key={g}
-                                    active={fuelType === g}
-                                    onClick={() => setFuelType(g)}
+                                    active={fuelTypes.includes(g)}
+                                    onClick={() => toggleGrade(g)}
                                 >
                                     {metaLabel(meta?.fuel_types, g)}
                                 </Chip>
@@ -183,7 +219,7 @@ export function ReportSheet({
                         </Field>
                     )}
 
-                    {status && status !== 'out' && (
+                    {priceAllowed && (
                         <Field label="Цена, сом/л (необязательно)">
                             <input
                                 inputMode="decimal"

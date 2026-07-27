@@ -15,6 +15,7 @@ import {
 } from '../lib/format'
 import { useStation } from '../lib/queries'
 import type { FuelMeta, LatLng, Station, StationDetail } from '../lib/types'
+import { StationAvatar } from './StationCard'
 
 export function StationSheet({
     station,
@@ -50,15 +51,18 @@ export function StationSheet({
         >
             {data && (
                 <div className="flex flex-col gap-4">
-                    <p className="-mt-1 text-[13px] text-muted-foreground">
-                        {[
-                            data.brand,
-                            data.address,
-                            formatDistance(data.distance_km),
-                        ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                    </p>
+                    <div className="-mt-1 flex items-center gap-3">
+                        <StationAvatar station={data} size={44} />
+                        <p className="text-[13px] leading-snug text-muted-foreground">
+                            {[
+                                data.brand,
+                                data.address,
+                                formatDistance(data.distance_km),
+                            ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                        </p>
+                    </div>
 
                     {/* сводка по маркам */}
                     <div className="flex flex-col gap-2">

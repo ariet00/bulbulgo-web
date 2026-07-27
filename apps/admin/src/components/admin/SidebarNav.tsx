@@ -14,6 +14,7 @@ import {
     ClipboardList,
     Flag,
     FolderTree,
+    Fuel,
     Gift,
     LayoutDashboard,
     LayoutGrid,
@@ -90,6 +91,13 @@ const sections: NavSection[] = [
             { name: 'Новости', href: '/admin/news', icon: Newspaper },
             { name: 'Рефералы', href: '/admin/referral', icon: Gift },
             { name: 'Настройки', href: '/admin/settings', icon: SettingsIcon },
+        ],
+    },
+    {
+        label: 'Где заправка',
+        items: [
+            { name: 'Метки топлива', href: '/admin/fuel/reports', icon: Fuel },
+            { name: 'АЗС', href: '/admin/fuel/stations', icon: MapPin },
         ],
     },
     {

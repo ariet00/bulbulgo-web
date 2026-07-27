@@ -6,6 +6,7 @@ import { authFetch } from '../../auth'
 import type {
     FuelMeta,
     LatLng,
+    MyReport,
     ReportPayload,
     Station,
     StationDetail,
@@ -70,4 +71,11 @@ export async function submitReport(
     })
     if (r.status === 429) throw new ReportRateLimited()
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
+}
+
+export async function fetchMyReports(): Promise<MyReport[]> {
+    const r = await authFetch('/fuel/my-reports')
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const { items } = (await r.json()) as { items: MyReport[] }
+    return items
 }

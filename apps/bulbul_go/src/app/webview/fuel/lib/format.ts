@@ -8,9 +8,17 @@ import type { FuelStatus, MetaOption } from './types'
 /** Цвет статуса (совпадает с переменными в fuel.css). */
 export const STATUS_COLOR: Record<FuelStatus, string> = {
     available: 'var(--fl-ok)',
+    low: 'var(--fl-low)',
     incoming: 'var(--fl-soon)',
     queue: 'var(--fl-warn)',
     out: 'var(--fl-bad)',
+}
+
+/** Детерминированный тон буквы-аватара АЗС без лого (по названию). */
+export function avatarHue(name: string): number {
+    let h = 0
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0
+    return Math.abs(h) % 360
 }
 
 export function metaLabel(options: MetaOption[] | undefined, value: string): string {
