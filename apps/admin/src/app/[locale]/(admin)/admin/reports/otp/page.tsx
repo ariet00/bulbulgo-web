@@ -25,13 +25,7 @@ import {
     useAdminOtpReportTopPhones,
 } from '@/hooks/queries/admin'
 import { OtpTimeseriesChart } from '@/components/admin/analytics/charts-lazy'
-
-const PERIODS = [
-    { value: '24h', label: '24h' },
-    { value: '7d', label: '7d' },
-    { value: '30d', label: '30d' },
-    { value: '90d', label: '90d' },
-]
+import { REPORT_PERIODS as PERIODS, SummaryCard } from '@/components/admin/reports/shared'
 
 const PURPOSES = [
     { value: '', label: 'Все сценарии' },
@@ -307,69 +301,5 @@ export default function OtpReportPage() {
                 </CardContent>
             </Card>
         </div>
-    )
-}
-
-function SummaryCard({
-    title,
-    value,
-    prev,
-    suffix = '',
-    goodWhenUp = false,
-    hint,
-}: {
-    title: string
-    value: number | undefined
-    prev?: number
-    suffix?: string
-    goodWhenUp?: boolean
-    hint?: string
-}) {
-    return (
-        <Card>
-            <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-normal text-muted-foreground">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-baseline gap-2 flex-wrap">
-                    <div className="text-2xl font-semibold">
-                        {value ?? '—'}
-                        {value !== undefined ? suffix : ''}
-                    </div>
-                    <DeltaBadge value={value} prev={prev} goodWhenUp={goodWhenUp} />
-                </div>
-                {hint && <div className="text-xs text-amber-600 dark:text-amber-400">{hint}</div>}
-            </CardContent>
-        </Card>
-    )
-}
-
-// Δ к окну той же длины перед периодом. Для «Подтверждено»/«Конверсия» рост —
-// хорошо (goodWhenUp), для ошибок — плохо.
-function DeltaBadge({
-    value,
-    prev,
-    goodWhenUp,
-}: {
-    value: number | undefined
-    prev: number | undefined
-    goodWhenUp: boolean
-}) {
-    if (value === undefined || prev === undefined) return null
-    if (prev === 0 && value === 0) return null
-    if (prev === 0) return <span className="text-xs text-muted-foreground">новое</span>
-    const pct = Math.round(((value - prev) / prev) * 100)
-    if (pct === 0) return <span className="text-xs text-muted-foreground">±0%</span>
-    const good = pct > 0 ? goodWhenUp : !goodWhenUp
-    return (
-        <span
-            className={`text-xs font-medium ${
-                good ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-            }`}
-            title={`Прошлый период: ${prev}`}
-        >
-            {pct > 0 ? '+' : ''}
-            {pct}%
-        </span>
     )
 }

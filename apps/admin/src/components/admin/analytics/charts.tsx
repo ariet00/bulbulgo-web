@@ -491,6 +491,43 @@ export function OtpTimeseriesChart({
     )
 }
 
+// Referral report: captured vs rewarded (bars) + anti-fraud rejections (line).
+export function ReferralTimeseriesChart({
+    data,
+    granularity = 'day',
+}: {
+    data: Array<{ bucket: string; captured: number; rewarded: number; rejected: number }>
+    granularity?: 'hour' | 'day' | 'week'
+}) {
+    const t = useChartTheme()
+    const series = data.map(d => ({
+        ...d,
+        label: formatBucket(d.bucket, granularity === 'hour' ? 'hour' : 'day'),
+    }))
+
+    return (
+        <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={series} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+                <XAxis dataKey="label" fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <YAxis allowDecimals={false} fontSize={12} stroke={t.axis} tick={{ fill: t.axis }} />
+                <Tooltip {...tooltipProps(t)} />
+                <Legend wrapperStyle={{ color: t.axis }} />
+                <Bar dataKey="captured" name="Привязано" fill={CHART_COLORS[0]} radius={[3, 3, 0, 0]} />
+                <Bar dataKey="rewarded" name="Выплачено" fill="#16a34a" radius={[3, 3, 0, 0]} />
+                <Line
+                    type="monotone"
+                    dataKey="rejected"
+                    name="Отклонено"
+                    stroke="#dc2626"
+                    strokeWidth={2}
+                    dot={false}
+                />
+            </ComposedChart>
+        </ResponsiveContainer>
+    )
+}
+
 // Compact trend of a single error signature inside the drill-down panel.
 export function ErrorSignatureSparkline({
     data,

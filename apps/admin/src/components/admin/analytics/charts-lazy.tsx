@@ -62,3 +62,8 @@ export const OtpTimeseriesChart = dynamic(
     () => import('./charts').then(m => m.OtpTimeseriesChart),
     { ssr: false, loading },
 )
+
+export const ReferralTimeseriesChart = dynamic(
+    () => import('./charts').then(m => m.ReferralTimeseriesChart),
+    { ssr: false, loading },
+)

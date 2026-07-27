@@ -45,7 +45,7 @@ export interface AdminOtpPhoneRow {
     last_seen: string
 }
 
-export interface AdminOtpReportParams {
+export interface AdminReportParams {
     period?: string
     purpose?: string
     platform?: string
@@ -53,7 +53,7 @@ export interface AdminOtpReportParams {
     limit?: number
 }
 
-const qs = (params: AdminOtpReportParams) => {
+const qs = (params: AdminReportParams) => {
     const q = new URLSearchParams()
     if (params.period) q.set('period', params.period)
     if (params.purpose) q.set('purpose', params.purpose)
@@ -63,17 +63,74 @@ const qs = (params: AdminOtpReportParams) => {
     return q.toString()
 }
 
-const BASE = '/admin/analytics/reports/otp'
+const OTP_BASE = '/admin/analytics/reports/otp'
+
+// ── Referral report (/admin/analytics/reports/referral) ─────────────────────
+
+export interface AdminReferralReportSummary {
+    shared: number
+    code_checked: number
+    code_valid: number
+    captured: number
+    rewarded: number
+    rejected: number
+    signed_up: number
+    paid_total: number
+    paid_referrers: number
+    paid_referees: number
+    pipeline_pending: number
+    pipeline_rewarded: number
+    pipeline_capped: number
+    pipeline_void: number
+    prev_captured: number
+    prev_rewarded: number
+    prev_rejected: number
+    prev_paid_total: number
+}
+
+export interface AdminReferralTimeseriesRow {
+    bucket: string
+    captured: number
+    rewarded: number
+    rejected: number
+}
+
+export interface AdminReferralRejectionRow {
+    reason: string | null
+    count: number
+    last_seen: string
+}
+
+export interface AdminReferralTopRow {
+    user_id: number
+    name: string | null
+    username: string | null
+    phone: string | null
+    captured: number
+    payouts: number
+    earned: number
+    last_payout: string | null
+}
+
+const REFERRAL_BASE = '/admin/analytics/reports/referral'
 
 export const reportsAdminApi = {
-    getOtpReportSummary: (params: AdminOtpReportParams) =>
-        requests.get<AdminOtpReportSummary>(`${BASE}/summary?${qs(params)}`),
-    getOtpReportTimeseries: (params: AdminOtpReportParams) =>
-        requests.get<AdminOtpTimeseriesRow[]>(`${BASE}/timeseries?${qs(params)}`),
-    getOtpReportFailures: (params: AdminOtpReportParams) =>
-        requests.get<AdminOtpFailureRow[]>(`${BASE}/failures?${qs(params)}`),
-    getOtpReportPlatforms: (params: AdminOtpReportParams) =>
-        requests.get<AdminOtpPlatformRow[]>(`${BASE}/platforms?${qs(params)}`),
-    getOtpReportTopPhones: (params: AdminOtpReportParams) =>
-        requests.get<AdminOtpPhoneRow[]>(`${BASE}/top-phones?${qs(params)}`),
+    getOtpReportSummary: (params: AdminReportParams) =>
+        requests.get<AdminOtpReportSummary>(`${OTP_BASE}/summary?${qs(params)}`),
+    getOtpReportTimeseries: (params: AdminReportParams) =>
+        requests.get<AdminOtpTimeseriesRow[]>(`${OTP_BASE}/timeseries?${qs(params)}`),
+    getOtpReportFailures: (params: AdminReportParams) =>
+        requests.get<AdminOtpFailureRow[]>(`${OTP_BASE}/failures?${qs(params)}`),
+    getOtpReportPlatforms: (params: AdminReportParams) =>
+        requests.get<AdminOtpPlatformRow[]>(`${OTP_BASE}/platforms?${qs(params)}`),
+    getOtpReportTopPhones: (params: AdminReportParams) =>
+        requests.get<AdminOtpPhoneRow[]>(`${OTP_BASE}/top-phones?${qs(params)}`),
+    getReferralReportSummary: (params: AdminReportParams) =>
+        requests.get<AdminReferralReportSummary>(`${REFERRAL_BASE}/summary?${qs(params)}`),
+    getReferralReportTimeseries: (params: AdminReportParams) =>
+        requests.get<AdminReferralTimeseriesRow[]>(`${REFERRAL_BASE}/timeseries?${qs(params)}`),
+    getReferralReportRejections: (params: AdminReportParams) =>
+        requests.get<AdminReferralRejectionRow[]>(`${REFERRAL_BASE}/rejections?${qs(params)}`),
+    getReferralReportTopReferrers: (params: AdminReportParams) =>
+        requests.get<AdminReferralTopRow[]>(`${REFERRAL_BASE}/top-referrers?${qs(params)}`),
 }

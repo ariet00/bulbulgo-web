@@ -1,5 +1,5 @@
 import { Link } from '@doska/i18n'
-import { KeyRound, ChevronRight } from 'lucide-react'
+import { Gift, KeyRound, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@doska/ui'
 
 // Реестр отчётов: новый отчёт = запись здесь + страница в reports/<slug>/.
@@ -10,6 +10,13 @@ const REPORTS = [
         description:
             'Отправка и подтверждение SMS-кодов: конверсия, ошибки и их причины, платформы, подозрительные номера.',
         icon: KeyRound,
+    },
+    {
+        slug: 'referral',
+        title: 'Реферальная программа',
+        description:
+            'Воронка приглашений, конверсия в выплату, кто сколько заработал, анти-фрод отклонения.',
+        icon: Gift,
     },
 ]
 
