@@ -73,8 +73,6 @@
     color: inherit;
 }
 
-/* bottom-sheet общий — анимации в ../webview.css (wv-sheet-*) */
-
 /* горизонтальная лента чипсов без скроллбара */
 .fl-chips {
     scrollbar-width: none;

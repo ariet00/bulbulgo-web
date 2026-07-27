@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import '../globals.css'
-import './webview.css'
 import { BridgeNav } from './BridgeNav'
 import { QueryProvider } from './QueryProvider'
 import { ThemeSync } from './ThemeSync'
