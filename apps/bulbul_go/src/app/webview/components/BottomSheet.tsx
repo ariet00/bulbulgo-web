@@ -33,6 +33,11 @@ export function BottomSheet({
             onOpenChange={(next) => {
                 if (!next) onClose()
             }}
+            // выключено: по умолчанию vaul слушает visualViewport и инлайном
+            // переписывает height панели «под клавиатуру» — во вьюве
+            // приложения viewport дёргается и без неё, панель получает высоту
+            // больше видимой области и футер уезжает за экран
+            repositionInputs={false}
         >
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-50 bg-black/45" />
