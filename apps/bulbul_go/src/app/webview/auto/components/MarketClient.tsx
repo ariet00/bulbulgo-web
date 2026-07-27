@@ -237,6 +237,19 @@ export function MarketClient() {
         )
     }
 
+    // высота fixed-шапки → paddingTop корня (меняется при смене ветки:
+    // появляются/уходят табы, сегмент, чипсы)
+    const headerRef = useRef<HTMLDivElement>(null)
+    const [headerH, setHeaderH] = useState(0)
+    useEffect(() => {
+        const el = headerRef.current
+        if (!el) return
+        const ro = new ResizeObserver(() => setHeaderH(el.offsetHeight))
+        ro.observe(el)
+        setHeaderH(el.offsetHeight)
+        return () => ro.disconnect()
+    }, [])
+
     const chip =
         'shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-medium active:bg-muted transition-colors'
     const chipActive = {
@@ -248,6 +261,7 @@ export function MarketClient() {
     return (
         <div
             className="min-h-dvh pb-24"
+            style={{ paddingTop: headerH }}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -277,8 +291,14 @@ export function MarketClient() {
                     </svg>
                 </div>
             )}
-            {/* сегмент рынка */}
-            <div className="sticky top-0 z-20 border-b bg-background/95 px-4 pb-2.5 pt-3 backdrop-blur">
+            {/* сегмент рынка: прикреплён fixed'ом (sticky ломает
+                overflow-x-hidden на html/body вебвью-layout); высота
+                переменная (табы/сегмент/чипсы по ветке) — замеряется
+                ResizeObserver'ом и компенсируется paddingTop корня */}
+            <div
+                ref={headerRef}
+                className="fixed inset-x-0 top-0 z-20 border-b bg-background/95 px-4 pb-2.5 pt-3 backdrop-blur"
+            >
                 {/* табы подкатегорий (Легковые/Грузовые/Мото/Запчасти/Сервисы) */}
                 {tabs.length > 1 && (
                     <div className="am-chips -mx-4 mb-2.5 flex gap-2 overflow-x-auto px-4">
