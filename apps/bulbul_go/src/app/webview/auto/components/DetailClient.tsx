@@ -32,7 +32,7 @@ import {
 } from '../lib/queries'
 import type { EffectiveAttribute, ListingContact } from '../lib/types'
 import { navigateTo } from '../lib/nav'
-import { BottomSheet } from './BottomSheet'
+import { BottomSheet } from '../../components/BottomSheet'
 import { ListingCard } from './ListingCard'
 
 // Страница объявления: галерея, цена в обеих валютах, таблица характеристик,

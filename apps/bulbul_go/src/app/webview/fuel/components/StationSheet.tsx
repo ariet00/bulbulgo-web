@@ -4,7 +4,7 @@
 // свежих репортов. Кнопка «Сообщить» открывает форму репорта (гейт auth —
 // внутри ReportSheet).
 
-import { BottomSheet } from '../../auto/components/BottomSheet'
+import { BottomSheet } from '../../components/BottomSheet'
 import { callPhone, bridgeAvailable } from '../../bridge'
 import {
     STATUS_COLOR,

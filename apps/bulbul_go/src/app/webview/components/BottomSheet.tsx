@@ -2,8 +2,9 @@
 
 import { useEffect, type ReactNode } from 'react'
 
-// Общий bottom-sheet вебвью (без зависимостей): бэкдроп + панель снизу,
-// блокировка скролла body на время показа. Высота — до 85dvh, контент скроллится.
+// Общий bottom-sheet webview-сервисов (без зависимостей): бэкдроп + панель
+// снизу, лок скролла страницы на время показа. Высота — до 85dvh, контент
+// скроллится. Анимации — в ../webview.css (wv-sheet-*).
 
 export function BottomSheet({
     open,
@@ -19,12 +20,32 @@ export function BottomSheet({
     /** прилипшая к низу панель действия («Показать N») */
     footer?: ReactNode
 }) {
+    // Лок скролла страницы: overflow:hidden на body НЕ останавливает
+    // touch-скролл в iOS-вебвью — фиксируем body на месте (position:fixed
+    // с компенсацией scrollY) и возвращаем позицию при закрытии.
     useEffect(() => {
         if (!open) return
-        const prev = document.body.style.overflow
-        document.body.style.overflow = 'hidden'
+        const scrollY = window.scrollY
+        const { position, top, left, right, width, overflow } =
+            document.body.style
+        Object.assign(document.body.style, {
+            position: 'fixed',
+            top: `-${scrollY}px`,
+            left: '0',
+            right: '0',
+            width: '100%',
+            overflow: 'hidden',
+        })
         return () => {
-            document.body.style.overflow = prev
+            Object.assign(document.body.style, {
+                position,
+                top,
+                left,
+                right,
+                width,
+                overflow,
+            })
+            window.scrollTo(0, scrollY)
         }
     }, [open])
 
@@ -41,10 +62,10 @@ export function BottomSheet({
         >
             <button
                 aria-label="Закрыть"
-                className="am-sheet-backdrop absolute inset-0 bg-black/45"
+                className="wv-sheet-backdrop absolute inset-0 bg-black/45"
                 onClick={onClose}
             />
-            <div className="am-sheet-panel absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-2xl">
+            <div className="wv-sheet-panel absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-2xl">
                 <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30" />
                 <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-3">
                     <h2 className="text-[17px] font-semibold tracking-tight">
@@ -60,7 +81,9 @@ export function BottomSheet({
                         </svg>
                     </button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+                {/* overscroll-contain: доскроллив контент шита до края, жест
+                    не перетекает в скролл страницы под ним */}
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
                     {children}
                 </div>
                 {/* +отступ к safe-area: во вьюве приложения inset = 0 */}

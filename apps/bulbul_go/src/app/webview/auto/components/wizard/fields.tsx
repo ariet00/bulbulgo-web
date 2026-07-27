@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchRegions, type RegionItem } from '../../lib/api'
 import { pickLabel } from '../../lib/format'
 import type { EffectiveAttribute } from '../../lib/types'
-import { BottomSheet } from '../BottomSheet'
+import { BottomSheet } from '../../../components/BottomSheet'
 
 // Поля формы подачи: подпись + чипсы-enum / переключатель / числовой инпут,
 // плюс пикер региона с поиском. Рендер атрибутов — по метаданным каталога.

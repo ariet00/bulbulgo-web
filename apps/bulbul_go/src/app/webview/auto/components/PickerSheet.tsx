@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { AttributeOption } from '../lib/types'
 import { pickLabel } from '../lib/format'
-import { BottomSheet } from './BottomSheet'
+import { BottomSheet } from '../../components/BottomSheet'
 
 // Пикер опций словаря (марка/модель): поиск, группа «Популярные» сверху
 // (data.popular у топовых марок рынка), одиночный или множественный выбор.

@@ -15,7 +15,7 @@ import {
     useRates,
 } from '../lib/queries'
 import type { ListingFilters } from '../lib/types'
-import { BottomSheet } from './BottomSheet'
+import { BottomSheet } from '../../components/BottomSheet'
 import { ListingCard, ListingCardSkeleton } from './ListingCard'
 import { PickerSheet } from './PickerSheet'
 import {

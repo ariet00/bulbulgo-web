@@ -44,29 +44,7 @@
     color: inherit;
 }
 
-/* bottom-sheet */
-@keyframes am-sheet-in {
-    from {
-        transform: translateY(100%);
-    }
-    to {
-        transform: none;
-    }
-}
-@keyframes am-fade-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-.am-sheet-backdrop {
-    animation: am-fade-in 0.2s ease both;
-}
-.am-sheet-panel {
-    animation: am-sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+/* bottom-sheet общий — анимации в ../webview.css (wv-sheet-*) */
 
 /* горизонтальная лента чипсов без скроллбара */
 .am-chips {

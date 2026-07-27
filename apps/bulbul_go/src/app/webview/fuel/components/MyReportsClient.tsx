@@ -34,7 +34,7 @@ export function MyReportsClient() {
     }
 
     return (
-        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+76px)] pt-3">
+        <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+84px)] pt-3">
             {authed === false ? (
                 <div className="fl-rise flex flex-col items-center px-6 py-16 text-center">
                     <p className="text-[16px] font-semibold">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BottomSheet } from '../BottomSheet'
+import { BottomSheet } from '../../../components/BottomSheet'
 import { inputCls } from '../wizard/fields'
 
 // Шиты пополевого редактирования на странице владельца: пользователь редко

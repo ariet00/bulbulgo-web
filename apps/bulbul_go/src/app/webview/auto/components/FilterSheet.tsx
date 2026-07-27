@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RegionItem } from '../lib/api'
 import type { EffectiveAttribute, ListingFilters } from '../lib/types'
 import { pickLabel } from '../lib/format'
-import { BottomSheet } from './BottomSheet'
+import { BottomSheet } from '../../components/BottomSheet'
 import { RegionField } from './wizard/fields'
 
 // Полный набор фильтров (bottom-sheet): цена с валютой, диапазоны

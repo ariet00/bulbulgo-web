@@ -18,7 +18,7 @@ import {
     toast,
     waitForBridge,
 } from '../../bridge'
-import { BottomSheet } from '../../auto/components/BottomSheet'
+import { BottomSheet } from '../../components/BottomSheet'
 import { ReportRateLimited, submitReport } from '../lib/api'
 import { STATUS_COLOR, metaLabel } from '../lib/format'
 import { useFuelInvalidation } from '../lib/queries'
