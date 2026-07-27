@@ -77,6 +77,7 @@ const sections: NavSection[] = [
             { name: 'Версии', href: '/admin/analytics/versions', icon: LineChart },
             { name: 'Ошибки', href: '/admin/analytics/errors', icon: AlertTriangle },
             { name: 'События', href: '/admin/analytics/events', icon: Activity },
+            { name: 'Отчёты', href: '/admin/reports', icon: ClipboardList },
         ],
     },
     {

@@ -57,3 +57,8 @@ export const ErrorSignatureSparkline = dynamic(
     () => import('./charts').then(m => m.ErrorSignatureSparkline),
     { ssr: false, loading },
 )
+
+export const OtpTimeseriesChart = dynamic(
+    () => import('./charts').then(m => m.OtpTimeseriesChart),
+    { ssr: false, loading },
+)

@@ -16,6 +16,7 @@ export * from './settings'
 export * from './celery'
 export * from './seeders'
 export * from './referral'
+export * from './reports'
 
 import { regionsAdminApi } from './regions'
 import { usersAdminApi } from './users'
@@ -34,6 +35,7 @@ import { settingsAdminApi } from './settings'
 import { celeryAdminApi } from './celery'
 import { seedersAdminApi } from './seeders'
 import { referralAdminApi } from './referral'
+import { reportsAdminApi } from './reports'
 
 // Единый объект-агрегат — публичный контракт `adminApi` не изменился.
 export const adminApi = {
@@ -54,4 +56,5 @@ export const adminApi = {
     ...celeryAdminApi,
     ...seedersAdminApi,
     ...referralAdminApi,
+    ...reportsAdminApi,
 }
