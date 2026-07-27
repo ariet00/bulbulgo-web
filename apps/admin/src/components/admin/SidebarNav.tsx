@@ -94,7 +94,7 @@ const sections: NavSection[] = [
         ],
     },
     {
-        label: 'Где заправка',
+        label: 'Где Бензин',
         items: [
             { name: 'Метки топлива', href: '/admin/fuel/reports', icon: Fuel },
             { name: 'АЗС', href: '/admin/fuel/stations', icon: MapPin },
