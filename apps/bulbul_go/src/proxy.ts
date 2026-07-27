@@ -109,5 +109,6 @@ export const config = {
     // - webview (страницы для вебвью мобильного приложения — без локали и auth-редиректов)
     // - rideshare (smart-link /rideshare/trips/:id — App Link-цель, без локали)
     // - auto (share-страница объявления авторынка /auto/:id — без локали)
-    matcher: ["/((?!api|webview|rideshare|auto|_next/static|_next/image|favicon.ico|images|.*\\..*).*)"],
+    // - real_estate (share-страница объявления недвижимости /real_estate/details/:id — без локали)
+    matcher: ["/((?!api|webview|rideshare|auto|real_estate|_next/static|_next/image|favicon.ico|images|.*\\..*).*)"],
 };
