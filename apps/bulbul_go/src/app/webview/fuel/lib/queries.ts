@@ -56,11 +56,14 @@ export function useStation(id: number | null, origin: LatLng | null) {
     })
 }
 
-/** После отправки репорта: протухнуть список и карточку станции. */
+/** После отправки репорта: протухнуть ленту, карту, карточку станции и
+ * «Мои метки» — везде, где виден агрегат статусов. */
 export function useFuelInvalidation() {
     const qc = useQueryClient()
     return (stationId: number) => {
         void qc.invalidateQueries({ queryKey: ['fuel', 'stations'] })
+        void qc.invalidateQueries({ queryKey: ['fuel', 'map-stations'] })
         void qc.invalidateQueries({ queryKey: qk.station(stationId) })
+        void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] })
     }
 }

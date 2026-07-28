@@ -124,6 +124,9 @@ export function FuelMap() {
     const [mapReady, setMapReady] = useState(false)
     const [openedStation, setOpenedStation] = useState<Station | null>(null)
     const [reportStation, setReportStation] = useState<Station | null>(null)
+    // видимые донат-маркеры кластеров по cluster_id; в ref — чтобы update-путь
+    // эффекта (setData) мог их очистить и sync пересоздал со свежими долями
+    const donutsRef = useRef(new Map<number, Marker>())
 
     // Станции для карты: широкий радиус от позиции (не фильтруем по марке —
     // на карте видно всё; лимит бэка 200 покрывает пол-страны от любой точки)
@@ -195,6 +198,10 @@ export function FuelMap() {
         const existing = map.getSource('stations') as GeoJSONSource | undefined
         if (existing) {
             existing.setData(geojson)
+            // cluster_id после setData переиспользуются — старые донаты
+            // остались бы со стухшими долями; сносим, sync нарисует заново
+            for (const marker of donutsRef.current.values()) marker.remove()
+            donutsRef.current.clear()
             return
         }
 
@@ -239,7 +246,7 @@ export function FuelMap() {
         // ── донаты кластеров: HTML-маркеры, пересинк на каждый кадр ──
         // (паттерн из примеров MapLibre: querySourceFeatures на 'render',
         // маркеры добавляются/удаляются по видимым cluster_id)
-        const donuts = new Map<number, Marker>()
+        const donuts = donutsRef.current
         const groupColors = {
             ok: palette.available,
             bad: palette.out,
