@@ -1,17 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+// Табы «Где Бензин»: Лента · Карта · Мои метки. Каркас — общий TabBar.
 
-// Нижние табы сервиса: Лента · Карта · Мои метки. Живёт в layout сегмента,
-// активный таб — по pathname, подсветка оптимистично по тапу. Переключение —
-// SPA-заменой (один нативный экран, история не растёт).
-
-type TabKey = 'feed' | 'map' | 'my'
+import { TabBar as SharedTabBar, type TabItem } from '../../components/TabBar'
 
 const BASE = '/webview/fuel'
 
-const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[] = [
+const TABS: TabItem[] = [
     {
         key: 'feed',
         path: BASE,
@@ -49,61 +44,5 @@ const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[
 ]
 
 export function TabBar() {
-    const router = useRouter()
-    const pathname = usePathname()
-
-    const [pending, setPending] = useState<TabKey | null>(null)
-    useEffect(() => setPending(null), [pathname])
-
-    useEffect(() => {
-        for (const t of TABS) router.prefetch(t.path)
-    }, [router])
-
-    const isTabRoute = TABS.some((t) => t.path === pathname)
-    if (!isTabRoute) return null
-
-    const active = pending ?? TABS.find((t) => t.path === pathname)?.key ?? 'feed'
-
-    return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-            {/* +26px к safe-area: во вьюве приложения inset может быть 0,
-                с меньшим запасом кнопки липнут к жестовой зоне */}
-            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+26px)]">
-                {TABS.map((t) => {
-                    const isActive = t.key === active
-                    return (
-                        <button
-                            key={t.key}
-                            onClick={() => {
-                                if (isActive) return
-                                setPending(t.key)
-                                router.replace(t.path)
-                            }}
-                            className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
-                            style={
-                                isActive
-                                    ? { color: 'var(--wv-accent)' }
-                                    : { opacity: 0.55 }
-                            }
-                        >
-                            <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden
-                            >
-                                {t.icon}
-                            </svg>
-                            <span className="text-[10px] font-medium">{t.label}</span>
-                        </button>
-                    )
-                })}
-            </div>
-        </nav>
-    )
+    return <SharedTabBar items={TABS} />
 }

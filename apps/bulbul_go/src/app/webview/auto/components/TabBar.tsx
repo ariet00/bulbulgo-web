@@ -1,21 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+// Табы авторынка: Поиск · Мои · [Создать] · Избранные · Профиль.
+// Каркас — общий TabBar; «Создать» — центральное действие, открывает wizard
+// нативным экраном поверх (openWebPage).
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { TabBar as SharedTabBar, type TabItem } from '../../components/TabBar'
 import { navigateTo } from '../lib/nav'
-
-// Нижние табы сервиса: Поиск · Мои · Создать · Избранные · Профиль.
-// Живёт в layout сегмента (не перемонтируется), активный таб определяет по
-// pathname, подсветка — оптимистично сразу по тапу, пока Next грузит страницу.
-// Табы переключаются SPA-заменой (один нативный экран, история не растёт);
-// «Создать» — не таб, а действие: открывает wizard нативным экраном поверх.
-// На глубоких роутах (карточка, wizard, владелец) скрывается сам.
-
-export type TabKey = 'search' | 'my' | 'favorites' | 'profile'
 
 const BASE = '/webview/auto'
 
-const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[] = [
+const TABS: TabItem[] = [
     {
         key: 'search',
         path: BASE,
@@ -42,6 +38,7 @@ const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[
         key: 'favorites',
         path: `${BASE}/favorites`,
         label: 'Избранные',
+        fillWhenActive: true,
         icon: (
             <path d="M8 13.2C5.2 11.2 2.3 8.9 2.3 6.1a3.1 3.1 0 0 1 5.7-1.8A3.1 3.1 0 0 1 13.7 6c0 2.9-2.9 5.2-5.7 7.2Z" />
         ),
@@ -61,93 +58,20 @@ const TABS: { key: TabKey; path: string; label: string; icon: React.ReactNode }[
 
 export function TabBar() {
     const router = useRouter()
-    const pathname = usePathname()
-    const [left, right] = [TABS.slice(0, 2), TABS.slice(2)]
-
-    // оптимистичная подсветка: тап красит таб сразу; когда навигация
-    // завершилась (pathname сменился) — источником истины снова становится URL
-    const [pending, setPending] = useState<TabKey | null>(null)
-    useEffect(() => setPending(null), [pathname])
-
-    // кнопки (в отличие от Link) не префетчат роуты — без этого тап по табу
-    // ждёт загрузку чанка/RSC целевой страницы и переход ощущается с задержкой
+    // wizard — не таб (общий TabBar его не префетчит), но открывается с
+    // центральной кнопки — греем заранее, чтобы тап не ждал чанк
     useEffect(() => {
-        for (const t of TABS) router.prefetch(t.path)
         router.prefetch(`${BASE}/new`)
     }, [router])
-
-    // глубокие роуты (карточка, wizard, владелец) — без таббара
-    const isTabRoute = TABS.some((t) => t.path === pathname)
-    if (!isTabRoute) return null
-
-    const active =
-        pending ?? TABS.find((t) => t.path === pathname)?.key ?? 'search'
-
-    const tab = (t: (typeof TABS)[number]) => {
-        const isActive = t.key === active
-        return (
-            <button
-                key={t.key}
-                onClick={() => {
-                    if (isActive) return
-                    setPending(t.key)
-                    router.replace(t.path)
-                }}
-                className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
-                style={isActive ? { color: 'var(--wv-accent)' } : { opacity: 0.55 }}
-            >
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 16 16"
-                    fill={t.key === 'favorites' && isActive ? 'currentColor' : 'none'}
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                >
-                    {t.icon}
-                </svg>
-                <span className="text-[10px] font-medium">{t.label}</span>
-            </button>
-        )
-    }
-
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-            {/* +26px к safe-area (как в fuel): во вьюве приложения inset
-                может быть 0, с меньшим запасом кнопки липнут к жестовой зоне */}
-            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+26px)]">
-                {left.map(tab)}
-
-                {/* Создать — акцентная центральная кнопка, открывает wizard */}
-                <button
-                    onClick={() =>
-                        navigateTo(
-                            router,
-                            `${BASE}/new`,
-                            'Подать объявление',
-                        )
-                    }
-                    aria-label="Создать объявление"
-                    className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
-                >
-                    <span
-                        className="flex h-9 w-9 -translate-y-2.5 items-center justify-center rounded-full text-white shadow-lg"
-                        style={{ background: 'var(--wv-accent)' }}
-                    >
-                        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                            <path d="M8 3v10M3 8h10" />
-                        </svg>
-                    </span>
-                    <span className="-mt-2 text-[10px] font-medium" style={{ color: 'var(--wv-accent)' }}>
-                        Создать
-                    </span>
-                </button>
-
-                {right.map(tab)}
-            </div>
-        </nav>
+        <SharedTabBar
+            items={TABS}
+            centerAction={{
+                label: 'Создать',
+                ariaLabel: 'Создать объявление',
+                onPress: () =>
+                    navigateTo(router, `${BASE}/new`, 'Подать объявление'),
+            }}
+        />
     )
 }
