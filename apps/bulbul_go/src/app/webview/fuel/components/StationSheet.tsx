@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ensureAuth } from '../../auth'
 import { BottomSheet } from '../../components/BottomSheet'
 import { bridgeAvailable, callPhone, haptic, toast } from '../../bridge'
-import { confirmReport } from '../lib/api'
+import { confirmReport, unconfirmReport } from '../lib/api'
 import {
     STATUS_COLOR,
     formatDistance,
@@ -39,19 +39,19 @@ export function StationSheet({
     const data = (detail.data ?? station) as StationDetail | Station | null
     const [confirming, setConfirming] = useState<number | null>(null)
 
-    const confirm = async (reportId: number) => {
+    const toggleConfirm = async (reportId: number, undo: boolean) => {
         if (!station || confirming) return
         setConfirming(reportId)
         try {
             if (!(await ensureAuth())) return
-            await confirmReport(reportId)
-            void haptic('success').catch(() => {})
+            await (undo ? unconfirmReport(reportId) : confirmReport(reportId))
+            void haptic(undo ? 'light' : 'success').catch(() => {})
             void qc.invalidateQueries({ queryKey: qk.station(station.id) })
             void qc.invalidateQueries({ queryKey: ['fuel', 'my-stats'] })
             void qc.invalidateQueries({ queryKey: ['fuel', 'leaderboard'] })
         } catch {
             if (bridgeAvailable()) {
-                void toast('Не получилось подтвердить', 'warning').catch(() => {})
+                void toast('Не получилось, попробуйте ещё раз', 'warning').catch(() => {})
             }
         } finally {
             setConfirming(null)
@@ -215,7 +215,7 @@ export function StationSheet({
                                                     {!r.is_mine && !r.i_confirmed && fresh && (
                                                         <button
                                                             disabled={confirming === r.id}
-                                                            onClick={() => void confirm(r.id)}
+                                                            onClick={() => void toggleConfirm(r.id, false)}
                                                             className="rounded-full border border-[var(--wv-accent-border)] bg-[var(--wv-accent-soft)] px-2.5 py-1 text-[11.5px] font-semibold text-[var(--wv-accent)] active:opacity-70 disabled:opacity-50"
                                                         >
                                                             {confirming === r.id
@@ -223,10 +223,21 @@ export function StationSheet({
                                                                 : '✓ Подтвердить'}
                                                         </button>
                                                     )}
+                                                    {r.i_confirmed && (
+                                                        // повторный тап — отмена своего подтверждения
+                                                        <button
+                                                            disabled={confirming === r.id}
+                                                            onClick={() => void toggleConfirm(r.id, true)}
+                                                            className="rounded-full border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground active:bg-muted disabled:opacity-50"
+                                                        >
+                                                            {confirming === r.id
+                                                                ? 'Отменяем…'
+                                                                : '✓ Вы подтвердили · отменить'}
+                                                        </button>
+                                                    )}
                                                     {r.confirmed_count > 0 && (
                                                         <span className="text-[11.5px] text-muted-foreground">
-                                                            ✓ подтвердили: {r.confirmed_count}
-                                                            {r.i_confirmed ? ' (вы)' : ''}
+                                                            ✓ {r.confirmed_count}
                                                         </span>
                                                     )}
                                                 </div>

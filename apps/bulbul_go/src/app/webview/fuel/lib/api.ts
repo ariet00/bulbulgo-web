@@ -2,7 +2,7 @@
 // meta) — обычный fetch без auth; отправка репорта — authFetch (ленивая
 // авторизация через мост, см. ../auth.ts).
 
-import { authFetch } from '../../auth'
+import { authFetch, getAccessToken } from '../../auth'
 import type {
     FuelMeta,
     LatLng,
@@ -20,6 +20,19 @@ const FUEL = `${API_URL}/fuel`
 async function ok<T>(r: Response): Promise<T> {
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     return (await r.json()) as T
+}
+
+/** Публичный fetch, который представляется, если сессия страницы есть:
+ * бэкенд тогда помечает is_mine/i_confirmed в выдаче. Протухший access →
+ * тихая деградация до анонимного запроса (не роняем публичную карточку). */
+async function optionalAuthFetch(url: string): Promise<Response> {
+    const token = getAccessToken()
+    if (!token) return fetch(url)
+    const r = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+    })
+    if (r.status !== 401) return r
+    return fetch(url)
 }
 
 export async function fetchStations(
@@ -49,7 +62,9 @@ export async function fetchStation(
         params.set('lng', String(origin.lng))
     }
     const qs = params.size ? `?${params}` : ''
-    return ok(await fetch(`${FUEL}/stations/${id}${qs}`))
+    // с токеном (если есть): бэкенд помечает is_mine/i_confirmed — иначе
+    // на своих метках рисовалась бы кнопка «Подтвердить»
+    return ok(await optionalAuthFetch(`${FUEL}/stations/${id}${qs}`))
 }
 
 export async function fetchMeta(): Promise<FuelMeta> {
@@ -88,6 +103,16 @@ export async function fetchMyReports(): Promise<MyReport[]> {
 export async function confirmReport(reportId: number): Promise<number> {
     const r = await authFetch(`/fuel/reports/${reportId}/confirm`, {
         method: 'POST',
+    })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const body = (await r.json()) as { confirmed_count: number }
+    return body.confirmed_count
+}
+
+/** Отменить своё подтверждение (баллы обеих сторон отзываются). */
+export async function unconfirmReport(reportId: number): Promise<number> {
+    const r = await authFetch(`/fuel/reports/${reportId}/confirm`, {
+        method: 'DELETE',
     })
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     const body = (await r.json()) as { confirmed_count: number }
