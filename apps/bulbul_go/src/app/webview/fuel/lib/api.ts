@@ -6,7 +6,9 @@ import { authFetch } from '../../auth'
 import type {
     FuelMeta,
     LatLng,
+    Leaderboard,
     MyReport,
+    MyStats,
     ReportPayload,
     Station,
     StationDetail,
@@ -64,7 +66,7 @@ export class ReportRateLimited extends Error {
 export async function submitReport(
     stationId: number,
     payload: ReportPayload,
-): Promise<void> {
+): Promise<{ points: number; bonuses: string[] }> {
     const r = await authFetch(`/fuel/stations/${stationId}/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,6 +74,8 @@ export async function submitReport(
     })
     if (r.status === 429) throw new ReportRateLimited()
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const body = (await r.json()) as { points?: number; bonuses?: string[] }
+    return { points: body.points ?? 0, bonuses: body.bonuses ?? [] }
 }
 
 export async function fetchMyReports(): Promise<MyReport[]> {
@@ -79,4 +83,25 @@ export async function fetchMyReports(): Promise<MyReport[]> {
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     const { items } = (await r.json()) as { items: MyReport[] }
     return items
+}
+
+export async function confirmReport(reportId: number): Promise<number> {
+    const r = await authFetch(`/fuel/reports/${reportId}/confirm`, {
+        method: 'POST',
+    })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const body = (await r.json()) as { confirmed_count: number }
+    return body.confirmed_count
+}
+
+export async function fetchMyStats(): Promise<MyStats> {
+    const r = await authFetch('/fuel/my-stats')
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    return (await r.json()) as MyStats
+}
+
+export async function fetchLeaderboard(): Promise<Leaderboard> {
+    const r = await authFetch('/fuel/leaderboard')
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    return (await r.json()) as Leaderboard
 }

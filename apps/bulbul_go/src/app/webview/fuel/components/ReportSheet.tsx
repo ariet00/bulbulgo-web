@@ -108,7 +108,7 @@ export function ReportSheet({
             }
             const location = await resolveLocation()
             const parsedPrice = parseFloat(price.replace(',', '.'))
-            await submitReport(station.id, {
+            const { points } = await submitReport(station.id, {
                 fuel_types: fuelTypes,
                 status,
                 queue: status === 'out' ? null : queue,
@@ -121,7 +121,12 @@ export function ReportSheet({
             })
             invalidate(station.id)
             void haptic('success').catch(() => {})
-            await notify('Спасибо! Отметка сохранена', 'success')
+            await notify(
+                points > 0
+                    ? `Спасибо! +${points} баллов`
+                    : 'Спасибо! Отметка сохранена',
+                'success',
+            )
             onClose()
         } catch (e) {
             void haptic('error').catch(() => {})

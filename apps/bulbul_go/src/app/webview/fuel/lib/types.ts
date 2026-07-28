@@ -38,6 +38,41 @@ export interface Report {
     note: string | null
     created_at: string
     is_mine: boolean
+    confirmed_count: number
+    i_confirmed: boolean
+}
+
+export interface FuelLevel {
+    slug: string
+    label: string
+    points: number
+    next_label: string | null
+    next_at: number | null
+}
+
+export interface FuelBadge {
+    key: string
+    label: string
+}
+
+export interface MyStats {
+    level: FuelLevel
+    reports_count: number
+    confirms_received: number
+    badges: FuelBadge[]
+}
+
+export interface LeaderboardItem {
+    user_id: number
+    name: string
+    points: number
+    is_me: boolean
+}
+
+export interface Leaderboard {
+    week_start: string
+    items: LeaderboardItem[]
+    me: { points: number; rank: number | null }
 }
 
 export interface StationDetail extends Station {

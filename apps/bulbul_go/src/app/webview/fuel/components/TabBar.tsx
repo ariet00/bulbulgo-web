@@ -33,11 +33,11 @@ const TABS: TabItem[] = [
     {
         key: 'my',
         path: `${BASE}/my`,
-        label: 'Мои метки',
+        label: 'Профиль',
         icon: (
             <>
-                <path d="M8 14s-4.6-4-4.6-7.4a4.6 4.6 0 0 1 9.2 0C12.6 10 8 14 8 14Z" />
-                <circle cx="8" cy="6.4" r="1.6" />
+                <circle cx="8" cy="5.4" r="2.6" />
+                <path d="M2.8 13.4a5.4 5.4 0 0 1 10.4 0" />
             </>
         ),
     },

@@ -1,11 +1,15 @@
 'use client'
 
 // Карточка АЗС в боттом-шите: сводка статусов по маркам, контакты и лента
-// свежих репортов. Кнопка «Сообщить» открывает форму репорта (гейт auth —
-// внутри ReportSheet).
+// свежих репортов с подтверждениями («N водителей подтвердили»). Кнопка
+// «Сообщить» открывает форму репорта (гейт auth — внутри ReportSheet).
 
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { ensureAuth } from '../../auth'
 import { BottomSheet } from '../../components/BottomSheet'
-import { callPhone, bridgeAvailable } from '../../bridge'
+import { bridgeAvailable, callPhone, haptic, toast } from '../../bridge'
+import { confirmReport } from '../lib/api'
 import {
     STATUS_COLOR,
     formatDistance,
@@ -13,7 +17,7 @@ import {
     metaLabel,
     timeAgo,
 } from '../lib/format'
-import { useStation } from '../lib/queries'
+import { qk, useStation } from '../lib/queries'
 import type { FuelMeta, LatLng, Station, StationDetail } from '../lib/types'
 import { StationAvatar } from './StationCard'
 
@@ -30,8 +34,29 @@ export function StationSheet({
     onClose: () => void
     onReport: (station: Station) => void
 }) {
+    const qc = useQueryClient()
     const detail = useStation(station?.id ?? null, origin)
     const data = (detail.data ?? station) as StationDetail | Station | null
+    const [confirming, setConfirming] = useState<number | null>(null)
+
+    const confirm = async (reportId: number) => {
+        if (!station || confirming) return
+        setConfirming(reportId)
+        try {
+            if (!(await ensureAuth())) return
+            await confirmReport(reportId)
+            void haptic('success').catch(() => {})
+            void qc.invalidateQueries({ queryKey: qk.station(station.id) })
+            void qc.invalidateQueries({ queryKey: ['fuel', 'my-stats'] })
+            void qc.invalidateQueries({ queryKey: ['fuel', 'leaderboard'] })
+        } catch {
+            if (bridgeAvailable()) {
+                void toast('Не получилось подтвердить', 'warning').catch(() => {})
+            }
+        } finally {
+            setConfirming(null)
+        }
+    }
 
     return (
         <BottomSheet
@@ -139,6 +164,12 @@ export function StationSheet({
                             <ul className="flex flex-col gap-2">
                                 {data.reports.map((r) => {
                                     const color = STATUS_COLOR[r.status]
+                                    // подтверждать можно только свежую метку
+                                    // (бэк отвергнет устаревшую — не показываем
+                                    // кнопку зря)
+                                    const fresh =
+                                        Date.now() - new Date(r.created_at).getTime() <
+                                        (meta?.fresh_minutes ?? 90) * 60_000
                                     return (
                                         <li
                                             key={r.id}
@@ -175,6 +206,30 @@ export function StationSheet({
                                                         .filter(Boolean)
                                                         .join(' · ')}
                                                 </p>
+                                            )}
+                                            {/* подтверждения: чужую метку можно
+                                                подтвердить (＋балл автору) */}
+                                            {(r.confirmed_count > 0 ||
+                                                (!r.is_mine && fresh)) && (
+                                                <div className="mt-1.5 flex items-center gap-2">
+                                                    {!r.is_mine && !r.i_confirmed && fresh && (
+                                                        <button
+                                                            disabled={confirming === r.id}
+                                                            onClick={() => void confirm(r.id)}
+                                                            className="rounded-full border border-[var(--wv-accent-border)] bg-[var(--wv-accent-soft)] px-2.5 py-1 text-[11.5px] font-semibold text-[var(--wv-accent)] active:opacity-70 disabled:opacity-50"
+                                                        >
+                                                            {confirming === r.id
+                                                                ? 'Подтверждаем…'
+                                                                : '✓ Подтвердить'}
+                                                        </button>
+                                                    )}
+                                                    {r.confirmed_count > 0 && (
+                                                        <span className="text-[11.5px] text-muted-foreground">
+                                                            ✓ подтвердили: {r.confirmed_count}
+                                                            {r.i_confirmed ? ' (вы)' : ''}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             )}
                                         </li>
                                     )

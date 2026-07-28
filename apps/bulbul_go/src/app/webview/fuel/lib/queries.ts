@@ -68,5 +68,8 @@ export function useFuelInvalidation() {
         void qc.invalidateQueries({ queryKey: ['fuel', 'map-stations'] })
         void qc.invalidateQueries({ queryKey: qk.station(stationId) })
         void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] })
+        // баллы/лидерборд меняются с каждой меткой
+        void qc.invalidateQueries({ queryKey: ['fuel', 'my-stats'] })
+        void qc.invalidateQueries({ queryKey: ['fuel', 'leaderboard'] })
     }
 }
