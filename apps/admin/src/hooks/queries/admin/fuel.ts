@@ -25,3 +25,10 @@ export const useAdminFuelReports = (
         placeholderData: keepPreviousData,
     })
 }
+
+export const useAdminFuelPointsSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.all, 'fuel', 'points-settings'],
+        queryFn: () => adminApi.getFuelPointsSettings(),
+    })
+}

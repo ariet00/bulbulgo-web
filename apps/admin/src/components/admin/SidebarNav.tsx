@@ -30,6 +30,7 @@ import {
     Smartphone,
     Tags,
     Timer,
+    Trophy,
     Users,
 } from 'lucide-react'
 import { cn } from '@doska/shared'
@@ -100,6 +101,7 @@ const sections: NavSection[] = [
         items: [
             { name: 'Метки топлива', href: '/admin/fuel/reports', icon: Fuel },
             { name: 'АЗС', href: '/admin/fuel/stations', icon: MapPin },
+            { name: 'Баллы', href: '/admin/fuel/settings', icon: Trophy },
         ],
     },
     {

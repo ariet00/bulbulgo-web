@@ -47,7 +47,21 @@ export interface AdminFuelReportFilters {
     status?: string
 }
 
+export interface FuelPointsSettings {
+    base_on_site: number
+    base_remote: number
+    bonus_stale_station: number
+    bonus_first_of_day: number
+    confirm_received: number
+    confirm_given: number
+    on_site_radius_km: number
+}
+
 export const fuelAdminApi = {
+    getFuelPointsSettings: () =>
+        requests.get<FuelPointsSettings>('/admin/fuel/points-settings'),
+    updateFuelPointsSettings: (body: FuelPointsSettings) =>
+        requests.put<FuelPointsSettings>('/admin/fuel/points-settings', body),
     getFuelStations: (
         page = 1,
         size = 50,
