@@ -4,7 +4,7 @@
 // станции — SWR с фоновым рефетчем и refetch на возврат в приложение
 // (статусы живут минутами); карточка — мгновенный рендер из кэша списка.
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchMeta, fetchStation, fetchStations } from './api'
 import type { LatLng, Station } from './types'
 
@@ -35,6 +35,9 @@ export function useStations(origin: LatLng | null, fuelType: string | null) {
         // краудсорс-статусы протухают быстро — держим список живым
         staleTime: 60_000,
         refetchOnWindowFocus: true,
+        // смена ключа (уточнилась позиция, сменился фильтр) не сбрасывает
+        // список в скелетон — старые данные видны до прихода новых
+        placeholderData: keepPreviousData,
     })
 }
 

@@ -22,9 +22,16 @@ function browserLocation(timeoutMs = 6000): Promise<LatLng | null> {
     })
 }
 
+// Кэш последней найденной позиции на время жизни вебвью: табы — разные
+// роуты, экран монтируется заново при каждом переключении — без кэша каждый
+// вход ждал бы мост/геолокацию заново и показывал скелетон при тёплых данных.
+let cachedResult: { origin: LatLng; geoDenied: boolean } | null = null
+
 export function useOrigin(): { origin: LatLng | null; geoDenied: boolean } {
-    const [origin, setOrigin] = useState<LatLng | null>(null)
-    const [geoDenied, setGeoDenied] = useState(false)
+    const [origin, setOrigin] = useState<LatLng | null>(
+        cachedResult?.origin ?? null,
+    )
+    const [geoDenied, setGeoDenied] = useState(cachedResult?.geoDenied ?? false)
 
     useEffect(() => {
         let cancelled = false
@@ -38,7 +45,9 @@ export function useOrigin(): { origin: LatLng | null; geoDenied: boolean } {
             }
             loc ??= await browserLocation()
             if (cancelled) return
-            setGeoDenied(loc === null)
+            const denied = loc === null
+            cachedResult = { origin: loc ?? BISHKEK, geoDenied: denied }
+            setGeoDenied(denied)
             setOrigin(loc ?? BISHKEK)
         })()
         return () => {

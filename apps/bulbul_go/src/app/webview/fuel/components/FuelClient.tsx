@@ -4,7 +4,7 @@
 // геолокация → центр Бишкека), фильтр по маркам и список АЗС по удалению.
 // Заголовок экрана рисует нативный AppBar приложения.
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Chip } from '../../components/Chip'
 import { EmptyState } from '../../components/EmptyState'
 import { metaLabel } from '../lib/format'
@@ -15,11 +15,17 @@ import { ReportSheet } from './ReportSheet'
 import { StationCard } from './StationCard'
 import { StationSheet } from './StationSheet'
 
+// Каскадная анимация карточек — только при первом показе ленты за сессию
+// вебвью: при возврате с другого таба список из кэша появляется мгновенно,
+// повторный «взлёт» карточек читается как перерисовка с нуля.
+let feedAnimated = false
+
 export function FuelClient() {
     const { origin, geoDenied } = useOrigin()
     const [fuelType, setFuelType] = useState<FuelType | null>(null)
     const [openedStation, setOpenedStation] = useState<Station | null>(null)
     const [reportStation, setReportStation] = useState<Station | null>(null)
+    const [animate] = useState(() => !feedAnimated)
 
     const meta = useFuelMeta()
     const stations = useStations(origin, fuelType)
@@ -35,6 +41,11 @@ export function FuelClient() {
         () => (stations.data ?? []).filter((s) => s.fuel_types.length > 0),
         [stations.data],
     )
+
+    // лента показана с данными — последующие маунты идут без каскада
+    useEffect(() => {
+        if (visible.length > 0) feedAnimated = true
+    }, [visible.length])
 
     return (
         // +92px снизу: фиксированный таббар сегмента; +60px сверху:
@@ -106,8 +117,12 @@ export function FuelClient() {
                     {visible.map((station, i) => (
                         <li
                             key={station.id}
-                            className="wv-rise"
-                            style={{ '--wv-delay': `${Math.min(i, 8) * 40}ms` } as React.CSSProperties}
+                            className={animate ? 'wv-rise' : undefined}
+                            style={
+                                animate
+                                    ? ({ '--wv-delay': `${Math.min(i, 8) * 40}ms` } as React.CSSProperties)
+                                    : undefined
+                            }
                         >
                             <StationCard
                                 station={station}
