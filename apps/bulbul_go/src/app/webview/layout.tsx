@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import '../globals.css'
 import './theme.css'
+import { AuthWarmup } from './AuthWarmup'
 import { BridgeNav } from './BridgeNav'
 import { QueryProvider } from './QueryProvider'
 import { ThemeSync } from './ThemeSync'
@@ -66,6 +67,7 @@ export default function WebviewLayout({
             <body className="overflow-x-hidden max-w-[100vw] bg-background text-foreground antialiased">
                 <ThemeSync />
                 <BridgeNav />
+                <AuthWarmup />
                 <WebviewErrorBoundary>
                     <QueryProvider>{children}</QueryProvider>
                 </WebviewErrorBoundary>

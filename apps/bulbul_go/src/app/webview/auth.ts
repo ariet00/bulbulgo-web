@@ -85,15 +85,25 @@ export async function initWebviewAuth(): Promise<boolean> {
  * залогинен в приложении. Зовите при загрузке, чтобы сразу показать
  * «авторизованный» интерфейс (имя, свои записи). false — страница анонимна.
  */
+// Один тихий обмен за раз: прогрев из layout (AuthWarmup) и экранный
+// useWebviewAuth могут стартовать параллельно — делят общий промис вместо
+// двух гонящихся обменов кода.
+let silentInFlight: Promise<boolean> | null = null
+
 export async function trySilentAuth(): Promise<boolean> {
     if (getAccessToken()) return true
-    if (!(await waitForBridge(1500))) return false
-    try {
-        const r = await requestAuth({ interactive: false })
-        return !!r?.code && (await exchangeCode(r.code))
-    } catch {
-        return false
-    }
+    silentInFlight ??= (async () => {
+        if (!(await waitForBridge(1500))) return false
+        try {
+            const r = await requestAuth({ interactive: false })
+            return !!r?.code && (await exchangeCode(r.code))
+        } catch {
+            return false
+        }
+    })().finally(() => {
+        silentInFlight = null
+    })
+    return silentInFlight
 }
 
 /**
