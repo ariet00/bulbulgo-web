@@ -2,11 +2,14 @@
 
 // «Мои метки»: свои репорты новыми сверху. Тихая авторизация при открытии
 // (сессия страницы или код приложения без UI); если её нет — кнопка входа
-// через ensureAuth (нативный экран логина поверх вебвью).
+// через ensureAuth (нативный экран логина поверх вебвью). Подписка на
+// onAuthChanged — самолечение, если промис интерактивного входа оборвался:
+// приложение сообщает «вошёл», страница тихо добирает сессию.
 
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ensureAuth, trySilentAuth } from '../../auth'
+import { bridgeAvailable, onAuthChanged, toast } from '../../bridge'
 import { fetchMyReports } from '../lib/api'
 import { STATUS_COLOR, formatPrice, metaLabel, timeAgo } from '../lib/format'
 import { useFuelMeta } from '../lib/queries'
@@ -17,7 +20,19 @@ export function MyReportsClient() {
 
     useEffect(() => {
         void trySilentAuth().then(setAuthed)
-    }, [])
+        return onAuthChanged((authorized) => {
+            if (!authorized) {
+                setAuthed(false)
+                return
+            }
+            void trySilentAuth().then((ok) => {
+                if (ok) {
+                    setAuthed(true)
+                    void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] })
+                }
+            })
+        })
+    }, [qc])
 
     const meta = useFuelMeta()
     const reports = useQuery({
@@ -30,6 +45,9 @@ export function MyReportsClient() {
         if (await ensureAuth()) {
             setAuthed(true)
             void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] })
+        } else if (bridgeAvailable()) {
+            // вход не состоялся (отменил/сбой) — не молчим
+            void toast('Не получилось войти — попробуйте ещё раз', 'warning').catch(() => {})
         }
     }
 

@@ -12,6 +12,7 @@
 import {
     bridgeAvailable,
     closeWebview,
+    isAuthorized,
     requestAuth,
     toast,
     waitForBridge,
@@ -106,10 +107,23 @@ export async function ensureAuth(): Promise<boolean> {
     if (!bridgeAvailable()) return false
     try {
         const r = await requestAuth()
-        return !!r?.code && (await exchangeCode(r.code))
+        if (r?.code && (await exchangeCode(r.code))) return true
     } catch {
-        return false
+        // упавший интерактивный путь добиваем страховкой ниже
     }
+    // Страховка: интерактивный путь мог оборваться уже ПОСЛЕ успешного
+    // входа (гонка чтения состояния на нативной стороне, потерянный промис,
+    // пока вебвью был накрыт экраном логина). Если приложение фактически
+    // залогинено — тихий повтор выдаст код без UI.
+    try {
+        if (await isAuthorized()) {
+            const r = await requestAuth({ interactive: false })
+            return !!r?.code && (await exchangeCode(r.code))
+        }
+    } catch {
+        // мост недоступен/отвалился — честный false ниже
+    }
+    return false
 }
 
 async function refreshTokens(): Promise<boolean> {
