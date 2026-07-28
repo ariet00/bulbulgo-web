@@ -4,6 +4,7 @@ export const TARGET_TYPES: { value: string; label: string }[] = [
     { value: 'trip', label: 'Поездка' },
     { value: 'user', label: 'Пользователь' },
     { value: 'listing', label: 'Объявление' },
+    { value: 'fuel_station', label: 'АЗС' },
 ]
 
 export const STATUSES: { value: string; label: string }[] = [
@@ -29,6 +30,7 @@ export function targetHref(t: AdminComplaintTarget | null): string | null {
     if (t.type === 'user') return `/admin/users/${t.id}`
     if (t.type === 'trip') return `/admin/trips/${t.id}`
     if (t.type === 'listing') return `/admin/marketplace/listings/${t.id}`
+    if (t.type === 'fuel_station') return '/admin/fuel/stations'
     return null
 }
 

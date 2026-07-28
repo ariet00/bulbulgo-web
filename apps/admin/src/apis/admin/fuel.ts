@@ -85,6 +85,8 @@ export const fuelAdminApi = {
         }
         return requests.get<AdminFuelReportsPage>(`/admin/fuel/reports?${params}`)
     },
+    updateFuelStation: (id: number, body: { enabled: boolean }) =>
+        requests.patch<AdminFuelStation>(`/admin/fuel/stations/${id}`, body),
     deleteFuelReport: (id: number) =>
         requests.delete<{ success: boolean }>(`/admin/fuel/reports/${id}`),
 }

@@ -118,3 +118,8 @@ export interface MyReport {
 }
 
 export type LatLng = { lat: number; lng: number }
+
+export interface IssueReason {
+    id: number
+    text: string
+}

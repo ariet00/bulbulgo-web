@@ -1,10 +1,12 @@
 'use client'
 
-// Справочник АЗС (только просмотр): сид из OSM + ручные записи. CRUD появится,
+// Справочник АЗС: просмотр + вкл/выкл (модерация по жалобам «АЗС больше
+// нет»). enabled переживает ре-сид (сидер флаг не трогает); CRUD полей —
 // когда сидер переключим на Ownership.OPERATOR (иначе правки затрёт ре-сид).
 
 import { useEffect, useState } from 'react'
 import { useAdminFuelStations } from '@/hooks/queries/admin'
+import { useAdminUpdateFuelStation } from '@/hooks/mutations/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
 import { useDebounce } from '@doska/shared'
 import {
@@ -56,6 +58,8 @@ export default function FuelStationsPage() {
             enabled: values.enabled === ALL ? undefined : values.enabled === 'true',
         },
     )
+
+    const updateStation = useAdminUpdateFuelStation()
 
     const resetFilters = () => {
         setQInput('')
@@ -161,15 +165,25 @@ export default function FuelStationsPage() {
                                             </span>
                                         </TableCell>
                                         <TableCell>
-                                            <span
-                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                                            {/* модерация по жалобам: выключенная АЗС
+                                                исчезает из ленты и карты */}
+                                            <button
+                                                disabled={updateStation.isPending}
+                                                onClick={() =>
+                                                    updateStation.mutate({
+                                                        id: s.id,
+                                                        enabled: !s.enabled,
+                                                    })
+                                                }
+                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium transition-opacity disabled:opacity-50 ${
                                                     s.enabled
                                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
                                                         : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                                                 }`}
+                                                title={s.enabled ? 'Выключить станцию' : 'Включить станцию'}
                                             >
                                                 {s.enabled ? 'Вкл' : 'Выкл'}
-                                            </span>
+                                            </button>
                                         </TableCell>
                                         <TableCell>
                                             <a

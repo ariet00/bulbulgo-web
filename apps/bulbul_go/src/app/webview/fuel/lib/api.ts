@@ -5,6 +5,7 @@
 import { authFetch, getAccessToken } from '../../auth'
 import type {
     FuelMeta,
+    IssueReason,
     LatLng,
     Leaderboard,
     MyReport,
@@ -129,4 +130,30 @@ export async function fetchLeaderboard(): Promise<Leaderboard> {
     const r = await authFetch('/fuel/leaderboard')
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     return (await r.json()) as Leaderboard
+}
+
+// ── жалобы на данные АЗС ──
+
+export async function fetchIssueReasons(): Promise<IssueReason[]> {
+    return ok(await fetch(`${API_URL}/complaints/reasons?context=fuel`))
+}
+
+/** 409 — по этой АЗС жалоба от пользователя уже есть. */
+export class IssueAlreadyReported extends Error {
+    constructor() {
+        super('issue_already_reported')
+    }
+}
+
+export async function submitStationIssue(
+    stationId: number,
+    payload: { reason_id: number; comment?: string | null; location?: LatLng | null },
+): Promise<void> {
+    const r = await authFetch(`/fuel/stations/${stationId}/issues`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+    if (r.status === 409) throw new IssueAlreadyReported()
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
 }

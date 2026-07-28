@@ -19,6 +19,7 @@ import {
 } from '../lib/format'
 import { qk, useStation } from '../lib/queries'
 import type { FuelMeta, LatLng, Station, StationDetail } from '../lib/types'
+import { IssueSheet } from './IssueSheet'
 import { StationAvatar } from './StationCard'
 
 export function StationSheet({
@@ -38,6 +39,7 @@ export function StationSheet({
     const detail = useStation(station?.id ?? null, origin)
     const data = (detail.data ?? station) as StationDetail | Station | null
     const [confirming, setConfirming] = useState<number | null>(null)
+    const [issueFor, setIssueFor] = useState<Station | null>(null)
 
     const toggleConfirm = async (reportId: number, undo: boolean) => {
         if (!station || confirming) return
@@ -253,8 +255,22 @@ export function StationSheet({
                             </p>
                         )}
                     </div>
+
+                    {/* жалоба на данные самой АЗС (не на топливо) */}
+                    <button
+                        onClick={() => station && setIssueFor(station)}
+                        className="w-fit text-[12.5px] text-muted-foreground underline decoration-dotted underline-offset-4 active:opacity-70"
+                    >
+                        Сообщить об ошибке в данных АЗС
+                    </button>
                 </div>
             )}
+
+            <IssueSheet
+                station={issueFor}
+                origin={origin}
+                onClose={() => setIssueFor(null)}
+            />
         </BottomSheet>
     )
 }

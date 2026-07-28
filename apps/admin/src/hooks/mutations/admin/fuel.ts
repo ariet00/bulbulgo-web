@@ -27,3 +27,15 @@ export const useAdminUpdateFuelPointsSettings = () => {
         },
     })
 }
+
+export const useAdminUpdateFuelStation = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, ...body }: { id: number; enabled: boolean }) =>
+            adminApi.updateFuelStation(id, body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.fuelStations() })
+            toast.success('Станция обновлена')
+        },
+    })
+}
