@@ -18,3 +18,12 @@
     --fl-warn: #f0a12f;
     --fl-bad: #ef5a50;
 }
+
+/* Тёмная тема карты: у OpenFreeMap нет dark-стиля — инвертируем светлый
+   канвас фильтром. Фильтр только на canvas: пины/донаты/«я тут» — DOM-маркеры
+   рядом, их цвета не трогаем. Переключение темы на лету подхватывается само
+   (класс dark на <html> ставит приложение). */
+:root.dark .maplibregl-canvas {
+    filter: invert(1) hue-rotate(180deg) brightness(0.91) contrast(0.9)
+        saturate(0.8);
+}
