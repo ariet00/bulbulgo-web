@@ -54,7 +54,9 @@ export function TabBar({
                     setPending(t.key)
                     router.replace(t.path)
                 }}
-                className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
+                // touch-manipulation: WebKit не придерживает первый тап в
+                // ожидании двойного (зум) — срабатывание с первого касания
+                className="flex flex-1 touch-manipulation flex-col items-center gap-0.5 pt-2 pb-[calc(env(safe-area-inset-bottom)+26px)]"
                 style={
                     isActive ? { color: 'var(--wv-accent)' } : { opacity: 0.55 }
                 }
@@ -84,16 +86,17 @@ export function TabBar({
 
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-            {/* +26px к safe-area: во вьюве приложения inset может быть 0,
-                с меньшим запасом кнопки липнут к жестовой зоне */}
-            <div className="flex items-stretch px-2 pb-[calc(env(safe-area-inset-bottom)+26px)]">
+            {/* нижний запас (+26px к safe-area: во вьюве inset может быть 0)
+                живёт ВНУТРИ кнопок, не на контейнере — иначе нижняя часть
+                панели была бы мёртвой зоной и тапы «мимо иконки» терялись */}
+            <div className="flex items-stretch px-2">
                 {left.map(tab)}
 
                 {centerAction && (
                     <button
                         onClick={centerAction.onPress}
                         aria-label={centerAction.ariaLabel}
-                        className="flex flex-1 flex-col items-center gap-0.5 py-1.5"
+                        className="flex flex-1 touch-manipulation flex-col items-center gap-0.5 pt-2 pb-[calc(env(safe-area-inset-bottom)+26px)]"
                     >
                         <span
                             className="flex h-9 w-9 -translate-y-2.5 items-center justify-center rounded-full text-white shadow-lg"
