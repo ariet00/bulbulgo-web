@@ -22,13 +22,14 @@ async function ok<T>(r: Response): Promise<T> {
 
 export async function fetchStations(
     origin: LatLng,
-    opts: { radiusKm?: number; fuelType?: string | null } = {},
+    opts: { radiusKm?: number; fuelType?: string | null; limit?: number } = {},
 ): Promise<Station[]> {
     const params = new URLSearchParams({
         lat: String(origin.lat),
         lng: String(origin.lng),
         radius_km: String(opts.radiusKm ?? 30),
     })
+    if (opts.limit) params.set('limit', String(opts.limit))
     if (opts.fuelType) params.set('fuel_type', opts.fuelType)
     const { items } = await ok<{ items: Station[] }>(
         await fetch(`${FUEL}/stations?${params}`),

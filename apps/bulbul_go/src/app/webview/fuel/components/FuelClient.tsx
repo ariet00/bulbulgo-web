@@ -4,58 +4,22 @@
 // геолокация → центр Бишкека), фильтр по маркам и список АЗС по удалению.
 // Заголовок экрана рисует нативный AppBar приложения.
 
-import { useEffect, useMemo, useState } from 'react'
-import { getLocation, waitForBridge } from '../../bridge'
+import { useMemo, useState } from 'react'
 import { Chip } from '../../components/Chip'
 import { EmptyState } from '../../components/EmptyState'
 import { metaLabel } from '../lib/format'
 import { useFuelMeta, useStations } from '../lib/queries'
-import type { FuelType, LatLng, Station } from '../lib/types'
+import { useOrigin } from '../lib/useOrigin'
+import type { FuelType, Station } from '../lib/types'
 import { ReportSheet } from './ReportSheet'
 import { StationCard } from './StationCard'
 import { StationSheet } from './StationSheet'
 
-const BISHKEK: LatLng = { lat: 42.8746, lng: 74.5698 }
-
-function browserLocation(timeoutMs = 6000): Promise<LatLng | null> {
-    return new Promise((resolve) => {
-        if (typeof navigator === 'undefined' || !navigator.geolocation) {
-            return resolve(null)
-        }
-        navigator.geolocation.getCurrentPosition(
-            (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-            () => resolve(null),
-            { timeout: timeoutMs, maximumAge: 60_000 },
-        )
-    })
-}
-
 export function FuelClient() {
-    const [origin, setOrigin] = useState<LatLng | null>(null)
-    const [geoDenied, setGeoDenied] = useState(false)
+    const { origin, geoDenied } = useOrigin()
     const [fuelType, setFuelType] = useState<FuelType | null>(null)
     const [openedStation, setOpenedStation] = useState<Station | null>(null)
     const [reportStation, setReportStation] = useState<Station | null>(null)
-
-    useEffect(() => {
-        let cancelled = false
-        void (async () => {
-            let loc: LatLng | null = null
-            if (await waitForBridge(1500)) {
-                const bridged = await getLocation().catch(() => null)
-                if (bridged) {
-                    loc = { lat: bridged.latitude, lng: bridged.longitude }
-                }
-            }
-            loc ??= await browserLocation()
-            if (cancelled) return
-            setGeoDenied(loc === null)
-            setOrigin(loc ?? BISHKEK)
-        })()
-        return () => {
-            cancelled = true
-        }
-    }, [])
 
     const meta = useFuelMeta()
     const stations = useStations(origin, fuelType)
