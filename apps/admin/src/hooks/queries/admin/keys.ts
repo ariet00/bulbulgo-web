@@ -24,6 +24,7 @@ export const adminKeys = {
     chat: (id: number) => [...adminKeys.chats(), id] as const,
     analytics: () => [...adminKeys.all, 'analytics'] as const,
     reports: () => [...adminKeys.all, 'reports'] as const,
+    currencies: () => [...adminKeys.all, 'currencies'] as const,
     bookingBots: (onlyUnlinked: boolean) => [...adminKeys.all, 'booking-bots', onlyUnlinked] as const,
     bookingBot: (id: number) => [...adminKeys.all, 'booking-bot', id] as const,
     celeryTasks: () => [...adminKeys.all, 'celery-tasks'] as const,

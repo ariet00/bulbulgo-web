@@ -17,6 +17,7 @@ export * from './celery'
 export * from './seeders'
 export * from './referral'
 export * from './reports'
+export * from './currencies'
 export * from './fuel'
 
 import { regionsAdminApi } from './regions'
@@ -37,6 +38,7 @@ import { celeryAdminApi } from './celery'
 import { seedersAdminApi } from './seeders'
 import { referralAdminApi } from './referral'
 import { reportsAdminApi } from './reports'
+import { currenciesAdminApi } from './currencies'
 import { fuelAdminApi } from './fuel'
 
 // Единый объект-агрегат — публичный контракт `adminApi` не изменился.
@@ -60,4 +62,5 @@ export const adminApi = {
     ...referralAdminApi,
     ...reportsAdminApi,
     ...fuelAdminApi,
+    ...currenciesAdminApi,
 }
