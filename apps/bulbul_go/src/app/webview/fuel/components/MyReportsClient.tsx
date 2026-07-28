@@ -1,38 +1,21 @@
 'use client'
 
-// «Мои метки»: свои репорты новыми сверху. Тихая авторизация при открытии
-// (сессия страницы или код приложения без UI); если её нет — кнопка входа
-// через ensureAuth (нативный экран логина поверх вебвью). Подписка на
-// onAuthChanged — самолечение, если промис интерактивного входа оборвался:
-// приложение сообщает «вошёл», страница тихо добирает сессию.
+// «Мои метки»: свои репорты новыми сверху. Auth-гейт — общий useWebviewAuth
+// (тихая авторизация, самолечение через onAuthChanged, тост при сбое).
 
-import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ensureAuth, trySilentAuth } from '../../auth'
-import { bridgeAvailable, onAuthChanged, toast } from '../../bridge'
+import { LoginPrompt } from '../../components/LoginPrompt'
+import { useWebviewAuth } from '../../useWebviewAuth'
 import { fetchMyReports } from '../lib/api'
 import { STATUS_COLOR, formatPrice, metaLabel, timeAgo } from '../lib/format'
 import { useFuelMeta } from '../lib/queries'
 
 export function MyReportsClient() {
     const qc = useQueryClient()
-    const [authed, setAuthed] = useState<boolean | null>(null)
-
-    useEffect(() => {
-        void trySilentAuth().then(setAuthed)
-        return onAuthChanged((authorized) => {
-            if (!authorized) {
-                setAuthed(false)
-                return
-            }
-            void trySilentAuth().then((ok) => {
-                if (ok) {
-                    setAuthed(true)
-                    void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] })
-                }
-            })
-        })
-    }, [qc])
+    const { authed, login } = useWebviewAuth({
+        onAuthed: () =>
+            void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] }),
+    })
 
     const meta = useFuelMeta()
     const reports = useQuery({
@@ -41,33 +24,14 @@ export function MyReportsClient() {
         enabled: authed === true,
     })
 
-    const login = async () => {
-        if (await ensureAuth()) {
-            setAuthed(true)
-            void qc.invalidateQueries({ queryKey: ['fuel', 'my-reports'] })
-        } else if (bridgeAvailable()) {
-            // вход не состоялся (отменил/сбой) — не молчим
-            void toast('Не получилось войти — попробуйте ещё раз', 'warning').catch(() => {})
-        }
-    }
-
     return (
         <div className="mx-auto max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+92px)] pt-3">
             {authed === false ? (
-                <div className="wv-rise flex flex-col items-center px-6 py-16 text-center">
-                    <p className="text-[16px] font-semibold">
-                        Войдите, чтобы видеть свои метки
-                    </p>
-                    <p className="mt-1 text-[13.5px] text-muted-foreground">
-                        Здесь появится история ваших отметок о наличии топлива.
-                    </p>
-                    <button
-                        onClick={() => void login()}
-                        className="mt-4 rounded-full bg-[var(--wv-accent)] px-6 py-2.5 text-[14px] font-semibold text-white active:opacity-80"
-                    >
-                        Войти
-                    </button>
-                </div>
+                <LoginPrompt
+                    title="Войдите, чтобы видеть свои метки"
+                    text="Здесь появится история ваших отметок о наличии топлива."
+                    onLogin={login}
+                />
             ) : authed === null || reports.isLoading ? (
                 <div className="flex flex-col gap-2.5">
                     {Array.from({ length: 4 }).map((_, i) => (

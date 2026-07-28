@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ensureAuth, initWebviewAuth, trySilentAuth } from '../../auth'
 import { authFetch } from '../../auth'
+import { LoginPrompt } from '../../components/LoginPrompt'
+import { useWebviewAuth } from '../../useWebviewAuth'
 import { navigateTo } from '../lib/nav'
 import { useMyListings } from '../lib/queries'
 
@@ -19,45 +20,30 @@ interface Me {
 
 export function ProfileClient() {
     const router = useRouter()
-    const [authed, setAuthed] = useState<boolean | null>(null)
+    const { authed, login } = useWebviewAuth()
     const [me, setMe] = useState<Me | null>(null)
     // из общего кэша «Моих» — счётчик совпадает со вкладкой «Активные»
     const activeCount = useMyListings('active', authed === true).data?.total ?? null
 
     useEffect(() => {
+        if (authed !== true) return
         let alive = true
-        ;(async () => {
-            await initWebviewAuth()
-            const ok = await trySilentAuth()
-            if (!alive) return
-            setAuthed(ok)
-            if (!ok) return
-            authFetch('/users/me')
-                .then((r) => r.json())
-                .then((u) => alive && setMe(u))
-                .catch(() => {})
-        })()
+        authFetch('/users/me')
+            .then((r) => r.json())
+            .then((u) => alive && setMe(u))
+            .catch(() => {})
         return () => {
             alive = false
         }
-    }, [])
+    }, [authed])
 
     if (authed === false) {
         return (
-            <div className="flex min-h-dvh flex-col items-center justify-center px-8 text-center">
-                <p className="text-[17px] font-semibold">Нужен вход</p>
-                <p className="mt-2 text-[14px] text-muted-foreground">
-                    Войдите в аккаунт BulBul Go, чтобы видеть профиль и свои
-                    объявления.
-                </p>
-                <button
-                    onClick={async () => setAuthed(await ensureAuth())}
-                    className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--wv-accent)' }}
-                >
-                    Войти
-                </button>
-            </div>
+            <LoginPrompt
+                variant="screen"
+                text="Войдите в аккаунт BulBul Go, чтобы видеть профиль и свои объявления."
+                onLogin={login}
+            />
         )
     }
 

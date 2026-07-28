@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { ensureAuth, initWebviewAuth } from '../../auth'
+import { LoginPrompt } from '../../components/LoginPrompt'
+import { useWebviewAuth } from '../../useWebviewAuth'
 import { removeFavorite } from '../lib/api'
 import { pickLabel } from '../lib/format'
 import { navigateTo } from '../lib/nav'
@@ -23,19 +24,7 @@ import { ListingCard } from './ListingCard'
 export function FavoritesClient() {
     const router = useRouter()
     const qc = useQueryClient()
-    const [authed, setAuthed] = useState<boolean | null>(null)
-
-    useEffect(() => {
-        let alive = true
-        ;(async () => {
-            await initWebviewAuth()
-            const ok = await ensureAuth()
-            if (alive) setAuthed(ok)
-        })()
-        return () => {
-            alive = false
-        }
-    }, [])
+    const { authed, login } = useWebviewAuth({ interactiveOnMount: true })
 
     const favQ = useFavorites(authed === true)
     const items = favQ.data?.items ?? []
@@ -81,19 +70,11 @@ export function FavoritesClient() {
 
     if (authed === false) {
         return (
-            <div className="flex min-h-dvh flex-col items-center justify-center px-8 text-center">
-                <p className="text-[17px] font-semibold">Нужен вход</p>
-                <p className="mt-2 text-[14px] text-muted-foreground">
-                    Войдите, чтобы увидеть избранные объявления.
-                </p>
-                <button
-                    onClick={async () => setAuthed(await ensureAuth())}
-                    className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--wv-accent)' }}
-                >
-                    Войти
-                </button>
-            </div>
+            <LoginPrompt
+                variant="screen"
+                text="Войдите, чтобы увидеть избранные объявления."
+                onLogin={login}
+            />
         )
     }
 

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ensureAuth, initWebviewAuth } from '../../auth'
+import { LoginPrompt } from '../../components/LoginPrompt'
+import { useWebviewAuth } from '../../useWebviewAuth'
 import * as bridge from '../../bridge'
 import { renewListing, updateListing } from '../lib/api'
 import { formatPrice, pickLabel, timeAgo } from '../lib/format'
@@ -24,17 +25,10 @@ type Status = (typeof TABS)[number][0]
 
 export function MyListingsClient() {
     const router = useRouter()
-    const [authed, setAuthed] = useState<boolean | null>(null)
+    const { authed, login } = useWebviewAuth({ interactiveOnMount: true })
     const [status, setStatus] = useState<Status>('active')
     const [busyId, setBusyId] = useState<number | null>(null)
     const invalidate = useListingInvalidation()
-
-    useEffect(() => {
-        ;(async () => {
-            await initWebviewAuth()
-            setAuthed(await ensureAuth())
-        })()
-    }, [])
 
     const mineQ = useMyListings(status, authed === true)
     const items = mineQ.data?.items ?? []
@@ -78,19 +72,11 @@ export function MyListingsClient() {
 
     if (authed === false) {
         return (
-            <div className="flex min-h-dvh flex-col items-center justify-center px-8 text-center">
-                <p className="text-[17px] font-semibold">Нужен вход</p>
-                <p className="mt-2 text-[14px] text-muted-foreground">
-                    Войдите, чтобы увидеть свои объявления.
-                </p>
-                <button
-                    onClick={async () => setAuthed(await ensureAuth())}
-                    className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--wv-accent)' }}
-                >
-                    Войти
-                </button>
-            </div>
+            <LoginPrompt
+                variant="screen"
+                text="Войдите, чтобы увидеть свои объявления."
+                onLogin={login}
+            />
         )
     }
 
