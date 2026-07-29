@@ -19,7 +19,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useQuery } from '@tanstack/react-query'
 import { fetchStations } from '../lib/api'
 import { useFuelMeta } from '../lib/queries'
-import { useOrigin } from '../lib/useOrigin'
+import { BISHKEK, useOrigin } from '../lib/useOrigin'
 import type { FuelStatus, Station } from '../lib/types'
 import { ReportSheet } from './ReportSheet'
 import { StationSheet } from './StationSheet'
@@ -102,6 +102,22 @@ function donutElement(
     return el
 }
 
+/** Подписи карты — только по-русски: name:ru с фолбэком на местное имя.
+ * Правим лишь слои, чей text-field ссылается на name (шильды дорог с ref
+ * и номера домов не трогаем). */
+function applyRussianLabels(map: MapLibreMap) {
+    for (const layer of map.getStyle().layers ?? []) {
+        if (layer.type !== 'symbol') continue
+        const tf = map.getLayoutProperty(layer.id, 'text-field')
+        if (!tf || !JSON.stringify(tf).includes('name')) continue
+        map.setLayoutProperty(layer.id, 'text-field', [
+            'coalesce',
+            ['get', 'name:ru'],
+            ['get', 'name'],
+        ])
+    }
+}
+
 /** CSS-переменные светофора → конкретные цвета для WebGL-слоя. */
 function resolvePalette(): Record<FuelStatus, string> {
     const cs = getComputedStyle(document.documentElement)
@@ -127,6 +143,7 @@ export function FuelMap() {
     // видимые донат-маркеры кластеров по cluster_id; в ref — чтобы update-путь
     // эффекта (setData) мог их очистить и sync пересоздал со свежими долями
     const donutsRef = useRef(new Map<number, Marker>())
+    const userDotRef = useRef<Marker | null>(null)
 
     // Станции для карты: широкий радиус от позиции (не фильтруем по марке —
     // на карте видно всё; лимит бэка 200 покрывает пол-страны от любой точки)
@@ -142,38 +159,54 @@ export function FuelMap() {
         refetchOnWindowFocus: true,
     })
 
-    // ── инициализация карты (после получения позиции) ──
+    // ── инициализация карты: сразу, НЕ дожидаясь GPS ──
+    // Холодный GPS-фикс на Android — секунды; карта стартует с последней
+    // известной позиции (кэш useOrigin) или центра Бишкека и грузит
+    // стиль/тайлы параллельно с определением позиции.
     useEffect(() => {
-        if (!origin || !containerRef.current || mapRef.current) return
+        if (!containerRef.current || mapRef.current) return
+        const start = origin ?? BISHKEK
         const map = new MapLibreMap({
             container: containerRef.current,
             style: MAP_STYLE_URL,
-            center: [origin.lng, origin.lat],
+            center: [start.lng, start.lat],
             zoom: 12,
             attributionControl: { compact: true },
         })
         mapRef.current = map
-        map.on('load', () => setMapReady(true))
-
-        // точка «я тут» — только при реальной позиции (не фолбэк-центре)
-        if (!geoDenied) {
-            const dot = document.createElement('div')
-            dot.style.cssText =
-                'width:14px;height:14px;border-radius:50%;background:#1f6ff0;' +
-                'border:3px solid #fff;box-shadow:0 0 0 2px rgb(31 111 240 / .35)'
-            new Marker({ element: dot })
-                .setLngLat([origin.lng, origin.lat])
-                .addTo(map)
-        }
-
+        map.on('load', () => {
+            applyRussianLabels(map)
+            setMapReady(true)
+        })
         return () => {
             mapRef.current = null
             setMapReady(false)
             map.remove()
         }
-        // origin меняется один раз (null → значение) — реинит не нужен
+        // старт один раз; настоящая позиция доедет эффектом ниже
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [origin])
+    }, [])
+
+    // ── позиция получена: перецентровка + точка «я тут» ──
+    useEffect(() => {
+        const map = mapRef.current
+        if (!map || !origin || geoDenied || userDotRef.current) return
+        const dot = document.createElement('div')
+        dot.style.cssText =
+            'width:14px;height:14px;border-radius:50%;background:#1f6ff0;' +
+            'border:3px solid #fff;box-shadow:0 0 0 2px rgb(31 111 240 / .35)'
+        userDotRef.current = new Marker({ element: dot })
+            .setLngLat([origin.lng, origin.lat])
+            .addTo(map)
+        // доезжаем, только если стартовый центр заметно отличался
+        const from = map.getCenter()
+        const drifted =
+            Math.abs(from.lat - origin.lat) > 0.002 ||
+            Math.abs(from.lng - origin.lng) > 0.002
+        if (drifted) {
+            map.easeTo({ center: [origin.lng, origin.lat], zoom: 12 })
+        }
+    }, [origin, geoDenied])
 
     // ── слой АЗС: source + донат-кластеры + пины + обработчики ──
     useEffect(() => {
@@ -302,10 +335,23 @@ export function FuelMap() {
             {/* карта на весь экран; таббар (z-40) поверх. Контейнеру карты
                 нельзя давать fixed напрямую: maplibre вешает на него свой
                 .maplibregl-map { position: relative } и перебивает класс —
-                поэтому fixed на обёртке, карта растягивается по ней */}
-            <div className="fixed inset-0">
+                поэтому fixed на обёртке, карта растягивается по ней.
+                bg-muted: просветы/недогруженные области — в цвет темы,
+                а не чёрный WebGL-канвас (Android) */}
+            <div className="fixed inset-0 bg-muted">
                 <div ref={containerRef} className="h-full w-full" />
             </div>
+
+            {/* плейсхолдер до первого кадра карты: на Android WebGL-канвас
+                до отрисовки чёрный — прячем его тематическим экраном */}
+            {!mapReady && (
+                <div className="fixed inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background">
+                    <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[var(--wv-accent-soft)] border-t-[var(--wv-accent)]" />
+                    <p className="text-[13.5px] text-muted-foreground">
+                        Загружаем карту…
+                    </p>
+                </div>
+            )}
 
             {geoDenied && (
                 <div className="wv-rise fixed inset-x-3 top-3 z-30 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-[13px] leading-snug text-amber-700 backdrop-blur dark:text-amber-400">
