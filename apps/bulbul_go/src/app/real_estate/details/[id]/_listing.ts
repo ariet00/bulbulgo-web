@@ -52,7 +52,12 @@ export async function fetchListingMeta(
         if (l.kind !== 'want' && l.deal_type && l.deal_type !== 'sale') {
             spec.push(DEAL[l.deal_type as string] ?? String(l.deal_type))
         }
-        if (typeof a.rooms === 'number') spec.push(`${a.rooms}-комн`)
+        // rooms — enum: '3' | 'free' (свободная планировка)
+        if (/^\d+$/.test(String(a.rooms ?? ''))) {
+            spec.push(`${a.rooms}-комн`)
+        } else if (a.rooms === 'free') {
+            spec.push('своб. планировка')
+        }
         if (typeof a.area_total === 'number') spec.push(`${a.area_total} м²`)
         if (typeof a.land_area === 'number') {
             spec.push(`${formatAmount(a.land_area)} соток`)
