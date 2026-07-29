@@ -132,18 +132,28 @@ function resolvePalette(): Record<FuelStatus, string> {
     }
 }
 
+// ── карта живёт всю сессию вебвью ──
+// Табы — разные роуты, компонент размонтируется при каждом переключении;
+// без персиста карта создавалась бы заново (плейсхолдер и загрузка каждый
+// раз). Инстанс и его DOM-контейнер держим на уровне модуля: на маунте
+// контейнер просто прикрепляется к свежему хосту + resize — возврат на таб
+// мгновенный, «Загружаем карту…» виден только при первом открытии.
+let persistedMap: MapLibreMap | null = null
+let persistedContainer: HTMLDivElement | null = null
+let persistedReady = false
+let userDotPlaced = false
+const donutRegistry = new Map<number, Marker>()
+// клики по слоям регистрируются один раз на жизнь карты — роутим их через
+// модульный колбэк, который каждый маунт переписывает на свой setState
+let onPinTap: ((stationId: number) => void) | null = null
+
 export function FuelMap() {
     const { origin, geoDenied } = useOrigin()
     const meta = useFuelMeta()
-    const containerRef = useRef<HTMLDivElement>(null)
-    const mapRef = useRef<MapLibreMap | null>(null)
-    const [mapReady, setMapReady] = useState(false)
+    const hostRef = useRef<HTMLDivElement>(null)
+    const [mapReady, setMapReady] = useState(persistedReady)
     const [openedStation, setOpenedStation] = useState<Station | null>(null)
     const [reportStation, setReportStation] = useState<Station | null>(null)
-    // видимые донат-маркеры кластеров по cluster_id; в ref — чтобы update-путь
-    // эффекта (setData) мог их очистить и sync пересоздал со свежими долями
-    const donutsRef = useRef(new Map<number, Marker>())
-    const userDotRef = useRef<Marker | null>(null)
 
     // Станции для карты: широкий радиус от позиции (не фильтруем по марке —
     // на карте видно всё; лимит бэка 200 покрывает пол-страны от любой точки)
@@ -159,43 +169,65 @@ export function FuelMap() {
         refetchOnWindowFocus: true,
     })
 
-    // ── инициализация карты: сразу, НЕ дожидаясь GPS ──
-    // Холодный GPS-фикс на Android — секунды; карта стартует с последней
-    // известной позиции (кэш useOrigin) или центра Бишкека и грузит
-    // стиль/тайлы параллельно с определением позиции.
+    // актуальный список станций для клика по пину (обработчик живёт дольше
+    // компонента — читает через ref, а не из устаревшего замыкания)
+    const stationsRef = useRef<Station[]>([])
+    stationsRef.current = stations.data ?? []
+
+    // ── маунт: прикрепить/создать персистентную карту ──
+    // Старт сразу, НЕ дожидаясь GPS: холодный фикс на Android — секунды;
+    // карта едет с последней известной позиции (кэш useOrigin) или Бишкека,
+    // стиль/тайлы грузятся параллельно с определением позиции.
     useEffect(() => {
-        if (!containerRef.current || mapRef.current) return
-        const start = origin ?? BISHKEK
-        const map = new MapLibreMap({
-            container: containerRef.current,
-            style: MAP_STYLE_URL,
-            center: [start.lng, start.lat],
-            zoom: 12,
-            attributionControl: { compact: true },
-        })
-        mapRef.current = map
-        map.on('load', () => {
-            applyRussianLabels(map)
-            setMapReady(true)
-        })
-        return () => {
-            mapRef.current = null
-            setMapReady(false)
-            map.remove()
+        const host = hostRef.current
+        if (!host) return
+        if (!persistedContainer) {
+            persistedContainer = document.createElement('div')
+            persistedContainer.style.cssText = 'width:100%;height:100%'
         }
-        // старт один раз; настоящая позиция доедет эффектом ниже
+        host.appendChild(persistedContainer)
+
+        if (!persistedMap) {
+            const start = origin ?? BISHKEK
+            const map = new MapLibreMap({
+                container: persistedContainer,
+                style: MAP_STYLE_URL,
+                center: [start.lng, start.lat],
+                zoom: 12,
+                attributionControl: { compact: true },
+            })
+            persistedMap = map
+            map.on('load', () => {
+                applyRussianLabels(map)
+                persistedReady = true
+                setMapReady(true)
+            })
+        } else {
+            // контейнер был отсоединён при уходе с таба — освежаем размеры
+            persistedMap.resize()
+        }
+
+        onPinTap = (stationId) => {
+            const hit = stationsRef.current.find((s) => s.id === stationId)
+            if (hit) setOpenedStation(hit)
+        }
+        return () => {
+            onPinTap = null
+        }
+        // прикрепление один раз на маунт; позиция доедет эффектом ниже
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // ── позиция получена: перецентровка + точка «я тут» ──
     useEffect(() => {
-        const map = mapRef.current
-        if (!map || !origin || geoDenied || userDotRef.current) return
+        const map = persistedMap
+        if (!map || !origin || geoDenied || userDotPlaced) return
+        userDotPlaced = true
         const dot = document.createElement('div')
         dot.style.cssText =
             'width:14px;height:14px;border-radius:50%;background:#1f6ff0;' +
             'border:3px solid #fff;box-shadow:0 0 0 2px rgb(31 111 240 / .35)'
-        userDotRef.current = new Marker({ element: dot })
+        new Marker({ element: dot })
             .setLngLat([origin.lng, origin.lat])
             .addTo(map)
         // доезжаем, только если стартовый центр заметно отличался
@@ -210,7 +242,7 @@ export function FuelMap() {
 
     // ── слой АЗС: source + донат-кластеры + пины + обработчики ──
     useEffect(() => {
-        const map = mapRef.current
+        const map = persistedMap
         const items = stations.data
         if (!map || !mapReady || !items) return
 
@@ -233,8 +265,8 @@ export function FuelMap() {
             existing.setData(geojson)
             // cluster_id после setData переиспользуются — старые донаты
             // остались бы со стухшими долями; сносим, sync нарисует заново
-            for (const marker of donutsRef.current.values()) marker.remove()
-            donutsRef.current.clear()
+            for (const marker of donutRegistry.values()) marker.remove()
+            donutRegistry.clear()
             return
         }
 
@@ -266,8 +298,7 @@ export function FuelMap() {
 
         map.on('click', 'station-pins', (e: MapLayerMouseEvent) => {
             const id = e.features?.[0]?.properties?.id
-            const hit = (stations.data ?? []).find((s) => s.id === id)
-            if (hit) setOpenedStation(hit)
+            if (typeof id === 'number') onPinTap?.(id)
         })
         map.on('mouseenter', 'station-pins', () => {
             map.getCanvas().style.cursor = 'pointer'
@@ -279,7 +310,7 @@ export function FuelMap() {
         // ── донаты кластеров: HTML-маркеры, пересинк на каждый кадр ──
         // (паттерн из примеров MapLibre: querySourceFeatures на 'render',
         // маркеры добавляются/удаляются по видимым cluster_id)
-        const donuts = donutsRef.current
+        const donuts = donutRegistry
         const groupColors = {
             ok: palette.available,
             bad: palette.out,
@@ -339,7 +370,7 @@ export function FuelMap() {
                 bg-muted: просветы/недогруженные области — в цвет темы,
                 а не чёрный WebGL-канвас (Android) */}
             <div className="fixed inset-0 bg-muted">
-                <div ref={containerRef} className="h-full w-full" />
+                <div ref={hostRef} className="h-full w-full" />
             </div>
 
             {/* плейсхолдер до первого кадра карты: на Android WebGL-канвас
@@ -364,7 +395,7 @@ export function FuelMap() {
                 <button
                     aria-label="К моей позиции"
                     onClick={() =>
-                        mapRef.current?.easeTo({
+                        persistedMap?.easeTo({
                             center: [origin.lng, origin.lat],
                             zoom: 13,
                         })
