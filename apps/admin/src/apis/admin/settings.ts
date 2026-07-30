@@ -96,6 +96,15 @@ export interface AdminParcelTypesSettings {
     types: AdminParcelType[]
 }
 
+export interface AdminSupportSettings {
+    in_app_enabled: boolean
+    tg_enabled: boolean
+    tg_url: string | null
+}
+
+// service -> role -> [phrases]
+export type AdminQuickMessages = Record<string, Record<string, string[]>>
+
 export interface AdminAttractiveRoute {
     from_location_id: number
     to_location_id: number
@@ -289,6 +298,18 @@ export const settingsAdminApi = {
         requests.get<AdminParcelTypesSettings>('/admin/settings/parcel-types'),
     updateParcelTypesSettings: (body: AdminParcelTypesSettings) =>
         requests.put<AdminParcelTypesSettings>('/admin/settings/parcel-types', body),
+
+    // Support contact channels (Redis key `app:support`)
+    getSupportSettings: () =>
+        requests.get<AdminSupportSettings>('/admin/settings/support'),
+    updateSupportSettings: (body: AdminSupportSettings) =>
+        requests.put<AdminSupportSettings>('/admin/settings/support', body),
+
+    // Quick messages (Redis key `app:quick_messages`): service -> role -> phrases
+    getQuickMessages: () =>
+        requests.get<AdminQuickMessages>('/admin/settings/quick-messages'),
+    updateQuickMessages: (body: AdminQuickMessages) =>
+        requests.put<AdminQuickMessages>('/admin/settings/quick-messages', body),
     getAttractivePricesSettings: () =>
         requests.get<AdminAttractivePricesSettings>('/admin/settings/attractive-prices'),
     updateAttractivePricesSettings: (body: AdminAttractivePricesSettings) =>

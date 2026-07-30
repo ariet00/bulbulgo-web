@@ -94,6 +94,20 @@ export const useAdminParcelTypesSettings = () => {
     })
 }
 
+export const useAdminSupportSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'support'] as const,
+        queryFn: () => adminApi.getSupportSettings(),
+    })
+}
+
+export const useAdminQuickMessages = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'quick-messages'] as const,
+        queryFn: () => adminApi.getQuickMessages(),
+    })
+}
+
 export const useAdminAttractivePricesSettings = () => {
     return useQuery({
         queryKey: [...adminKeys.appSettings(), 'attractive-prices'] as const,

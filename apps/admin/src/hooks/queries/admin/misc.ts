@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/apis/admin'
 import { adminKeys } from './keys'
 
@@ -67,5 +67,23 @@ export const useAdminChat = (id: number) => {
         queryKey: adminKeys.chat(id),
         queryFn: () => adminApi.getChat(id),
         enabled: !!id,
+    })
+}
+
+export const useAdminSupportChats = (page: number = 1, size: number = 40) => {
+    return useQuery({
+        queryKey: [...adminKeys.supportChats(), { page, size }],
+        queryFn: () => adminApi.getSupportChats(page, size),
+    })
+}
+
+// Reply in a support chat as «Техподдержка»; refetch the thread on success.
+export const useReplyToChat = (id: number) => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (content: string) => adminApi.replyToChat(id, content),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.chat(id) })
+        },
     })
 }

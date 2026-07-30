@@ -38,4 +38,12 @@ export const miscAdminApi = {
         return requests.get<Page<any>>(`/admin/chats/?${params.toString()}`)
     },
     getChat: (id: number) => requests.get<any>(`/admin/chats/${id}`),
+    // Support inbox: chats with the «Техподдержка» account, newest first.
+    getSupportChats: (page = 1, size = 40) =>
+        requests.get<Page<any>>(
+            `/admin/chats/support?page=${page}&size=${size}`,
+        ),
+    // Reply in a support chat as the «Техподдержка» account.
+    replyToChat: (id: number, content: string) =>
+        requests.post<any>(`/admin/chats/${id}/reply`, { content }),
 }

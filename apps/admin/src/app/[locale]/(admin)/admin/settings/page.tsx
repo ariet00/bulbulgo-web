@@ -12,6 +12,8 @@ import { ActiveLimitsSettingsForm } from '@/components/admin/settings/ActiveLimi
 import { SubscriptionSettingsForm } from '@/components/admin/settings/SubscriptionSettingsForm'
 import { ServicePricesSettingsForm } from '@/components/admin/settings/ServicePricesSettingsForm'
 import { ParcelTypesSettingsForm } from '@/components/admin/settings/ParcelTypesSettingsForm'
+import { SupportSettingsForm } from '@/components/admin/settings/SupportSettingsForm'
+import { QuickMessagesSettingsForm } from '@/components/admin/settings/QuickMessagesSettingsForm'
 import { AttractivePricesSettingsForm } from '@/components/admin/settings/AttractivePricesSettingsForm'
 import { TripCreateRulesSettingsForm } from '@/components/admin/settings/TripCreateRulesSettingsForm'
 
@@ -27,6 +29,8 @@ const TABS = [
     { value: 'bump-limits', label: 'Лимиты поднятий', Form: BumpLimitsSettingsForm },
     { value: 'active-limits', label: 'Лимиты активных', Form: ActiveLimitsSettingsForm },
     { value: 'subscriptions', label: 'Подписки', Form: SubscriptionSettingsForm },
+    { value: 'support', label: 'Поддержка', Form: SupportSettingsForm },
+    { value: 'quick-messages', label: 'Быстрые сообщения', Form: QuickMessagesSettingsForm },
 ] as const
 
 const FILTER_DEFAULTS = { tab: 'app' }

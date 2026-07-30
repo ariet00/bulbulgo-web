@@ -22,6 +22,7 @@ export const adminKeys = {
     property: (id: number) => [...adminKeys.properties(), id] as const,
     chats: () => [...adminKeys.all, 'chats'] as const,
     chat: (id: number) => [...adminKeys.chats(), id] as const,
+    supportChats: () => [...adminKeys.chats(), 'support'] as const,
     analytics: () => [...adminKeys.all, 'analytics'] as const,
     reports: () => [...adminKeys.all, 'reports'] as const,
     currencies: () => [...adminKeys.all, 'currencies'] as const,
