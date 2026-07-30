@@ -77,13 +77,15 @@ export const useAdminSupportChats = (page: number = 1, size: number = 40) => {
     })
 }
 
-// Reply in a support chat as «Техподдержка»; refetch the thread on success.
+// Reply in a support chat as «Техподдержка»; refetch the thread + inbox list
+// on success (the list preview / ordering depends on the new last message).
 export const useReplyToChat = (id: number) => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: (content: string) => adminApi.replyToChat(id, content),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: adminKeys.chat(id) })
+            queryClient.invalidateQueries({ queryKey: adminKeys.supportChats() })
         },
     })
 }
