@@ -77,14 +77,27 @@ export const useAdminSupportChats = (page: number = 1, size: number = 40) => {
     })
 }
 
-// Reply in a support chat as «Техподдержка»; refetch the thread + inbox list
-// on success (the list preview / ordering depends on the new last message).
+// Reply in a support chat as «Техподдержка». The endpoint returns the created
+// message, so append it to the open thread immediately (no refetch flicker —
+// the message shows the instant the request resolves). Deduped by id since the
+// realtime WS echo may also deliver it. The inbox list is refreshed for the
+// updated preview/ordering.
 export const useReplyToChat = (id: number) => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: (content: string) => adminApi.replyToChat(id, content),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: adminKeys.chat(id) })
+        onSuccess: (message: any) => {
+            queryClient.setQueryData(adminKeys.chat(id), (prev: any) => {
+                if (!prev || !message?.id) return prev
+                const messages = prev.messages ?? []
+                if (messages.some((m: any) => m.id === message.id)) return prev
+                return {
+                    ...prev,
+                    messages: [...messages, message],
+                    last_message: message,
+                    last_message_at: message.created_at,
+                }
+            })
             queryClient.invalidateQueries({ queryKey: adminKeys.supportChats() })
         },
     })
