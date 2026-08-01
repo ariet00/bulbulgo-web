@@ -43,7 +43,11 @@ export const miscAdminApi = {
         requests.get<Page<any>>(
             `/admin/chats/support?page=${page}&size=${size}`,
         ),
-    // Reply in a support chat as the «Техподдержка» account.
-    replyToChat: (id: number, content: string) =>
-        requests.post<any>(`/admin/chats/${id}/reply`, { content }),
+    // Reply in a support chat as the «Техподдержка» account. `parentId` quotes
+    // a specific message (rendered as a reply preview client-side).
+    replyToChat: (id: number, content: string, parentId?: number) =>
+        requests.post<any>(`/admin/chats/${id}/reply`, {
+            content,
+            parent_id: parentId,
+        }),
 }

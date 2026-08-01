@@ -2,20 +2,31 @@
 
 import { useState } from 'react'
 import { Button, Textarea } from '@doska/ui'
-import { Send, Headset } from 'lucide-react'
+import { Send, Headset, Reply, X } from 'lucide-react'
+
+export type ReplyTarget = {
+    id: number
+    content: string
+    author: string
+}
 
 /**
  * Reply composer for a support thread. Sends from the «Техподдержка» account
- * (handled server-side). Ctrl/⌘ + Enter sends.
+ * (handled server-side). Ctrl/⌘ + Enter sends. When `replyTo` is set the message
+ * quotes it (rendered as a reply preview above the input).
  */
 export function Composer({
     onSend,
     isPending,
     isError,
+    replyTo,
+    onCancelReply,
 }: {
     onSend: (content: string) => void
     isPending: boolean
     isError: boolean
+    replyTo?: ReplyTarget | null
+    onCancelReply?: () => void
 }) {
     const [draft, setDraft] = useState('')
 
@@ -32,6 +43,28 @@ export function Composer({
                 <Headset className="h-3.5 w-3.5" />
                 Ответ отправится от имени «Техподдержки»
             </div>
+
+            {replyTo && (
+                <div className="mb-2 flex items-start gap-2 rounded-lg border-l-2 border-primary bg-muted/50 py-1.5 pl-2 pr-1.5">
+                    <Reply className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-medium text-primary">
+                            В ответ на {replyTo.author}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {replyTo.content || 'Вложение'}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onCancelReply}
+                        aria-label="Отменить ответ"
+                        className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
+                    >
+                        <X className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            )}
             <div className="flex items-end gap-2">
                 <Textarea
                     value={draft}

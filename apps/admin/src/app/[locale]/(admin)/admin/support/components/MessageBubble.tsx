@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@doska/shared'
+import { Reply } from 'lucide-react'
 import { clockTime } from './utils'
 
 type Attachment = { url: string; type?: string }
@@ -20,9 +21,11 @@ type Message = {
 export function MessageBubble({
     message,
     outgoing,
+    onReply,
 }: {
     message: Message
     outgoing: boolean
+    onReply?: () => void
 }) {
     const images = (message.attachments ?? []).filter(
         (a) => (a.type ?? 'image') === 'image' && a.url,
@@ -31,10 +34,20 @@ export function MessageBubble({
     return (
         <div
             className={cn(
-                'flex w-full',
+                'group flex w-full items-center gap-1.5',
                 outgoing ? 'justify-end' : 'justify-start',
             )}
         >
+            {onReply && outgoing && (
+                <button
+                    type="button"
+                    onClick={onReply}
+                    aria-label="Ответить на сообщение"
+                    className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 focus-visible:outline-none group-hover:opacity-100"
+                >
+                    <Reply className="h-4 w-4" />
+                </button>
+            )}
             <div
                 className={cn(
                     'max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[70%]',
@@ -87,6 +100,17 @@ export function MessageBubble({
                     {clockTime(message.created_at)}
                 </div>
             </div>
+
+            {onReply && !outgoing && (
+                <button
+                    type="button"
+                    onClick={onReply}
+                    aria-label="Ответить на сообщение"
+                    className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 focus-visible:outline-none group-hover:opacity-100"
+                >
+                    <Reply className="h-4 w-4" />
+                </button>
+            )}
         </div>
     )
 }

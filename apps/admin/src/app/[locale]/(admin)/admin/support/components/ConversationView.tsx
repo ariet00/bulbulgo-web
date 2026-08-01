@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useAdminChat, useReplyToChat } from '@/hooks/queries/admin'
 import { Avatar, AvatarFallback, Button, Skeleton } from '@doska/ui'
-import { ArrowLeft, MessageCircle } from 'lucide-react'
+import { ArrowLeft, MessageCircle, ExternalLink } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
-import { Composer } from './Composer'
+import { Composer, type ReplyTarget } from './Composer'
 import {
     displayName,
     initials,
@@ -23,6 +24,7 @@ export function ConversationView({ chatId, onBack }: Props) {
     const reply = useReplyToChat(chatId)
     const scrollRef = useRef<HTMLDivElement>(null)
     const bottomRef = useRef<HTMLDivElement>(null)
+    const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null)
 
     const messages = chat?.messages ?? []
     const sid = chat ? supportId(chat as SupportChat) : null
@@ -36,6 +38,16 @@ export function ConversationView({ chatId, onBack }: Props) {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ block: 'end' })
     }, [messages.length, chatId])
+
+    // Drop any pending reply target when switching to another conversation.
+    useEffect(() => {
+        setReplyTo(null)
+    }, [chatId])
+
+    const handleSend = (content: string) => {
+        reply.mutate({ content, parentId: replyTo?.id })
+        setReplyTo(null)
+    }
 
     return (
         <div className="flex h-full flex-col">
@@ -61,7 +73,7 @@ export function ConversationView({ chatId, onBack }: Props) {
                                 {initials(user)}
                             </AvatarFallback>
                         </Avatar>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold">
                                 {displayName(user)}
                             </p>
@@ -70,6 +82,22 @@ export function ConversationView({ chatId, onBack }: Props) {
                                 {user?.phone ? ` · ${user.phone}` : ''}
                             </p>
                         </div>
+                        {user?.id != null && (
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="shrink-0"
+                            >
+                                <Link
+                                    href={`/admin/users/${user.id}`}
+                                    title="Открыть профиль пользователя"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Профиль</span>
+                                </Link>
+                            </Button>
+                        )}
                     </>
                 )}
             </div>
@@ -96,22 +124,36 @@ export function ConversationView({ chatId, onBack }: Props) {
                     </div>
                 ) : (
                     <>
-                        {messages.map((msg: any) => (
-                            <MessageBubble
-                                key={msg.id}
-                                message={msg}
-                                outgoing={sid != null && msg.sender_id === sid}
-                            />
-                        ))}
+                        {messages.map((msg: any) => {
+                            const outgoing = sid != null && msg.sender_id === sid
+                            return (
+                                <MessageBubble
+                                    key={msg.id}
+                                    message={msg}
+                                    outgoing={outgoing}
+                                    onReply={() =>
+                                        setReplyTo({
+                                            id: msg.id,
+                                            content: msg.content ?? '',
+                                            author: outgoing
+                                                ? 'Техподдержку'
+                                                : displayName(user),
+                                        })
+                                    }
+                                />
+                            )
+                        })}
                         <div ref={bottomRef} />
                     </>
                 )}
             </div>
 
             <Composer
-                onSend={(content) => reply.mutate(content)}
+                onSend={handleSend}
                 isPending={reply.isPending}
                 isError={reply.isError}
+                replyTo={replyTo}
+                onCancelReply={() => setReplyTo(null)}
             />
         </div>
     )

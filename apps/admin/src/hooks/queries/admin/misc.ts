@@ -85,7 +85,8 @@ export const useAdminSupportChats = (page: number = 1, size: number = 40) => {
 export const useReplyToChat = (id: number) => {
     const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: (content: string) => adminApi.replyToChat(id, content),
+        mutationFn: ({ content, parentId }: { content: string; parentId?: number }) =>
+            adminApi.replyToChat(id, content, parentId),
         onSuccess: (message: any) => {
             queryClient.setQueryData(adminKeys.chat(id), (prev: any) => {
                 if (!prev || !message?.id) return prev
