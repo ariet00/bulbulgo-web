@@ -32,6 +32,7 @@ export interface AdminAppFeaturesSettings {
     is_wallet_enabled: boolean
     is_passenger_search_enabled: boolean
     map_route_preview: boolean
+    /** Легаси-копия для старых сборок (читают из /me); гейты — в правилах создания. */
     require_verified_phone: boolean
     phone_login_enabled: boolean
     phone_view_insights_enabled: boolean
@@ -152,10 +153,20 @@ export interface AdminTripCreateRoleRules {
     time_required: boolean
 }
 
+export interface AdminFreightCreateRules {
+    driver: AdminTripCreateRoleRules
+    cargo_owner: AdminTripCreateRoleRules
+}
+
 export interface AdminTripCreateRulesSettings {
+    /** Публиковать может только пользователь с подтверждённым номером. */
+    require_verified_phone: boolean
+    /** Показывать блок «Как могут с вами связаться» (попутки + грузы). */
+    contact_method_enabled: boolean
     driver: AdminTripCreateRoleRules
     passenger: AdminTripCreateRoleRules
     parcel: AdminTripCreateRoleRules
+    freight: AdminFreightCreateRules
 }
 
 export interface CeleryCrontab {
