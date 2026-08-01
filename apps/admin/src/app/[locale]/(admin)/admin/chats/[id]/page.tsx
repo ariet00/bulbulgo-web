@@ -34,7 +34,7 @@ export default function ChatDetailPage() {
     const handleSend = () => {
         const content = draft.trim()
         if (!content || reply.isPending) return
-        reply.mutate(content, { onSuccess: () => setDraft('') })
+        reply.mutate({ content }, { onSuccess: () => setDraft('') })
     }
 
     return (
