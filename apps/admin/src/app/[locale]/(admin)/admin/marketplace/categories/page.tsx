@@ -18,16 +18,22 @@ import {
     Plus,
     Trash2,
 } from 'lucide-react'
-import type { McAttribute, McCategoryNode, McGroupDef } from '@/apis/marketplace'
+import type { McAttribute, McCategoryNode, McGroup } from '@/apis/marketplace'
 import {
     useMpAttributes,
     useMpCategories,
     useMpCategoryAttributes,
+    useMpCategoryGroups,
     useMpCategoryBindings,
 } from '@/hooks/queries/marketplace'
-import { useMpDeleteBinding, useMpDeleteCategory } from '@/hooks/mutations/marketplace'
+import {
+    useMpDeleteBinding,
+    useMpDeleteCategory,
+    useMpDeleteGroup,
+} from '@/hooks/mutations/marketplace'
 import { CategoryDialog } from '@/components/admin/marketplace/CategoryDialog'
 import { BindingDialog } from '@/components/admin/marketplace/BindingDialog'
+import { GroupDialog } from '@/components/admin/marketplace/GroupDialog'
 import { pickLabel } from '@/components/admin/marketplace/shared'
 
 function flatten(nodes: McCategoryNode[], acc: Map<number, McCategoryNode>) {
@@ -51,22 +57,16 @@ export default function MarketplaceCategoriesPage() {
         parent?: McCategoryNode | null
     }>({ open: false })
     const [bindDialog, setBindDialog] = useState<{ open: boolean; binding?: any }>({ open: false })
+    const [groupDialog, setGroupDialog] = useState<{ open: boolean; group?: McGroup | null }>({
+        open: false,
+    })
 
     const byId = useMemo(() => flatten(tree ?? [], new Map()), [tree])
     const selected = selectedId != null ? byId.get(selectedId) ?? null : null
 
-    // groups available for bindings = selected category + inherited from ancestors
-    const bindingGroups = useMemo(() => {
-        const merged = new Map<string, McGroupDef>()
-        const chain: McCategoryNode[] = []
-        let node: McCategoryNode | null = selected
-        while (node) {
-            chain.unshift(node)
-            node = node.parent_id != null ? byId.get(node.parent_id) ?? null : null
-        }
-        for (const c of chain) for (const g of c.attribute_groups ?? []) merged.set(g.key, g)
-        return [...merged.values()].sort((a, b) => a.sort_order - b.sort_order)
-    }, [selected, byId])
+    // группы для привязок: свои + унаследованные (резолвит бэкенд)
+    const { data: groups } = useMpCategoryGroups(selectedId)
+    const bindingGroups = groups ?? []
     const attrsById = useMemo(() => {
         const m = new Map<number, McAttribute>()
         for (const a of attributes ?? []) m.set(a.id, a)
@@ -76,6 +76,7 @@ export default function MarketplaceCategoriesPage() {
     const { data: bindings } = useMpCategoryBindings(selectedId)
     const { data: effective } = useMpCategoryAttributes(selectedId)
     const deleteCategory = useMpDeleteCategory()
+    const deleteGroup = useMpDeleteGroup()
     const deleteBinding = useMpDeleteBinding()
 
     const toggle = (id: number) =>
@@ -218,6 +219,70 @@ export default function MarketplaceCategoriesPage() {
                     <CardContent className="space-y-6">
                         {selected && (
                             <>
+                                {/* группы формы: свои и унаследованные */}
+                                <section className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-semibold">Группы полей</h3>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setGroupDialog({ open: true })}
+                                        >
+                                            <Plus className="mr-1 h-4 w-4" /> Группа
+                                        </Button>
+                                    </div>
+                                    {bindingGroups.length === 0 ? (
+                                        <div className="text-sm text-muted-foreground">
+                                            Групп нет — поля пойдут сплошным списком
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y rounded-md border">
+                                            {bindingGroups.map((g) => (
+                                                <div
+                                                    key={g.id}
+                                                    className={`flex items-center gap-2 px-3 py-2 text-sm ${
+                                                        g.is_active ? '' : 'opacity-50'
+                                                    }`}
+                                                >
+                                                    <span className="font-medium">
+                                                        {pickLabel(g.label, g.key)}
+                                                    </span>
+                                                    <span className="font-mono text-xs text-muted-foreground">
+                                                        {g.key}
+                                                    </span>
+                                                    {g.category_id !== selected.id && (
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            из «{g.category_slug}»
+                                                        </span>
+                                                    )}
+                                                    <div className="ml-auto flex items-center gap-0.5">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6"
+                                                            onClick={() =>
+                                                                setGroupDialog({ open: true, group: g })
+                                                            }
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        {g.is_active && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 text-destructive"
+                                                                onClick={() => deleteGroup.mutate(g.id)}
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
+
                                 {/* own bindings */}
                                 <section className="space-y-2">
                                     <div className="flex items-center justify-between">
@@ -322,7 +387,15 @@ export default function MarketplaceCategoriesPage() {
                     parent={catDialog.parent}
                 />
             )}
-            {bindDialog.open && selectedId != null && (
+            {groupDialog.open && selectedId != null && (
+                <GroupDialog
+                    open={groupDialog.open}
+                    onOpenChange={(v) => setGroupDialog((st) => ({ ...st, open: v }))}
+                    categoryId={selectedId!}
+                    group={groupDialog.group}
+                />
+            )}
+            {selectedId != null && bindDialog.open && (
                 <BindingDialog
                     open={bindDialog.open}
                     onOpenChange={(v) => setBindDialog((s) => ({ ...s, open: v }))}
@@ -330,6 +403,10 @@ export default function MarketplaceCategoriesPage() {
                     binding={bindDialog.binding}
                     attributes={attributes ?? []}
                     groups={bindingGroups}
+                    dealTypes={
+                        (effective ?? []).find((a) => a.key === 'deal_type')?.options ?? []
+                    }
+                    effective={effective ?? []}
                     ownerPaths={selected ? selected.path.split('.') : undefined}
                 />
             )}

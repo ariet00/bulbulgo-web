@@ -48,9 +48,12 @@ export interface EffectiveAttribute {
     /** границы значений int/decimal из каталога (для инпутов wizard'а) */
     min_value: number | null
     max_value: number | null
-    /** условная видимость: показывать только при совпадении другого атрибута
-     * (у электро нет объёма двигателя): {key, in?} | {key, not_in?} */
-    visible_when: { key: string; in?: string[]; not_in?: string[] } | null
+    /** типы сделки, при которых поле применимо / обязательно (пусто = любые) */
+    deal_types: string[]
+    required_deal_types: string[]
+    /** зависимость от значения другого атрибута: поле есть, только если у
+     * `key` выбрано одно из `values` (у электро нет объёма двигателя) */
+    depends_on: { key: string; values: string[] } | null
     sort_order: number
     role: string | null
     group: string | null
@@ -105,7 +108,6 @@ export interface ListingPage {
 export interface ListingContact {
     phone: string | null
     name: string | null
-    telegram: string | null
     whatsapp: boolean
 }
 

@@ -8,8 +8,45 @@ import {
     McBindingUpdate,
     McCategoryCreate,
     McCategoryUpdate,
+    McGroupCreate,
+    McGroupUpdate,
 } from '@/apis/marketplace'
 import { mpKeys } from '@/hooks/queries/marketplace'
+
+// ── attribute groups ──
+export const useMpCreateGroup = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: McGroupCreate) => marketplaceAdminApi.createGroup(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: mpKeys.all })
+            toast.success('Группа создана')
+        },
+    })
+}
+
+export const useMpUpdateGroup = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: McGroupUpdate }) =>
+            marketplaceAdminApi.updateGroup(id, body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: mpKeys.all })
+            toast.success('Группа обновлена')
+        },
+    })
+}
+
+export const useMpDeleteGroup = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id: number) => marketplaceAdminApi.deleteGroup(id),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: mpKeys.all })
+            toast.success('Группа скрыта')
+        },
+    })
+}
 
 // ── categories ──
 export const useMpCreateCategory = () => {

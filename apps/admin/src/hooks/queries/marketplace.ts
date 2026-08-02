@@ -9,6 +9,8 @@ export const mpKeys = {
         [...mpKeys.all, 'category-attributes', id] as const,
     categoryBindings: (id: number) =>
         [...mpKeys.all, 'category-bindings', id] as const,
+    categoryGroups: (id: number) =>
+        [...mpKeys.all, 'category-groups', id] as const,
     attributes: (includeInactive: boolean) =>
         [...mpKeys.all, 'attributes', includeInactive] as const,
     listings: (params: McListingsParams) =>
@@ -32,6 +34,13 @@ export const useMpCategoryBindings = (id: number | null) =>
     useQuery({
         queryKey: mpKeys.categoryBindings(id ?? -1),
         queryFn: () => marketplaceAdminApi.getCategoryBindings(id as number),
+        enabled: id != null,
+    })
+
+export const useMpCategoryGroups = (id: number | null) =>
+    useQuery({
+        queryKey: mpKeys.categoryGroups(id ?? -1),
+        queryFn: () => marketplaceAdminApi.getCategoryGroups(id as number),
         enabled: id != null,
     })
 

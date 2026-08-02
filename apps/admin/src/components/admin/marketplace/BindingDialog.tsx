@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
     Button,
+    Checkbox,
     Dialog,
     DialogContent,
     DialogFooter,
@@ -17,12 +18,19 @@ import {
     SelectValue,
     Switch,
 } from '@doska/ui'
-import type { McAttribute, McBinding, McGroupDef } from '@/apis/marketplace'
+import type {
+    McAttribute,
+    McAttributeOption,
+    McBinding,
+    McEffectiveAttribute,
+    McGroup,
+} from '@/apis/marketplace'
 import { APPLIES_TO } from '@/apis/marketplace'
 import { useMpCreateBinding, useMpUpdateBinding } from '@/hooks/mutations/marketplace'
 import { pickLabel } from './shared'
 
 const NO_GROUP = '__none__'
+const NO_PARENT = '__none__'
 
 type Props = {
     open: boolean
@@ -31,10 +39,14 @@ type Props = {
     /** present → edit; absent → create */
     binding?: McBinding | null
     attributes: McAttribute[]
-    /** groups available for this category (self + inherited), for the group picker */
-    groups?: McGroupDef[]
+    /** группы категории (свои + унаследованные) — выбор в пикере */
+    groups?: McGroup[]
     /** пути категории от корня к ней самой — атрибут можно вешать только из них */
     ownerPaths?: string[]
+    /** типы сделки этой ветки — ось «когда поле применимо» */
+    dealTypes?: McAttributeOption[]
+    /** эффективный набор категории — из него выбирается родитель зависимости */
+    effective?: McEffectiveAttribute[]
 }
 
 export function BindingDialog({
@@ -45,6 +57,8 @@ export function BindingDialog({
     attributes,
     groups = [],
     ownerPaths,
+    dealTypes = [],
+    effective = [],
 }: Props) {
     const isEdit = !!binding
     const [attributeId, setAttributeId] = useState<number | null>(null)
@@ -52,7 +66,13 @@ export function BindingDialog({
     const [filterable, setFilterable] = useState(false)
     const [appliesTo, setAppliesTo] = useState('both')
     const [sortOrder, setSortOrder] = useState(0)
-    const [group, setGroup] = useState<string>(NO_GROUP)
+    const [groupId, setGroupId] = useState<string>(NO_GROUP)
+    // пусто = поле применимо к любой сделке (аналог applies_to = both)
+    const [deals, setDeals] = useState<string[]>([])
+    const [requiredDeals, setRequiredDeals] = useState<string[]>([])
+    // зависимость от значения другого атрибута: родитель + его значения
+    const [parentKey, setParentKey] = useState<string>(NO_PARENT)
+    const [parentValues, setParentValues] = useState<string[]>([])
 
     const create = useMpCreateBinding()
     const update = useMpUpdateBinding()
@@ -80,11 +100,42 @@ export function BindingDialog({
         setFilterable(binding?.is_filterable ?? false)
         setAppliesTo(binding?.applies_to ?? 'both')
         setSortOrder(binding?.sort_order ?? 0)
-        setGroup(binding?.group ?? NO_GROUP)
+        setGroupId(binding?.group_id ? String(binding.group_id) : NO_GROUP)
+        setDeals(binding?.deal_types ?? [])
+        setRequiredDeals(binding?.required_deal_types ?? [])
+        setParentKey(binding?.depends_on?.key ?? NO_PARENT)
+        setParentValues(binding?.depends_on?.values ?? [])
     }, [open, binding])
 
+    const toggle = (
+        list: string[],
+        set: (next: string[]) => void,
+        value: string,
+    ) => set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
+
+    // родителем может быть только перечислимый атрибут этой категории —
+    // бэкенд это же и проверяет при сохранении
+    const parents = useMemo(
+        () =>
+            effective.filter(
+                (a) =>
+                    a.key !== attr?.key &&
+                    (a.type === 'enum' || a.type === 'multi_enum') &&
+                    a.options.length > 0,
+            ),
+        [effective, attr],
+    )
+    const parentOptions = parents.find((p) => p.key === parentKey)?.options ?? []
+
+    // пустые значения снимают зависимость
+    const dependsOn = () =>
+        parentKey !== NO_PARENT && parentValues.length > 0
+            ? { key: parentKey, values: parentValues }
+            : { key: '', values: [] }
+
     const submit = () => {
-        const groupVal = group === NO_GROUP ? '' : group
+        // 0 снимает группу — бэкенд отличает «не трогать» (undefined) от сброса
+        const groupVal = groupId === NO_GROUP ? 0 : Number(groupId)
         if (isEdit) {
             update.mutate(
                 {
@@ -94,7 +145,10 @@ export function BindingDialog({
                         is_filterable: filterable,
                         applies_to: appliesTo,
                         sort_order: sortOrder,
-                        group: groupVal,
+                        deal_types: deals,
+                        required_deal_types: requiredDeals,
+                        depends_on: dependsOn(),
+                        group_id: groupVal,
                     },
                 },
                 { onSuccess: () => onOpenChange(false) },
@@ -109,7 +163,10 @@ export function BindingDialog({
                     is_filterable: filterable,
                     applies_to: appliesTo,
                     sort_order: sortOrder,
-                    group: groupVal || undefined,
+                    deal_types: deals,
+                    required_deal_types: requiredDeals,
+                    depends_on: dependsOn(),
+                    group_id: groupVal || undefined,
                 },
                 { onSuccess: () => onOpenChange(false) },
             )
@@ -192,14 +249,14 @@ export function BindingDialog({
 
                     <div className="space-y-1.5">
                         <Label>Группа</Label>
-                        <Select value={group} onValueChange={setGroup}>
+                        <Select value={groupId} onValueChange={setGroupId}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Без группы" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value={NO_GROUP}>Без группы</SelectItem>
                                 {groups.map((g) => (
-                                    <SelectItem key={g.key} value={g.key}>
+                                    <SelectItem key={g.id} value={String(g.id)}>
                                         {pickLabel(g.label, g.key)}
                                     </SelectItem>
                                 ))}
@@ -211,6 +268,101 @@ export function BindingDialog({
                             </p>
                         )}
                     </div>
+
+                    {parents.length > 0 && (
+                        <div className="space-y-2">
+                            <Label>Зависит от поля</Label>
+                            <Select
+                                value={parentKey}
+                                onValueChange={(v) => {
+                                    setParentKey(v)
+                                    setParentValues([])
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Без зависимости" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={NO_PARENT}>Без зависимости</SelectItem>
+                                    {parents.map((p) => (
+                                        <SelectItem key={p.key} value={p.key}>
+                                            {pickLabel(p.label, p.key)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {parentKey !== NO_PARENT && (
+                                <>
+                                    <p className="text-xs text-muted-foreground">
+                                        Поле показывается, только если у родителя выбрано
+                                        одно из отмеченных значений. Ничего не отмечено —
+                                        зависимости нет.
+                                    </p>
+                                    <div className="divide-y rounded-md border">
+                                        {parentOptions.map((o) => (
+                                            <label
+                                                key={o.value}
+                                                className="flex items-center gap-3 px-2 py-1.5 text-sm"
+                                            >
+                                                <Checkbox
+                                                    checked={parentValues.includes(o.value)}
+                                                    onCheckedChange={() =>
+                                                        toggle(
+                                                            parentValues,
+                                                            setParentValues,
+                                                            o.value,
+                                                        )
+                                                    }
+                                                />
+                                                {pickLabel(o.label, o.value)}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {dealTypes.length > 0 && (
+                        <div className="space-y-2">
+                            <Label>Типы сделки</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Ничего не отмечено — поле применимо к любой сделке.
+                                Отметки в «обязательно» требуют его при этих сделках.
+                            </p>
+                            <div className="divide-y rounded-md border">
+                                {dealTypes.map((o) => (
+                                    <div
+                                        key={o.value}
+                                        className="flex items-center gap-3 px-2 py-1.5"
+                                    >
+                                        <Checkbox
+                                            checked={deals.includes(o.value)}
+                                            onCheckedChange={() =>
+                                                toggle(deals, setDeals, o.value)
+                                            }
+                                        />
+                                        <span className="flex-1 text-sm">
+                                            {pickLabel(o.label, o.value)}
+                                        </span>
+                                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                            <Checkbox
+                                                checked={requiredDeals.includes(o.value)}
+                                                onCheckedChange={() =>
+                                                    toggle(
+                                                        requiredDeals,
+                                                        setRequiredDeals,
+                                                        o.value,
+                                                    )
+                                                }
+                                            />
+                                            обязательно
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                 </div>
 

@@ -171,7 +171,7 @@ export function OwnerClient({ id }: { id: number }) {
         async (changes: Record<string, unknown>) => {
             if (!listing) return
             const merged = { ...listing.attributes, ...changes }
-            // значения полей, скрытых visible_when после правки, вычищаем
+            // значения полей, скрытых depends_on после правки, вычищаем
             for (const a of attrs) {
                 if (a.key in merged && !isAttrVisible(a, merged)) delete merged[a.key]
             }
@@ -235,7 +235,7 @@ export function OwnerClient({ id }: { id: number }) {
         : null
     const attrValue = (key: string) => l.attributes?.[key]
 
-    // строки редактируемых атрибутов (offer): каталог, visible_when, без
+    // строки редактируемых атрибутов (offer): каталог, depends_on, без
     // make/model/year — у них свои строки с каскадом
     const paramAttrs = attrs.filter(
         (a) =>
@@ -494,7 +494,7 @@ export function OwnerClient({ id }: { id: number }) {
                 initialWhatsapp={contact?.whatsapp ?? false}
                 onSave={async (phone, whatsapp) => {
                     await patch({ phone, whatsapp })
-                    setContact({ ...(contact ?? { name: null, telegram: null }), phone, whatsapp })
+                    setContact({ ...(contact ?? { name: null }), phone, whatsapp })
                 }}
             />
 

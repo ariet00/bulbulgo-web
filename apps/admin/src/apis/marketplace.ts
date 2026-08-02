@@ -35,9 +35,35 @@ export const LISTING_STATUSES = [
 
 // ── categories ──
 export interface McGroupDef {
+    id?: number
     key: string
     label: LabelMap
     sort_order: number
+}
+
+/** Группа полей формы — строка marketplace.attribute_groups. */
+export interface McGroup {
+    id: number
+    category_id: number
+    category_slug?: string | null
+    key: string
+    label: LabelMap
+    sort_order: number
+    is_active: boolean
+}
+
+export interface McGroupCreate {
+    category_id: number
+    key: string
+    label: LabelMap
+    sort_order?: number
+}
+
+export interface McGroupUpdate {
+    key?: string
+    label?: LabelMap
+    sort_order?: number
+    is_active?: boolean
 }
 
 export interface McCategoryNode {
@@ -59,7 +85,6 @@ export interface McCategoryCreate {
     parent_id?: number | null
     icon?: string | null
     sort_order?: number
-    attribute_groups?: McGroupDef[]
 }
 
 export interface McCategoryUpdate {
@@ -69,7 +94,6 @@ export interface McCategoryUpdate {
     icon?: string | null
     sort_order?: number
     is_active?: boolean
-    attribute_groups?: McGroupDef[]
 }
 
 // ── attributes ──
@@ -117,6 +141,11 @@ export interface McAttributeUpdate {
 }
 
 // ── bindings ──
+export interface McDependsOn {
+    key: string
+    values: string[]
+}
+
 export interface McEffectiveAttribute {
     attribute_id: number
     key: string
@@ -130,6 +159,9 @@ export interface McEffectiveAttribute {
     role?: string | null
     group?: string | null
     group_label?: LabelMap
+    deal_types?: string[]
+    required_deal_types?: string[]
+    depends_on?: McDependsOn | null
     options: McAttributeOption[]
 }
 
@@ -142,6 +174,11 @@ export interface McBinding {
     applies_to: string
     sort_order: number
     is_active: boolean
+    /** типы сделки, при которых поле показывается / обязательно (пусто = любые) */
+    deal_types?: string[]
+    required_deal_types?: string[]
+    depends_on?: McDependsOn | null
+    group_id?: number | null
     group?: string | null
 }
 
@@ -152,7 +189,11 @@ export interface McBindingCreate {
     is_filterable?: boolean
     applies_to?: string
     sort_order?: number
-    group?: string | null
+    deal_types?: string[]
+    required_deal_types?: string[]
+    depends_on?: McDependsOn | null
+    /** 0 снимает группу */
+    group_id?: number
 }
 
 export interface McBindingUpdate {
@@ -161,7 +202,10 @@ export interface McBindingUpdate {
     applies_to?: string
     sort_order?: number
     is_active?: boolean
-    group?: string | null
+    deal_types?: string[]
+    required_deal_types?: string[]
+    depends_on?: McDependsOn | null
+    group_id?: number
 }
 
 // ── listings ──
@@ -216,6 +260,14 @@ export const marketplaceAdminApi = {
         req.get<McEffectiveAttribute[]>(`${base}/categories/${id}/attributes`),
     getCategoryBindings: (id: number) =>
         req.get<McBinding[]>(`${base}/categories/${id}/bindings`),
+
+    // attribute groups
+    getCategoryGroups: (id: number) =>
+        req.get<McGroup[]>(`${base}/categories/${id}/groups`),
+    createGroup: (body: McGroupCreate) => req.post<McGroup>(`${base}/groups`, body),
+    updateGroup: (id: number, body: McGroupUpdate) =>
+        req.patch<McGroup>(`${base}/groups/${id}`, body),
+    deleteGroup: (id: number) => req.delete<{ success: boolean }>(`${base}/groups/${id}`),
 
     // attributes
     getAttributes: (includeInactive = true) =>
