@@ -252,23 +252,23 @@ export function modelYearRange(
     return y && !Array.isArray(y) ? y : null
 }
 
-/** Проверка условной видимости (visible_when из каталога) по текущим значениям
- * формы — у электромобиля не спрашиваем объём двигателя и ГБО. */
+/** Применимо ли поле (depends_on из каталога) по текущим значениям формы —
+ * у электромобиля не спрашиваем объём двигателя и ГБО. Пока родитель не
+ * выбран, зависимое поле не показываем: набор значений закрытый. */
 export function isAttrVisible(
     a: EffectiveAttribute,
     values: Record<string, unknown>,
 ): boolean {
-    const cond = a.visible_when
+    const cond = a.depends_on
     if (!cond) return true
     const v = values[cond.key]
-    if (v === undefined || v === null || v === '') return true // ещё не выбрано
-    if (cond.in) return cond.in.includes(String(v))
-    if (cond.not_in) return !cond.not_in.includes(String(v))
-    return true
+    if (v === undefined || v === null || v === '') return false
+    const current = Array.isArray(v) ? v.map(String) : [String(v)]
+    return current.some((x) => cond.values.includes(x))
 }
 
 /** Атрибуты стороны offer для шага «Параметры» — обязательные сверху;
- * зависимые (visible_when) отфильтровываются по текущим значениям. */
+ * зависимые (depends_on) отфильтровываются по текущим значениям. */
 export function useParamAttrs(
     attrs: EffectiveAttribute[],
     values: Record<string, unknown> = {},
