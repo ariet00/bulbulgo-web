@@ -19,19 +19,30 @@ import {
 import { Plus, Trash2 } from 'lucide-react'
 import type { LabelMap, McAttribute, McAttributeOption } from '@/apis/marketplace'
 import { ATTRIBUTE_TYPES } from '@/apis/marketplace'
+import { useMpCategories } from '@/hooks/queries/marketplace'
 import { useMpCreateAttribute, useMpUpdateAttribute } from '@/hooks/mutations/marketplace'
-import { LabelInputs } from './shared'
+import { flattenTree, LabelInputs, pickLabel } from './shared'
 
 type Props = {
     open: boolean
     onOpenChange: (v: boolean) => void
     attribute?: McAttribute | null
+    /** предзаполненный владелец при создании из раздела вертикали */
+    defaultCategoryId?: number | null
 }
 
 const ENUM_TYPES = ['enum', 'multi_enum']
 
-export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
+export function AttributeDialog({
+    open,
+    onOpenChange,
+    attribute,
+    defaultCategoryId,
+}: Props) {
     const isEdit = !!attribute
+    const { data: categories } = useMpCategories(true)
+    const categoryOptions = flattenTree(categories)
+    const [categoryId, setCategoryId] = useState<number | null>(null)
     const [key, setKey] = useState('')
     const [type, setType] = useState<string>('string')
     const [label, setLabel] = useState<LabelMap>({})
@@ -46,13 +57,14 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
 
     useEffect(() => {
         if (!open) return
+        setCategoryId(attribute?.category_id ?? defaultCategoryId ?? null)
         setKey(attribute?.key ?? '')
         setType(attribute?.type ?? 'string')
         setLabel(attribute?.label ?? {})
         setUnit(attribute?.unit ?? {})
         setIsSystem(attribute?.role === 'system')
         setOptions(attribute?.options?.map((o) => ({ ...o })) ?? [])
-    }, [open, attribute])
+    }, [open, attribute, defaultCategoryId])
 
     const addOption = () =>
         setOptions((prev) => [...prev, { value: '', label: {}, sort_order: prev.length, is_active: true }])
@@ -61,7 +73,7 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
     const removeOption = (i: number) => setOptions((prev) => prev.filter((_, idx) => idx !== i))
 
     const submit = () => {
-        if (!key.trim()) return
+        if (!key.trim() || categoryId == null) return
         const cleanOptions = isEnum
             ? options.filter((o) => o.value.trim()).map((o, i) => ({ ...o, sort_order: i }))
             : []
@@ -71,13 +83,29 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
             update.mutate(
                 {
                     id: attribute!.id,
-                    body: { key, type: type as any, label, unit: unitVal, role, options: cleanOptions },
+                    body: {
+                        category_id: categoryId,
+                        key,
+                        type: type as any,
+                        label,
+                        unit: unitVal,
+                        role,
+                        options: cleanOptions,
+                    },
                 },
                 { onSuccess: () => onOpenChange(false) },
             )
         } else {
             create.mutate(
-                { key, type: type as any, label, unit: unitVal, role, options: cleanOptions },
+                {
+                    category_id: categoryId,
+                    key,
+                    type: type as any,
+                    label,
+                    unit: unitVal,
+                    role,
+                    options: cleanOptions,
+                },
                 { onSuccess: () => onOpenChange(false) },
             )
         }
@@ -91,6 +119,31 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
                 </DialogHeader>
 
                 <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label>Раздел-владелец</Label>
+                        <Select
+                            value={categoryId != null ? String(categoryId) : ''}
+                            onValueChange={(v) => setCategoryId(Number(v))}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Выберите раздел" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categoryOptions.map(({ node, depth }) => (
+                                    <SelectItem key={node.id} value={String(node.id)}>
+                                        {'\u00A0'.repeat(depth * 2)}
+                                        {pickLabel(node.label, node.slug)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                            Обычно корень вертикали. Ключ уникален внутри владельца:
+                            одноимённый атрибут на подкатегории перекроет родительский
+                            для её ветки (так «Участки» получают свой набор сделок).
+                        </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label>Ключ</Label>
@@ -184,7 +237,7 @@ export function AttributeDialog({ open, onOpenChange, attribute }: Props) {
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Отмена
                     </Button>
-                    <Button onClick={submit} disabled={pending || !key.trim()}>
+                    <Button onClick={submit} disabled={pending || !key.trim() || categoryId == null}>
                         {isEdit ? 'Сохранить' : 'Создать'}
                     </Button>
                 </DialogFooter>

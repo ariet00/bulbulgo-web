@@ -260,9 +260,9 @@ export default function MarketplaceCategoriesPage() {
                                                         <Badge variant="outline" className="text-[10px]">
                                                             {b.applies_to}
                                                         </Badge>
-                                                        {b.allowed_options && b.allowed_options.length > 0 && (
+                                                        {a && a.category_slug !== selected?.slug && (
                                                             <span className="text-[10px] text-muted-foreground">
-                                                                [{b.allowed_options.join(', ')}]
+                                                                из «{a.category_slug}»
                                                             </span>
                                                         )}
                                                         <div className="ml-auto flex items-center gap-0.5">
@@ -330,6 +330,7 @@ export default function MarketplaceCategoriesPage() {
                     binding={bindDialog.binding}
                     attributes={attributes ?? []}
                     groups={bindingGroups}
+                    ownerPaths={selected ? selected.path.split('.') : undefined}
                 />
             )}
         </div>

@@ -86,6 +86,9 @@ export interface McAttribute {
     key: string
     type: AttributeType
     is_active: boolean
+    /** категория-владелец (обычно корень вертикали); key уникален внутри неё */
+    category_id: number
+    category_slug?: string | null
     label: LabelMap
     unit?: LabelMap | null
     role?: string | null
@@ -93,6 +96,7 @@ export interface McAttribute {
 }
 
 export interface McAttributeCreate {
+    category_id: number
     key: string
     type: AttributeType
     label: LabelMap
@@ -102,6 +106,7 @@ export interface McAttributeCreate {
 }
 
 export interface McAttributeUpdate {
+    category_id?: number
     key?: string
     type?: AttributeType
     label?: LabelMap
@@ -137,7 +142,6 @@ export interface McBinding {
     applies_to: string
     sort_order: number
     is_active: boolean
-    allowed_options?: string[] | null
     group?: string | null
 }
 
@@ -148,7 +152,6 @@ export interface McBindingCreate {
     is_filterable?: boolean
     applies_to?: string
     sort_order?: number
-    allowed_options?: string[] | null
     group?: string | null
 }
 
@@ -158,7 +161,6 @@ export interface McBindingUpdate {
     applies_to?: string
     sort_order?: number
     is_active?: boolean
-    allowed_options?: string[] | null
     group?: string | null
 }
 

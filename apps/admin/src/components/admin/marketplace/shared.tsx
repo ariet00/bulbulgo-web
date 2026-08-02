@@ -1,7 +1,7 @@
 'use client'
 
 import { Input, Label } from '@doska/ui'
-import type { LabelMap } from '@/apis/marketplace'
+import type { LabelMap, McCategoryNode } from '@/apis/marketplace'
 
 export const LANGS: { code: string; name: string }[] = [
     { code: 'ru', name: 'RU' },
@@ -13,6 +13,22 @@ export const LANGS: { code: string; name: string }[] = [
 export function pickLabel(map?: LabelMap | null, fallback = ''): string {
     if (!map) return fallback
     return map.ru || map.ky || map.en || Object.values(map)[0] || fallback
+}
+
+/** Дерево категорий в плоский список (с уровнем вложенности) — для селектов. */
+export function flattenTree(
+    nodes: McCategoryNode[] | undefined,
+    depth = 0,
+): { node: McCategoryNode; depth: number }[] {
+    return (nodes ?? []).flatMap((node) => [
+        { node, depth },
+        ...flattenTree(node.children, depth + 1),
+    ])
+}
+
+/** Пути от корня до узла включительно: 'real_estate.land' → [real_estate, land]. */
+export function ancestorSlugs(path: string): string[] {
+    return path.split('.')
 }
 
 /** Three small inputs (RU/KY/EN) editing a LabelMap. */
