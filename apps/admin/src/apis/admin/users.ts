@@ -7,7 +7,9 @@ export interface AdminDeviceToken {
     device_type: string
     device_info: string | null
     app_version: string | null
-    token: string
+    // null — устройство есть, а пуш-токена нет (пуш запрещён / нет Play Services)
+    token: string | null
+    push_permission?: string | null
     // active | logged_out | banned
     status: string
     rooted?: boolean | null

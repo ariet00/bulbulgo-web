@@ -219,8 +219,8 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                         </div>
                                                     )}
                                                     <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                                                        <span className="truncate font-mono" title={d.token}>
-                                                            {d.token.slice(0, 16)}…
+                                                        <span className="truncate font-mono" title={d.token ?? undefined}>
+                                                            {d.token ? `${d.token.slice(0, 16)}…` : 'без токена'}
                                                         </span>
                                                         <span className="whitespace-nowrap">
                                                             {new Date(d.created_at).toLocaleDateString()}
@@ -265,8 +265,8 @@ export function DevicesTab({ uid }: { uid: number }) {
                                                             <TableCell className="text-xs">
                                                                 {d.device_info ?? '—'}
                                                             </TableCell>
-                                                            <TableCell className="font-mono text-xs text-muted-foreground truncate" title={d.token}>
-                                                                {d.token.slice(0, 12)}…
+                                                            <TableCell className="font-mono text-xs text-muted-foreground truncate" title={d.token ?? undefined}>
+                                                                {d.token ? `${d.token.slice(0, 12)}…` : '—'}
                                                             </TableCell>
                                                             <TableCell className="text-xs whitespace-nowrap">
                                                                 {new Date(d.created_at).toLocaleString()}
