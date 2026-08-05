@@ -1179,8 +1179,28 @@ export default function AdminTripDetailPage() {
                             </div>
                             <Separator />
                             <div className="divide-y divide-border">
-                                <InfoRow icon={Phone} label="Телефон">
-                                    {driver.phone || trip.phone || '—'}
+                                <InfoRow icon={Phone} label="Номер в поездке">
+                                    {trip.phone ? (
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {trip.phone}
+                                            {driver.phone &&
+                                                driver.phone !== trip.phone && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-[10px] font-normal"
+                                                    >
+                                                        отличается от профиля
+                                                    </Badge>
+                                                )}
+                                        </span>
+                                    ) : (
+                                        <span className="text-muted-foreground">
+                                            не указан (берётся из профиля)
+                                        </span>
+                                    )}
+                                </InfoRow>
+                                <InfoRow icon={Phone} label="Телефон профиля">
+                                    {driver.phone || '—'}
                                 </InfoRow>
                                 <InfoRow icon={Mail} label="Email">
                                     {driver.email || '—'}
@@ -1305,6 +1325,20 @@ export default function AdminTripDetailPage() {
                     <div className="space-y-3 text-sm">
                         {trip.author && (
                             <SourceAuthorControl tripId={id} author={trip.author} />
+                        )}
+                        {trip.phone && (
+                            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3">
+                                <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span className="text-xs uppercase text-muted-foreground">
+                                    Номер в поездке
+                                </span>
+                                <a
+                                    href={`tel:${trip.phone}`}
+                                    className="font-medium text-foreground hover:underline"
+                                >
+                                    {trip.phone}
+                                </a>
+                            </div>
                         )}
                         <div className="flex flex-wrap items-center gap-2">
                             {trip.source.channel &&
