@@ -28,6 +28,8 @@ const DEFAULT_ROLE: AdminTripCreateRoleRules = {
     default_duration_hours: 4,
     price_required: false,
     time_required: false,
+    schedule_enabled: true,
+    waypoints_enabled: true,
 }
 
 const DEFAULT_FORM: AdminTripCreateRulesSettings = {
@@ -181,6 +183,42 @@ export function TripCreateRulesSettingsForm() {
                     <Switch
                         checked={rules.time_required}
                         onCheckedChange={(v) => set('time_required', v)}
+                        disabled={isLoading}
+                    />
+                </div>
+
+                <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                    <div className="space-y-0.5">
+                        <Label className="cursor-pointer">
+                            Кнопка «Составить расписание»
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                            schedule_enabled — публикация одним объявлением на
+                            несколько дат. Выключено — кнопка скрыта в пикере
+                            даты, роль публикует объявление одной датой.
+                        </p>
+                    </div>
+                    <Switch
+                        checked={rules.schedule_enabled}
+                        onCheckedChange={(v) => set('schedule_enabled', v)}
+                        disabled={isLoading}
+                    />
+                </div>
+
+                <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                    <div className="space-y-0.5">
+                        <Label className="cursor-pointer">
+                            Промежуточные точки
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                            waypoints_enabled — до 5 точек между «Откуда» и
+                            «Куда». Выключено — блок скрыт, маршрут только
+                            откуда → куда.
+                        </p>
+                    </div>
+                    <Switch
+                        checked={rules.waypoints_enabled}
+                        onCheckedChange={(v) => set('waypoints_enabled', v)}
                         disabled={isLoading}
                     />
                 </div>

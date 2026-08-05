@@ -151,6 +151,10 @@ export interface AdminTripCreateRoleRules {
     default_duration_hours: number
     price_required: boolean
     time_required: boolean
+    /** Показывать кнопку «Составить расписание» в пикере даты. */
+    schedule_enabled: boolean
+    /** Показывать промежуточные точки в шаге маршрута. */
+    waypoints_enabled: boolean
 }
 
 export interface AdminFreightCreateRules {
