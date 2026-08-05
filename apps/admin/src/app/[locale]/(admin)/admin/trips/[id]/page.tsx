@@ -19,6 +19,7 @@ import {
     useAdminSetTripServiceUntil,
 } from '@/hooks/mutations/admin'
 import type { TripViewersResponse } from '@/apis/admin'
+import { TripComplaintsCard } from './TripComplaintsCard'
 import {
     Card,
     CardContent,
@@ -1367,6 +1368,9 @@ export default function AdminTripDetailPage() {
 
             {/* ── Manual bump history ── */}
             <TripBumpsCard tripId={id} />
+
+            {/* ── Complaints on this trip (read-only) ── */}
+            <TripComplaintsCard tripId={id} />
 
             {/* ── Delete confirm ── */}
             <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
