@@ -175,12 +175,13 @@ export function BindingDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg">
-                <DialogHeader>
+            <DialogContent className="flex max-h-[85dvh] max-w-lg flex-col overflow-y-hidden">
+                <DialogHeader className="shrink-0">
                     <DialogTitle>{isEdit ? 'Привязка атрибута' : 'Привязать атрибут'}</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4">
+                {/* тело скроллится, шапка и кнопки закреплены */}
+                <div className="-mx-6 flex-1 space-y-4 overflow-y-auto px-6 py-0.5">
                     <div className="space-y-1.5">
                         <Label>Атрибут</Label>
                         {isEdit ? (
@@ -366,7 +367,7 @@ export function BindingDialog({
 
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="shrink-0">
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Отмена
                     </Button>
