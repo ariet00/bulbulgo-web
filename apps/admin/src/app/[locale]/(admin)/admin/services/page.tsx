@@ -18,28 +18,31 @@ import {
 } from '@doska/ui'
 import { Link, useRouter } from '@doska/i18n'
 import { Check, Globe, Plus, Smartphone, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import type { AdminService } from '@/apis/admin'
 import {
     useAdminDeleteService,
     useAdminUpdateService,
 } from '@/hooks/mutations/admin'
 import { useAdminServices } from '@/hooks/queries/admin'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 export default function AdminServicesPage() {
     const { data, isLoading } = useAdminServices()
     const updateMutation = useAdminUpdateService()
     const deleteMutation = useAdminDeleteService()
     const router = useRouter()
+    const confirm = useConfirm()
 
-    const handleDelete = (e: MouseEvent, s: AdminService) => {
+    const handleDelete = async (e: MouseEvent, s: AdminService) => {
         e.stopPropagation()
         if (s.type === 'native') {
-            alert(
+            toast.info(
                 'Нативный сервис зашит в приложение — вместо удаления выключите его.',
             )
             return
         }
-        if (confirm(`Удалить сервис «${s.label?.ru ?? s.slug}»?`)) {
+        if (await confirm(`Удалить сервис «${s.label?.ru ?? s.slug}»?`)) {
             deleteMutation.mutate(s.id)
         }
     }

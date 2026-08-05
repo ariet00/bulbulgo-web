@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions, getMe } from '@doska/shared'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { AdminHeader } from '@/components/admin/AdminHeader'
+import { ConfirmProvider } from '@/components/admin/ConfirmProvider'
 
 export default async function AdminLayout({
     children,
@@ -39,7 +40,7 @@ export default async function AdminLayout({
             <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
                 <AdminHeader />
                 <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-x-auto">
-                    {children}
+                    <ConfirmProvider>{children}</ConfirmProvider>
                 </main>
             </div>
         </div>

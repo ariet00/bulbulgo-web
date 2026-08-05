@@ -25,6 +25,7 @@ import {
     useRunAnalyticsPurge,
     useSetAnalyticsCleanupConfig,
 } from '@/hooks/mutations/admin'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 function EventTypePicker({
     available,
@@ -75,6 +76,7 @@ export default function AnalyticsCleanupPage() {
     const run = useRunAnalyticsCleanup()
     const purgePreview = useAnalyticsPurgePreview()
     const purge = useRunAnalyticsPurge()
+    const confirm = useConfirm()
 
     const [enabled, setEnabled] = useState(false)
     const [retentionDays, setRetentionDays] = useState('90')
@@ -158,9 +160,9 @@ export default function AnalyticsCleanupPage() {
         if (!purgeReady) return
         purgePreview.mutate({ event_types: [...purgeSelected], before: purgeBefore })
     }
-    const onPurge = () => {
+    const onPurge = async () => {
         if (!purgeReady) return
-        const ok = window.confirm(
+        const ok = await confirm(
             `Удалить события ${purgeSelected.size} типов старше ${purgeBefore}? Это действие необратимо.`,
         )
         if (!ok) return

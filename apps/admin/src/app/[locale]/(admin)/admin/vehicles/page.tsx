@@ -27,6 +27,7 @@ import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 const VEHICLE_TYPES = ['passenger', 'cargo']
@@ -66,9 +67,10 @@ export default function AdminVehiclesPage() {
         },
     )
     const deleteVehicleMutation = useAdminDeleteVehicle()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number, model: string) => {
-        if (confirm(`Are you sure you want to delete vehicle "${model}"?`)) {
+    const handleDelete = async (id: number, model: string) => {
+        if (await confirm(`Are you sure you want to delete vehicle "${model}"?`)) {
             deleteVehicleMutation.mutate(id)
         }
     }

@@ -5,6 +5,7 @@
 import { useAdminFuelReports } from '@/hooks/queries/admin'
 import { useAdminDeleteFuelReport } from '@/hooks/mutations/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 import {
     Table,
     TableBody,
@@ -60,9 +61,10 @@ export default function FuelReportsPage() {
         },
     )
     const deleteReport = useAdminDeleteFuelReport()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number) => {
-        if (confirm('Удалить метку без возможности восстановления?')) {
+    const handleDelete = async (id: number) => {
+        if (await confirm('Удалить метку без возможности восстановления?')) {
             deleteReport.mutate(id)
         }
     }

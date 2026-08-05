@@ -33,6 +33,7 @@ import {
     saveTemplates,
     type NotificationTemplate,
 } from '@/lib/notification-templates'
+import { useConfirm, usePrompt } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -70,6 +71,8 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
     const sendMutation = useAdminSendNotification()
     const scheduleMutation = useAdminScheduleNotification()
     const pending = sendMutation.isPending || scheduleMutation.isPending
+    const confirm = useConfirm()
+    const prompt = usePrompt()
 
     const clickAction =
         clickActionPreset === ALL
@@ -110,8 +113,14 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
         setIsDataOnly(!!tpl.isDataOnly)
     }
 
-    const saveTemplate = () => {
-        const name = prompt('Название шаблона:')
+    const saveTemplate = async () => {
+        const name = await prompt({
+            title: 'Сохранить шаблон',
+            label: 'Название шаблона',
+            placeholder: 'Например: Приветствие',
+            required: true,
+            confirmText: 'Сохранить',
+        })
         if (!name) return
         const tpl: NotificationTemplate = {
             name,
@@ -130,8 +139,8 @@ export function UserSendNotificationForm({ userId }: { userId: number }) {
         saveTemplates(next)
     }
 
-    const deleteTemplate = (name: string) => {
-        if (!confirm(`Удалить шаблон «${name}»?`)) return
+    const deleteTemplate = async (name: string) => {
+        if (!(await confirm(`Удалить шаблон «${name}»?`))) return
         const next = templates.filter((t) => t.name !== name)
         setTemplates(next)
         saveTemplates(next)

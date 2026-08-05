@@ -28,6 +28,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import type { AdminBannedIdentifier, AdminBannedIdentifierGroup } from '@/apis/admin/users'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 import { useAdminBannedIdentifiers } from '@/hooks/queries/admin'
 import { useAdminBanIdentifier, useAdminUnbanIdentifier } from '@/hooks/mutations/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
@@ -98,6 +99,7 @@ export default function BannedIdentifiersPage() {
 
     const banMutation = useAdminBanIdentifier()
     const unbanMutation = useAdminUnbanIdentifier()
+    const confirm = useConfirm()
 
     // Форма ручного бана
     const [newType, setNewType] = useState('phone')
@@ -117,8 +119,14 @@ export default function BannedIdentifiersPage() {
         )
     }
 
-    const handleUnban = (row: AdminBannedIdentifier) => {
-        if (confirm(`Разбанить ${row.type === 'email' ? 'почту' : 'номер'} ${row.value}?`)) {
+    const handleUnban = async (row: AdminBannedIdentifier) => {
+        if (
+            await confirm({
+                description: `Разбанить ${row.type === 'email' ? 'почту' : 'номер'} ${row.value}?`,
+                tone: 'default',
+                confirmText: 'Разбанить',
+            })
+        ) {
             unbanMutation.mutate(row.id)
         }
     }

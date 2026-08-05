@@ -26,6 +26,7 @@ import { useMpAttributes, useMpCategories } from '@/hooks/queries/marketplace'
 import { useMpDeleteAttribute } from '@/hooks/mutations/marketplace'
 import { AttributeDialog } from '@/components/admin/marketplace/AttributeDialog'
 import { flattenTree, pickLabel } from '@/components/admin/marketplace/shared'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -33,6 +34,7 @@ export default function MarketplaceAttributesPage() {
     const { data: attributes, isLoading } = useMpAttributes(true)
     const { data: categories } = useMpCategories(true)
     const del = useMpDeleteAttribute()
+    const confirm = useConfirm()
     const [dialog, setDialog] = useState<{ open: boolean; attribute?: McAttribute | null }>({
         open: false,
     })
@@ -147,8 +149,8 @@ export default function MarketplaceAttributesPage() {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-7 w-7 text-destructive"
-                                                    onClick={() => {
-                                                        if (confirm(`Скрыть атрибут «${pickLabel(a.label, a.key)}»?`))
+                                                    onClick={async () => {
+                                                        if (await confirm(`Скрыть атрибут «${pickLabel(a.label, a.key)}»?`))
                                                             del.mutate(a.id)
                                                     }}
                                                 >

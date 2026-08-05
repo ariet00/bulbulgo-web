@@ -28,6 +28,7 @@ import { toast } from 'sonner'
 
 import { CeleryTaskForm } from '@/components/admin/celery/CeleryTaskForm'
 import { formatDateTime } from '@/components/admin/celery/shared'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 function formatSchedule(t: CeleryPeriodicTask): string {
     if (t.crontab) {
@@ -48,6 +49,7 @@ export function ScheduleTab() {
 
     const [open, setOpen] = useState(false)
     const [editing, setEditing] = useState<CeleryPeriodicTask | null>(null)
+    const confirm = useConfirm()
 
     const toggleEnabled = async (t: CeleryPeriodicTask, enabled: boolean) => {
         try {
@@ -58,7 +60,7 @@ export function ScheduleTab() {
     }
 
     const onDelete = async (t: CeleryPeriodicTask) => {
-        if (!confirm(`Delete task "${t.name}"?`)) return
+        if (!(await confirm(`Delete task "${t.name}"?`))) return
         try {
             await remove.mutateAsync(t.id)
         } catch (err: any) {

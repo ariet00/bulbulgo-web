@@ -5,6 +5,7 @@ import { useDebounce } from '@doska/shared'
 import { useEffect, useState } from 'react'
 import { useAdminUsers } from '@/hooks/queries/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 import {
     Table,
     TableBody,
@@ -105,9 +106,10 @@ export default function UsersPage() {
         },
     )
     const banUserMutation = useAdminBanUser()
+    const confirm = useConfirm()
 
-    const handleBan = (id: number, ban: boolean) => {
-        if (confirm(`Are you sure you want to ${ban ? 'ban' : 'unban'} this user?`)) {
+    const handleBan = async (id: number, ban: boolean) => {
+        if (await confirm(`Are you sure you want to ${ban ? 'ban' : 'unban'} this user?`)) {
             banUserMutation.mutate({ id, status: ban ? 'banned' : 'active' })
         }
     }

@@ -21,6 +21,7 @@ import { ArrowLeft, Ban, CheckCircle2 } from 'lucide-react'
 import { useAdminDevice } from '@/hooks/queries/admin'
 import { useAdminBanDevice } from '@/hooks/mutations/admin'
 import type { AdminDeviceSessionItem } from '@/apis/admin'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const STATUS_LABELS: Record<string, string> = {
     active: 'Активно',
@@ -50,6 +51,7 @@ export default function DeviceDetailPage() {
 
     const { data: device, isLoading } = useAdminDevice(id)
     const banDevice = useAdminBanDevice()
+    const confirm = useConfirm()
 
     if (isLoading) return <div className="p-4">Загрузка...</div>
     if (!device)
@@ -78,9 +80,9 @@ export default function DeviceDetailPage() {
                     variant={device.status === 'banned' ? 'default' : 'destructive'}
                     className="gap-2"
                     disabled={banDevice.isPending}
-                    onClick={() => {
+                    onClick={async () => {
                         const ban = device.status !== 'banned'
-                        if (confirm(`${ban ? 'Забанить' : 'Разбанить'} это устройство?`)) {
+                        if (await confirm(`${ban ? 'Забанить' : 'Разбанить'} это устройство?`)) {
                             banDevice.mutate({ id: device.id, status: ban ? 'banned' : 'active' })
                         }
                     }}

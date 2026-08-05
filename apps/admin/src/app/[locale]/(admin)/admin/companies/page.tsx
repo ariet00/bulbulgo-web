@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react'
 
 import { CompanyTypeSelect } from '@/components/admin/selectors/StaticSelects'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const FILTER_DEFAULTS = {
     page: 1,
@@ -49,9 +50,10 @@ export default function AdminCompaniesPage() {
         values.type || undefined,
     )
     const deleteCompanyMutation = useAdminDeleteCompany()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number, name: string) => {
-        if (confirm(`Удалить компанию "${name}"?`)) {
+    const handleDelete = async (id: number, name: string) => {
+        if (await confirm(`Удалить компанию "${name}"?`)) {
             deleteCompanyMutation.mutate(id)
         }
     }

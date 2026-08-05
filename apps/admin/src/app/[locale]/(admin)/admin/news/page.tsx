@@ -30,6 +30,7 @@ import type { AdminNews } from '@/apis/admin'
 import { useAdminNewsList } from '@/hooks/queries/admin'
 import { useAdminDeleteNews } from '@/hooks/mutations/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -54,9 +55,10 @@ export default function AdminNewsPage() {
         status: values.status === ALL ? undefined : values.status,
     })
     const deleteNews = useAdminDeleteNews()
+    const confirm = useConfirm()
 
-    const handleDelete = (n: AdminNews) => {
-        if (confirm(`Удалить новость «${n.title}»?`)) {
+    const handleDelete = async (n: AdminNews) => {
+        if (await confirm(`Удалить новость «${n.title}»?`)) {
             deleteNews.mutate(n.id)
         }
     }

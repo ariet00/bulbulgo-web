@@ -31,6 +31,7 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import type { AdminAd } from '@/apis/admin'
 import { PLACEMENTS } from '@/components/admin/ads/AdForm'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -63,10 +64,11 @@ export default function AdminAdsPage() {
     const deleteMutation = useAdminDeleteAd()
     const updateMutation = useAdminUpdateAd()
     const router = useRouter()
+    const confirm = useConfirm()
 
-    const handleDelete = (e: MouseEvent, id: number) => {
+    const handleDelete = async (e: MouseEvent, id: number) => {
         e.stopPropagation()
-        if (confirm(`Удалить рекламу #${id}?`)) {
+        if (await confirm(`Удалить рекламу #${id}?`)) {
             deleteMutation.mutate(id)
         }
     }

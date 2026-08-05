@@ -26,6 +26,7 @@ import {
 import { Link } from '@doska/i18n'
 import { ArrowLeft, CalendarClock, X } from 'lucide-react'
 import { useState } from 'react'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -67,9 +68,10 @@ export default function AdminScheduledNotificationsPage() {
     })
 
     const cancelMutation = useAdminCancelScheduledNotification()
+    const confirm = useConfirm()
 
-    const onCancel = (id: number) => {
-        if (confirm(`Отменить запланированное #${id}?`)) {
+    const onCancel = async (id: number) => {
+        if (await confirm(`Отменить запланированное #${id}?`)) {
             cancelMutation.mutate(id)
         }
     }

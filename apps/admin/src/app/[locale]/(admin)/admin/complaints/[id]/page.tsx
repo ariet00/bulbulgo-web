@@ -25,6 +25,7 @@ import {
     useAdminSetComplaintStatus,
 } from '@/hooks/mutations/admin'
 import { StatusBadge, targetHref, targetTypeLabel } from '../helpers'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
@@ -43,6 +44,7 @@ export default function ComplaintDetailPage() {
     const { data: c, isLoading } = useAdminComplaint(id)
     const setStatus = useAdminSetComplaintStatus()
     const deleteComplaint = useAdminDeleteComplaint()
+    const confirm = useConfirm()
 
     if (isLoading) return <div className="p-6">Загрузка...</div>
     if (!c) return <div className="p-6">Жалоба не найдена</div>
@@ -53,8 +55,8 @@ export default function ComplaintDetailPage() {
         c.reporter?.name ||
         (c.reporter?.username ? `@${c.reporter.username}` : c.reporter_id ? `#${c.reporter_id}` : 'Аноним')
 
-    const handleDelete = () => {
-        if (confirm('Удалить жалобу без возможности восстановления?')) {
+    const handleDelete = async () => {
+        if (await confirm('Удалить жалобу без возможности восстановления?')) {
             deleteComplaint.mutate(id, { onSuccess: () => router.push('/admin/complaints') })
         }
     }

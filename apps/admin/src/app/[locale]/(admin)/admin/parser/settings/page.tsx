@@ -25,6 +25,7 @@ import {
 } from '@doska/ui'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 function dataPreview(value: any): string {
     if (value === null || value === undefined) return '—'
@@ -58,9 +59,10 @@ export default function ParserSettingsPage() {
         dq || undefined,
     )
     const remove = useDeleteParserSetting()
+    const confirm = useConfirm()
 
-    const handleDelete = (row: ParserSetting) => {
-        if (confirm(`Удалить ${row.group}/${row.key}?`)) {
+    const handleDelete = async (row: ParserSetting) => {
+        if (await confirm(`Удалить ${row.group}/${row.key}?`)) {
             remove.mutate(row.id)
         }
     }

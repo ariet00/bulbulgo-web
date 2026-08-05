@@ -37,6 +37,7 @@ import { Link, useRouter } from '@doska/i18n'
 import { ArrowLeft, CalendarClock, Save, Send, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
+import { useConfirm, usePrompt } from '@/components/admin/ConfirmProvider'
 import {
     BUILT_IN_TEMPLATES,
     loadTemplates,
@@ -66,6 +67,8 @@ const CLICK_ACTION_PRESETS: { value: string; label: string }[] = [
 
 export default function AdminSendNotificationPage() {
     const router = useRouter()
+    const confirm = useConfirm()
+    const prompt = usePrompt()
     const [tab, setTab] = useState<'user' | 'broadcast'>('user')
     const [mode, setMode] = useState<'now' | 'schedule'>('now')
     const [scheduledAt, setScheduledAt] = useState('') // datetime-local value
@@ -204,8 +207,14 @@ export default function AdminSendNotificationPage() {
         setIsDataOnly(!!tpl.isDataOnly)
     }
 
-    const saveTemplate = () => {
-        const name = prompt('Название шаблона:')
+    const saveTemplate = async () => {
+        const name = await prompt({
+            title: 'Сохранить шаблон',
+            label: 'Название шаблона',
+            placeholder: 'Например: Приветствие',
+            required: true,
+            confirmText: 'Сохранить',
+        })
         if (!name) return
         const tpl: Template = {
             name,
@@ -224,8 +233,8 @@ export default function AdminSendNotificationPage() {
         saveTemplates(next)
     }
 
-    const deleteTemplate = (name: string) => {
-        if (!confirm(`Удалить шаблон «${name}»?`)) return
+    const deleteTemplate = async (name: string) => {
+        if (!(await confirm(`Удалить шаблон «${name}»?`))) return
         const next = templates.filter((t) => t.name !== name)
         setTemplates(next)
         saveTemplates(next)
@@ -283,9 +292,9 @@ export default function AdminSendNotificationPage() {
             if (
                 audience &&
                 audience.devices > 0 &&
-                !confirm(
+                !(await confirm(
                     `Отправить ${audience.devices} устройствам (${audience.users} пользователей)?`,
-                )
+                ))
             ) {
                 return
             }

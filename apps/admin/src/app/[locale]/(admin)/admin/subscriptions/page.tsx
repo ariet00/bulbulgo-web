@@ -34,6 +34,7 @@ import { Link } from '@doska/i18n'
 import { format } from 'date-fns'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 import type { AdminTripSubscription } from '@/apis/admin'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 const TRIP_TYPES = ['rideshare', 'taxi', 'shuttle', 'freight', 'delivery']
@@ -91,9 +92,10 @@ export default function AdminSubscriptionsPage() {
 
     const setActive = useAdminSetTripSubscriptionActive()
     const deleteSub = useAdminDeleteTripSubscription()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number) => {
-        if (confirm(`Удалить подписку #${id}?`)) deleteSub.mutate(id)
+    const handleDelete = async (id: number) => {
+        if (await confirm(`Удалить подписку #${id}?`)) deleteSub.mutate(id)
     }
 
     const resetFilters = () => {

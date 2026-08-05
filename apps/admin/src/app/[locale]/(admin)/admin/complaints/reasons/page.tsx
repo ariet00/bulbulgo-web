@@ -35,6 +35,7 @@ import {
     useAdminUpdateComplaintReason,
 } from '@/hooks/mutations/admin'
 import { COMPLAINT_CONTEXTS, contextLabel } from '../helpers'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 interface ReasonFormState {
     text: string
@@ -50,6 +51,7 @@ export default function ComplaintReasonsPage() {
     const updateReason = useAdminUpdateComplaintReason()
     const deleteReason = useAdminDeleteComplaintReason()
     const reorder = useAdminReorderComplaintReasons()
+    const confirm = useConfirm()
 
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editing, setEditing] = useState<AdminComplaintReason | null>(null)
@@ -107,8 +109,8 @@ export default function ComplaintReasonsPage() {
         reorder.mutate(ids)
     }
 
-    const handleDelete = (r: AdminComplaintReason) => {
-        if (confirm(`Удалить тип жалобы «${r.text}»? Существующие жалобы не изменятся.`)) {
+    const handleDelete = async (r: AdminComplaintReason) => {
+        if (await confirm(`Удалить тип жалобы «${r.text}»? Существующие жалобы не изменятся.`)) {
             deleteReason.mutate(r.id)
         }
     }

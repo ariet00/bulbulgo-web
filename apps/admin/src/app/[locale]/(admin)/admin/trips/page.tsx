@@ -28,6 +28,7 @@ import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Z
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 import { format } from 'date-fns'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 import { RegionCombobox } from '@/components/admin/selectors/RegionCombobox'
@@ -207,15 +208,22 @@ export default function AdminTripsPage() {
     )
     const deleteTripMutation = useAdminDeleteTrip()
     const bumpTripMutation = useAdminBumpTrip()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number) => {
-        if (confirm(`Are you sure you want to delete this trip (ID: ${id})?`)) {
+    const handleDelete = async (id: number) => {
+        if (await confirm(`Are you sure you want to delete this trip (ID: ${id})?`)) {
             deleteTripMutation.mutate(id)
         }
     }
 
-    const handleBump = (id: number) => {
-        if (confirm(`Поднять объявление #${id}? Оно станет активным и будет репостнуто в группы.`)) {
+    const handleBump = async (id: number) => {
+        if (
+            await confirm({
+                description: `Поднять объявление #${id}? Оно станет активным и будет репостнуто в группы.`,
+                tone: 'default',
+                confirmText: 'Поднять',
+            })
+        ) {
             bumpTripMutation.mutate(id)
         }
     }

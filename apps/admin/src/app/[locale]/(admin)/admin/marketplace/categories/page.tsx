@@ -35,6 +35,7 @@ import { CategoryDialog } from '@/components/admin/marketplace/CategoryDialog'
 import { BindingDialog } from '@/components/admin/marketplace/BindingDialog'
 import { GroupDialog } from '@/components/admin/marketplace/GroupDialog'
 import { pickLabel } from '@/components/admin/marketplace/shared'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 function flatten(nodes: McCategoryNode[], acc: Map<number, McCategoryNode>) {
     for (const n of nodes) {
@@ -78,6 +79,7 @@ export default function MarketplaceCategoriesPage() {
     const deleteCategory = useMpDeleteCategory()
     const deleteGroup = useMpDeleteGroup()
     const deleteBinding = useMpDeleteBinding()
+    const confirm = useConfirm()
 
     const toggle = (id: number) =>
         setExpanded((prev) => {
@@ -154,9 +156,9 @@ export default function MarketplaceCategoriesPage() {
                                 size="icon"
                                 className="h-6 w-6 text-destructive"
                                 title="Скрыть (soft-delete)"
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                     e.stopPropagation()
-                                    if (confirm(`Скрыть «${pickLabel(node.label, node.slug)}» и всё поддерево?`))
+                                    if (await confirm(`Скрыть «${pickLabel(node.label, node.slug)}» и всё поддерево?`))
                                         deleteCategory.mutate(node.id)
                                 }}
                             >

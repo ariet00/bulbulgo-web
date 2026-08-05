@@ -33,6 +33,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import type { AdminComplaint } from '@/apis/admin'
 import { STATUSES, StatusBadge, TARGET_TYPES, targetHref, targetTypeLabel } from './helpers'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -73,9 +74,10 @@ export default function ComplaintsPage() {
 
     const setStatus = useAdminSetComplaintStatus()
     const deleteComplaint = useAdminDeleteComplaint()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number) => {
-        if (confirm('Удалить жалобу без возможности восстановления?')) {
+    const handleDelete = async (id: number) => {
+        if (await confirm('Удалить жалобу без возможности восстановления?')) {
             deleteComplaint.mutate(id)
         }
     }

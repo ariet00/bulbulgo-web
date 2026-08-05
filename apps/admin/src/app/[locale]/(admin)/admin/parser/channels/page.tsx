@@ -27,6 +27,7 @@ import {
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const FILTER_DEFAULTS = {
     page: 1,
@@ -45,9 +46,10 @@ export default function ParserChannelsPage() {
     const { data, isLoading } = useParserChannels(values.page, values.size, 'parse', values.q || undefined)
     const remove = useDeleteParserChannel()
     const update = useUpdateParserChannel()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number, chatId: string) => {
-        if (confirm(`Удалить канал "${chatId}"?`)) {
+    const handleDelete = async (id: number, chatId: string) => {
+        if (await confirm(`Удалить канал "${chatId}"?`)) {
             remove.mutate(id)
         }
     }
