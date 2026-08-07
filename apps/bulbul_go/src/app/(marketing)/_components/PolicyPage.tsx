@@ -3,7 +3,7 @@ import { FileText } from 'lucide-react'
 function OperatorDetails() {
     const email = 'bakasovariet00@gmail.com'
     return (
-        <div className="bg-gray-50 p-4 rounded-xl space-y-1">
+        <div className="bg-muted p-4 rounded-xl space-y-1">
             <p>
                 <strong>ИП:</strong> Бакасов Ариет Бактыбекович
             </p>
@@ -14,7 +14,7 @@ function OperatorDetails() {
                 <strong>Email:</strong>{' '}
                 <a
                     href={`mailto:${email}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
                 >
                     {email}
                 </a>
@@ -26,15 +26,15 @@ function OperatorDetails() {
 function PrivacyContent() {
     return (
         <div className="space-y-8">
-            <div className="pb-6 border-b border-gray-100">
-                <p className="text-lg font-semibold text-gray-800">BulBul Go</p>
-                <p className="text-sm text-gray-400">
+            <div className="pb-6 border-b border-border">
+                <p className="text-lg font-semibold text-foreground">BulBul Go</p>
+                <p className="text-sm text-muted-foreground">
                     Дата последнего обновления: 09 января 2026 года
                 </p>
             </div>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     1. Введение
                 </h2>
                 <p>
@@ -45,7 +45,7 @@ function PrivacyContent() {
                     защищаем при использовании вами нашего сервиса по организации
                     совместных поездок.
                 </p>
-                <p className="mt-2 text-sm italic border-l-4 border-blue-500 pl-4 py-1 bg-blue-50">
+                <p className="mt-2 text-sm italic border-l-4 border-blue-500 pl-4 py-1 bg-blue-50 dark:bg-blue-950/30">
                     Используя BulBul Go, вы соглашаетесь со сбором и
                     использованием информации в соответствии с настоящей
                     Политикой.
@@ -53,11 +53,11 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     2. Информация, которую мы собираем
                 </h2>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-4">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-4">
                     2.1. Информация при регистрации
                 </h3>
                 <p className="mb-3">
@@ -70,7 +70,7 @@ function PrivacyContent() {
                     <li>Уникальный идентификатор учетной записи</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     2.2. Информация о поездках
                 </h3>
                 <p className="mb-3">
@@ -91,7 +91,7 @@ function PrivacyContent() {
                     </li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     2.3. Техническая информация
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -103,7 +103,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     3. Как мы используем вашу информацию
                 </h2>
                 <p className="mb-3">
@@ -127,7 +127,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     4. Раскрытие информации третьим лицам
                 </h2>
                 <p className="mb-3">Мы можем передавать вашу информацию:</p>
@@ -151,14 +151,14 @@ function PrivacyContent() {
                         продажи или реорганизации компании
                     </li>
                 </ul>
-                <p className="mt-3 text-sm italic border-l-4 border-amber-500 pl-4 py-1 bg-amber-50">
+                <p className="mt-3 text-sm italic border-l-4 border-amber-500 pl-4 py-1 bg-amber-50 dark:bg-amber-950/30">
                     Мы никогда не продаем вашу личную информацию третьим лицам в
                     рекламных целях.
                 </p>
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     5. Хранение и защита данных
                 </h2>
                 <p className="mb-3">
@@ -180,7 +180,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     6. Ваши права
                 </h2>
                 <p className="mb-3">Вы имеете право:</p>
@@ -201,7 +201,7 @@ function PrivacyContent() {
                     Для реализации своих прав свяжитесь с нами по адресу:{' '}
                     <a
                         href="mailto:support@bulbulgo.com"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
                     >
                         support@bulbulgo.com
                     </a>
@@ -209,7 +209,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     7. Файлы cookie и технологии отслеживания
                 </h2>
                 <p>
@@ -222,7 +222,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     8. Дети
                 </h2>
                 <p>
@@ -234,7 +234,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     9. Изменения в Политике конфиденциальности
                 </h2>
                 <p>
@@ -246,7 +246,7 @@ function PrivacyContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     10. Контакты и реквизиты
                 </h2>
                 <OperatorDetails />
@@ -258,20 +258,20 @@ function PrivacyContent() {
 function TermsContent() {
     return (
         <div className="space-y-8">
-            <div className="pb-6 border-b border-gray-100">
-                <p className="text-lg font-semibold text-gray-800">
+            <div className="pb-6 border-b border-border">
+                <p className="text-lg font-semibold text-foreground">
                     BulBul Go — Условия использования
                 </p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-muted-foreground">
                     Дата последнего обновления: 09 января 2026 года
                 </p>
             </div>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     1. Общие положения
                 </h2>
-                <p className="bg-gray-50 p-4 rounded-xl text-gray-700 mb-3">
+                <p className="bg-muted p-4 rounded-xl text-foreground mb-3">
                     Настоящие Условия использования регулируют использование
                     платформы BulBul Go. Внимательно ознакомьтесь с ними перед
                     использованием сервиса.
@@ -282,14 +282,14 @@ function TermsContent() {
                     предоставляем технологическую платформу, но не являемся
                     транспортной компанией или перевозчиком.
                 </p>
-                <p className="mt-3 text-sm italic border-l-4 border-blue-500 pl-4 py-1 bg-blue-50">
+                <p className="mt-3 text-sm italic border-l-4 border-blue-500 pl-4 py-1 bg-blue-50 dark:bg-blue-950/30">
                     Используя BulBul Go, вы соглашаетесь с настоящими Условиями.
                     Если вы не согласны, пожалуйста, не пользуйтесь сервисом.
                 </p>
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     2. Определения
                 </h2>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -316,11 +316,11 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     3. Регистрация и учетная запись
                 </h2>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-4">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-4">
                     3.1. Требования к регистрации
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -334,7 +334,7 @@ function TermsContent() {
                     </li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     3.2. Безопасность учетной записи
                 </h3>
                 <p>
@@ -345,11 +345,11 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     4. Правила для водителей
                 </h2>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-4">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-4">
                     4.1. Требования
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -359,7 +359,7 @@ function TermsContent() {
                     <li>Соблюдение правил дорожного движения</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     4.2. Обязанности водителя
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -374,7 +374,7 @@ function TermsContent() {
                     <li>Вести себя вежливо и уважительно</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     4.3. Запрещается
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -393,11 +393,11 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     5. Правила для пассажиров
                 </h2>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-4">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-4">
                     5.1. Обязанности пассажира
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -410,7 +410,7 @@ function TermsContent() {
                     <li>Не наносить ущерб автомобилю</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     5.2. Запрещается
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -425,11 +425,11 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     6. Создание объявлений о поездках
                 </h2>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-4">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-4">
                     6.1. Типы поездок
                 </h3>
                 <p className="mb-3">
@@ -446,7 +446,7 @@ function TermsContent() {
                     </li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     6.2. Обязательная информация
                 </h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -461,7 +461,7 @@ function TermsContent() {
                     <li>Для водителей: информация об автомобиле</li>
                 </ul>
 
-                <p className="mt-4 text-sm italic border-l-4 border-amber-500 pl-4 py-1 bg-amber-50">
+                <p className="mt-4 text-sm italic border-l-4 border-amber-500 pl-4 py-1 bg-amber-50 dark:bg-amber-950/30">
                     Все объявления должны содержать правдивую информацию.
                     Размещение заведомо ложных объявлений является основанием для
                     блокировки учетной записи.
@@ -469,7 +469,7 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     7. Оплата и расчеты
                 </h2>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -492,11 +492,11 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     8. Ответственность и ограничения
                 </h2>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-4">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-4">
                     8.1. Роль BulBul Go
                 </h3>
                 <p className="mb-3">BulBul Go является посредником и:</p>
@@ -512,15 +512,15 @@ function TermsContent() {
                     <li>Не несет ответственности за действия пользователей</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     8.2. Ответственность пользователей
                 </h3>
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                    <p className="font-semibold text-red-900">Важно!</p>
-                    <p className="text-red-800 mt-2">
+                <div className="bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 p-4 rounded">
+                    <p className="font-semibold text-red-900 dark:text-red-300">Важно!</p>
+                    <p className="text-red-800 dark:text-red-300 mt-2">
                         Пользователи несут полную ответственность за:
                     </p>
-                    <ul className="list-disc list-inside space-y-1 ml-4 mt-2 text-red-800">
+                    <ul className="list-disc list-inside space-y-1 ml-4 mt-2 text-red-800 dark:text-red-300">
                         <li>Соблюдение законодательства</li>
                         <li>Безопасность во время поездки</li>
                         <li>
@@ -531,7 +531,7 @@ function TermsContent() {
                     </ul>
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">
+                <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">
                     8.3. Ограничение ответственности Платформы
                 </h3>
                 <p>BulBul Go не несет ответственности за:</p>
@@ -547,7 +547,7 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     9. Запрещенное использование
                 </h2>
                 <p className="mb-3">
@@ -579,7 +579,7 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     10. Блокировка и удаление учетной записи
                 </h2>
                 <p className="mb-3">
@@ -601,7 +601,7 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     11. Интеллектуальная собственность
                 </h2>
                 <p>
@@ -614,7 +614,7 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     12. Изменения в Условиях
                 </h2>
                 <p>
@@ -627,7 +627,7 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     13. Разрешение споров
                 </h2>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -640,7 +640,7 @@ function TermsContent() {
                         Претензии к Платформе направляются на email:{' '}
                         <a
                             href="mailto:support@bulbulgo.com"
-                            className="text-blue-600 hover:underline"
+                            className="text-blue-600 dark:text-blue-400 hover:underline"
                         >
                             support@bulbulgo.com
                         </a>
@@ -650,18 +650,18 @@ function TermsContent() {
             </section>
 
             <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
                     14. Контакты и реквизиты
                 </h2>
                 <OperatorDetails />
             </section>
 
-            <section className="border-t border-gray-200 pt-6">
-                <p className="text-center text-gray-600 italic">
+            <section className="border-t border-border pt-6">
+                <p className="text-center text-muted-foreground italic">
                     Используя BulBul Go, вы подтверждаете, что прочитали, поняли
                     и согласны с настоящими Условиями использования.
                 </p>
-                <p className="text-center text-gray-600 mt-2">
+                <p className="text-center text-muted-foreground mt-2">
                     Желаем вам приятных и безопасных поездок!
                 </p>
             </section>
@@ -677,12 +677,12 @@ export default function PolicyPage({
     type: 'privacy' | 'terms'
 }) {
     return (
-        <section className="py-20 bg-white min-h-screen">
+        <section className="py-20 bg-background min-h-screen">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-10 flex items-center">
-                    <FileText className="mr-4 text-blue-600" /> {title}
+                <h1 className="text-3xl font-bold text-foreground mb-10 flex items-center">
+                    <FileText className="mr-4 text-blue-600 dark:text-blue-400" /> {title}
                 </h1>
-                <div className="prose prose-blue max-w-none text-gray-600 space-y-6">
+                <div className="prose prose-blue max-w-none text-muted-foreground space-y-6">
                     {type === 'privacy' ? <PrivacyContent /> : <TermsContent />}
                 </div>
             </div>

@@ -29,7 +29,7 @@ export default function Navbar() {
     }
 
     return (
-        <nav className="bg-white shadow-md sticky top-0 z-50">
+        <nav className="bg-card/95 backdrop-blur border-b border-border shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
                     <Link
@@ -38,7 +38,7 @@ export default function Navbar() {
                         onClick={() => setIsMenuOpen(false)}
                     >
                         <Bird className="h-8 w-8 text-blue-600 mr-2" />
-                        <span className="text-2xl font-bold text-blue-900 tracking-tight">
+                        <span className="text-2xl font-bold text-blue-900 dark:text-blue-300 tracking-tight">
                             BulBul Go
                         </span>
                     </Link>
@@ -50,8 +50,8 @@ export default function Navbar() {
                                 href={link.path}
                                 className={`text-sm font-medium transition-colors ${
                                     isActive(link.path)
-                                        ? 'text-blue-600 border-b-2 border-blue-600'
-                                        : 'text-gray-600 hover:text-blue-500'
+                                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                                        : 'text-muted-foreground hover:text-blue-500'
                                 }`}
                             >
                                 {link.title}
@@ -62,7 +62,7 @@ export default function Navbar() {
                     <div className="md:hidden">
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="text-gray-600"
+                            className="text-muted-foreground"
                         >
                             {isMenuOpen ? <X /> : <Menu />}
                         </button>
@@ -71,13 +71,13 @@ export default function Navbar() {
             </div>
 
             {isMenuOpen && (
-                <div className="md:hidden bg-white border-t border-gray-100 pb-4 shadow-lg">
+                <div className="md:hidden bg-card border-t border-border pb-4 shadow-lg">
                     {navLinks.map((link) => (
                         <Link
                             key={link.path}
                             href={link.path}
                             onClick={() => setIsMenuOpen(false)}
-                            className="block w-full text-left px-6 py-3 text-base font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                            className="block w-full text-left px-6 py-3 text-base font-medium text-muted-foreground hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400"
                         >
                             {link.title}
                         </Link>

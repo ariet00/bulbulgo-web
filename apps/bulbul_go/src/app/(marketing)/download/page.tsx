@@ -21,14 +21,14 @@ export default function DownloadPage() {
     }, [])
 
     return (
-        <div className="min-h-[70vh] flex items-center justify-center px-4 pt-8 pb-20 bg-gradient-to-br from-blue-50 to-white">
+        <div className="min-h-[70vh] flex items-center justify-center px-4 pt-8 pb-20 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/30 dark:to-background">
             <div className="max-w-4xl w-full text-center">
-                <div className="inline-block p-4 bg-blue-100 rounded-2xl mb-8">
-                    <Download className="w-12 h-12 text-blue-600 animate-bounce" />
+                <div className="inline-block p-4 bg-blue-100 dark:bg-blue-950/50 rounded-2xl mb-8">
+                    <Download className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-bounce" />
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
-                    Скачайте <span className="text-blue-600">BulBul Go</span>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-6">
+                    Скачайте <span className="text-blue-600 dark:text-blue-400">BulBul Go</span>
                 </h1>
                 <div className="flex flex-col md:flex-row items-center justify-center gap-6">
                     {storeButtons.map(({ href, name, Icon }) => (
@@ -49,8 +49,8 @@ export default function DownloadPage() {
                     ))}
                 </div>
 
-                <div className="mt-8 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 inline-block">
-                    <p className="text-sm text-gray-500 font-medium max-w-xs mx-auto">
+                <div className="mt-8 bg-card p-8 rounded-3xl shadow-sm border border-border inline-block">
+                    <p className="text-sm text-muted-foreground font-medium max-w-xs mx-auto">
                         BulBul Go — первое самое удобное приложение для поиска
                         попутчиков по всему Кыргызстану.
                     </p>

@@ -73,12 +73,12 @@ export default function HomePage() {
             </section>
 
             {/* Features Section */}
-            <section className="py-20 bg-white">
+            <section className="py-20 bg-background">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                         Почему выбирают BulBul Go?
                     </h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
                         Мы создаем сообщество ответственных и дружелюбных
                         путешественников.
                     </p>
@@ -88,15 +88,15 @@ export default function HomePage() {
                         {features.map((feature, i) => (
                             <div
                                 key={i}
-                                className="bg-gray-50 p-8 rounded-3xl hover:shadow-xl transition-all duration-300 border border-gray-100 group"
+                                className="bg-muted/50 p-8 rounded-3xl hover:shadow-xl transition-all duration-300 border border-border group"
                             >
                                 <div className="mb-6 transform group-hover:scale-110 transition-transform">
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                                <h3 className="text-xl font-bold text-foreground mb-4">
                                     {feature.title}
                                 </h3>
-                                <p className="text-gray-600 leading-relaxed">
+                                <p className="text-muted-foreground leading-relaxed">
                                     {feature.desc}
                                 </p>
                             </div>
@@ -106,24 +106,24 @@ export default function HomePage() {
             </section>
 
             {/* How it works */}
-            <section className="py-20 bg-blue-50">
+            <section className="py-20 bg-blue-50 dark:bg-blue-950/20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         <div className="lg:w-1/2">
-                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
+                            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
                                 Как это работает?
                             </h2>
                             <div className="space-y-8">
                                 {steps.map((item, i) => (
                                     <div key={i} className="flex gap-6">
-                                        <span className="text-3xl font-black text-blue-200">
+                                        <span className="text-3xl font-black text-blue-200 dark:text-blue-800">
                                             {item.step}
                                         </span>
                                         <div>
-                                            <h4 className="text-xl font-bold text-gray-900 mb-1">
+                                            <h4 className="text-xl font-bold text-foreground mb-1">
                                                 {item.title}
                                             </h4>
-                                            <p className="text-gray-600">
+                                            <p className="text-muted-foreground">
                                                 {item.text}
                                             </p>
                                         </div>

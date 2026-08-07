@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
+import { ThemeProvider } from 'next-themes'
 import { SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 import Navbar from './_components/Navbar'
@@ -44,17 +45,24 @@ export default function MarketingLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="ru">
+        <html lang="ru" suppressHydrationWarning>
             <body>
-                <div className="min-h-screen font-sans bg-gray-50 flex flex-col scroll-smooth">
-                    <Suspense fallback={null}>
-                        <Navbar />
-                    </Suspense>
-                    <main className="flex-grow">{children}</main>
-                    <Suspense fallback={null}>
-                        <Footer />
-                    </Suspense>
-                </div>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    <div className="min-h-screen font-sans bg-background text-foreground flex flex-col scroll-smooth">
+                        <Suspense fallback={null}>
+                            <Navbar />
+                        </Suspense>
+                        <main className="flex-grow">{children}</main>
+                        <Suspense fallback={null}>
+                            <Footer />
+                        </Suspense>
+                    </div>
+                </ThemeProvider>
             </body>
         </html>
     )

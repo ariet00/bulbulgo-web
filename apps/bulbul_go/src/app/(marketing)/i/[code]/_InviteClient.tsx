@@ -27,18 +27,18 @@ export default function InviteClient({ code }: { code: string }) {
     }
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center px-4 py-20 bg-gradient-to-br from-blue-50 to-white">
+        <div className="min-h-[80vh] flex items-center justify-center px-4 py-20 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/30 dark:to-background">
             <div className="max-w-2xl w-full text-center">
-                <div className="inline-block p-4 bg-blue-100 rounded-2xl mb-8">
-                    <Gift className="w-12 h-12 text-blue-600" />
+                <div className="inline-block p-4 bg-blue-100 dark:bg-blue-950/50 rounded-2xl mb-8">
+                    <Gift className="w-12 h-12 text-blue-600 dark:text-blue-400" />
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4">
                     Вас пригласил друг в{' '}
-                    <span className="text-blue-600">BulBul Go</span>
+                    <span className="text-blue-600 dark:text-blue-400">BulBul Go</span>
                 </h1>
 
-                <p className="text-lg text-gray-600 mb-10 max-w-xl mx-auto leading-relaxed">
+                <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto leading-relaxed">
                     Установите приложение и введите промокод при входе по
                     номеру телефона — и находите попутчиков по всему
                     Кыргызстану.
@@ -46,23 +46,23 @@ export default function InviteClient({ code }: { code: string }) {
 
                 {/* Промокод */}
                 <div className="mb-10">
-                    <p className="text-sm font-medium text-gray-500 mb-3">
+                    <p className="text-sm font-medium text-muted-foreground mb-3">
                         Ваш промокод
                     </p>
                     <button
                         onClick={copy}
-                        className="group inline-flex items-center gap-4 bg-white border-2 border-blue-100 hover:border-blue-300 rounded-2xl px-8 py-5 shadow-lg transition-all"
+                        className="group inline-flex items-center gap-4 bg-card border-2 border-blue-100 dark:border-blue-900 hover:border-blue-300 dark:hover:border-blue-700 rounded-2xl px-8 py-5 shadow-lg transition-all"
                     >
-                        <span className="text-3xl md:text-4xl font-bold tracking-[0.3em] text-gray-900">
+                        <span className="text-3xl md:text-4xl font-bold tracking-[0.3em] text-foreground">
                             {code}
                         </span>
                         {copied ? (
-                            <Check className="w-6 h-6 text-green-600" />
+                            <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
                         ) : (
-                            <Copy className="w-6 h-6 text-blue-600 opacity-70 group-hover:opacity-100" />
+                            <Copy className="w-6 h-6 text-blue-600 dark:text-blue-400 opacity-70 group-hover:opacity-100" />
                         )}
                     </button>
-                    <p className="text-xs text-gray-400 mt-3">
+                    <p className="text-xs text-muted-foreground mt-3">
                         {copied
                             ? 'Код скопирован'
                             : 'Нажмите, чтобы скопировать'}
@@ -87,20 +87,20 @@ export default function InviteClient({ code }: { code: string }) {
 
                     <a
                         href={links.appStore}
-                        className="w-full md:w-auto flex items-center gap-4 bg-white text-black border-2 border-gray-100 px-8 py-4 rounded-2xl hover:border-blue-200 transition-all transform hover:-translate-y-1 shadow-xl"
+                        className="w-full md:w-auto flex items-center gap-4 bg-card text-foreground border-2 border-border px-8 py-4 rounded-2xl hover:border-blue-300 dark:hover:border-blue-700 transition-all transform hover:-translate-y-1 shadow-xl"
                     >
-                        <Download className="w-8 h-8 text-blue-600" />
+                        <Download className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         <div className="text-left leading-tight">
-                            <p className="text-[12px] uppercase font-medium text-gray-500">
+                            <p className="text-[12px] uppercase font-medium text-muted-foreground">
                                 Скачайте в
                             </p>
                             <p className="text-xl font-bold">App Store</p>
                         </div>
-                        <ArrowRight className="w-5 h-5 ml-2 opacity-50 text-blue-600" />
+                        <ArrowRight className="w-5 h-5 ml-2 opacity-50 text-blue-600 dark:text-blue-400" />
                     </a>
                 </div>
 
-                <p className="mt-12 text-sm text-gray-400 max-w-md mx-auto">
+                <p className="mt-12 text-sm text-muted-foreground max-w-md mx-auto">
                     Промокод скопирован в буфер обмена — вставьте его в поле
                     «У меня есть промокод» на экране входа.
                 </p>

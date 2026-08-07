@@ -91,25 +91,25 @@ export default function ContactPage() {
     }
 
     return (
-        <section className="py-20 bg-gray-50 min-h-screen">
+        <section className="py-20 bg-background min-h-screen">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
+                    <h1 className="text-4xl font-extrabold text-foreground mb-4">
                         Обратная связь
                     </h1>
-                    <p className="text-lg text-gray-600">
+                    <p className="text-lg text-muted-foreground">
                         Мы всегда рады вашим вопросам, предложениям и отзывам
                     </p>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
+                <div className="bg-card border border-border rounded-2xl shadow-lg p-8 md:p-10">
                     {submitted ? (
                         <div className="text-center py-12">
                             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                            <h2 className="text-2xl font-bold text-foreground mb-2">
                                 Спасибо за ваше обращение!
                             </h2>
-                            <p className="text-gray-600">
+                            <p className="text-muted-foreground">
                                 Мы свяжемся с вами в ближайшее время.
                             </p>
                         </div>
@@ -118,7 +118,7 @@ export default function ContactPage() {
                             <div>
                                 <label
                                     htmlFor="name"
-                                    className="flex items-center text-sm font-semibold text-gray-700 mb-2"
+                                    className="flex items-center text-sm font-semibold text-foreground mb-2"
                                 >
                                     <User className="w-4 h-4 mr-2 text-blue-600" />
                                     Ваше имя
@@ -129,10 +129,10 @@ export default function ContactPage() {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-3 rounded-xl border ${
+                                    className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground ${
                                         errors.name
                                             ? 'border-red-500'
-                                            : 'border-gray-300'
+                                            : 'border-input'
                                     } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
                                     placeholder="Введите ваше имя"
                                 />
@@ -147,7 +147,7 @@ export default function ContactPage() {
                             <div>
                                 <label
                                     htmlFor="email"
-                                    className="flex items-center text-sm font-semibold text-gray-700 mb-2"
+                                    className="flex items-center text-sm font-semibold text-foreground mb-2"
                                 >
                                     <Mail className="w-4 h-4 mr-2 text-blue-600" />
                                     Email
@@ -158,10 +158,10 @@ export default function ContactPage() {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-3 rounded-xl border ${
+                                    className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground ${
                                         errors.email
                                             ? 'border-red-500'
-                                            : 'border-gray-300'
+                                            : 'border-input'
                                     } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
                                     placeholder="example@mail.com"
                                 />
@@ -176,7 +176,7 @@ export default function ContactPage() {
                             <div>
                                 <label
                                     htmlFor="reason"
-                                    className="flex items-center text-sm font-semibold text-gray-700 mb-2"
+                                    className="flex items-center text-sm font-semibold text-foreground mb-2"
                                 >
                                     <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
                                     Причина обращения
@@ -186,11 +186,11 @@ export default function ContactPage() {
                                     name="reason"
                                     value={formData.reason}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-3 rounded-xl border ${
+                                    className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground ${
                                         errors.reason
                                             ? 'border-red-500'
-                                            : 'border-gray-300'
-                                    } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white`}
+                                            : 'border-input'
+                                    } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
                                 >
                                     {reasons.map((reason) => (
                                         <option
@@ -210,8 +210,8 @@ export default function ContactPage() {
                             </div>
 
                             {formData.reason === 'data_deletion' && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                                    <p className="text-sm text-yellow-800">
+                                <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-900 rounded-xl p-4">
+                                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
                                         <strong>Обратите внимание:</strong> Запрос
                                         на удаление данных будет обработан в
                                         соответствии с нашей{' '}
@@ -230,7 +230,7 @@ export default function ContactPage() {
                             <div>
                                 <label
                                     htmlFor="message"
-                                    className="flex items-center text-sm font-semibold text-gray-700 mb-2"
+                                    className="flex items-center text-sm font-semibold text-foreground mb-2"
                                 >
                                     <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
                                     Сообщение
@@ -241,10 +241,10 @@ export default function ContactPage() {
                                     value={formData.message}
                                     onChange={handleChange}
                                     rows={6}
-                                    className={`w-full px-4 py-3 rounded-xl border ${
+                                    className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground ${
                                         errors.message
                                             ? 'border-red-500'
-                                            : 'border-gray-300'
+                                            : 'border-input'
                                     } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none`}
                                     placeholder="Опишите ваш вопрос или проблему..."
                                 />
@@ -267,7 +267,7 @@ export default function ContactPage() {
                     )}
                 </div>
 
-                <div className="mt-8 text-center text-gray-600">
+                <div className="mt-8 text-center text-muted-foreground">
                     <p className="text-sm">
                         Обычно мы отвечаем в течение 24 часов в рабочие дни
                     </p>
