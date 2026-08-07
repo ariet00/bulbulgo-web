@@ -37,6 +37,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
+    // <meta name="color-scheme"> до загрузки CSS: холст документа красится по
+    // системной теме с первого кадра, без белой вспышки при навигации.
+    colorScheme: 'light dark',
 }
 
 export default function MarketingLayout({

@@ -1,5 +1,5 @@
 import { authOptions, Providers, NotificationSystem, NotificationHandler } from '@doska/shared'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { getServerSession } from 'next-auth'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
@@ -20,6 +20,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Doska',
   description: 'Bulletin Board',
+}
+
+// Отдаёт <meta name="color-scheme" content="light dark"> в <head> ещё до
+// загрузки CSS — браузер красит холст документа по системной теме с первого
+// кадра, поэтому при навигации нет белой вспышки у системно-тёмных.
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
 }
 
 
