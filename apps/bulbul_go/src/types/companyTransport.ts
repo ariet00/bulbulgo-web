@@ -1,4 +1,4 @@
-import type { Region, UserPublic } from '@doska/shared';
+import type { Region, TripUser } from '@doska/shared';
 
 // ── Fleet vehicles ────────────────────────────────────────────────
 export interface CompanyVehicle {
@@ -35,7 +35,7 @@ export interface Driver {
     license_number?: string | null;
     license_categories?: string | null;
     default_vehicle_id?: number | null;
-    user?: UserPublic | null;
+    user?: TripUser | null;
 }
 
 export interface DriverCreate {
@@ -82,7 +82,7 @@ export interface CompanyTrip {
     status: string;
     vehicle_id?: number | null;
     vehicle?: CompanyVehicle | null;
-    user?: UserPublic | null;
+    user?: TripUser | null;
     schedules?: CompanyTripSchedule[];
 }
 

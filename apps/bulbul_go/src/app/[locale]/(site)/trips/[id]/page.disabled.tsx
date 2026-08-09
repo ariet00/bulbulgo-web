@@ -192,7 +192,7 @@ export default function TripDetailsPage() {
                                 {trip.user?.username !== 'chat_parser_user' ? (
                                     <>
                                         <Avatar className="h-24 w-24 mb-4 border-4 border-background ring-4 ring-primary/5">
-                                            <AvatarImage src={trip.user?.data?.avatar} />
+                                            <AvatarImage src={trip.user?.avatar_url} />
                                             <AvatarFallback className="text-2xl font-black bg-primary/5 text-primary">
                                                 {trip.user?.username?.[0]?.toUpperCase()}
                                             </AvatarFallback>
@@ -200,8 +200,7 @@ export default function TripDetailsPage() {
                                         <h3 className="text-xl font-black">{trip.user?.username}</h3>
                                         <div className="flex items-center gap-1 text-sm font-bold text-amber-500 bg-amber-500/5 px-3 py-1 rounded-full mt-2">
                                             <Star className="h-4 w-4 fill-amber-500" />
-                                            <span>{trip.user?.data?.rating || "5.0"}</span>
-                                            <span className="text-muted-foreground ml-1">({trip.user?.data?.review_count || 0})</span>
+                                            <span>{trip.user?.rating || "5.0"}</span>
                                         </div>
                                         <Separator className="my-6 opacity-50" />
                                     </>

@@ -1,4 +1,4 @@
-import { UserPublic } from './user';
+import { TripUser } from './user';
 import { Region } from './region';
 import { Vehicle } from './vehicle';
 
@@ -33,7 +33,7 @@ export interface Trip {
     updated_at: string;
     
     // Relations
-    user?: UserPublic;
+    user?: TripUser;
     from_location?: Region;
     to_location?: Region;
     vehicle?: Vehicle;
