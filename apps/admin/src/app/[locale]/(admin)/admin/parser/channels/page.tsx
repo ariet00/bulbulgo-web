@@ -1,11 +1,15 @@
 'use client'
 
 import {
+    CHANNEL_PURPOSES,
+    CHANNEL_PURPOSE_LABELS,
+    CHANNEL_TYPE_LABELS,
     useDebounce,
     useDeleteParserChannel,
     useParserChannels,
     useUpdateParserChannel,
 } from '@doska/shared'
+import type { ChannelPurpose } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import {
     Badge,
@@ -33,6 +37,7 @@ const FILTER_DEFAULTS = {
     page: 1,
     size: 40,
     q: '',
+    purpose: 'parse',
 }
 
 export default function ParserChannelsPage() {
@@ -43,7 +48,12 @@ export default function ParserChannelsPage() {
         if (dq !== values.q) setValues({ q: dq })
     }, [dq, values.q, setValues])
 
-    const { data, isLoading } = useParserChannels(values.page, values.size, 'parse', values.q || undefined)
+    const { data, isLoading } = useParserChannels(
+        values.page,
+        values.size,
+        values.purpose as ChannelPurpose,
+        values.q || undefined,
+    )
     const remove = useDeleteParserChannel()
     const update = useUpdateParserChannel()
     const confirm = useConfirm()
@@ -67,9 +77,22 @@ export default function ParserChannelsPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Telegram-каналы для парсинга</CardTitle>
+                    <CardTitle>Telegram-каналы</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {CHANNEL_PURPOSES.map((p) => (
+                            <Button
+                                key={p}
+                                variant={values.purpose === p ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setValues({ purpose: p })}
+                            >
+                                {CHANNEL_PURPOSE_LABELS[p]}
+                            </Button>
+                        ))}
+                    </div>
+
                     <Input
                         placeholder="Поиск по chat_id…"
                         value={qInput}
@@ -122,7 +145,9 @@ export default function ParserChannelsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline">{row.channel_type}</Badge>
+                                                <Badge variant="outline">
+                                                    {CHANNEL_TYPE_LABELS[row.channel_type]}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 {row.parser.use_parser_ai ? (

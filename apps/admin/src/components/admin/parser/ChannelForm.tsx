@@ -1,6 +1,7 @@
 'use client'
 
 import type { ChannelType, ParserChannel, TripRole } from '@doska/shared'
+import { CHANNEL_TYPES, CHANNEL_TYPE_LABELS } from '@doska/shared'
 import {
     Button,
     Card,
@@ -23,13 +24,6 @@ const ALL_ROLES: { value: TripRole; label: string }[] = [
     { value: 'driver', label: 'Водители' },
     { value: 'passenger', label: 'Пассажиры' },
     { value: 'parcel', label: 'Посылки' },
-]
-
-const CHANNEL_TYPE_OPTIONS: { value: ChannelType; label: string }[] = [
-    { value: 'parse', label: 'Парсинг' },
-    { value: 'publish', label: 'Публикация' },
-    { value: 'both', label: 'И парсинг и публикация' },
-    { value: 'none', label: 'Не используется' },
 ]
 
 export type ChannelFormState = {
@@ -180,9 +174,9 @@ export function ChannelForm({ value: v, onChange }: Props) {
                                 <SelectValue placeholder="Выбери тип" />
                             </SelectTrigger>
                             <SelectContent>
-                                {CHANNEL_TYPE_OPTIONS.map((o) => (
-                                    <SelectItem key={o.value} value={o.value}>
-                                        {o.label}
+                                {CHANNEL_TYPES.map((t) => (
+                                    <SelectItem key={t} value={t}>
+                                        {CHANNEL_TYPE_LABELS[t]}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { parserApi } from '../../apis/parser'
+import { parserApi, type ChannelPurpose } from '../../apis/parser'
 
 export const parserKeys = {
     all: ['parser'] as const,
@@ -34,7 +34,7 @@ export const useParserSetting = (id: number) =>
 export const useParserChannels = (
     page = 1,
     size = 40,
-    purpose: 'parse' | 'publish' = 'parse',
+    purpose: ChannelPurpose = 'parse',
     q?: string,
 ) =>
     useQuery({

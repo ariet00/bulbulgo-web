@@ -69,7 +69,30 @@ export interface ParserChannelBlock {
     filters?: Record<string, any> | null
 }
 
-export type ChannelType = 'parse' | 'publish' | 'both' | 'none'
+/** Chat roles — mirrors `CHANNEL_TYPES` in backend `apps/telegram/models/chat.py`.
+ * Single source for every channel_type select / badge / filter in the UI. */
+export const CHANNEL_TYPES = ['parse', 'publish', 'both', 'none'] as const
+
+export type ChannelType = (typeof CHANNEL_TYPES)[number]
+
+export const CHANNEL_TYPE_LABELS: Record<ChannelType, string> = {
+    parse: 'Парсинг',
+    publish: 'Публикация',
+    both: 'И парсинг и публикация',
+    none: 'Не используется',
+}
+
+/** List-filter values understood by `GET /admin/parser/channels` (`purpose`).
+ * `all` = no channel_type filter. */
+export const CHANNEL_PURPOSES = ['parse', 'publish', 'all'] as const
+
+export type ChannelPurpose = (typeof CHANNEL_PURPOSES)[number]
+
+export const CHANNEL_PURPOSE_LABELS: Record<ChannelPurpose, string> = {
+    parse: 'Парсинг',
+    publish: 'Публикация',
+    all: 'Все',
+}
 
 export interface ParserChannel {
     id: number
@@ -119,7 +142,7 @@ export const parserApi = {
     getChannels: (
         page = 1,
         size = 40,
-        purpose: 'parse' | 'publish' = 'parse',
+        purpose: ChannelPurpose = 'parse',
         q?: string,
     ) => {
         const params = new URLSearchParams({
