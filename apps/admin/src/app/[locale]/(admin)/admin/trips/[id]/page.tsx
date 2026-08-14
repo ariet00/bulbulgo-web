@@ -72,6 +72,7 @@ import {
     Play,
     Zap,
     TrendingUp,
+    BadgePercent,
     Hash,
     Building2,
     ExternalLink,
@@ -539,6 +540,7 @@ function TripBumpsCard({ tripId }: { tripId: number }) {
 const SERVICE_LABELS: Record<string, string> = {
     auto_bump: 'Авто-подъём',
     urgent: 'Срочно',
+    attractive: 'Выгодная поездка',
 }
 
 type ServiceState = 'active' | 'expired' | 'never'
@@ -632,6 +634,7 @@ function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
 
     const autoBumpState = serviceState(data.is_auto_bump, data.auto_bump_until)
     const urgentState = serviceState(data.is_urgent, data.urgent_until)
+    const attractiveState = serviceState(data.is_attractive, data.attractive_until)
 
     const openEdit = (serviceType: string) => {
         const cur = data[`${serviceType}_until`]
@@ -688,6 +691,12 @@ function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
                     rows={[
                         { label: 'Действует до', value: fmtDate(data.auto_bump_until, true) },
                         {
+                            label: 'Подключена',
+                            value: data.auto_bump_activated_at
+                                ? fmtDate(data.auto_bump_activated_at, true)
+                                : '—',
+                        },
+                        {
                             label: 'Интервал подъёма',
                             value: data.auto_bump_interval_hours
                                 ? `каждые ${data.auto_bump_interval_hours} ч`
@@ -719,6 +728,40 @@ function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
                     onEdit={() => openEdit('urgent')}
                     rows={[
                         { label: 'Действует до', value: fmtDate(data.urgent_until, true) },
+                        {
+                            label: 'Подключена',
+                            value: data.urgent_activated_at
+                                ? fmtDate(data.urgent_activated_at, true)
+                                : '—',
+                        },
+                    ]}
+                />
+                <ServiceStateBlock
+                    title="Выгодная поездка"
+                    icon={BadgePercent}
+                    state={attractiveState}
+                    adminEdited={!!data.attractive_admin_edited}
+                    onEdit={() => openEdit('attractive')}
+                    rows={[
+                        { label: 'Действует до', value: fmtDate(data.attractive_until, true) },
+                        {
+                            label: 'Подключена',
+                            value: data.attractive_activated_at
+                                ? fmtDate(data.attractive_activated_at, true)
+                                : '—',
+                        },
+                        {
+                            label: 'Интервал подъёма',
+                            value: data.attractive_interval_hours
+                                ? `каждые ${data.attractive_interval_hours} ч`
+                                : '—',
+                        },
+                        {
+                            label: 'Последний подъём',
+                            value: data.attractive_last_at
+                                ? fmtDate(data.attractive_last_at, true)
+                                : 'ещё не поднималась',
+                        },
                     ]}
                 />
             </div>

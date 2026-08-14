@@ -24,7 +24,7 @@ import {
     SelectValue,
     Switch,
 } from "@doska/ui"
-import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Zap, Flame, ArrowUp } from 'lucide-react'
+import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Zap, Flame, BadgePercent, ArrowUp } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
@@ -41,6 +41,7 @@ const SERVICE_OPTIONS = [
     { value: 'any', label: 'Любая активная' },
     { value: 'auto_bump', label: 'Авто-подъём (активен)' },
     { value: 'urgent', label: 'Срочно (активен)' },
+    { value: 'attractive', label: 'Выгодная поездка (активна)' },
     { value: 'ever', label: 'Когда-либо подключали' },
 ]
 
@@ -65,14 +66,14 @@ const FILTER_DEFAULTS = {
     include_deleted: true,
 }
 
-// Подключённые платные услуги объявления (живут в trip.data). Услуга с
-// истёкшим `*_until` показывается погашенной.
+// Подключённые услуги объявления (живут в trip.data) — платные и бесплатная
+// «Выгодная поездка». Услуга с истёкшим `*_until` показывается погашенной.
 const tripServices = (trip: any) => {
     const now = Date.now()
     const services: Array<{
         key: string
         label: string
-        icon: 'zap' | 'flame'
+        icon: 'zap' | 'flame' | 'percent'
         active: boolean
         until: string | null
     }> = []
@@ -92,6 +93,16 @@ const tripServices = (trip: any) => {
             key: 'urgent',
             label: 'срочно',
             icon: 'flame',
+            active: !until || new Date(until).getTime() > now,
+            until,
+        })
+    }
+    if (trip.data?.is_attractive) {
+        const until = trip.data.attractive_until ?? null
+        services.push({
+            key: 'attractive',
+            label: 'выгодная поездка',
+            icon: 'percent',
             active: !until || new Date(until).getTime() > now,
             until,
         })
@@ -117,12 +128,16 @@ function ServiceBadges({ trip }: { trip: any }) {
                         s.active
                             ? s.key === 'urgent'
                                 ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                                : s.key === 'attractive'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
                             : 'bg-muted text-muted-foreground opacity-60'
                     }`}
                 >
                     {s.icon === 'zap' ? (
                         <Zap className="h-3.5 w-3.5" />
+                    ) : s.icon === 'percent' ? (
+                        <BadgePercent className="h-3.5 w-3.5" />
                     ) : (
                         <Flame className="h-3.5 w-3.5" />
                     )}

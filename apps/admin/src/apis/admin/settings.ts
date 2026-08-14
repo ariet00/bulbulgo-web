@@ -114,7 +114,12 @@ export interface AdminAttractiveRoute {
 }
 
 export interface AdminAttractivePricesSettings {
+    /** Гейтит только массовую рассылку. */
     enabled: boolean
+    /** Гейтит бесплатную услугу «Выгодная поездка» (поднятия + репост в группу). */
+    service_enabled: boolean
+    service_duration_hours: number
+    service_interval_hours: number
     routes: AdminAttractiveRoute[]
 }
 

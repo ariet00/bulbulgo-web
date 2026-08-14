@@ -22,6 +22,9 @@ import { useEffect, useState } from 'react'
 
 const DEFAULT_FORM: AdminAttractivePricesSettings = {
     enabled: false,
+    service_enabled: false,
+    service_duration_hours: 24,
+    service_interval_hours: 1,
     routes: [],
 }
 
@@ -63,13 +66,16 @@ export function AttractivePricesSettingsForm() {
         }))
 
     // Только полностью заполненные маршруты — пустой выбор региона = 0.
-    const isValid = form.routes.every(
-        (r) =>
-            r.from_location_id > 0 &&
-            r.to_location_id > 0 &&
-            r.max_price > 0 &&
-            r.min_price <= r.max_price,
-    )
+    const isValid =
+        form.routes.every(
+            (r) =>
+                r.from_location_id > 0 &&
+                r.to_location_id > 0 &&
+                r.max_price > 0 &&
+                r.min_price <= r.max_price,
+        ) &&
+        form.service_duration_hours > 0 &&
+        form.service_interval_hours > 0
 
     const submit = () => update.mutate(form)
 
@@ -103,6 +109,73 @@ export function AttractivePricesSettingsForm() {
                             }
                             disabled={isLoading}
                         />
+                    </div>
+
+                    <div className="space-y-3 rounded border px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-0.5">
+                                <Label className="cursor-pointer">
+                                    Услуга «Выгодная поездка»
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Поездке, попавшей в маршрут, бесплатно
+                                    включается услуга: она периодически
+                                    поднимается в ленте и переспубликуется в
+                                    Telegram-группе. Независимо от рассылки:
+                                    можно включить только услугу или только
+                                    рассылку. Выдаётся один раз на поездку и
+                                    снимается, если цену подняли.
+                                </p>
+                            </div>
+                            <Switch
+                                checked={form.service_enabled}
+                                onCheckedChange={(v) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        service_enabled: v,
+                                    }))
+                                }
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label>Длительность, часов</Label>
+                                <Input
+                                    type="number"
+                                    step={1}
+                                    min={1}
+                                    value={form.service_duration_hours || ''}
+                                    placeholder="24"
+                                    onChange={(e) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            service_duration_hours:
+                                                parseFloat(e.target.value) || 0,
+                                        }))
+                                    }
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Поднимать раз в, часов</Label>
+                                <Input
+                                    type="number"
+                                    step={1}
+                                    min={1}
+                                    value={form.service_interval_hours || ''}
+                                    placeholder="1"
+                                    onChange={(e) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            service_interval_hours:
+                                                parseFloat(e.target.value) || 0,
+                                        }))
+                                    }
+                                    disabled={isLoading}
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <Separator />
