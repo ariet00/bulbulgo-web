@@ -176,6 +176,12 @@ export function AttractivePricesSettingsForm() {
                                 />
                             </div>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            Длительность — верхняя граница: поднятия всегда
+                            заканчиваются за час до конца публикации объявления
+                            и срок публикации не продлевают. Если до конца
+                            осталось меньше интервала, услуга не выдаётся.
+                        </p>
                     </div>
 
                     <Separator />
