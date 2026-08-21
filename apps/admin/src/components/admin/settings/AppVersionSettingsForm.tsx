@@ -63,9 +63,10 @@ export function AppVersionSettingsForm() {
                                 Включить проверку версии
                             </Label>
                             <p className="text-xs text-muted-foreground">
-                                <code>app:set_version_header</code>. Когда выключено,
-                                middleware на каждый запрос делает 1 GET в Redis и
-                                сразу выходит — без сравнения версий.
+                                <code>app:set_version_header</code>. Мастер-выключатель
+                                гейтинга версии: когда выключен, приложение всегда
+                                получает вердикт «всё ок». Приложение проверяет
+                                версию один раз за запуск — в <code>GET /app/config</code>.
                             </p>
                         </div>
                         <Switch
@@ -106,9 +107,9 @@ export function AppVersionSettingsForm() {
                         </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Клиенты ниже этой версии получают{' '}
-                        <code>X-App-ForceUpdate=true</code> — экран обновления
-                        без кнопки «Пропустить».
+                        Клиенты ниже этой версии получают вердикт{' '}
+                        <code>force</code> — экран обновления без кнопки
+                        «Пропустить».
                     </p>
 
                     <Separator />
@@ -145,9 +146,9 @@ export function AppVersionSettingsForm() {
                     </div>
                     <p className="text-xs text-muted-foreground">
                         Клиенты ниже этой версии (но не ниже принудительной)
-                        получают пропускаемый экран «Доступно обновление» — не
-                        чаще раза в сутки. Равна принудительной — рекомендация
-                        отключена.
+                        получают вердикт <code>recommended</code> — пропускаемый
+                        экран «Доступно обновление», один раз за запуск
+                        приложения. Равна принудительной — рекомендация отключена.
                     </p>
 
                     <Separator />
