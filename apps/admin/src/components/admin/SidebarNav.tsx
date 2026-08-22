@@ -29,6 +29,7 @@ import {
     Radio,
     Settings as SettingsIcon,
     Smartphone,
+    Star,
     Tags,
     Timer,
     Trophy,
@@ -64,6 +65,7 @@ const sections: NavSection[] = [
             { name: 'Ads', href: '/admin/ads', icon: Megaphone },
             { name: 'Сервисы', href: '/admin/services', icon: LayoutGrid },
             { name: 'Жалобы', href: '/admin/complaints', icon: Flag },
+            { name: 'Отзывы', href: '/admin/reviews', icon: Star },
         ],
     },
     {

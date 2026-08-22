@@ -2,6 +2,7 @@ export type { LocalizedText } from './base'
 export * from './regions'
 export * from './users'
 export * from './complaints'
+export * from './reviews'
 export * from './news'
 export * from './companies'
 export * from './trips'
@@ -23,6 +24,7 @@ export * from './fuel'
 import { regionsAdminApi } from './regions'
 import { usersAdminApi } from './users'
 import { complaintsAdminApi } from './complaints'
+import { reviewsAdminApi } from './reviews'
 import { newsAdminApi } from './news'
 import { companiesAdminApi } from './companies'
 import { tripsAdminApi } from './trips'
@@ -46,6 +48,7 @@ export const adminApi = {
     ...regionsAdminApi,
     ...usersAdminApi,
     ...complaintsAdminApi,
+    ...reviewsAdminApi,
     ...newsAdminApi,
     ...companiesAdminApi,
     ...tripsAdminApi,
