@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi, AdminUserAppNotice } from '@/apis/admin'
+import { adminApi, AdminBalanceAdjustBody, AdminUserAppNotice } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
@@ -114,6 +114,29 @@ export const useUpdateAdminUserAppNotice = () => {
             })
             queryClient.invalidateQueries({ queryKey: adminKeys.user(id) })
             toast.success('Сохранено')
+        },
+    })
+}
+
+export const useAdminAdjustUserBalance = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, body }: { id: number; body: AdminBalanceAdjustBody }) =>
+            adminApi.adjustUserBalance(id, body),
+        onSuccess: (res, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.user(id) })
+            const verb = res.type === 'income' ? 'Начислено' : 'Списано'
+            toast.success(
+                `${verb} ${res.amount} ${res.currency} · ${res.wallet_name}` +
+                    (res.notified ? ' · уведомление отправлено' : ''),
+            )
+        },
+        onError: (e: any) => {
+            toast.error(
+                e?.response?.data?.message ??
+                    e?.response?.data?.detail ??
+                    'Не удалось изменить баланс',
+            )
         },
     })
 }

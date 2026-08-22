@@ -142,6 +142,38 @@ export interface AdminBannedIdentifierGroup {
     identifiers: AdminBannedIdentifier[]
 }
 
+// Ручная корректировка баланса из карточки пользователя
+// (POST /admin/akcha/users/{id}/balance).
+export type AdminBalanceDirection = 'income' | 'expense'
+
+export const BALANCE_DIRECTION_LABELS: Record<AdminBalanceDirection, string> = {
+    income: 'Начислить',
+    expense: 'Списать',
+}
+
+export interface AdminBalanceAdjustBody {
+    amount: number
+    type?: AdminBalanceDirection
+    // Кошелёк из списка пользователя; без него бэкенд возьмёт дефолтный кошелёк продукта.
+    wallet_id?: number
+    product?: string
+    comment?: string
+    notify?: boolean
+    // Разрешить списанию увести баланс в минус.
+    allow_negative?: boolean
+}
+
+export interface AdminBalanceAdjustResult {
+    transaction_id: number
+    wallet_id: number
+    wallet_name: string
+    currency: string
+    balance: number
+    amount: number
+    type: AdminBalanceDirection
+    notified: boolean
+}
+
 export const usersAdminApi = {
     // Users
     getUsers: (
@@ -310,4 +342,6 @@ export const usersAdminApi = {
             }
         >(`/admin/akcha/users/${id}/transactions?${qs.toString()}`)
     },
+    adjustUserBalance: (id: number, body: AdminBalanceAdjustBody) =>
+        requests.post<AdminBalanceAdjustResult>(`/admin/akcha/users/${id}/balance`, body),
 }

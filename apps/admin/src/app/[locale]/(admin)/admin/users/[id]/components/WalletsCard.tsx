@@ -22,6 +22,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { useAdminUserTransactions, useAdminUserWallets } from '@/hooks/queries/admin'
+import { BalanceAdjustDialog } from './BalanceAdjustDialog'
 
 const TX_TYPES = [
     { value: '', label: 'Все' },
@@ -108,21 +109,21 @@ export function WalletsCard({ uid }: { uid: number }) {
                                 ({walletItems.length})
                             </span>
                         </CardTitle>
-                        {Object.keys(balances).length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                                {Object.entries(balances).map(([cur, total]) => (
-                                    <span
-                                        key={cur}
-                                        className="inline-flex items-baseline gap-1.5 rounded-full border bg-muted/40 px-3 py-1 text-sm"
-                                    >
-                                        <span className="text-xs text-muted-foreground">{cur}</span>
-                                        <span className="font-semibold tabular-nums">
-                                            {fmtAmount(total)}
-                                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {Object.entries(balances).map(([cur, total]) => (
+                                <span
+                                    key={cur}
+                                    className="inline-flex items-baseline gap-1.5 rounded-full border bg-muted/40 px-3 py-1 text-sm"
+                                >
+                                    <span className="text-xs text-muted-foreground">{cur}</span>
+                                    <span className="font-semibold tabular-nums">
+                                        {fmtAmount(total)}
                                     </span>
-                                ))}
-                            </div>
-                        )}
+                                </span>
+                            ))}
+                            <BalanceAdjustDialog uid={uid} wallets={walletItems} initialType="income" />
+                            <BalanceAdjustDialog uid={uid} wallets={walletItems} initialType="expense" />
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
