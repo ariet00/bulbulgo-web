@@ -15,6 +15,7 @@ export interface AdminAdTargeting {
     roles: string[]
     platforms: string[]
     min_app_version?: string | null
+    max_app_version?: string | null
 }
 
 export interface AdminAd {

@@ -222,6 +222,9 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
     const [minAppVersion, setMinAppVersion] = useState(
         initial?.targeting?.min_app_version ?? '',
     )
+    const [maxAppVersion, setMaxAppVersion] = useState(
+        initial?.targeting?.max_app_version ?? '',
+    )
 
     const [previewLang, setPreviewLang] = useState('ru')
     const [previewDark, setPreviewDark] = useState(false)
@@ -252,6 +255,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                 roles,
                 platforms,
                 min_app_version: minAppVersion.trim() || null,
+                max_app_version: maxAppVersion.trim() || null,
             },
             is_active: isActive,
             sort_order: Number(sortOrder) || 0,
@@ -563,6 +567,20 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                                 Клиенты без версии (web, очень старые сборки) рекламу
                                 не увидят. Нужно для типов действия, которых нет в
                                 старых версиях (напр. «Поделиться»).
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Макс. версия приложения</Label>
+                            <Input
+                                placeholder="напр. 1.2.0 — пусто = всем"
+                                value={maxAppVersion}
+                                onChange={(e) => setMaxAppVersion(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Показывать только клиентам с X-App-Version не выше.
+                                Клиенты без версии считаются старой сборкой и рекламу
+                                увидят. Нужно, когда объявление актуально только до
+                                определённой сборки (напр. просьба обновиться).
                             </p>
                         </div>
                         <div className="space-y-2">
