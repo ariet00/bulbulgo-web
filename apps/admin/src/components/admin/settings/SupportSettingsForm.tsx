@@ -19,6 +19,8 @@ const DEFAULT_FORM: AdminSupportSettings = {
     in_app_enabled: true,
     tg_enabled: false,
     tg_url: '',
+    wa_enabled: false,
+    wa_phone: '',
 }
 
 export function SupportSettingsForm() {
@@ -27,7 +29,12 @@ export function SupportSettingsForm() {
     const [form, setForm] = useState<AdminSupportSettings>(DEFAULT_FORM)
 
     useEffect(() => {
-        if (data) setForm({ ...data, tg_url: data.tg_url ?? '' })
+        if (data)
+            setForm({
+                ...data,
+                tg_url: data.tg_url ?? '',
+                wa_phone: data.wa_phone ?? '',
+            })
     }, [data])
 
     const set = <K extends keyof AdminSupportSettings>(
@@ -36,7 +43,11 @@ export function SupportSettingsForm() {
     ) => setForm((prev) => ({ ...prev, [key]: value }))
 
     const submit = () =>
-        update.mutate({ ...form, tg_url: form.tg_url?.trim() || null })
+        update.mutate({
+            ...form,
+            tg_url: form.tg_url?.trim() || null,
+            wa_phone: form.wa_phone?.trim() || null,
+        })
 
     return (
         <div className="space-y-6">
@@ -44,7 +55,8 @@ export function SupportSettingsForm() {
                 Каналы связи с поддержкой на экране «Поддержка» в приложении.
                 Управляется без релиза (Redis <code className="text-xs">app:support</code>);
                 отдаётся клиенту в <code className="text-xs">/me</code> (
-                <code className="text-xs">settings.support</code>).
+                <code className="text-xs">settings.support</code>) и в публичном{' '}
+                <code className="text-xs">/app/config</code>.
             </p>
 
             <Card>
@@ -97,6 +109,39 @@ export function SupportSettingsForm() {
                         <p className="mt-1 text-xs text-muted-foreground">
                             Пустая ссылка = кнопка Telegram скрыта, даже если
                             переключатель включён.
+                        </p>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 rounded border px-3 py-2">
+                        <div className="space-y-0.5">
+                            <Label className="cursor-pointer">
+                                WhatsApp-поддержка
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                Кнопка «Написать в WhatsApp». Показывается,
+                                только если включена и указан номер.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={form.wa_enabled}
+                            onCheckedChange={(v) => set('wa_enabled', v)}
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <div>
+                        <Label>Номер WhatsApp</Label>
+                        <Input
+                            value={form.wa_phone ?? ''}
+                            onChange={(e) => set('wa_phone', e.target.value)}
+                            placeholder="+996700123456"
+                            disabled={isLoading || !form.wa_enabled}
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Сохраняется в формате E.164 (
+                            <code className="text-xs">+996700123456</code>);
+                            принимаются KG/KZ/RU/UZ номера в любом виде. Пустой
+                            номер = кнопка WhatsApp скрыта.
                         </p>
                     </div>
 

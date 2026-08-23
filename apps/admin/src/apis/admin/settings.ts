@@ -101,6 +101,10 @@ export interface AdminSupportSettings {
     in_app_enabled: boolean
     tg_enabled: boolean
     tg_url: string | null
+    wa_enabled: boolean
+    // Номер WhatsApp. Бэкенд нормализует его в E.164 (`+996…`) при сохранении
+    // и отвечает 400, если номер не разобрался.
+    wa_phone: string | null
 }
 
 // service -> role -> [phrases]
