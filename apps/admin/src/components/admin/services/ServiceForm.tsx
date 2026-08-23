@@ -17,6 +17,8 @@ import {
     Switch,
 } from '@doska/ui'
 import { Plus, Trash2 } from 'lucide-react'
+import { LocalizedInputs } from './LocalizedInputs'
+import { IconColorInput } from './IconColorInput'
 import type {
     AdminService,
     AdminServiceCreate,
@@ -24,13 +26,30 @@ import type {
     LocalizedText,
 } from '@/apis/admin'
 
-const LANGS = [
-    { code: 'ru', name: 'RU' },
-    { code: 'ky', name: 'KY' },
-    { code: 'en', name: 'EN' },
-]
-
 const NO_BADGE = '__none__'
+
+// Зеркало AppService._icons (app_service.dart). Новое имя работает только
+// после релиза приложения — старые сборки его молча проигнорируют.
+const SERVICE_ICONS = [
+    'car',
+    'garage',
+    'sell',
+    'bus',
+    'truck',
+    'apartment',
+    'work',
+    'tools',
+    'calendar',
+    'package',
+    'store',
+    'news',
+    'fuel',
+    'grid',
+    'wallet',
+    'chat',
+    'star',
+    'heart',
+]
 
 // Синхронно с ServiceNavItem._icons во Flutter (app_service.dart)
 const NAV_ICONS = [
@@ -48,39 +67,6 @@ const NAV_ICONS = [
     'grid',
 ]
 
-function LocalizedInputs({
-    value,
-    onChange,
-    label,
-}: {
-    value: LocalizedText
-    onChange: (next: LocalizedText) => void
-    label: string
-}) {
-    return (
-        <div className="space-y-1.5">
-            <Label>{label}</Label>
-            <div className="grid grid-cols-3 gap-2">
-                {LANGS.map((l) => (
-                    <div key={l.code} className="space-y-1">
-                        <span className="text-[10px] uppercase text-muted-foreground">
-                            {l.name}
-                        </span>
-                        <Input
-                            value={value?.[l.code] ?? ''}
-                            onChange={(e) => {
-                                const next = { ...(value ?? {}) }
-                                if (e.target.value) next[l.code] = e.target.value
-                                else delete next[l.code]
-                                onChange(next)
-                            }}
-                        />
-                    </div>
-                ))}
-            </div>
-        </div>
-    )
-}
 
 type Props = {
     /** present → edit (slug/type заблокированы); absent → create */
@@ -100,10 +86,8 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     const [description, setDescription] = useState<LocalizedText>(
         initial?.description ?? {},
     )
-    const [category, setCategory] = useState<LocalizedText>(
-        initial?.category ?? {},
-    )
     const [icon, setIcon] = useState(initial?.icon ?? '')
+    const [color, setColor] = useState(initial?.color ?? '')
     const [badge, setBadge] = useState(initial?.badge ?? NO_BADGE)
     const [showInTabs, setShowInTabs] = useState(initial?.show_in_tabs ?? true)
     const [url, setUrl] = useState(initial?.url ?? '')
@@ -139,8 +123,8 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             type,
             label,
             description,
-            category,
             icon: icon.trim() || null,
+            color: color.trim() || null,
             badge: badge === NO_BADGE ? null : (badge as 'new' | 'soon'),
             show_in_tabs: showInTabs,
             url: type === 'webview' ? url.trim() : null,
@@ -196,11 +180,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                         onChange={setDescription}
                         label="Описание"
                     />
-                    <LocalizedInputs
-                        value={category}
-                        onChange={setCategory}
-                        label="Категория (группа на «Главной»; пусто — «Другое»)"
-                    />
+                    <IconColorInput value={color} onChange={setColor} />
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
@@ -227,12 +207,32 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label>Иконка (URL картинки)</Label>
+                        <Label>Иконка</Label>
                         <Input
                             value={icon}
                             onChange={(e) => setIcon(e.target.value)}
-                            placeholder="https://…  (пусто для нативных — иконка в приложении)"
+                            placeholder="https://… или имя значка (пусто — иконка из приложения)"
                         />
+                        <div className="flex flex-wrap gap-1">
+                            {SERVICE_ICONS.map((name) => (
+                                <button
+                                    key={name}
+                                    type="button"
+                                    onClick={() => setIcon(name)}
+                                    className={`rounded-md border px-2 py-0.5 text-xs transition-colors ${
+                                        icon === name
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'hover:bg-muted'
+                                    }`}
+                                >
+                                    {name}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Имя значка рисуется самим приложением — картинку
+                            хостить не нужно. Своя картинка задаётся полным URL.
+                        </p>
                     </div>
 
                     <div className="flex items-center justify-between rounded-md border p-3">

@@ -15,9 +15,9 @@ export interface AdminService {
     position: number
     label: LocalizedText
     description: LocalizedText
-    // категория для группировки/фильтра на «Главной»; пусто — «Другое»
-    category: LocalizedText
     icon: string | null
+    // HEX-цвет значка (#RRGGBB); null — приложение подберёт цвет само
+    color: string | null
     badge: 'new' | 'soon' | null
     show_in_tabs: boolean
     url: string | null
@@ -34,8 +34,8 @@ export interface AdminServiceCreate {
     type: 'native' | 'webview'
     label?: LocalizedText
     description?: LocalizedText
-    category?: LocalizedText
     icon?: string | null
+    color?: string | null
     badge?: 'new' | 'soon' | null
     show_in_tabs?: boolean
     url?: string | null

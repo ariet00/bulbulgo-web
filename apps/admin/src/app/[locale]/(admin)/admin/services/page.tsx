@@ -17,7 +17,7 @@ import {
     TableRow,
 } from '@doska/ui'
 import { Link, useRouter } from '@doska/i18n'
-import { Check, Globe, Plus, Smartphone, Trash2 } from 'lucide-react'
+import { Check, Globe, LayoutGrid, Plus, Smartphone, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminService } from '@/apis/admin'
 import {
@@ -51,11 +51,18 @@ export default function AdminServicesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold">Сервисы приложения</h1>
-                <Button asChild size="sm">
-                    <Link href="/admin/services/new">
-                        <Plus className="size-4 mr-1" /> Создать
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button asChild size="sm" variant="outline">
+                        <Link href="/admin/services/groups">
+                            <LayoutGrid className="size-4 mr-1" /> Группы
+                        </Link>
+                    </Button>
+                    <Button asChild size="sm">
+                        <Link href="/admin/services/new">
+                            <Plus className="size-4 mr-1" /> Создать
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             <Card>

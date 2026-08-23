@@ -1,5 +1,6 @@
 export * from './analytics'
 export * from './app-services'
+export * from './service-groups'
 export * from './booking'
 export * from './companies'
 export * from './complaints'
