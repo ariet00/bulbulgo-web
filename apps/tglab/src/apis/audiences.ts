@@ -5,6 +5,7 @@ import type {
   AudienceImportResult,
   AudienceInput,
   AudienceItemsPage,
+  AudienceReach,
 } from '@/types'
 
 export interface ItemFilters {
@@ -44,6 +45,12 @@ export async function updateAudience(id: number, payload: Partial<AudienceInput>
 
 export async function deleteAudience(id: number) {
   const { data } = await api.delete(`/tglab/audiences/${id}`)
+  return data
+}
+
+/** Whose base this is — which accounts can address how much of it. */
+export async function getAudienceReach(id: number) {
+  const { data } = await api.get<AudienceReach>(`/tglab/audiences/${id}/reach`)
   return data
 }
 

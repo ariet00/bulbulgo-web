@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AccountFilters } from '@/apis/accounts'
 import { getAccountSessions, getAccounts } from '@/apis/accounts'
 import type { ItemFilters } from '@/apis/audiences'
-import { getAudienceItems, getAudiences } from '@/apis/audiences'
+import { getAudienceItems, getAudienceReach, getAudiences } from '@/apis/audiences'
 import { getMe } from '@/apis/auth'
 import type { TaskFilters } from '@/apis/tasks'
 import { getTaskLogs, getTasks } from '@/apis/tasks'
@@ -121,5 +121,14 @@ export function useTaskLogs(taskId: number | null) {
     queryFn: () => getTaskLogs(taskId as number, { limit: 200 }),
     enabled: Boolean(taskId),
     staleTime: 0,
+  })
+}
+
+/** Per-account coverage of a base — the answer to «почему никого не приглашает». */
+export function useAudienceReach(audienceId: number | null) {
+  return useQuery({
+    queryKey: tglabKeys.audienceReach(audienceId ?? 0),
+    queryFn: () => getAudienceReach(audienceId as number),
+    enabled: Boolean(audienceId),
   })
 }

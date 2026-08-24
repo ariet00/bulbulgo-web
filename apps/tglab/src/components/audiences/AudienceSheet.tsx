@@ -20,7 +20,7 @@ import { useRef, useState } from 'react'
 
 import { exportAudience } from '@/apis/audiences'
 import { useAddAudienceItems } from '@/hooks/mutations'
-import { useAudienceItems, useMeta } from '@/hooks/queries'
+import { useAudienceItems, useAudienceReach, useMeta } from '@/hooks/queries'
 import type { Audience } from '@/types'
 
 const PAGE_SIZE = 100
@@ -48,6 +48,7 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
     size: PAGE_SIZE,
     ...filters,
   })
+  const { data: reach } = useAudienceReach(audience?.id ?? null)
 
   if (!audience) return null
 
@@ -71,6 +72,38 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
             Записей: {audience.items_count}
             {audience.source?.target ? ` · источник ${audience.source.target}` : ''}
           </div>
+
+          {reach && (
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="text-sm font-medium">Кому база доступна</div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  С логином — доступны любому аккаунту
+                </span>
+                <span>{reach.with_username}</span>
+              </div>
+              {reach.accounts.map((entry) => (
+                <div key={entry.account_id} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    По сохранённому доступу — {entry.label}
+                  </span>
+                  <span>{entry.items}</span>
+                </div>
+              ))}
+              {reach.unreachable > 0 && (
+                <div className="flex justify-between text-sm text-amber-600 dark:text-amber-400">
+                  <span>Ни логина, ни доступа — недостижимы</span>
+                  <span>{reach.unreachable}</span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Telegram выдаёт доступ к человеку каждому аккаунту отдельно. Записи
+                без логина видит только тот аккаунт, который их собрал — пересоберите
+                базу нужным аккаунтом либо включите в задаче «Прогревать по исходному
+                чату».
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label>Добавить вручную</Label>
@@ -156,8 +189,24 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
                 key={item.id}
                 className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
               >
-                <span>
+                <span className="flex items-center gap-2">
                   {item.username ? `@${item.username}` : item.tg_user_id}
+                  {!item.username &&
+                    (item.hash_accounts.length ? (
+                      <span
+                        className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                        title="Доступен аккаунтам, которые его собрали"
+                      >
+                        есть доступ
+                      </span>
+                    ) : (
+                      <span
+                        className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-600 dark:text-amber-400"
+                        title="Ни логина, ни сохранённого доступа — обратиться к нему нельзя"
+                      >
+                        только id
+                      </span>
+                    ))}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {flagLabels(item.flags).join(', ') ||

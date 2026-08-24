@@ -253,6 +253,8 @@ export interface AudienceItem {
   id: number
   tg_user_id: number | null
   username: string | null
+  /** Accounts holding an access hash for this entry — see `AudienceReach`. */
+  hash_accounts: number[]
   /** Bitmask of what already happened to this entry. */
   flags: number
   cycles: number
@@ -262,6 +264,15 @@ export interface AudienceItem {
 export interface AudienceItemsPage {
   items: AudienceItem[]
   total: number
+}
+
+/** Who can actually work with a base: Telegram issues the access hash per
+ *  account, so a bare id is addressable only by the account that saw it. */
+export interface AudienceReach {
+  total: number
+  with_username: number
+  unreachable: number
+  accounts: { account_id: number; label: string; items: number }[]
 }
 
 export interface AudienceImportResult {
