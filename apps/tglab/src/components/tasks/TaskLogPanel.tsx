@@ -9,7 +9,7 @@ import { StatusChip } from '@/components/common/StatusChip'
 import { useStartTask, useStopTask } from '@/hooks/mutations'
 import { useMeta, useTaskLogs } from '@/hooks/queries'
 import { useLiveStore } from '@/store/useLiveStore'
-import type { Task } from '@/types'
+import type { Task, TaskLog } from '@/types'
 
 /** Colour per log level — an error has to be findable in a long tail. */
 const LEVEL_TONES: Record<string, string> = {
@@ -21,6 +21,14 @@ const LEVEL_TONES: Record<string, string> = {
 
 const RUNNING = ['running', 'scheduled']
 
+/** Stable reference for "no lines yet".
+ *
+ * zustand 5 reads through `useSyncExternalStore`, which compares snapshots by
+ * identity — a selector that builds a fresh `[]` on every call looks like an
+ * endless stream of changes and re-renders until React gives up. So the empty
+ * case has to be one and the same array. */
+const NO_LINES: TaskLog[] = []
+
 interface Props {
   task: Task | null
   onOpenChange: (open: boolean) => void
@@ -30,7 +38,9 @@ interface Props {
 export function TaskLogPanel({ task, onOpenChange }: Props) {
   const { data: meta } = useMeta()
   const { data: tail } = useTaskLogs(task?.id ?? null)
-  const lines = useLiveStore((s) => (task ? s.logs[task.id] ?? [] : []))
+  // The selector returns only what the store already holds (or undefined) —
+  // never a freshly built value.
+  const lines = useLiveStore((s) => (task ? s.logs[task.id] : undefined)) ?? NO_LINES
   const primeLogs = useLiveStore((s) => s.primeLogs)
   const connected = useLiveStore((s) => s.connected)
   const start = useStartTask()

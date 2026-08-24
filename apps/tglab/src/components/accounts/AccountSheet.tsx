@@ -4,6 +4,11 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -13,14 +18,16 @@ import {
 import { Loader2, LogOut, RefreshCw, ShieldAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { NONE_VALUE, ProjectSelect } from '@/components/common/ProjectSelect'
 import { StatusChip } from '@/components/common/StatusChip'
 import {
   useCheckAccount,
   useCheckAccountSpamBlock,
   useTerminateAccountSessions,
+  useUpdateAccount,
   useUpdateAccountProfile,
 } from '@/hooks/mutations'
-import { useAccountSessions, useMeta } from '@/hooks/queries'
+import { useAccountSessions, useMeta, useProxies } from '@/hooks/queries'
 import type { Account } from '@/types'
 
 interface Props {
@@ -35,6 +42,8 @@ export function AccountSheet({ account, onOpenChange }: Props) {
   const spamCheck = useCheckAccountSpamBlock()
   const updateProfile = useUpdateAccountProfile()
   const terminate = useTerminateAccountSessions()
+  const update = useUpdateAccount()
+  const { data: proxies } = useProxies()
   // Listing devices is a live Telegram call — only while the panel is open.
   const sessions = useAccountSessions(account?.id ?? null)
 
@@ -92,6 +101,44 @@ export function AccountSheet({ account, onOpenChange }: Props) {
               @SpamBot
             </Button>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Прокси</Label>
+              <Select
+                value={account.proxy_id ? String(account.proxy_id) : NONE_VALUE}
+                onValueChange={(value) =>
+                  update.mutate({
+                    id: account.id,
+                    proxy_id: value === NONE_VALUE ? null : Number(value),
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Без прокси" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_VALUE}>Без прокси</SelectItem>
+                  {proxies?.map((proxy) => (
+                    <SelectItem key={proxy.id} value={String(proxy.id)}>
+                      {proxy.name || `${proxy.host}:${proxy.port}`}
+                      {proxy.status === 'failed' ? ' · не отвечает' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Проект</Label>
+              <ProjectSelect
+                value={account.project_id}
+                onChange={(project_id) => update.mutate({ id: account.id, project_id })}
+              />
+            </div>
+          </div>
+          <p className="-mt-4 text-xs text-muted-foreground">
+            Смена прокси применится со следующего подключения — нажмите «Проверить».
+          </p>
 
           {account.last_error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -196,8 +243,9 @@ export function AccountSheet({ account, onOpenChange }: Props) {
             {sessions.isLoading ? (
               <div className="text-sm text-muted-foreground">Загрузка…</div>
             ) : sessions.isError ? (
-              <div className="text-sm text-muted-foreground">
-                Не удалось получить — аккаунт не на связи.
+              <div className="text-sm text-destructive">
+                {(sessions.error as { response?: { data?: { message?: string } } })
+                  ?.response?.data?.message ?? 'Не удалось получить — аккаунт не на связи.'}
               </div>
             ) : (
               <div className="space-y-2">
