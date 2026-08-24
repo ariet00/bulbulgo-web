@@ -15,8 +15,39 @@ api.interceptors.request.use((config) => {
   config.headers = config.headers ?? {}
   if (token) config.headers.Authorization = `Bearer ${token}`
   config.headers['X-Product'] = 'tglab'
+
+  // File uploads must NOT inherit the instance's JSON content type: without a
+  // multipart boundary the server sees an empty body and reports every field
+  // as missing. Dropping the header lets the browser set it with the boundary.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    config.headers.delete('Content-Type')
+  }
   return config
 })
+
+/**
+ * FastAPI answers in two dialects: our own `{message}` and pydantic's
+ * `{detail: [{loc, msg}, …]}` for a 422. The array must never reach a toast —
+ * rendering it as a React child is what blanks the page.
+ */
+function readableError(body: any, fallback: string): string {
+  if (typeof body?.message === 'string') return body.message
+
+  const detail = body?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    const lines = detail
+      .map((item) => {
+        // loc[0] is always "body"/"query" — the field name is what helps.
+        const field = Array.isArray(item?.loc) ? item.loc.slice(1).join('.') : ''
+        return field ? `${field}: ${item?.msg}` : item?.msg
+      })
+      .filter(Boolean)
+    if (lines.length) return lines.join('; ')
+  }
+  return fallback
+}
+
 
 /** Drop the session and bounce to the sign-in page (dead/absent refresh token). */
 function toLogin() {
