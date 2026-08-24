@@ -34,6 +34,7 @@ import {
     Tags,
     Timer,
     Trophy,
+    UserCog,
     Users,
 } from 'lucide-react'
 import { cn } from '@doska/shared'
@@ -117,6 +118,14 @@ const sections: NavSection[] = [
             { name: 'Модерация групп', href: '/admin/moderation', icon: ShieldBan },
             { name: 'Каналы парсера', href: '/admin/parser/channels', icon: Radio },
             { name: 'Настройки парсера', href: '/admin/parser/settings', icon: SettingsIcon },
+        ],
+    },
+    {
+        // Внутренний кабинет продвижения (apps/tglab) — здесь только операторы,
+        // сама работа идёт в отдельном приложении @doska/tglab.
+        label: 'Tglab',
+        items: [
+            { name: 'Операторы', href: '/admin/tglab', icon: UserCog },
         ],
     },
 ]

@@ -23,6 +23,7 @@ export * from './currencies'
 export * from './fuel'
 export * from './moderation'
 export * from './telegram'
+export * from './tglab'
 
 import { regionsAdminApi } from './regions'
 import { usersAdminApi } from './users'
@@ -48,6 +49,7 @@ import { currenciesAdminApi } from './currencies'
 import { fuelAdminApi } from './fuel'
 import { moderationAdminApi } from './moderation'
 import { telegramAdminApi } from './telegram'
+import { tglabAdminApi } from './tglab'
 
 // Единый объект-агрегат — публичный контракт `adminApi` не изменился.
 export const adminApi = {
@@ -75,4 +77,5 @@ export const adminApi = {
     ...currenciesAdminApi,
     ...moderationAdminApi,
     ...telegramAdminApi,
+    ...tglabAdminApi,
 }

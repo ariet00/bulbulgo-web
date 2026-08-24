@@ -38,6 +38,8 @@ export const adminKeys = {
     celeryRunsSummary: (windowHours: number) =>
         [...adminKeys.all, 'celery-runs-summary', windowHours] as const,
     seeders: () => [...adminKeys.all, 'seeders'] as const,
+    tglabUsers: () => [...adminKeys.all, 'tglab-users'] as const,
+    tglabRoles: () => [...adminKeys.all, 'tglab-roles'] as const,
     notifications: () => [...adminKeys.all, 'notifications'] as const,
     notification: (id: number) => [...adminKeys.notifications(), id] as const,
     ads: () => [...adminKeys.all, 'ads'] as const,
