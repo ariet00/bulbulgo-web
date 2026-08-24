@@ -2,7 +2,9 @@
 
 import {
     type AdminAutoBumpTariff,
+    type AdminUrgentTariff,
     type AdminServicePrices,
+    type ServiceRole,
 } from '@/apis/admin'
 import { useAdminServicePricesSettings } from '@/hooks/queries/admin'
 import { useUpdateAdminServicePricesSettings } from '@/hooks/mutations/admin'
@@ -23,6 +25,7 @@ import { useEffect, useState } from 'react'
 const DEFAULT_FORM: AdminServicePrices = {
     auto_bump_enabled: false,
     auto_bump_title: 'Автоподнятие',
+    auto_bump_short_description: '',
     auto_bump_description: '',
     auto_bump_tariffs: [
         {
@@ -40,17 +43,77 @@ const DEFAULT_FORM: AdminServicePrices = {
             price: 300,
         },
     ],
+    auto_bump_roles: ['driver'],
     urgent_enabled: false,
     urgent_title: 'Срочно',
+    urgent_short_description: '',
     urgent_description: '',
+    urgent_tariffs: [
+        { id: 'd1', label: '1 день', duration_days: 1, price: 100 },
+        { id: 'd3', label: '3 дня', duration_days: 3, price: 200 },
+    ],
+    urgent_roles: ['driver'],
     urgent_price: 50,
     urgent_duration_days: 1,
+}
+
+const ROLE_OPTIONS: { value: ServiceRole; label: string }[] = [
+    { value: 'driver', label: 'Водитель' },
+    { value: 'passenger', label: 'Пассажир' },
+    { value: 'parcel', label: 'Посылка' },
+]
+
+function RolesField({
+    value,
+    onToggle,
+    disabled,
+}: {
+    value: ServiceRole[]
+    onToggle: (role: ServiceRole) => void
+    disabled?: boolean
+}) {
+    return (
+        <div className="space-y-1">
+            <Label>Кому показывать</Label>
+            <div className="flex flex-wrap gap-2">
+                {ROLE_OPTIONS.map((opt) => {
+                    const active = value.includes(opt.value)
+                    return (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => onToggle(opt.value)}
+                            className={`rounded-full border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+                                active
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'border-input bg-background text-muted-foreground hover:bg-accent'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    )
+                })}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+                Роли объявлений, для которых видна услуга. Пусто — не видна
+                никому.
+            </p>
+        </div>
+    )
 }
 
 const newTariff = (): AdminAutoBumpTariff => ({
     id: crypto.randomUUID(),
     label: '',
     interval_hours: 1,
+    duration_days: 1,
+    price: 100,
+})
+
+const newUrgentTariff = (): AdminUrgentTariff => ({
+    id: crypto.randomUUID(),
+    label: '',
     duration_days: 1,
     price: 100,
 })
@@ -72,8 +135,10 @@ export function ServicePricesSettingsForm() {
     const setText = (
         key:
             | 'auto_bump_title'
+            | 'auto_bump_short_description'
             | 'auto_bump_description'
             | 'urgent_title'
+            | 'urgent_short_description'
             | 'urgent_description',
         value: string,
     ) => setForm((prev) => ({ ...prev, [key]: value }))
@@ -82,6 +147,18 @@ export function ServicePricesSettingsForm() {
         key: 'auto_bump_enabled' | 'urgent_enabled',
         value: boolean,
     ) => setForm((prev) => ({ ...prev, [key]: value }))
+
+    const toggleRole = (
+        key: 'auto_bump_roles' | 'urgent_roles',
+        role: ServiceRole,
+    ) =>
+        setForm((prev) => {
+            const current = prev[key]
+            const next = current.includes(role)
+                ? current.filter((r) => r !== role)
+                : [...current, role]
+            return { ...prev, [key]: next }
+        })
 
     const setTariff = <K extends keyof AdminAutoBumpTariff>(
         idx: number,
@@ -105,6 +182,30 @@ export function ServicePricesSettingsForm() {
         setForm((prev) => ({
             ...prev,
             auto_bump_tariffs: prev.auto_bump_tariffs.filter((_, i) => i !== idx),
+        }))
+
+    const setUrgentTariff = <K extends keyof AdminUrgentTariff>(
+        idx: number,
+        key: K,
+        value: AdminUrgentTariff[K],
+    ) =>
+        setForm((prev) => ({
+            ...prev,
+            urgent_tariffs: prev.urgent_tariffs.map((t, i) =>
+                i === idx ? { ...t, [key]: value } : t,
+            ),
+        }))
+
+    const addUrgentTariff = () =>
+        setForm((prev) => ({
+            ...prev,
+            urgent_tariffs: [...prev.urgent_tariffs, newUrgentTariff()],
+        }))
+
+    const removeUrgentTariff = (idx: number) =>
+        setForm((prev) => ({
+            ...prev,
+            urgent_tariffs: prev.urgent_tariffs.filter((_, i) => i !== idx),
         }))
 
     const submit = () => update.mutate(form)
@@ -140,6 +241,11 @@ export function ServicePricesSettingsForm() {
                             disabled={isLoading}
                         />
                     </div>
+                    <RolesField
+                        value={form.urgent_roles}
+                        onToggle={(role) => toggleRole('urgent_roles', role)}
+                        disabled={isLoading}
+                    />
                     <div className="space-y-1">
                         <Label>Заголовок</Label>
                         <Input
@@ -149,6 +255,23 @@ export function ServicePricesSettingsForm() {
                             }
                             disabled={isLoading}
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Краткое описание (под заголовком)</Label>
+                        <Input
+                            value={form.urgent_short_description}
+                            onChange={(e) =>
+                                setText(
+                                    'urgent_short_description',
+                                    e.target.value,
+                                )
+                            }
+                            disabled={isLoading}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Короткая строка под названием услуги в шите
+                            подключения.
+                        </p>
                     </div>
                     <div className="space-y-1">
                         <Label>Описание (как работает)</Label>
@@ -165,9 +288,93 @@ export function ServicePricesSettingsForm() {
                             строк сохраняются.
                         </p>
                     </div>
+
+                    <Separator />
+
+                    <p className="text-sm font-medium">Тарифы</p>
+                    {form.urgent_tariffs.map((t, idx) => (
+                        <div
+                            key={idx}
+                            className="space-y-3 rounded border px-3 py-3"
+                        >
+                            <div className="space-y-1">
+                                <Label>Название</Label>
+                                <Input
+                                    value={t.label}
+                                    placeholder="1 день"
+                                    onChange={(e) =>
+                                        setUrgentTariff(
+                                            idx,
+                                            'label',
+                                            e.target.value,
+                                        )
+                                    }
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label>Срок, дней</Label>
+                                    <Input
+                                        type="number"
+                                        value={t.duration_days}
+                                        onChange={(e) =>
+                                            setUrgentTariff(
+                                                idx,
+                                                'duration_days',
+                                                parseInt(e.target.value) || 0,
+                                            )
+                                        }
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Цена</Label>
+                                    <Input
+                                        type="number"
+                                        step={0.01}
+                                        value={t.price}
+                                        onChange={(e) =>
+                                            setUrgentTariff(
+                                                idx,
+                                                'price',
+                                                parseFloat(e.target.value) || 0,
+                                            )
+                                        }
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeUrgentTariff(idx)}
+                                    disabled={isLoading}
+                                >
+                                    Удалить
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
+
+                    <Button
+                        variant="outline"
+                        onClick={addUrgentTariff}
+                        disabled={isLoading}
+                    >
+                        + Добавить тариф
+                    </Button>
+
+                    <Separator />
+
+                    <p className="text-[10px] text-muted-foreground">
+                        ⚠️ Legacy: одиночная цена/срок для старых клиентов,
+                        которые не умеют тарифы. Позже уберём.
+                    </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <Label>Цена</Label>
+                            <Label>Цена (legacy)</Label>
                             <Input
                                 type="number"
                                 step={0.01}
@@ -181,11 +388,11 @@ export function ServicePricesSettingsForm() {
                                 disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                                urgent_price — стоимость статуса «Срочно».
+                                urgent_price — стоимость для старых клиентов.
                             </p>
                         </div>
                         <div className="space-y-1">
-                            <Label>Срок, дней</Label>
+                            <Label>Срок, дней (legacy)</Label>
                             <Input
                                 type="number"
                                 value={form.urgent_duration_days}
@@ -198,7 +405,7 @@ export function ServicePricesSettingsForm() {
                                 disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                                urgent_duration_days — сколько дней действует.
+                                urgent_duration_days — срок для старых клиентов.
                             </p>
                         </div>
                     </div>
@@ -228,6 +435,11 @@ export function ServicePricesSettingsForm() {
                             disabled={isLoading}
                         />
                     </div>
+                    <RolesField
+                        value={form.auto_bump_roles}
+                        onToggle={(role) => toggleRole('auto_bump_roles', role)}
+                        disabled={isLoading}
+                    />
                     <div className="space-y-1">
                         <Label>Заголовок</Label>
                         <Input
@@ -237,6 +449,23 @@ export function ServicePricesSettingsForm() {
                             }
                             disabled={isLoading}
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Краткое описание (под заголовком)</Label>
+                        <Input
+                            value={form.auto_bump_short_description}
+                            onChange={(e) =>
+                                setText(
+                                    'auto_bump_short_description',
+                                    e.target.value,
+                                )
+                            }
+                            disabled={isLoading}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Короткая строка под названием услуги в шите
+                            подключения.
+                        </p>
                     </div>
                     <div className="space-y-1">
                         <Label>Описание (как работает)</Label>

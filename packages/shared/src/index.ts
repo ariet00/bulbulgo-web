@@ -14,9 +14,11 @@ export * from './apis/whatsapp'
 export * from './apis/upload'
 export * from './apis/users'
 export * from './apis/trips'
-export * from './apis/parser'
+export * from './apis/settings-registry'
+export * from './apis/telegram-channels'
 
-export * from './hooks/queries/parser'
+export * from './hooks/queries/settings-registry'
+export * from './hooks/queries/telegram-channels'
 export * from './hooks/queries/contentManager'
 export * from './hooks/queries/instagram'
 export * from './hooks/queries/pages'
@@ -35,7 +37,8 @@ export * from './hooks/useDebounce'
 
 export { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
-export * from './hooks/mutations/parser'
+export * from './hooks/mutations/settings-registry'
+export * from './hooks/mutations/telegram-channels'
 export * from './hooks/mutations/contentManager'
 export * from './hooks/mutations/instagram'
 export * from './hooks/mutations/pages'
@@ -50,7 +53,9 @@ export * from './hooks/queries/useUsers'
 
 export * from './lib/auth'
 export * from './lib/categoryIcons'
-export * from './lib/firebase'
+// NOTE: './lib/firebase' is intentionally NOT re-exported here. Firebase (~39MB module
+// graph) is loaded lazily inside NotificationHandler via dynamic import(). Re-exporting it
+// from the barrel would drag the whole Firebase SDK into every page importing @doska/shared.
 export * from './lib/queryClient'
 export * from './lib/requester'
 export * from './lib/server-fetch'

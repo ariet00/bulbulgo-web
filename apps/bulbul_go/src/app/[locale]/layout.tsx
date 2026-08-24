@@ -1,9 +1,10 @@
 import { getMe, authOptions, Providers, NotificationSystem, NotificationHandler } from '@doska/shared'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { getServerSession } from 'next-auth'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 
 
@@ -18,8 +19,27 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Doska',
-  description: 'Bulletin Board',
+  metadataBase: new URL(SITE_URL),
+  title: 'BulBul Go',
+  description: 'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
+  icons: { icon: '/favicon.png' },
+  openGraph: {
+    type: 'website',
+    siteName: 'BulBul Go',
+    locale: 'ru_RU',
+    title: 'BulBul Go — поиск попутчиков по Кыргызстану',
+    description: 'BulBul Go — сервис для поиска попутчиков по всему Кыргызстану.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+}
+
+// <meta name="color-scheme" content="light dark"> в <head> до загрузки CSS —
+// браузер красит холст документа по системной теме с первого кадра, без белой
+// вспышки при навигации у системно-тёмных.
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
 }
 
 

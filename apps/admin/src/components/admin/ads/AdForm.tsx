@@ -20,6 +20,7 @@ import {
     TabsContent,
     TabsList,
     TabsTrigger,
+    Textarea,
 } from '@doska/ui'
 import { useState } from 'react'
 import type { AdminAd, AdminAdColors, AdminAdCreate } from '@/apis/admin'
@@ -34,6 +35,80 @@ const LANGS = [
     { code: 'ru', label: 'RU' },
     { code: 'ky', label: 'KY' },
     { code: 'en', label: 'EN' },
+]
+
+/** Тип действия по тапу на рекламу (поле action_type). */
+const ACTION_TYPES = [
+    { value: 'url', label: 'Внешняя ссылка / другое приложение' },
+    { value: 'route', label: 'Внутренний экран приложения' },
+    { value: 'phone', label: 'Позвонить' },
+    { value: 'share', label: 'Поделиться (системное меню)' },
+    { value: 'copy', label: 'Скопировать в буфер (промокод)' },
+    { value: 'none', label: 'Без действия (баннер)' },
+]
+
+/**
+ * Проверка и нормализация action_url под выбранный тип. Возвращает текст ошибки
+ * (или null) и нормализованное значение, которое уйдёт на бэкенд — чтобы в
+ * приложение попадал только валидный формат.
+ */
+function validateAction(
+    type: string,
+    raw: string,
+): { error: string | null; value: string } {
+    const v = raw.trim()
+    switch (type) {
+        case 'none':
+            return { error: null, value: '' }
+        case 'url':
+            return /^https?:\/\/.+/i.test(v)
+                ? { error: null, value: v }
+                : { error: 'Ссылка должна начинаться с http:// или https://', value: v }
+        case 'route':
+            return /^\/[\w\-/:]*$/.test(v)
+                ? { error: null, value: v }
+                : { error: 'Путь экрана должен начинаться с «/» (напр. /profile/wallet)', value: v }
+        case 'phone': {
+            const digits = v.replace(/[\s\-()]/g, '')
+            return /^\+[1-9]\d{8,14}$/.test(digits)
+                ? { error: null, value: digits }
+                : {
+                      error: 'Номер в межд. формате с кодом страны, напр. +996700123456',
+                      value: v,
+                  }
+        }
+        case 'share':
+        case 'copy':
+            return v.length > 0
+                ? { error: null, value: v }
+                : { error: 'Поле не должно быть пустым', value: v }
+        default:
+            return { error: null, value: v }
+    }
+}
+
+/** Подпись и плейсхолдер для поля action_url под каждый тип действия. */
+const ACTION_URL_HINT: Record<string, { label: string; placeholder: string }> = {
+    url: { label: 'Ссылка перехода (action_url)', placeholder: 'https://example.com' },
+    phone: { label: 'Номер телефона', placeholder: '+996700123456' },
+    share: { label: 'Текст для «Поделиться»', placeholder: 'Скачивай Bulbul Go: https://…' },
+    copy: { label: 'Текст для копирования (промокод)', placeholder: 'BULBUL2026' },
+}
+
+/**
+ * Частые внутренние экраны для action_type='route'. Пути — go_router из
+ * native_apps/bulbul_go/lib/core/router/app_router.dart. Можно вписать свой путь.
+ */
+const APP_ROUTES = [
+    { value: '/rideshare', label: 'Поездки (поиск)' },
+    { value: '/rideshare/create', label: 'Создать поездку' },
+    { value: '/freight', label: 'Грузы (поиск)' },
+    { value: '/freight/create', label: 'Создать груз' },
+    { value: '/bus', label: 'Автобусы' },
+    { value: '/messages', label: 'Сообщения' },
+    { value: '/profile', label: 'Профиль' },
+    { value: '/profile/wallet', label: 'Кошелёк' },
+    { value: '/profile/vehicles', label: 'Мои авто' },
 ]
 
 const PLATFORM_OPTIONS = [
@@ -124,6 +199,10 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
     const [placement, setPlacement] = useState(initial?.placement ?? 'contacts')
     const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '')
     const [actionUrl, setActionUrl] = useState(initial?.action_url ?? '')
+    const [actionType, setActionType] = useState(initial?.action_type ?? 'url')
+    const [googleInRotation, setGoogleInRotation] = useState(
+        initial?.google_in_rotation ?? false,
+    )
     const [title, setTitle] = useState<Record<string, string>>(initial?.title ?? {})
     const [buttonLabel, setButtonLabel] = useState<Record<string, string>>(
         initial?.button_label ?? {},
@@ -140,16 +219,32 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
     const [tripTypes, setTripTypes] = useState<string[]>(initial?.targeting?.trip_types ?? [])
     const [roles, setRoles] = useState<string[]>(initial?.targeting?.roles ?? [])
     const [platforms, setPlatforms] = useState<string[]>(initial?.targeting?.platforms ?? [])
+    const [minAppVersion, setMinAppVersion] = useState(
+        initial?.targeting?.min_app_version ?? '',
+    )
+    const [maxAppVersion, setMaxAppVersion] = useState(
+        initial?.targeting?.max_app_version ?? '',
+    )
 
     const [previewLang, setPreviewLang] = useState('ru')
     const [previewDark, setPreviewDark] = useState(false)
+    const [triedSubmit, setTriedSubmit] = useState(false)
+
+    const action = validateAction(actionType, actionUrl)
+    const showActionError =
+        action.error !== null && (triedSubmit || actionUrl.trim().length > 0)
 
     const handleSubmit = () => {
+        if (action.error) {
+            setTriedSubmit(true)
+            return
+        }
         const body: AdminAdCreate = {
             placement,
             image_url: imageUrl || undefined,
-            action_url: actionUrl || undefined,
-            action_type: 'url',
+            action_url: action.value || undefined,
+            action_type: actionType,
+            google_in_rotation: googleInRotation,
             title: cleanMap(title),
             button_label: cleanMap(buttonLabel),
             colors,
@@ -159,6 +254,8 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                 trip_types: tripTypes,
                 roles,
                 platforms,
+                min_app_version: minAppVersion.trim() || null,
+                max_app_version: maxAppVersion.trim() || null,
             },
             is_active: isActive,
             sort_order: Number(sortOrder) || 0,
@@ -213,16 +310,107 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Ссылка перехода (action_url)</Label>
-                            <Input
-                                placeholder="https://example.com"
-                                value={actionUrl}
-                                onChange={(e) => setActionUrl(e.target.value)}
-                            />
+                            <Label>Тип действия по тапу</Label>
+                            <Select value={actionType} onValueChange={setActionType}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ACTION_TYPES.map((t) => (
+                                        <SelectItem key={t.value} value={t.value}>
+                                            {t.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {actionType === 'none' ? null : actionType === 'route' ? (
+                            <div className="space-y-2">
+                                <Label>Экран приложения (action_url)</Label>
+                                <Select
+                                    value={
+                                        APP_ROUTES.some((r) => r.value === actionUrl)
+                                            ? actionUrl
+                                            : ''
+                                    }
+                                    onValueChange={setActionUrl}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Выберите раздел" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {APP_ROUTES.map((r) => (
+                                            <SelectItem key={r.value} value={r.value}>
+                                                {r.label} ({r.value})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Input
+                                    placeholder="или свой путь, напр. /profile/wallet"
+                                    value={actionUrl}
+                                    onChange={(e) => setActionUrl(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Путь go_router, начинается с «/».
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Label>
+                                    {(ACTION_URL_HINT[actionType] ?? ACTION_URL_HINT.url)
+                                        .label}
+                                </Label>
+                                {actionType === 'share' ? (
+                                    <Textarea
+                                        rows={4}
+                                        placeholder={ACTION_URL_HINT.share.placeholder}
+                                        value={actionUrl}
+                                        onChange={(e) => setActionUrl(e.target.value)}
+                                    />
+                                ) : (
+                                    <Input
+                                        placeholder={
+                                            (ACTION_URL_HINT[actionType] ??
+                                                ACTION_URL_HINT.url)
+                                                .placeholder
+                                        }
+                                        value={actionUrl}
+                                        onChange={(e) => setActionUrl(e.target.value)}
+                                    />
+                                )}
+                            </div>
+                        )}
+
+                        {showActionError && (
+                            <p className="text-xs text-destructive">{action.error}</p>
+                        )}
+
+                        <p className="text-xs text-muted-foreground">
+                            {actionType === 'none'
+                                ? 'Баннер без действия: тап игнорируется, кнопка не показывается. Подходит для чисто информационного фото.'
+                                : 'Всё объявление кликабельно — тап по фото (и по кнопке, если она есть) ведёт по действию выше. Заголовок и кнопка необязательны: оставьте их пустыми, чтобы показать только кликабельное фото.'}
+                        </p>
+
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    checked={googleInRotation}
+                                    onCheckedChange={setGoogleInRotation}
+                                />
+                                <Label>Добавлять Google-рекламу в ротацию слота</Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Google встанет одной позицией в круговую очередь этого
+                                слота (наравне с объявлениями). Настройка действует на
+                                весь слот: достаточно включить у одного объявления.
+                                Если своих объявлений нет — Google показывается всегда.
+                            </p>
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Тексты (по языкам)</Label>
+                            <Label>Тексты (по языкам) — необязательно</Label>
                             <Tabs defaultValue="ru">
                                 <TabsList>
                                     {LANGS.map((l) => (
@@ -368,6 +556,34 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                             />
                         </div>
                         <div className="space-y-2">
+                            <Label>Мин. версия приложения</Label>
+                            <Input
+                                placeholder="напр. 1.1.5 — пусто = всем"
+                                value={minAppVersion}
+                                onChange={(e) => setMinAppVersion(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Показывать только клиентам с X-App-Version не ниже.
+                                Клиенты без версии (web, очень старые сборки) рекламу
+                                не увидят. Нужно для типов действия, которых нет в
+                                старых версиях (напр. «Поделиться»).
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Макс. версия приложения</Label>
+                            <Input
+                                placeholder="напр. 1.2.0 — пусто = всем"
+                                value={maxAppVersion}
+                                onChange={(e) => setMaxAppVersion(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Показывать только клиентам с X-App-Version не выше.
+                                Клиенты без версии считаются старой сборкой и рекламу
+                                увидят. Нужно, когда объявление актуально только до
+                                определённой сборки (напр. просьба обновиться).
+                            </p>
+                        </div>
+                        <div className="space-y-2">
                             <Label>Регионы (ID через запятую)</Label>
                             <Input
                                 placeholder="напр. 1, 5, 12"
@@ -442,6 +658,7 @@ export function AdForm({ initial, submitting, submitLabel, onSubmit }: AdFormPro
                             <AdPreview
                                 placement={placement}
                                 imageUrl={imageUrl}
+                                actionType={actionType}
                                 title={title[previewLang] || title.ru || ''}
                                 buttonLabel={buttonLabel[previewLang] || buttonLabel.ru || ''}
                                 colors={resolveInherit(
@@ -540,33 +757,54 @@ function ColorField({
 function AdPreview({
     placement,
     imageUrl,
+    actionType,
     title,
     buttonLabel,
     colors,
 }: {
     placement: string
     imageUrl: string
+    actionType: string
     title: string
     buttonLabel: string
     colors: AdminAdColors
 }) {
-    const textBlock = (
+    // 'none' — баннер без действия: тапа и кнопки нет (как в приложении).
+    const isInteractive = actionType !== 'none'
+    const hasTitle = title.trim() !== ''
+    const hasButton = isInteractive && buttonLabel.trim() !== ''
+    // Нет ни заголовка, ни кнопки → текстовый блок не рисуем (баннер «только
+    // фото»), как и в native_apps/.../custom_ad_widget.dart.
+    const hasText = hasTitle || hasButton
+    // Кликабельное фото без текста — маленький бейдж, чтобы было видно, что тап
+    // по самой картинке ведёт по действию.
+    const photoClickable = isInteractive && !hasText
+    const textBlock = hasText ? (
         <div className="space-y-2 p-3">
-            <div
-                className="text-sm font-semibold leading-snug line-clamp-2"
-                style={{ color: colors.text }}
-            >
-                {title || 'Заголовок'}
-            </div>
-            <button
-                type="button"
-                className="w-full rounded-xl px-3 py-2 text-sm font-medium"
-                style={{ backgroundColor: colors.button, color: colors.button_text }}
-            >
-                {buttonLabel || 'Кнопка'}
-            </button>
+            {hasTitle && (
+                <div
+                    className="text-sm font-semibold leading-snug line-clamp-2"
+                    style={{ color: colors.text }}
+                >
+                    {title}
+                </div>
+            )}
+            {hasButton && (
+                <button
+                    type="button"
+                    className="w-full rounded-xl px-3 py-2 text-sm font-medium"
+                    style={{ backgroundColor: colors.button, color: colors.button_text }}
+                >
+                    {buttonLabel}
+                </button>
+            )}
         </div>
-    )
+    ) : null
+    const clickBadge = photoClickable ? (
+        <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white">
+            фото кликабельно
+        </span>
+    ) : null
 
     // Лента: картинка фиксированной высоты, текст снизу (как карточка поездки).
     if (placement === 'feed') {
@@ -575,16 +813,19 @@ function AdPreview({
                 className="overflow-hidden rounded-2xl border"
                 style={{ backgroundColor: colors.background }}
             >
-                {imageUrl ? (
-                    <img src={imageUrl} alt="" className="h-44 w-full object-cover" />
-                ) : (
-                    <div
-                        className="flex h-44 w-full items-center justify-center text-xs opacity-50"
-                        style={{ color: colors.text }}
-                    >
-                        нет фото
-                    </div>
-                )}
+                <div className="relative">
+                    {imageUrl ? (
+                        <img src={imageUrl} alt="" className="h-44 w-full object-cover" />
+                    ) : (
+                        <div
+                            className="flex h-44 w-full items-center justify-center text-xs opacity-50"
+                            style={{ color: colors.text }}
+                        >
+                            нет фото
+                        </div>
+                    )}
+                    {clickBadge}
+                </div>
                 {textBlock}
             </div>
         )
@@ -594,7 +835,7 @@ function AdPreview({
     // над текстом, заголовок и кнопка снизу. Квадрат = фото + текст вместе.
     return (
         <div
-            className="mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border"
+            className="relative mx-auto flex w-full max-w-[300px] flex-col overflow-hidden rounded-2xl border"
             style={{ aspectRatio: '380 / 370', backgroundColor: colors.background }}
         >
             {imageUrl ? (
@@ -611,7 +852,8 @@ function AdPreview({
                     нет фото
                 </div>
             )}
-            <div className="shrink-0">{textBlock}</div>
+            {clickBadge}
+            {textBlock && <div className="shrink-0">{textBlock}</div>}
         </div>
     )
 }

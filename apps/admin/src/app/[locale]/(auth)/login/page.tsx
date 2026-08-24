@@ -9,7 +9,9 @@ import { Chrome } from "lucide-react";
 export default function LoginPage() {
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get("callbackUrl") || "/";
-    const isForbidden = searchParams.get("error") === "forbidden";
+    const errorParam = searchParams.get("error");
+    const isForbidden = errorParam === "forbidden";
+    const isExpired = errorParam === "session_expired";
 
     const handleGoogleLogin = () => {
         signIn("google", { callbackUrl });
@@ -28,6 +30,11 @@ export default function LoginPage() {
                     {isForbidden && (
                         <p className="rounded-md bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
                             Доступ только для администраторов
+                        </p>
+                    )}
+                    {isExpired && (
+                        <p className="rounded-md bg-amber-500/10 px-3 py-2 text-center text-sm text-amber-600 dark:text-amber-400">
+                            Сессия истекла. Войдите снова.
                         </p>
                     )}
                     <Button

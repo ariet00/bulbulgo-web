@@ -3,8 +3,23 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter, Link } from '@doska/i18n'
-import { useAdminTrip, useAdminTripPhoneViewers } from '@/hooks/queries/admin'
-import { useAdminUpdateTripStatus, useAdminDeleteTrip } from '@/hooks/mutations/admin'
+import {
+    useAdminTrip,
+    useAdminTripPhoneViewers,
+    useAdminTripViewers,
+    useAdminTripBumps,
+    useAdminTripServicePayments,
+    useAdminBlockedAuthors,
+} from '@/hooks/queries/admin'
+import {
+    useAdminUpdateTripStatus,
+    useAdminDeleteTrip,
+    useAdminBlockAuthor,
+    useAdminUnblockAuthor,
+    useAdminSetTripServiceUntil,
+} from '@/hooks/mutations/admin'
+import type { TripViewersResponse } from '@/apis/admin'
+import { TripComplaintsCard } from './TripComplaintsCard'
 import {
     Card,
     CardContent,
@@ -13,6 +28,7 @@ import {
     BackButton,
     Badge,
     Button,
+    Input,
     Separator,
     Avatar,
     AvatarImage,
@@ -31,6 +47,7 @@ import {
     DialogDescription,
     DialogFooter,
     DialogClose,
+    Pagination,
 } from '@doska/ui'
 import {
     MapPin,
@@ -55,15 +72,20 @@ import {
     Play,
     Zap,
     TrendingUp,
+    BadgePercent,
     Hash,
     Building2,
     ExternalLink,
+    Rss,
     Map as MapIcon,
     CalendarClock,
     Repeat,
     Cake,
     MapPinned,
     Eye,
+    MousePointerClick,
+    Ban,
+    ShieldOff,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -203,14 +225,112 @@ function FlagBadge({ on, label }: { on?: boolean; label: string }) {
     )
 }
 
-function PhoneViewersCard({ tripId }: { tripId: number }) {
-    const { data, isLoading } = useAdminTripPhoneViewers(tripId)
+function SourceAuthorControl({
+    tripId,
+    author,
+}: {
+    tripId: number
+    author: { author_id: number; username?: string | null; name?: string | null }
+}) {
+    const { data: blocked } = useAdminBlockedAuthors()
+    const blockAuthor = useAdminBlockAuthor()
+    const unblockAuthor = useAdminUnblockAuthor()
+
+    const isBlocked = (blocked ?? []).some((b) => b.author_id === author.author_id)
+    const busy = blockAuthor.isPending || unblockAuthor.isPending
+    const displayName =
+        author.name || (author.username ? `@${author.username}` : `id ${author.author_id}`)
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 p-3">
+            <div className="min-w-0 space-y-0.5">
+                <div className="text-xs uppercase text-muted-foreground">Автор сообщения</div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground">{displayName}</span>
+                    {author.username && author.name && (
+                        <span className="text-sm text-muted-foreground">@{author.username}</span>
+                    )}
+                    <span className="font-mono text-xs text-muted-foreground">
+                        id {author.author_id}
+                    </span>
+                    {isBlocked && (
+                        <Badge variant="destructive" className="gap-1">
+                            <Ban className="h-3 w-3" /> Заблокирован
+                        </Badge>
+                    )}
+                </div>
+            </div>
+            {isBlocked ? (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => unblockAuthor.mutate(author.author_id)}
+                    className="gap-1.5"
+                >
+                    {unblockAuthor.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <ShieldOff className="h-4 w-4" />
+                    )}
+                    Разблокировать
+                </Button>
+            ) : (
+                <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() =>
+                        blockAuthor.mutate({
+                            author_id: author.author_id,
+                            username: author.username,
+                            name: author.name,
+                            trip_id: tripId,
+                        })
+                    }
+                    className="gap-1.5"
+                >
+                    {blockAuthor.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <Ban className="h-4 w-4" />
+                    )}
+                    Заблокировать автора
+                </Button>
+            )}
+        </div>
+    )
+}
+
+const VIEWERS_PAGE_SIZE = 10
+
+function ViewersCard({
+    title,
+    icon,
+    hint,
+    emptyText,
+    data,
+    isLoading,
+    ownerId,
+    page,
+    onPageChange,
+}: {
+    title: string
+    icon: React.ElementType
+    hint: string
+    emptyText: string
+    data: TripViewersResponse | undefined
+    isLoading: boolean
+    ownerId?: number | null
+    page: number
+    onPageChange: (page: number) => void
+}) {
     const viewers = data?.viewers ?? []
 
     return (
         <SectionCard
-            title="Кто смотрел номер"
-            icon={Eye}
+            title={title}
+            icon={icon}
             action={
                 data ? (
                     <span className="text-sm text-muted-foreground tabular-nums">
@@ -219,10 +339,7 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
                 ) : undefined
             }
         >
-            <p className="mb-4 text-xs text-muted-foreground">
-                Полная история из аналитики — не сбрасывается при поднятии объявления
-                (в отличие от счётчика «Просмотры номера»).
-            </p>
+            <p className="mb-4 text-xs text-muted-foreground">{hint}</p>
             {isLoading ? (
                 <div className="space-y-2">
                     <Skeleton className="h-12 w-full" />
@@ -230,54 +347,526 @@ function PhoneViewersCard({ tripId }: { tripId: number }) {
                 </div>
             ) : viewers.length === 0 ? (
                 <p className="py-6 text-center text-sm italic text-muted-foreground">
-                    Номер ещё никто не смотрел
+                    {emptyText}
                 </p>
             ) : (
-                <div className="divide-y divide-border">
-                    {viewers.map((v, i) => {
-                        const row = (
-                            <div className="flex items-center gap-3 py-2.5">
-                                <Avatar className="h-10 w-10 ring-1 ring-border">
-                                    <AvatarImage src={v.avatar_url || undefined} />
-                                    <AvatarFallback className="bg-zinc-900 text-xs text-white">
-                                        {(v.name || '?').slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-foreground">
-                                        {v.name || (v.user_id ? `user #${v.user_id}` : 'Аноним')}
-                                    </p>
-                                    <p className="truncate text-xs text-muted-foreground">
-                                        {v.phone || '—'}
+                <>
+                    <div className="divide-y divide-border">
+                        {viewers.map((v, i) => {
+                            const isOwner = !!ownerId && v.user_id === ownerId
+                            const row = (
+                                <div className="flex items-center gap-3 py-2.5">
+                                    <Avatar className="h-10 w-10 ring-1 ring-border">
+                                        <AvatarImage src={v.avatar_url || undefined} />
+                                        <AvatarFallback className="bg-zinc-900 text-xs text-white">
+                                            {(v.name || '?').slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
+                                            {v.name || (v.user_id ? `user #${v.user_id}` : 'Аноним')}
+                                            {isOwner && (
+                                                <Badge variant="secondary" className="shrink-0">
+                                                    владелец
+                                                </Badge>
+                                            )}
+                                        </p>
+                                        <p className="truncate text-xs text-muted-foreground">
+                                            {v.phone || '—'}
+                                        </p>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-sm font-semibold tabular-nums text-foreground">
+                                            {v.views_count}{' '}
+                                            <span className="text-xs font-normal text-muted-foreground">
+                                                просм.
+                                            </span>
+                                        </p>
+                                        <p className="text-xs text-muted-foreground tabular-nums">
+                                            {fmtDate(v.last_viewed_at, true)}
+                                        </p>
+                                    </div>
+                                </div>
+                            )
+                            return v.user_id ? (
+                                <Link
+                                    key={`${v.user_id}-${i}`}
+                                    href={`/admin/users/${v.user_id}`}
+                                    className="block transition-colors hover:bg-muted/40"
+                                >
+                                    {row}
+                                </Link>
+                            ) : (
+                                <div key={`anon-${i}`}>{row}</div>
+                            )
+                        })}
+                    </div>
+                    {data && data.total_viewers > VIEWERS_PAGE_SIZE && (
+                        <Pagination
+                            page={page}
+                            total={data.total_viewers}
+                            size={VIEWERS_PAGE_SIZE}
+                            onPageChange={onPageChange}
+                        />
+                    )}
+                </>
+            )}
+        </SectionCard>
+    )
+}
+
+function PhoneViewersCard({ tripId, ownerId }: { tripId: number; ownerId?: number | null }) {
+    const [page, setPage] = useState(1)
+    const { data, isLoading } = useAdminTripPhoneViewers(tripId, page, VIEWERS_PAGE_SIZE)
+    return (
+        <ViewersCard
+            title="Кто смотрел номер"
+            icon={Eye}
+            hint="Полная история из аналитики — не сбрасывается при поднятии объявления (в отличие от счётчика «Просмотры номера»)."
+            emptyText="Номер ещё никто не смотрел"
+            data={data}
+            isLoading={isLoading}
+            ownerId={ownerId}
+            page={page}
+            onPageChange={setPage}
+        />
+    )
+}
+
+function TripViewersCard({ tripId, ownerId }: { tripId: number; ownerId?: number | null }) {
+    const [page, setPage] = useState(1)
+    const { data, isLoading } = useAdminTripViewers(tripId, page, VIEWERS_PAGE_SIZE)
+    return (
+        <ViewersCard
+            title="Кто смотрел поездку"
+            icon={MousePointerClick}
+            hint="Пользователи, открывавшие детали объявления. Полная история из аналитики — не сбрасывается при поднятии."
+            emptyText="Детали поездки ещё никто не открывал"
+            data={data}
+            isLoading={isLoading}
+            ownerId={ownerId}
+            page={page}
+            onPageChange={setPage}
+        />
+    )
+}
+
+function TripBumpsCard({ tripId }: { tripId: number }) {
+    const [page, setPage] = useState(1)
+    const { data, isLoading } = useAdminTripBumps(tripId, page, VIEWERS_PAGE_SIZE)
+    const bumps = data?.bumps ?? []
+
+    return (
+        <SectionCard
+            title="История поднятий вручную"
+            icon={TrendingUp}
+            action={
+                data ? (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                        {data.total} поднятий
+                    </span>
+                ) : undefined
+            }
+        >
+            <p className="mb-4 text-xs text-muted-foreground">
+                Каждое ручное поднятие (событие «trip_bumped») из аналитики — не
+                сбрасывается при переносе/репосте объявления.
+            </p>
+            {isLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ) : bumps.length === 0 ? (
+                <p className="py-6 text-center text-sm italic text-muted-foreground">
+                    Объявление ещё не поднимали вручную
+                </p>
+            ) : (
+                <>
+                    <div className="divide-y divide-border">
+                        {bumps.map((b, i) => {
+                            const row = (
+                                <div className="flex items-center gap-3 py-2.5">
+                                    <Avatar className="h-10 w-10 ring-1 ring-border">
+                                        <AvatarImage src={b.avatar_url || undefined} />
+                                        <AvatarFallback className="bg-zinc-900 text-xs text-white">
+                                            {(b.name || '?').slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-medium text-foreground">
+                                            {b.name || (b.user_id ? `user #${b.user_id}` : 'Аноним')}
+                                        </p>
+                                        {b.platform && (
+                                            <p className="truncate text-xs text-muted-foreground">
+                                                {b.platform}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                                        {fmtDate(b.bumped_at, true)}
                                     </p>
                                 </div>
-                                <div className="shrink-0 text-right">
-                                    <p className="text-sm font-semibold tabular-nums text-foreground">
-                                        {v.views_count}{' '}
-                                        <span className="text-xs font-normal text-muted-foreground">
-                                            просм.
-                                        </span>
-                                    </p>
-                                    <p className="text-xs text-muted-foreground tabular-nums">
-                                        {fmtDate(v.last_viewed_at, true)}
-                                    </p>
-                                </div>
-                            </div>
-                        )
-                        return v.user_id ? (
-                            <Link
-                                key={`${v.user_id}-${i}`}
-                                href={`/admin/users/${v.user_id}`}
-                                className="block transition-colors hover:bg-muted/40"
-                            >
-                                {row}
-                            </Link>
-                        ) : (
-                            <div key={`anon-${i}`}>{row}</div>
-                        )
-                    })}
+                            )
+                            return b.user_id ? (
+                                <Link
+                                    key={`${b.user_id}-${i}`}
+                                    href={`/admin/users/${b.user_id}`}
+                                    className="block transition-colors hover:bg-muted/40"
+                                >
+                                    {row}
+                                </Link>
+                            ) : (
+                                <div key={`anon-${i}`}>{row}</div>
+                            )
+                        })}
+                    </div>
+                    {data && data.total > VIEWERS_PAGE_SIZE && (
+                        <Pagination
+                            page={page}
+                            total={data.total}
+                            size={VIEWERS_PAGE_SIZE}
+                            onPageChange={setPage}
+                        />
+                    )}
+                </>
+            )}
+        </SectionCard>
+    )
+}
+
+/* ────────────────────────── trip promo services ────────────────────────── */
+
+const SERVICE_LABELS: Record<string, string> = {
+    auto_bump: 'Авто-подъём',
+    urgent: 'Срочно',
+    attractive: 'Выгодная поездка',
+}
+
+type ServiceState = 'active' | 'expired' | 'never'
+
+function serviceState(flag: unknown, until: string | null | undefined): ServiceState {
+    const u = until ? new Date(until) : null
+    if (flag && (!u || u.getTime() > Date.now())) return 'active'
+    if (u) return 'expired'
+    return 'never'
+}
+
+const SERVICE_STATE_META: Record<ServiceState, { label: string; cls: string }> = {
+    active: {
+        label: 'Активна',
+        cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
+    },
+    expired: {
+        label: 'Истекла',
+        cls: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
+    },
+    never: { label: 'Не подключалась', cls: 'bg-muted text-muted-foreground' },
+}
+
+function ServiceStateBlock({
+    title,
+    icon: Icon,
+    state,
+    adminEdited,
+    rows,
+    onEdit,
+}: {
+    title: string
+    icon: React.ElementType
+    state: ServiceState
+    adminEdited?: boolean
+    rows: Array<{ label: string; value: React.ReactNode }>
+    onEdit: () => void
+}) {
+    const meta = SERVICE_STATE_META[state]
+    return (
+        <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    {title}
+                </div>
+                <div className="flex items-center gap-1.5">
+                    {adminEdited && (
+                        <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
+                            Изменял админ
+                        </span>
+                    )}
+                    <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${meta.cls}`}>
+                        {meta.label}
+                    </span>
+                </div>
+            </div>
+            {state !== 'never' && rows.length > 0 && (
+                <div className="mt-3 divide-y divide-border/60">
+                    {rows.map((r) => (
+                        <div
+                            key={r.label}
+                            className="flex items-center justify-between gap-4 py-1.5 text-sm"
+                        >
+                            <span className="text-muted-foreground">{r.label}</span>
+                            <span className="text-right font-medium text-foreground">
+                                {r.value}
+                            </span>
+                        </div>
+                    ))}
                 </div>
             )}
+            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={onEdit}>
+                <CalendarClock className="h-4 w-4" />
+                {state === 'active' ? 'Изменить срок' : 'Активировать / задать срок'}
+            </Button>
+        </div>
+    )
+}
+
+// Date → value for <input type="datetime-local"> in the admin's local time.
+function toLocalInputValue(d: Date): string {
+    return format(d, "yyyy-MM-dd'T'HH:mm")
+}
+
+function TripServicesCard({ tripId, data }: { tripId: number; data: any }) {
+    const { data: payments, isLoading } = useAdminTripServicePayments(tripId)
+    const setServiceUntil = useAdminSetTripServiceUntil()
+    const [editTarget, setEditTarget] = useState<string | null>(null)
+    const [untilInput, setUntilInput] = useState('')
+
+    const autoBumpState = serviceState(data.is_auto_bump, data.auto_bump_until)
+    const urgentState = serviceState(data.is_urgent, data.urgent_until)
+    const attractiveState = serviceState(data.is_attractive, data.attractive_until)
+
+    const openEdit = (serviceType: string) => {
+        const cur = data[`${serviceType}_until`]
+        const base =
+            cur && !Number.isNaN(new Date(cur).getTime())
+                ? new Date(cur)
+                : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        setUntilInput(toLocalInputValue(base))
+        setEditTarget(serviceType)
+    }
+
+    const submitUntil = () => {
+        if (!editTarget || !untilInput) return
+        const until = new Date(untilInput)
+        if (Number.isNaN(until.getTime())) return
+        setServiceUntil.mutate(
+            { id: tripId, service_type: editTarget, until: until.toISOString() },
+            { onSuccess: () => setEditTarget(null) },
+        )
+    }
+    const untilInPast = untilInput && new Date(untilInput).getTime() <= Date.now()
+
+    const totalPaid = (payments ?? []).reduce(
+        (acc, p) => {
+            const cur = p.currency ?? '—'
+            acc[cur] = (acc[cur] ?? 0) + p.amount
+            return acc
+        },
+        {} as Record<string, number>,
+    )
+    const totalStr = Object.entries(totalPaid)
+        .map(([cur, sum]) => `${sum.toLocaleString()} ${cur}`)
+        .join(' · ')
+
+    return (
+        <SectionCard
+            title="Подключённые услуги"
+            icon={Zap}
+            action={
+                payments && payments.length > 0 ? (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                        оплачено: {totalStr}
+                    </span>
+                ) : undefined
+            }
+        >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <ServiceStateBlock
+                    title="Авто-подъём"
+                    icon={TrendingUp}
+                    state={autoBumpState}
+                    adminEdited={!!data.auto_bump_admin_edited}
+                    onEdit={() => openEdit('auto_bump')}
+                    rows={[
+                        { label: 'Действует до', value: fmtDate(data.auto_bump_until, true) },
+                        {
+                            label: 'Подключена',
+                            value: data.auto_bump_activated_at
+                                ? fmtDate(data.auto_bump_activated_at, true)
+                                : '—',
+                        },
+                        {
+                            label: 'Интервал подъёма',
+                            value: data.auto_bump_interval_hours
+                                ? `каждые ${data.auto_bump_interval_hours} ч`
+                                : '—',
+                        },
+                        {
+                            label: 'Последний подъём',
+                            value: data.auto_bump_last_at
+                                ? fmtDate(data.auto_bump_last_at, true)
+                                : 'ещё не поднималась',
+                        },
+                        {
+                            label: 'Тариф',
+                            value: data.auto_bump_tariff_id ? (
+                                <span className="font-mono text-xs">
+                                    {data.auto_bump_tariff_id}
+                                </span>
+                            ) : (
+                                '—'
+                            ),
+                        },
+                    ]}
+                />
+                <ServiceStateBlock
+                    title="Срочно"
+                    icon={Zap}
+                    state={urgentState}
+                    adminEdited={!!data.urgent_admin_edited}
+                    onEdit={() => openEdit('urgent')}
+                    rows={[
+                        { label: 'Действует до', value: fmtDate(data.urgent_until, true) },
+                        {
+                            label: 'Подключена',
+                            value: data.urgent_activated_at
+                                ? fmtDate(data.urgent_activated_at, true)
+                                : '—',
+                        },
+                    ]}
+                />
+                <ServiceStateBlock
+                    title="Выгодная поездка"
+                    icon={BadgePercent}
+                    state={attractiveState}
+                    adminEdited={!!data.attractive_admin_edited}
+                    onEdit={() => openEdit('attractive')}
+                    rows={[
+                        { label: 'Действует до', value: fmtDate(data.attractive_until, true) },
+                        {
+                            label: 'Подключена',
+                            value: data.attractive_activated_at
+                                ? fmtDate(data.attractive_activated_at, true)
+                                : '—',
+                        },
+                        {
+                            label: 'Интервал подъёма',
+                            value: data.attractive_interval_hours
+                                ? `каждые ${data.attractive_interval_hours} ч`
+                                : '—',
+                        },
+                        {
+                            label: 'Последний подъём',
+                            value: data.attractive_last_at
+                                ? fmtDate(data.attractive_last_at, true)
+                                : 'ещё не поднималась',
+                        },
+                    ]}
+                />
+            </div>
+
+            <div className="mt-5">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    История оплат
+                </div>
+                {isLoading ? (
+                    <Skeleton className="h-16 w-full" />
+                ) : !payments || payments.length === 0 ? (
+                    <p className="py-4 text-center text-sm italic text-muted-foreground">
+                        Оплат услуг по этой поездке не было
+                    </p>
+                ) : (
+                    <div className="divide-y divide-border">
+                        {payments.map((p) => (
+                            <div
+                                key={p.id}
+                                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5 text-sm"
+                            >
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <span className="font-medium text-foreground">
+                                        {SERVICE_LABELS[p.service_type ?? ''] ??
+                                            p.service_type ??
+                                            '—'}
+                                    </span>
+                                    {p.tariff_id && (
+                                        <Badge variant="outline" className="font-mono text-xs">
+                                            {p.tariff_id}
+                                        </Badge>
+                                    )}
+                                    <Link
+                                        href={`/admin/users/${p.user_id}`}
+                                        className="truncate text-muted-foreground hover:text-primary hover:underline"
+                                    >
+                                        {p.user_name || `user #${p.user_id}`}
+                                    </Link>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-3">
+                                    <span className="font-semibold tabular-nums text-foreground">
+                                        {p.amount.toLocaleString()} {p.currency ?? ''}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground tabular-nums">
+                                        {fmtDate(p.created_at, true)}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <Dialog
+                open={!!editTarget}
+                onOpenChange={(open) => !open && setEditTarget(null)}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            Срок услуги «{SERVICE_LABELS[editTarget ?? ''] ?? editTarget}»
+                        </DialogTitle>
+                        <DialogDescription>
+                            Дата окончания меняется бесплатно, в обе стороны. Дата в будущем —
+                            услуга активна до неё; дата в прошлом — услуга отключается сразу.
+                            Поездка получит отметку, что срок менял админ.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                        <Input
+                            type="datetime-local"
+                            value={untilInput}
+                            onChange={(e) => setUntilInput(e.target.value)}
+                            className="w-full sm:w-64"
+                        />
+                        {untilInPast && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Дата в прошлом — услуга будет отключена сразу.
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Отмена</Button>
+                        </DialogClose>
+                        <Button
+                            onClick={submitUntil}
+                            variant={untilInPast ? 'destructive' : 'default'}
+                            disabled={
+                                setServiceUntil.isPending ||
+                                !untilInput ||
+                                Number.isNaN(new Date(untilInput).getTime())
+                            }
+                            className="gap-2"
+                        >
+                            {setServiceUntil.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <CalendarClock className="h-4 w-4" />
+                            )}
+                            {untilInPast ? 'Отключить услугу' : 'Сохранить срок'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </SectionCard>
     )
 }
@@ -380,7 +969,13 @@ export default function AdminTripDetailPage() {
                             <span>{trip.to_location?.name || trip.to_address || '—'}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 pt-1">
-                            <StatusPill status={trip.status} />
+                            {trip.is_deleted ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1 text-sm font-semibold text-zinc-800 ring-1 ring-inset ring-zinc-500/30">
+                                    <Trash2 className="h-3.5 w-3.5" /> Удалена
+                                </span>
+                            ) : (
+                                <StatusPill status={trip.status} />
+                            )}
                             {trip.trip_type && (
                                 <Badge className="bg-white/10 capitalize text-white hover:bg-white/15">
                                     {trip.trip_type}
@@ -627,8 +1222,28 @@ export default function AdminTripDetailPage() {
                             </div>
                             <Separator />
                             <div className="divide-y divide-border">
-                                <InfoRow icon={Phone} label="Телефон">
-                                    {driver.phone || trip.phone || '—'}
+                                <InfoRow icon={Phone} label="Номер в поездке">
+                                    {trip.phone ? (
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {trip.phone}
+                                            {driver.phone &&
+                                                driver.phone !== trip.phone && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-[10px] font-normal"
+                                                    >
+                                                        отличается от профиля
+                                                    </Badge>
+                                                )}
+                                        </span>
+                                    ) : (
+                                        <span className="text-muted-foreground">
+                                            не указан (берётся из профиля)
+                                        </span>
+                                    )}
+                                </InfoRow>
+                                <InfoRow icon={Phone} label="Телефон профиля">
+                                    {driver.phone || '—'}
                                 </InfoRow>
                                 <InfoRow icon={Mail} label="Email">
                                     {driver.email || '—'}
@@ -705,6 +1320,9 @@ export default function AdminTripDetailPage() {
                 </SectionCard>
             </div>
 
+            {/* ── Promo services ── */}
+            <TripServicesCard tripId={id} data={data} />
+
             {/* ── Preferences / options ── */}
             <SectionCard title="Опции и предпочтения" icon={Settings2}>
                 <div className="flex flex-wrap gap-2">
@@ -744,8 +1362,92 @@ export default function AdminTripDetailPage() {
                 </SectionCard>
             )}
 
-            {/* ── Phone viewers ── */}
-            <PhoneViewersCard tripId={id} />
+            {/* ── Source (parsed ads) ── */}
+            {trip.source && (
+                <SectionCard title="Источник (парсер)" icon={Rss}>
+                    <div className="space-y-3 text-sm">
+                        {trip.author && (
+                            <SourceAuthorControl tripId={id} author={trip.author} />
+                        )}
+                        {trip.phone && (
+                            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3">
+                                <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span className="text-xs uppercase text-muted-foreground">
+                                    Номер в поездке
+                                </span>
+                                <a
+                                    href={`tel:${trip.phone}`}
+                                    className="font-medium text-foreground hover:underline"
+                                >
+                                    {trip.phone}
+                                </a>
+                            </div>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2">
+                            {trip.source.channel &&
+                                (trip.source.channel_url ? (
+                                    <a
+                                        href={trip.source.channel_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-1 font-medium hover:underline"
+                                    >
+                                        @{trip.source.channel}
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                ) : (
+                                    <span className="font-medium">{trip.source.channel}</span>
+                                ))}
+                            {data.parser && (
+                                <Badge variant="secondary" className="uppercase">
+                                    {data.parser}
+                                </Badge>
+                            )}
+                            {trip.source.kind && (
+                                <Badge variant="outline">{trip.source.kind}</Badge>
+                            )}
+                        </div>
+
+                        {trip.source.message_url && (
+                            <a
+                                href={trip.source.message_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-primary hover:underline"
+                            >
+                                <ExternalLink className="h-4 w-4" /> Открыть сообщение в Telegram
+                            </a>
+                        )}
+
+                        {trip.remote_id && (
+                            <div className="font-mono text-xs text-muted-foreground">
+                                {trip.remote_id}
+                            </div>
+                        )}
+
+                        {data.original_message && (
+                            <div>
+                                <div className="mb-1 text-xs uppercase text-muted-foreground">
+                                    Исходный текст
+                                </div>
+                                <p className="whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-sm leading-relaxed">
+                                    {data.original_message}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* ── Phone + trip viewers ── */}
+            <PhoneViewersCard tripId={id} ownerId={driver?.id} />
+            <TripViewersCard tripId={id} ownerId={driver?.id} />
+
+            {/* ── Manual bump history ── */}
+            <TripBumpsCard tripId={id} />
+
+            {/* ── Complaints on this trip (read-only) ── */}
+            <TripComplaintsCard tripId={id} />
 
             {/* ── Delete confirm ── */}
             <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>

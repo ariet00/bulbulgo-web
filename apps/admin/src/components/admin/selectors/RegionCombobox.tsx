@@ -1,6 +1,6 @@
 'use client'
 
-import { useRegions } from '@doska/shared'
+import { useDebounce } from '@doska/shared'
 import {
     Button,
     Command,
@@ -16,18 +16,24 @@ import {
 import { Check, ChevronsUpDown, X } from 'lucide-react'
 import { useState } from 'react'
 
+import { useAdminRegion, useAdminRegions } from '@/hooks/queries/admin'
+
 type Props = {
     value: number | null
     onChange: (id: number | null) => void
     placeholder?: string
-    leafOnly?: boolean
 }
 
-export function RegionCombobox({ value, onChange, placeholder = 'Регион…', leafOnly = false }: Props) {
-    const [open, setOpen] = useState(false)
-    const { data: regions = [], isLoading } = useRegions(leafOnly)
+const SEARCH_LIMIT = 50
 
-    const selected = regions.find((r) => r.id === value)
+export function RegionCombobox({ value, onChange, placeholder = 'Регион…' }: Props) {
+    const [open, setOpen] = useState(false)
+    const [search, setSearch] = useState('')
+    const q = useDebounce(search, 250)
+
+    const { data: regions = [], isFetching } = useAdminRegions(q || undefined, SEARCH_LIMIT)
+    // The selected region often isn't in the current search page, so fetch it on its own.
+    const { data: selected } = useAdminRegion(value)
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -55,10 +61,14 @@ export function RegionCombobox({ value, onChange, placeholder = 'Регион…
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                <Command>
-                    <CommandInput placeholder="Поиск региона…" />
+                <Command shouldFilter={false}>
+                    <CommandInput
+                        placeholder="Поиск региона…"
+                        value={search}
+                        onValueChange={setSearch}
+                    />
                     <CommandList>
-                        {isLoading ? (
+                        {isFetching && regions.length === 0 ? (
                             <div className="p-4 text-center text-sm text-muted-foreground">Загрузка…</div>
                         ) : (
                             <>
@@ -67,16 +77,23 @@ export function RegionCombobox({ value, onChange, placeholder = 'Регион…
                                     {regions.map((region) => (
                                         <CommandItem
                                             key={region.id}
-                                            value={region.name}
+                                            value={String(region.id)}
                                             onSelect={() => {
                                                 onChange(region.id === value ? null : region.id)
                                                 setOpen(false)
                                             }}
                                         >
                                             <Check
-                                                className={`mr-2 h-4 w-4 ${value === region.id ? 'opacity-100' : 'opacity-0'}`}
+                                                className={`mr-2 h-4 w-4 shrink-0 ${value === region.id ? 'opacity-100' : 'opacity-0'}`}
                                             />
-                                            {region.name}
+                                            <div className="min-w-0">
+                                                <div className="truncate">{region.name}</div>
+                                                {region.sub_name ? (
+                                                    <div className="truncate text-xs text-muted-foreground">
+                                                        {region.sub_name}
+                                                    </div>
+                                                ) : null}
+                                            </div>
                                         </CommandItem>
                                     ))}
                                 </CommandGroup>

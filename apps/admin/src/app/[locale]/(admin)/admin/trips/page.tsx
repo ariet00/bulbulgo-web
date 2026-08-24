@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAdminTrips } from '@/hooks/queries/admin'
 import { useDebounce } from '@doska/shared'
 import { useFilterParams } from '@/hooks/useFilterParams'
-import { useAdminDeleteTrip } from '@/hooks/mutations/admin'
+import { useAdminBumpTrip, useAdminDeleteTrip } from '@/hooks/mutations/admin'
 import {
     Table,
     TableBody,
@@ -16,16 +16,19 @@ import {
 import {
     Button,
     Input,
+    Label,
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
+    Switch,
 } from "@doska/ui"
-import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw } from 'lucide-react'
+import { Trash2, Eye, MapPin, User, Phone, Star, X, RefreshCw, Ban, BarChart3, Zap, Flame, BadgePercent, ArrowUp } from 'lucide-react'
 import { Link } from '@doska/i18n'
 import { Pagination } from '@doska/ui'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 import { format } from 'date-fns'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
 import { RegionCombobox } from '@/components/admin/selectors/RegionCombobox'
@@ -34,12 +37,19 @@ const ALL = '__all__'
 const TRIP_STATUSES = ['active', 'processing', 'completed', 'cancelled', 'archived']
 const TRIP_TYPES = ['rideshare', 'rideshare_city', 'taxi', 'shuttle', 'bus', 'freight', 'freight_city', 'delivery']
 const TRIP_ROLES = ['driver', 'passenger', 'cargo_owner']
+const SERVICE_OPTIONS = [
+    { value: 'any', label: 'Любая активная' },
+    { value: 'auto_bump', label: 'Авто-подъём (активен)' },
+    { value: 'urgent', label: 'Срочно (активен)' },
+    { value: 'attractive', label: 'Выгодная поездка (активна)' },
+    { value: 'ever', label: 'Когда-либо подключали' },
+]
 
 const FILTER_DEFAULTS = {
     page: 1,
     size: 40,
     q: '',
-    status: ALL,
+    status: 'active',
     trip_type: ALL,
     role: ALL,
     user_id: 0,
@@ -51,6 +61,90 @@ const FILTER_DEFAULTS = {
     seats_max: 0,
     date_from: '',
     date_to: '',
+    service: ALL,
+    only_real: true,
+    include_deleted: true,
+}
+
+// Подключённые услуги объявления (живут в trip.data) — платные и бесплатная
+// «Выгодная поездка». Услуга с истёкшим `*_until` показывается погашенной.
+const tripServices = (trip: any) => {
+    const now = Date.now()
+    const services: Array<{
+        key: string
+        label: string
+        icon: 'zap' | 'flame' | 'percent'
+        active: boolean
+        until: string | null
+    }> = []
+    if (trip.data?.is_auto_bump) {
+        const until = trip.data.auto_bump_until ?? null
+        services.push({
+            key: 'auto_bump',
+            label: 'авто-подъём',
+            icon: 'zap',
+            active: !until || new Date(until).getTime() > now,
+            until,
+        })
+    }
+    if (trip.data?.is_urgent) {
+        const until = trip.data.urgent_until ?? null
+        services.push({
+            key: 'urgent',
+            label: 'срочно',
+            icon: 'flame',
+            active: !until || new Date(until).getTime() > now,
+            until,
+        })
+    }
+    if (trip.data?.is_attractive) {
+        const until = trip.data.attractive_until ?? null
+        services.push({
+            key: 'attractive',
+            label: 'выгодная поездка',
+            icon: 'percent',
+            active: !until || new Date(until).getTime() > now,
+            until,
+        })
+    }
+    return services
+}
+
+function ServiceBadges({ trip }: { trip: any }) {
+    const services = tripServices(trip)
+    if (services.length === 0) return <span className="text-muted-foreground">—</span>
+    return (
+        <div className="flex flex-wrap gap-1">
+            {services.map(s => (
+                <span
+                    key={s.key}
+                    title={
+                        s.label +
+                        (s.until
+                            ? ` — ${s.active ? 'до' : 'истекла'} ${format(new Date(s.until), 'dd.MM.yyyy HH:mm')}`
+                            : '')
+                    }
+                    className={`inline-flex items-center rounded-full p-1 ${
+                        s.active
+                            ? s.key === 'urgent'
+                                ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                                : s.key === 'attractive'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                            : 'bg-muted text-muted-foreground opacity-60'
+                    }`}
+                >
+                    {s.icon === 'zap' ? (
+                        <Zap className="h-3.5 w-3.5" />
+                    ) : s.icon === 'percent' ? (
+                        <BadgePercent className="h-3.5 w-3.5" />
+                    ) : (
+                        <Flame className="h-3.5 w-3.5" />
+                    )}
+                </span>
+            ))}
+        </div>
+    )
 }
 
 const statusClass = (status: string) => {
@@ -122,13 +216,30 @@ export default function AdminTripsPage() {
             seats_max: values.seats_max || undefined,
             date_from: values.date_from || undefined,
             date_to: values.date_to || undefined,
+            service: values.service === ALL ? undefined : values.service,
+            only_real: values.only_real,
+            include_deleted: values.include_deleted,
         },
     )
     const deleteTripMutation = useAdminDeleteTrip()
+    const bumpTripMutation = useAdminBumpTrip()
+    const confirm = useConfirm()
 
-    const handleDelete = (id: number) => {
-        if (confirm(`Are you sure you want to delete this trip (ID: ${id})?`)) {
+    const handleDelete = async (id: number) => {
+        if (await confirm(`Are you sure you want to delete this trip (ID: ${id})?`)) {
             deleteTripMutation.mutate(id)
+        }
+    }
+
+    const handleBump = async (id: number) => {
+        if (
+            await confirm({
+                description: `Поднять объявление #${id}? Оно станет активным и будет репостнуто в группы.`,
+                tone: 'default',
+                confirmText: 'Поднять',
+            })
+        ) {
+            bumpTripMutation.mutate(id)
         }
     }
 
@@ -154,7 +265,10 @@ export default function AdminTripsPage() {
         !!values.seats_min ||
         !!values.seats_max ||
         !!values.date_from ||
-        !!values.date_to
+        !!values.date_to ||
+        values.service !== ALL ||
+        !values.only_real ||
+        values.include_deleted
 
     return (
         <div className="space-y-6">
@@ -162,18 +276,31 @@ export default function AdminTripsPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Trip Management</CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => refetch()}
-                        disabled={isFetching}
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
-                        Обновить
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Link href="/admin/analytics/bulbulgo">
+                            <Button variant="outline" size="sm" title="Аналитика BulBul Go">
+                                <BarChart3 className="h-4 w-4 mr-1" />
+                                Аналитика
+                            </Button>
+                        </Link>
+                        <Link href="/admin/trips/blocked-authors">
+                            <Button variant="outline" size="icon" title="Заблокированные ТГ аккаунты">
+                                <Ban className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => refetch()}
+                            disabled={isFetching}
+                            title="Обновить"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex flex-wrap items-end gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
                         <div className="w-full sm:w-64">
                             <UserCombobox
                                 value={values.user_id || null}
@@ -236,7 +363,50 @@ export default function AdminTripsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <div className="flex flex-col">
+                        <Select
+                            value={values.service}
+                            onValueChange={(v) => setValues({ service: v })}
+                        >
+                            <SelectTrigger className="w-full sm:w-44">
+                                <SelectValue placeholder="Услуги" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>Услуги: не важно</SelectItem>
+                                {SERVICE_OPTIONS.map((s) => (
+                                    <SelectItem key={s.value} value={s.value}>
+                                        {s.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <div className="flex h-10 w-full items-center gap-2 rounded-md border px-3 sm:w-auto">
+                            <Switch
+                                id="only-real"
+                                checked={values.only_real}
+                                onCheckedChange={(v) => setValues({ only_real: v })}
+                            />
+                            <Label
+                                htmlFor="only-real"
+                                className="cursor-pointer whitespace-nowrap text-sm"
+                                title="Скрыть объявления, созданные парсером (chat_parser_user, gettik_parser_user)"
+                            >
+                                Только реальные
+                            </Label>
+                        </div>
+                        <div className="flex h-10 w-full items-center gap-2 rounded-md border px-3 sm:w-auto">
+                            <Switch
+                                id="include-deleted"
+                                checked={values.include_deleted}
+                                onCheckedChange={(v) => setValues({ include_deleted: v })}
+                            />
+                            <Label
+                                htmlFor="include-deleted"
+                                className="cursor-pointer whitespace-nowrap text-sm"
+                            >
+                                Показывать удалённые
+                            </Label>
+                        </div>
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Откуда</span>
                             <div className="w-full sm:w-44">
                                 <RegionCombobox
@@ -246,7 +416,7 @@ export default function AdminTripsPage() {
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Куда</span>
                             <div className="w-full sm:w-44">
                                 <RegionCombobox
@@ -256,7 +426,7 @@ export default function AdminTripsPage() {
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Цена</span>
                             <div className="flex items-center gap-1">
                                 <Input
@@ -265,7 +435,7 @@ export default function AdminTripsPage() {
                                     placeholder="от"
                                     value={priceMinInput}
                                     onChange={(e) => setPriceMinInput(e.target.value)}
-                                    className="w-24"
+                                    className="flex-1 sm:flex-none sm:w-24"
                                 />
                                 <span className="text-muted-foreground">—</span>
                                 <Input
@@ -274,11 +444,11 @@ export default function AdminTripsPage() {
                                     placeholder="до"
                                     value={priceMaxInput}
                                     onChange={(e) => setPriceMaxInput(e.target.value)}
-                                    className="w-24"
+                                    className="flex-1 sm:flex-none sm:w-24"
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Места</span>
                             <div className="flex items-center gap-1">
                                 <Input
@@ -287,7 +457,7 @@ export default function AdminTripsPage() {
                                     placeholder="от"
                                     value={seatsMinInput}
                                     onChange={(e) => setSeatsMinInput(e.target.value)}
-                                    className="w-20"
+                                    className="flex-1 sm:flex-none sm:w-20"
                                 />
                                 <span className="text-muted-foreground">—</span>
                                 <Input
@@ -296,11 +466,11 @@ export default function AdminTripsPage() {
                                     placeholder="до"
                                     value={seatsMaxInput}
                                     onChange={(e) => setSeatsMaxInput(e.target.value)}
-                                    className="w-20"
+                                    className="flex-1 sm:flex-none sm:w-20"
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Дата от</span>
                             <Input
                                 type="date"
@@ -309,7 +479,7 @@ export default function AdminTripsPage() {
                                 className="w-full sm:w-40"
                             />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex w-full flex-col sm:w-auto">
                             <span className="text-xs text-muted-foreground mb-1">Дата до</span>
                             <Input
                                 type="date"
@@ -328,27 +498,167 @@ export default function AdminTripsPage() {
                     {isLoading ? (
                         <div>Loading...</div>
                     ) : (
-                    <div className="rounded-md border overflow-x-auto">
+                    <>
+                    {/* Mobile: cards */}
+                    <div className="space-y-3 md:hidden">
+                        {trips?.items.length === 0 && (
+                            <div className="rounded-md border py-6 text-center text-muted-foreground">
+                                Ничего не найдено
+                            </div>
+                        )}
+                        {trips?.items.map((trip: any) => (
+                            <div key={trip.id} className="rounded-md border p-3 space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                    <Link
+                                        href={`/admin/trips/${trip.id}`}
+                                        className="flex flex-col text-sm min-w-0 hover:underline"
+                                    >
+                                        <span className="flex items-center">
+                                            <MapPin className="h-3 w-3 mr-1 shrink-0 text-blue-500" />
+                                            <span className="truncate">
+                                                {trip.from_location?.name || trip.from_address || 'Unknown'}
+                                            </span>
+                                        </span>
+                                        <span className="flex items-center">
+                                            <MapPin className="h-3 w-3 mr-1 shrink-0 text-green-500" />
+                                            <span className="truncate">
+                                                {trip.to_location?.name || trip.to_address || 'Unknown'}
+                                            </span>
+                                        </span>
+                                    </Link>
+                                    {trip.is_deleted ? (
+                                        <span className="shrink-0 px-2 py-1 rounded-full text-xs bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900">
+                                            Удален
+                                        </span>
+                                    ) : (
+                                        <span className={`shrink-0 px-2 py-1 rounded-full text-xs ${statusClass(trip.status)}`}>
+                                            {trip.status}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                                    <span className="text-muted-foreground">#{trip.id}</span>
+                                    <span>
+                                        {trip.departure_date ? format(new Date(trip.departure_date), 'dd.MM.yyyy') : 'N/A'}
+                                        {trip.time ? ` ${String(trip.time).slice(0, 5)}` : ''}
+                                    </span>
+                                    <span className="capitalize text-muted-foreground">
+                                        {trip.trip_type || '—'} / {trip.role}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                                    <span className="font-medium">
+                                        {trip.price != null
+                                            ? `${trip.price} ${trip.currency?.symbol || trip.currency?.code || ''}`.trim()
+                                            : 'Цена: —'}
+                                    </span>
+                                    {trip.seats != null && (
+                                        <span className="text-muted-foreground">мест: {trip.seats}</span>
+                                    )}
+                                    <span
+                                        className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                                        title="Просмотры номера телефона"
+                                    >
+                                        <Phone className="h-3 w-3" />
+                                        {trip.data?.phone_view_count ?? 0}
+                                    </span>
+                                    {tripServices(trip).length > 0 && <ServiceBadges trip={trip} />}
+                                </div>
+                                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                                    <span title="Создано">
+                                        {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                    </span>
+                                    {trip.updated_at && trip.updated_at !== trip.created_at && (
+                                        <span title="Обновлено">
+                                            ↻ {format(new Date(trip.updated_at), 'dd.MM.yyyy HH:mm')}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                                    <div className="flex flex-col text-sm min-w-0">
+                                        {trip.user_id ? (
+                                            <Link
+                                                href={`/admin/users/${trip.user_id}`}
+                                                className="flex items-center text-blue-600 hover:underline"
+                                            >
+                                                <User className="h-3 w-3 mr-1 shrink-0" />
+                                                <span className="truncate">
+                                                    {trip.user?.full_name || trip.user?.name || trip.user?.username || `#${trip.user_id}`}
+                                                </span>
+                                            </Link>
+                                        ) : (
+                                            <span className="flex items-center">
+                                                <User className="h-3 w-3 mr-1 shrink-0 text-muted-foreground" />
+                                                <span className="truncate">
+                                                    {trip.user?.full_name || trip.user?.name || trip.user?.username || '—'}
+                                                </span>
+                                            </span>
+                                        )}
+                                        {(trip.phone || trip.user?.phone) && (
+                                            <span className="flex items-center text-muted-foreground">
+                                                <Phone className="h-3 w-3 mr-1 shrink-0" />
+                                                {trip.phone || trip.user?.phone}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex shrink-0 space-x-2">
+                                        <Link href={`/admin/trips/${trip.id}`}>
+                                            <Button variant="outline" size="sm">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                        {!trip.is_deleted && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                title="Поднять (без лимитов)"
+                                                onClick={() => handleBump(trip.id)}
+                                                disabled={bumpTripMutation.isPending}
+                                            >
+                                                <ArrowUp className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                        {!trip.is_deleted && (
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => handleDelete(trip.id)}
+                                                disabled={deleteTripMutation.isPending}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Desktop: table */}
+                    <div className="hidden md:block rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ID</TableHead>
-                                    <TableHead>From - To</TableHead>
+                                    <TableHead>Trip</TableHead>
                                     <TableHead>User</TableHead>
-                                    <TableHead>Date</TableHead>
                                     <TableHead>Type / Role</TableHead>
-                                    <TableHead>Price</TableHead>
-                                    <TableHead>Seats</TableHead>
-                                    <TableHead>Bookings</TableHead>
+                                    <TableHead>Price / Seats</TableHead>
+                                    <TableHead title="Просмотры номера телефона">
+                                        <span className="flex items-center whitespace-nowrap">
+                                            <Phone className="h-3 w-3 mr-1" />
+                                            Views
+                                        </span>
+                                    </TableHead>
+                                    <TableHead title="Подключённые платные услуги">Услуги</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Created</TableHead>
+                                    <TableHead>Created / Updated</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {trips?.items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={11} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-6">
                                             Ничего не найдено
                                         </TableCell>
                                     </TableRow>
@@ -357,7 +667,10 @@ export default function AdminTripsPage() {
                                     <TableRow key={trip.id}>
                                         <TableCell>{trip.id}</TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col">
+                                            <Link
+                                                href={`/admin/trips/${trip.id}`}
+                                                className="flex flex-col hover:underline"
+                                            >
                                                 <span className="flex items-center text-sm">
                                                     <MapPin className="h-3 w-3 mr-1 text-blue-500" />
                                                     {trip.from_location?.name || trip.from_address || 'Unknown'}
@@ -366,7 +679,11 @@ export default function AdminTripsPage() {
                                                     <MapPin className="h-3 w-3 mr-1 text-green-500" />
                                                     {trip.to_location?.name || trip.to_address || 'Unknown'}
                                                 </span>
-                                            </div>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {trip.departure_date ? format(new Date(trip.departure_date), 'dd.MM.yyyy') : 'N/A'}
+                                                    {trip.time ? ` ${String(trip.time).slice(0, 5)}` : ''}
+                                                </span>
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col text-sm">
@@ -400,48 +717,57 @@ export default function AdminTripsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col text-sm">
-                                                <span>
-                                                    {trip.departure_date ? format(new Date(trip.departure_date), 'dd.MM.yyyy') : 'N/A'}
-                                                </span>
-                                                {trip.time && (
-                                                    <span className="text-muted-foreground">{String(trip.time).slice(0, 5)}</span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col text-sm">
                                                 <span className="capitalize">{trip.trip_type || '—'}</span>
                                                 <span className="capitalize text-muted-foreground">{trip.role}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap">
-                                            {trip.price != null
-                                                ? `${trip.price} ${trip.currency?.symbol || trip.currency?.code || ''}`.trim()
-                                                : '—'}
+                                            <div className="flex flex-col text-sm">
+                                                <span>
+                                                    {trip.price != null
+                                                        ? `${trip.price} ${trip.currency?.symbol || trip.currency?.code || ''}`.trim()
+                                                        : '—'}
+                                                </span>
+                                                {trip.seats != null && (
+                                                    <span className="text-xs text-muted-foreground">мест: {trip.seats}</span>
+                                                )}
+                                            </div>
                                         </TableCell>
-                                        <TableCell>{trip.seats ?? '—'}</TableCell>
                                         <TableCell>
-                                            {trip.booking_stats ? (
-                                                <div className="flex flex-col text-xs">
-                                                    <span className="text-green-700">✓ {trip.booking_stats.accepted}</span>
-                                                    {trip.booking_stats.pending > 0 && (
-                                                        <span className="text-yellow-700">⧗ {trip.booking_stats.pending}</span>
-                                                    )}
-                                                    <span className="text-muted-foreground">
-                                                        мест: {trip.booking_stats.seats_left}
-                                                    </span>
-                                                </div>
+                                            {trip.data?.phone_view_count ? (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                    <Phone className="h-3 w-3" />
+                                                    {trip.data.phone_view_count}
+                                                </span>
                                             ) : (
-                                                '—'
+                                                <span className="text-muted-foreground">0</span>
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <span className={`px-2 py-1 rounded-full text-xs ${statusClass(trip.status)}`}>
-                                                {trip.status}
-                                            </span>
+                                            <ServiceBadges trip={trip} />
+                                        </TableCell>
+                                        <TableCell>
+                                            {trip.is_deleted ? (
+                                                <span className="px-2 py-1 rounded-full text-xs bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900">
+                                                    Удален
+                                                </span>
+                                            ) : (
+                                                <span className={`px-2 py-1 rounded-full text-xs ${statusClass(trip.status)}`}>
+                                                    {trip.status}
+                                                </span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                            {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                            <div className="flex flex-col text-xs">
+                                                <span title="Создано">
+                                                    {trip.created_at ? format(new Date(trip.created_at), 'dd.MM.yyyy HH:mm') : '—'}
+                                                </span>
+                                                {trip.updated_at && trip.updated_at !== trip.created_at && (
+                                                    <span title="Обновлено">
+                                                        ↻ {format(new Date(trip.updated_at), 'dd.MM.yyyy HH:mm')}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex space-x-2">
@@ -450,14 +776,27 @@ export default function AdminTripsPage() {
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
                                                 </Link>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(trip.id)}
-                                                    disabled={deleteTripMutation.isPending}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                {!trip.is_deleted && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        title="Поднять (без лимитов)"
+                                                        onClick={() => handleBump(trip.id)}
+                                                        disabled={bumpTripMutation.isPending}
+                                                    >
+                                                        <ArrowUp className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {!trip.is_deleted && (
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleDelete(trip.id)}
+                                                        disabled={deleteTripMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -465,6 +804,7 @@ export default function AdminTripsPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    </>
                     )}
                     {trips && (
                         <Pagination

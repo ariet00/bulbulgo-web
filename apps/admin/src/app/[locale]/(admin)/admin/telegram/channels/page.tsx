@@ -1,0 +1,233 @@
+'use client'
+
+import {
+    CHANNEL_PURPOSES,
+    CHANNEL_PURPOSE_LABELS,
+    CHANNEL_TYPE_LABELS,
+    useDebounce,
+    useDeleteTelegramChannel,
+    useTelegramChannels,
+    useUpdateTelegramChannel,
+} from '@doska/shared'
+import type { ChannelPurpose } from '@doska/shared'
+import { Link } from '@doska/i18n'
+import {
+    Badge,
+    Button,
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    Input,
+    Pagination,
+    Switch,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@doska/ui'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useFilterParams } from '@/hooks/useFilterParams'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
+
+/** Парсерные колонки имеют смысл только там, где парсер читает канал. */
+const isParseRow = (type: string) => type === 'parse' || type === 'both'
+
+const FILTER_DEFAULTS = {
+    page: 1,
+    size: 40,
+    q: '',
+    purpose: 'parse',
+}
+
+export default function ChannelsPage() {
+    const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
+    const [qInput, setQInput] = useState(values.q)
+    const dq = useDebounce(qInput, 300)
+    useEffect(() => {
+        if (dq !== values.q) setValues({ q: dq })
+    }, [dq, values.q, setValues])
+
+    const { data, isLoading } = useTelegramChannels(
+        values.page,
+        values.size,
+        values.purpose as ChannelPurpose,
+        values.q || undefined,
+    )
+    const remove = useDeleteTelegramChannel()
+    const update = useUpdateTelegramChannel()
+    const confirm = useConfirm()
+
+    const handleDelete = async (id: number, chatId: string) => {
+        if (await confirm(`Удалить канал "${chatId}"?`)) {
+            remove.mutate(id)
+        }
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <h1 className="text-2xl font-bold">Каналы Telegram</h1>
+                <Link href="/admin/telegram/channels/new">
+                    <Button size="sm">
+                        <Plus className="size-4 mr-1" /> Добавить канал
+                    </Button>
+                </Link>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Каналы и группы</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {CHANNEL_PURPOSES.map((p) => (
+                            <Button
+                                key={p}
+                                variant={values.purpose === p ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setValues({ purpose: p })}
+                            >
+                                {CHANNEL_PURPOSE_LABELS[p]}
+                            </Button>
+                        ))}
+                    </div>
+
+                    <Input
+                        placeholder="Поиск по chat_id или названию…"
+                        value={qInput}
+                        onChange={(e) => setQInput(e.target.value)}
+                        className="w-full sm:max-w-md"
+                    />
+
+                    {isLoading ? (
+                        <div>Loading…</div>
+                    ) : (
+                        <div className="rounded-md border overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>ID</TableHead>
+                                        <TableHead>Название</TableHead>
+                                        <TableHead>chat_id</TableHead>
+                                        <TableHead>Активен</TableHead>
+                                        <TableHead>Роль</TableHead>
+                                        <TableHead>Парсер</TableHead>
+                                        <TableHead>Лимит</TableHead>
+                                        <TableHead>AI fallback</TableHead>
+                                        <TableHead>Bot</TableHead>
+                                        <TableHead>Роли</TableHead>
+                                        <TableHead>Порядок</TableHead>
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {data?.items.map((row) => (
+                                        <TableRow key={row.id}>
+                                            <TableCell>{row.id}</TableCell>
+                                            <TableCell className="text-sm">
+                                                {row.title ?? '—'}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs">
+                                                {row.chat_id}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Switch
+                                                        checked={row.is_active}
+                                                        disabled={update.isPending}
+                                                        onCheckedChange={(next) =>
+                                                            update.mutate({
+                                                                id: row.id,
+                                                                body: { is_active: next },
+                                                            })
+                                                        }
+                                                    />
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {row.is_active ? 'active' : 'off'}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">
+                                                    {CHANNEL_TYPE_LABELS[row.channel_type]}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {!isParseRow(row.channel_type) ? (
+                                                    <span className="text-muted-foreground">—</span>
+                                                ) : row.parser.use_parser_ai ? (
+                                                    <Badge variant="outline">AI</Badge>
+                                                ) : (
+                                                    <Badge variant="outline">regex</Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {isParseRow(row.channel_type)
+                                                    ? row.parser.limit_message
+                                                    : '—'}
+                                            </TableCell>
+                                            <TableCell>
+                                                {isParseRow(row.channel_type) && row.parser.ai_fallback
+                                                    ? '✓'
+                                                    : '—'}
+                                            </TableCell>
+                                            <TableCell className="text-xs text-muted-foreground">
+                                                {row.parser.bot_username || '—'}
+                                            </TableCell>
+                                            <TableCell className="text-xs text-muted-foreground">
+                                                {!isParseRow(row.channel_type)
+                                                    ? '—'
+                                                    : row.parser.allowed_roles?.length
+                                                      ? row.parser.allowed_roles.join(', ')
+                                                      : 'все'}
+                                            </TableCell>
+                                            <TableCell>
+                                                {isParseRow(row.channel_type)
+                                                    ? row.parser.sort_order
+                                                    : '—'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex space-x-2">
+                                                    <Link
+                                                        href={`/admin/telegram/channels/${row.id}`}
+                                                    >
+                                                        <Button variant="outline" size="sm">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            handleDelete(row.id, row.chat_id)
+                                                        }
+                                                        disabled={remove.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+                    {data && (
+                        <Pagination
+                            page={data.page}
+                            total={data.total}
+                            size={data.size}
+                            onPageChange={(p) => setValues({ page: p })}
+                            onSizeChange={(s) => setValues({ size: s })}
+                        />
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    )
+}

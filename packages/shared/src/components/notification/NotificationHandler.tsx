@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { onMessage, getToken } from "firebase/messaging";
-import { getMessagingInstance } from "@doska/shared"
 import { useNotificationStore } from "@doska/shared"
 import { useUserStore } from "@doska/shared"
 
 import { useNotifications, useUnreadCount } from "@doska/shared"
+import { registerDevice, pushPermissionLabel } from "../../apis/notification"
 
 const NotificationHandler = () => {
     const { addNotification, registerToken, setNotifications, setUnreadCount, setLoading } = useNotificationStore();
@@ -21,6 +20,19 @@ const NotificationHandler = () => {
         }
     }, [unreadCount, setUnreadCount]);
 
+    // Регистрируем устройство ДО и НЕЗАВИСИМО от разрешения на пуш и от логина.
+    // Без этого веб-устройство попадало в БД, только когда Firebase выдал токен,
+    // и веб-сессию не с чем было связать: device_info / app_version теперь живут
+    // на устройстве, а не в сессии.
+    //
+    // Один upsert по X-Device-Id (его шлёт requester). Событие пишет бэкенд и
+    // только при изменении, поэтому дедупить на клиенте нечего.
+    useEffect(() => {
+        registerDevice("web", pushPermissionLabel()).catch(() => {
+            // Не критично: повторится при следующей загрузке страницы.
+        });
+    }, []);
+
     useEffect(() => {
         if (isGuest || !user) return;
 
@@ -29,6 +41,13 @@ const NotificationHandler = () => {
         // Request permission and get token
         const setupMessaging = async () => {
             try {
+                // Lazy-load Firebase so its ~39MB module graph stays out of the
+                // static bundle/dev-compiler graph of every page that touches @doska/shared.
+                const [{ getMessagingInstance }, { onMessage, getToken }] = await Promise.all([
+                    import("../../lib/firebase"),
+                    import("firebase/messaging"),
+                ]);
+
                 const messaging = await getMessagingInstance();
                 if (!messaging) {
                     console.warn("Firebase Messaging is not supported in this browser.");

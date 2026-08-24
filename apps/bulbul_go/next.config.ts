@@ -9,7 +9,28 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_PRODUCT: 'bulbulgo',
   },
-  transpilePackages: ['@doska/shared', '@doska/ui'],
+  // /service/{slug}/* и алиас /s/{slug}/* — App Link-префиксы webview-сервисов
+  // (манифест Android + AASA ловят только их). В браузере (нет приложения /
+  // десктоп) разворачиваем на обычную страницу сайта: /service/auto/133 →
+  // /auto/133 (share-страница с OG; Telegram/WhatsApp следуют редиректу).
+  async redirects() {
+    return [
+      { source: '/service/:path*', destination: '/:path*', permanent: false },
+      { source: '/s/:path*', destination: '/:path*', permanent: false },
+    ]
+  },
+  // OG-картинки читают шрифты Montserrat с диска (fs.readFile) — форсим их
+  // включение в serverless-бандлы этих функций, иначе на проде ENOENT.
+  outputFileTracingIncludes: {
+    '/rideshare/trips/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/auto/[id]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/download/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+    '/[locale]/opengraph-image': ['./src/app/_og/_Montserrat-*.ttf', './public/favicon.png'],
+  },
+  // Dev с реального устройства по LAN-IP (webview-сервисы): разрешаем
+  // hot-reload ресурсы Next для приватных адресов. На prod не влияет.
+  allowedDevOrigins: ['192.168.75.44', 'localhost', '127.0.0.1', '10.0.2.2', '172.20.10.8'],
   images: {
     // Disable image optimization in development to avoid "resolved to private ip" errors
     // when fetching from local MinIO (localhost:9000)

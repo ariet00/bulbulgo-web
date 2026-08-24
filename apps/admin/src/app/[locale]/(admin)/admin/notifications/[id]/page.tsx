@@ -15,6 +15,7 @@ import {
 import { Trash2 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 function sourceBadge(source?: string) {
     if (source === 'admin') return <Badge variant="default">Админ</Badge>
@@ -63,9 +64,10 @@ export default function NotificationDetailPage() {
     const { data: n, isLoading } = useAdminNotification(id)
     const deleteMutation = useAdminDeleteNotification()
     const router = useRouter()
+    const confirm = useConfirm()
 
-    const handleDelete = () => {
-        if (confirm(`Удалить уведомление #${id}?`)) {
+    const handleDelete = async () => {
+        if (await confirm(`Удалить уведомление #${id}?`)) {
             deleteMutation.mutate(id, {
                 onSuccess: () => router.push('/admin/notifications'),
             })

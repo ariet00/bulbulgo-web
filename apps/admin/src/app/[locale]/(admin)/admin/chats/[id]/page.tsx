@@ -1,24 +1,41 @@
 'use client'
 
-import { useAdminChat } from '@/hooks/queries/admin'
+import { useAdminChat, useReplyToChat } from '@/hooks/queries/admin'
 import { useParams } from 'next/navigation'
+import { useState } from 'react'
 import { cn } from '@doska/shared'
 import { Card, CardContent, CardHeader, CardTitle } from "@doska/ui"
-import { BackButton } from '@doska/ui'
-import { User, MessageCircle, Info } from 'lucide-react'
+import { BackButton, Button, Textarea } from '@doska/ui'
+import { User, MessageCircle, Info, Send, Headset } from 'lucide-react'
 import { Badge } from "@doska/ui"
+
+// Username of the global «Техподдержка» account (see backend
+// settings.SUPPORT_USER_USERNAME). A chat is a support chat when this account
+// is one of the participants — that's the only kind the admin can answer.
+const SUPPORT_USERNAME = 'support'
 
 export default function ChatDetailPage() {
     const params = useParams()
     const rawId = params.id
     const id = rawId ? parseInt(Array.isArray(rawId) ? rawId[0] : rawId) : 0
     const { data: chat, isLoading } = useAdminChat(id)
+    const reply = useReplyToChat(id)
+    const [draft, setDraft] = useState('')
 
     if (isLoading) return <div>Loading...</div>
     if (!chat) return <div>Chat not found</div>
 
     const initiator = chat.initiator
     const receiver = chat.receiver
+    const isSupportChat =
+        initiator?.username === SUPPORT_USERNAME ||
+        receiver?.username === SUPPORT_USERNAME
+
+    const handleSend = () => {
+        const content = draft.trim()
+        if (!content || reply.isPending) return
+        reply.mutate({ content }, { onSuccess: () => setDraft('') })
+    }
 
     return (
         <div className="space-y-6">
@@ -89,8 +106,14 @@ export default function ChatDetailPage() {
             </div>
 
             <Card className="flex flex-col min-h-[500px]">
-                <CardHeader className="border-b">
+                <CardHeader className="border-b flex flex-row items-center justify-between space-y-0">
                     <CardTitle className="text-lg">Conversation History</CardTitle>
+                    {isSupportChat && (
+                        <Badge className="flex items-center gap-1">
+                            <Headset className="h-3.5 w-3.5" />
+                            Поддержка
+                        </Badge>
+                    )}
                 </CardHeader>
                 <CardContent className="p-6 flex-1 overflow-y-auto space-y-4 bg-gray-50/50 dark:bg-gray-900/50">
                     {chat.messages && chat.messages.length > 0 ? (
@@ -128,6 +151,40 @@ export default function ChatDetailPage() {
                         </div>
                     )}
                 </CardContent>
+                {isSupportChat && (
+                    <div className="border-t p-4 space-y-2">
+                        <p className="text-xs text-gray-500">
+                            Ответ отправится от имени «Техподдержки»
+                        </p>
+                        <div className="flex items-end gap-2">
+                            <Textarea
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                                        e.preventDefault()
+                                        handleSend()
+                                    }
+                                }}
+                                placeholder="Написать ответ…  (Ctrl/⌘ + Enter)"
+                                rows={2}
+                                className="flex-1 resize-none"
+                            />
+                            <Button
+                                onClick={handleSend}
+                                disabled={!draft.trim() || reply.isPending}
+                            >
+                                <Send className="h-4 w-4 mr-1" />
+                                {reply.isPending ? 'Отправка…' : 'Отправить'}
+                            </Button>
+                        </div>
+                        {reply.isError && (
+                            <p className="text-xs text-red-500">
+                                Не удалось отправить сообщение
+                            </p>
+                        )}
+                    </div>
+                )}
             </Card>
         </div>
     )

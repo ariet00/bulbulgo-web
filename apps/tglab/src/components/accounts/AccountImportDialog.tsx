@@ -1,0 +1,223 @@
+'use client'
+
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+} from '@doska/ui'
+import { useEffect, useRef, useState } from 'react'
+
+import { ProjectSelect, NONE_VALUE } from '@/components/common/ProjectSelect'
+import { useCreateAccount, useImportAccountFile } from '@/hooks/mutations'
+import { useProxies } from '@/hooks/queries'
+
+interface Props {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+/**
+ * Two ways in, both ending as one account row:
+ * — a Telethon session string (what other tools export);
+ * — the `.session` + `.json` pair a bought account ships as.
+ */
+export function AccountImportDialog({ open, onOpenChange }: Props) {
+  const { data: proxies } = useProxies()
+  const create = useCreateAccount()
+  const importFile = useImportAccountFile()
+
+  const [sessionString, setSessionString] = useState('')
+  const [apiId, setApiId] = useState('')
+  const [apiHash, setApiHash] = useState('')
+  const [twofa, setTwofa] = useState('')
+  const [phone, setPhone] = useState('')
+  const [projectId, setProjectId] = useState<number | null>(null)
+  const [proxyId, setProxyId] = useState<number | null>(null)
+  const sessionFileRef = useRef<HTMLInputElement>(null)
+  const metaFileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (open) return
+    setSessionString('')
+    setApiId('')
+    setApiHash('')
+    setTwofa('')
+    setPhone('')
+    setProjectId(null)
+    setProxyId(null)
+  }, [open])
+
+  const close = () => onOpenChange(false)
+
+  const submitString = () =>
+    create.mutate(
+      {
+        session_string: sessionString.trim(),
+        api_id: apiId ? Number(apiId) : null,
+        api_hash: apiHash || null,
+        twofa_password: twofa || null,
+        phone: phone || null,
+        project_id: projectId,
+        proxy_id: proxyId,
+      },
+      { onSuccess: close },
+    )
+
+  const submitFiles = () => {
+    const sessionFile = sessionFileRef.current?.files?.[0]
+    if (!sessionFile) return
+    importFile.mutate(
+      {
+        sessionFile,
+        metaFile: metaFileRef.current?.files?.[0] ?? null,
+        projectId,
+        proxyId,
+      },
+      { onSuccess: close },
+    )
+  }
+
+  const placement = (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-2">
+        <Label>Проект</Label>
+        <ProjectSelect value={projectId} onChange={setProjectId} />
+      </div>
+      <div className="space-y-2">
+        <Label>Прокси</Label>
+        <Select
+          value={proxyId ? String(proxyId) : NONE_VALUE}
+          onValueChange={(v) => setProxyId(v === NONE_VALUE ? null : Number(v))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Без прокси" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE_VALUE}>Без прокси</SelectItem>
+            {proxies?.map((proxy) => (
+              <SelectItem key={proxy.id} value={String(proxy.id)}>
+                {proxy.name || `${proxy.host}:${proxy.port}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  )
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Добавить аккаунт</DialogTitle>
+        </DialogHeader>
+
+        <Tabs defaultValue="string">
+          <TabsList className="mb-4">
+            <TabsTrigger value="string">Строка сессии</TabsTrigger>
+            <TabsTrigger value="files">Файлы</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="string" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="session">StringSession</Label>
+              <Textarea
+                id="session"
+                rows={4}
+                value={sessionString}
+                onChange={(e) => setSessionString(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="api-id">api_id</Label>
+                <Input
+                  id="api-id"
+                  inputMode="numeric"
+                  value={apiId}
+                  onChange={(e) => setApiId(e.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="api-hash">api_hash</Label>
+                <Input
+                  id="api-hash"
+                  value={apiHash}
+                  onChange={(e) => setApiHash(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Сессия привязана к тем api_id/api_hash, под которыми её создали —
+              укажите их, иначе будут взяты запасные из настроек сервера.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Телефон</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="twofa">Пароль 2FA</Label>
+                <Input id="twofa" value={twofa} onChange={(e) => setTwofa(e.target.value)} />
+              </div>
+            </div>
+            {placement}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={close}>
+                Отмена
+              </Button>
+              <Button
+                onClick={submitString}
+                disabled={sessionString.trim().length < 10 || create.isPending}
+              >
+                Добавить
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="session-file">Файл .session</Label>
+              <Input id="session-file" type="file" accept=".session" ref={sessionFileRef} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meta-file">Файл .json (необязательно)</Label>
+              <Input id="meta-file" type="file" accept=".json" ref={metaFileRef} />
+              <p className="text-xs text-muted-foreground">
+                Из него берутся api_id, api_hash, телефон, пароль 2FA и подпись
+                устройства. tdata пока не поддерживается.
+              </p>
+            </div>
+            {placement}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={close}>
+                Отмена
+              </Button>
+              <Button onClick={submitFiles} disabled={importFile.isPending}>
+                Импортировать
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  )
+}

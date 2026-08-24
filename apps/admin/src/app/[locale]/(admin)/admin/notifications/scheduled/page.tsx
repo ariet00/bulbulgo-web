@@ -26,6 +26,7 @@ import {
 import { Link } from '@doska/i18n'
 import { ArrowLeft, CalendarClock, X } from 'lucide-react'
 import { useState } from 'react'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -49,7 +50,7 @@ function filtersSummary(f: AdminScheduledNotification['filters']): string {
     const parts: string[] = []
     if (f.role_id) parts.push(`role=${f.role_id}`)
     if (f.device_type) parts.push(f.device_type)
-    if (f.is_active != null) parts.push(f.is_active ? 'активные' : 'неактивные')
+    if (f.status) parts.push(f.status === 'banned' ? 'забаненные' : 'активные')
     if (f.min_version) parts.push(`≥${f.min_version}`)
     if (f.max_version) parts.push(`≤${f.max_version}`)
     return parts.length ? parts.join(', ') : 'все'
@@ -67,9 +68,10 @@ export default function AdminScheduledNotificationsPage() {
     })
 
     const cancelMutation = useAdminCancelScheduledNotification()
+    const confirm = useConfirm()
 
-    const onCancel = (id: number) => {
-        if (confirm(`Отменить запланированное #${id}?`)) {
+    const onCancel = async (id: number) => {
+        if (await confirm(`Отменить запланированное #${id}?`)) {
             cancelMutation.mutate(id)
         }
     }

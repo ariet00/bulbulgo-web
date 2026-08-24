@@ -2,70 +2,80 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@doska/i18n'
-import {
-    useAdminUser,
-    useAdminUserTripsSummary,
-    useAdminUserWallets,
-    useAdminUserDevices,
-    useAdminUserSessions,
-} from '@/hooks/queries/admin'
+import { format } from 'date-fns'
+import { useFilterParams } from '@/hooks/useFilterParams'
+import { useAdminUser, useAdminUserTripsSummary } from '@/hooks/queries/admin'
 import { useAdminBanUser } from '@/hooks/mutations/admin'
+import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
+import { UserAppNoticeForm } from '@/components/admin/users/UserAppNoticeForm'
+import { UserPreBlockWarningForm } from '@/components/admin/users/UserPreBlockWarningForm'
+import { UserSendNotificationForm } from '@/components/admin/users/UserSendNotificationForm'
+import { RelatedAccountsTab } from '@/components/admin/users/RelatedAccountsTab'
+import { AnalyticsTab } from './components/AnalyticsTab'
+import { DevicesTab } from './components/DevicesTab'
+import { ErrorsTab } from './components/ErrorsTab'
+import { UserNotificationsCard } from './components/UserNotificationsCard'
+import { VehiclesCard } from './components/VehiclesCard'
+import { WalletsCard } from './components/WalletsCard'
 import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+    BackButton,
+    Button,
     Card,
     CardContent,
     CardHeader,
     CardTitle,
-    BackButton,
-    Button,
-    Avatar,
-    AvatarImage,
-    AvatarFallback,
-    Skeleton,
     Dialog,
+    DialogClose,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
     DialogDescription,
     DialogFooter,
-    DialogClose,
+    DialogHeader,
+    DialogTitle,
     DropdownMenu,
-    DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
+    DropdownMenuTrigger,
+    Skeleton,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
 } from '@doska/ui'
 import {
-    User as UserIcon,
-    Phone,
-    Mail,
+    Activity,
+    AlertTriangle,
     Ban,
-    CheckCircle2,
-    Star,
-    ShieldCheck,
-    Smartphone,
-    Monitor,
-    Wallet,
-    Car,
-    Route,
+    Bell,
     Calendar,
+    Car,
+    CheckCircle,
+    CheckCircle2,
     Clock,
     Copy,
-    ExternalLink,
-    MoreVertical,
+    Flag,
     Hash,
-    Fingerprint,
-    Globe,
-    Activity,
     Loader2,
+    Mail,
+    MoreVertical,
+    Phone,
+    RefreshCw,
+    Route,
+    ShieldAlert,
+    ShieldCheck,
+    Smartphone,
+    Star,
+    User as UserIcon,
     Users,
-    CheckCircle,
+    Wallet as WalletIcon,
     XCircle,
 } from 'lucide-react'
-import { format } from 'date-fns'
-
-/* ────────────────────────────── helpers ────────────────────────────── */
 
 const ACCENT = {
     emerald: 'text-emerald-600 dark:text-emerald-400',
@@ -73,6 +83,10 @@ const ACCENT = {
     amber: 'text-amber-600 dark:text-amber-400',
     rose: 'text-rose-600 dark:text-rose-400',
 }
+
+// Active tab lives in the URL (?tab=wallet) so it survives refresh/back and
+// can be shared as a link.
+const TAB_DEFAULTS = { tab: 'profile' }
 
 function fmt(v?: string | null, withTime = true) {
     if (!v) return '—'
@@ -90,6 +104,21 @@ function isOnline(lastOnline?: string | null) {
 
 function copy(text?: string | null) {
     if (text) navigator.clipboard?.writeText(text)
+}
+
+/** Бейдж «номер подтверждён/нет» рядом с телефоном (как в списке юзеров). */
+function PhoneVerifiedBadge({ verified }: { verified: boolean }) {
+    return verified ? (
+        <ShieldCheck
+            className="h-3.5 w-3.5 shrink-0 text-green-600"
+            aria-label="Номер подтверждён"
+        />
+    ) : (
+        <ShieldAlert
+            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+            aria-label="Номер не подтверждён"
+        />
+    )
 }
 
 function Pill({
@@ -199,23 +228,41 @@ function InfoRow({
 
 /* ────────────────────────────── page ────────────────────────────── */
 
+/* ────────────────────────────── page ────────────────────────────── */
+
 export default function UserDetailPage() {
     const params = useParams()
     const rawId = params.id
     const id = rawId ? parseInt(Array.isArray(rawId) ? rawId[0] : rawId) : 0
+    const uid = id
 
-    const { data: user, isLoading } = useAdminUser(id)
+    // Активный таб — в URL. Контент табов смонтирован только когда таб открыт
+    // (Radix размонтирует неактивные TabsContent), поэтому каждый таб грузит
+    // свои данные лениво — страница не делает десяток запросов на открытии.
+    const { values: tabParams, setValues: setTabParams } = useFilterParams(TAB_DEFAULTS)
+
+    // Период/продукт общие для табов «Аналитика» и «Ошибки».
+    const [period, setPeriod] = useState('7d')
+    const [product, setProduct] = useState('')
+
+    const profile = useAdminUser(id)
+    const user = profile.data
+    const isLoading = profile.isLoading
+
     const tripsSummary = useAdminUserTripsSummary(id)
-    const wallets = useAdminUserWallets(id)
-    const devices = useAdminUserDevices(id)
-    const sessions = useAdminUserSessions(id)
 
     const banUser = useAdminBanUser()
     const [confirmBan, setConfirmBan] = useState(false)
 
+    const queryClient = useQueryClient()
+    const isFetching = useIsFetching() > 0
+    // Помечает все запросы устаревшими: видимые перезапрашиваются сразу,
+    // остальные — при открытии своего таба.
+    const refreshAll = () => queryClient.invalidateQueries()
+
     if (isLoading) {
         return (
-            <div className="space-y-6">
+            <div className="mx-auto max-w-[1400px] space-y-6">
                 <BackButton />
                 <Skeleton className="h-40 w-full" />
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -230,7 +277,7 @@ export default function UserDetailPage() {
 
     if (!user) {
         return (
-            <div className="space-y-6">
+            <div className="mx-auto max-w-[1400px] space-y-6">
                 <BackButton />
                 <p className="py-12 text-center text-muted-foreground">Пользователь не найден</p>
             </div>
@@ -238,19 +285,17 @@ export default function UserDetailPage() {
     }
 
     const summary = tripsSummary.data
-    const walletItems = wallets.data?.wallets ?? []
-    const totals = wallets.data?.total_balance_by_currency ?? {}
     const online = isOnline(user.last_online_at)
 
     const handleBan = () => {
         banUser.mutate(
-            { id: user.id, isActive: !user.is_active },
+            { id: user.id, status: user.status === 'banned' ? 'active' : 'banned' },
             { onSettled: () => setConfirmBan(false) },
         )
     }
 
     return (
-        <div className="space-y-6">
+        <div className="mx-auto max-w-[1400px] space-y-6">
             <BackButton />
 
             {/* ── Profile header ── */}
@@ -279,7 +324,7 @@ export default function UserDetailPage() {
                             </h1>
                             <p className="text-sm text-muted-foreground">@{user.username}</p>
                             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                {user.is_active ? (
+                                {user.status !== 'banned' ? (
                                     <Pill tone="emerald">
                                         <CheckCircle2 className="h-3 w-3" /> Активен
                                     </Pill>
@@ -306,17 +351,21 @@ export default function UserDetailPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Link href={`/admin/analytics/users/${user.id}`}>
-                            <Button variant="outline" className="gap-2">
-                                <Activity className="h-4 w-4" /> Аналитика
-                            </Button>
-                        </Link>
                         <Button
-                            variant={user.is_active ? 'destructive' : 'default'}
+                            variant="outline"
+                            size="icon"
+                            onClick={refreshAll}
+                            disabled={isFetching}
+                            title="Обновить"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button
+                            variant={user.status !== 'banned' ? 'destructive' : 'default'}
                             className="gap-2"
                             onClick={() => setConfirmBan(true)}
                         >
-                            {user.is_active ? (
+                            {user.status !== 'banned' ? (
                                 <>
                                     <Ban className="h-4 w-4" /> Забанить
                                 </>
@@ -348,237 +397,197 @@ export default function UserDetailPage() {
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
-                                <Link href={`/admin/analytics/users/${user.id}`}>
+                                <Link href={`/admin/trips?user_id=${user.id}`}>
                                     <DropdownMenuItem>
-                                        <ExternalLink className="mr-2 h-4 w-4" /> Открыть аналитику
+                                        <Route className="mr-2 h-4 w-4" /> Поездки пользователя
                                     </DropdownMenuItem>
                                 </Link>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </CardContent>
+
+                {/* ── Quick facts strip ── */}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-border bg-muted/30 px-6 py-3 text-sm text-muted-foreground">
+                    <button
+                        onClick={() => copy(String(user.id))}
+                        className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                        title="Скопировать ID"
+                    >
+                        <Hash className="h-3.5 w-3.5" /> {user.id}
+                        <Copy className="h-3 w-3 opacity-50" />
+                    </button>
+                    {user.phone && (
+                        <button
+                            onClick={() => copy(user.phone)}
+                            className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                            title="Скопировать телефон"
+                        >
+                            <Phone className="h-3.5 w-3.5" /> {user.phone}
+                            <PhoneVerifiedBadge verified={!!user.phone_verified} />
+                            <Copy className="h-3 w-3 opacity-50" />
+                        </button>
+                    )}
+                    {user.email && (
+                        <button
+                            onClick={() => copy(user.email)}
+                            className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                            title="Скопировать email"
+                        >
+                            <Mail className="h-3.5 w-3.5" /> {user.email}
+                            <Copy className="h-3 w-3 opacity-50" />
+                        </button>
+                    )}
+                    <span className="flex items-center gap-1.5" title="Дата регистрации">
+                        <Calendar className="h-3.5 w-3.5" /> с {fmt(user.created_at, false)}
+                    </span>
+                    <span className="flex items-center gap-1.5" title="Был онлайн">
+                        <Clock className="h-3.5 w-3.5" />
+                        {online ? (
+                            <span className="text-emerald-600 dark:text-emerald-400">в сети</span>
+                        ) : (
+                            fmt(user.last_online_at)
+                        )}
+                    </span>
+                </div>
             </Card>
 
-            {/* ── Trips stat tiles ── */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                <StatTile label="Поездок всего" icon={Route} value={summary?.total ?? '—'} />
-                <StatTile label="Как водитель" icon={Car} accent={ACCENT.blue} value={summary?.driver ?? '—'} />
-                <StatTile label="Как пассажир" icon={Users} value={summary?.passenger ?? '—'} />
-                <StatTile label="Активные" icon={Activity} accent={ACCENT.emerald} value={summary?.active ?? '—'} />
-                <StatTile label="Завершённые" icon={CheckCircle} accent={ACCENT.emerald} value={summary?.completed ?? '—'} />
-                <StatTile label="Отменённые" icon={XCircle} accent={ACCENT.rose} value={summary?.cancelled ?? '—'} />
-            </div>
+            {/* ── Tabs ── */}
+            <Tabs
+                value={tabParams.tab}
+                onValueChange={v => setTabParams({ tab: v })}
+                className="space-y-6"
+            >
+                <TabsList className="w-full justify-start overflow-x-auto">
+                    <TabsTrigger value="profile" className="gap-2 shrink-0">
+                        <UserIcon className="h-4 w-4" /> Профиль
+                    </TabsTrigger>
+                    <TabsTrigger value="analytics" className="gap-2 shrink-0">
+                        <Activity className="h-4 w-4" /> Аналитика
+                    </TabsTrigger>
+                    <TabsTrigger value="errors" className="gap-2 shrink-0">
+                        <AlertTriangle className="h-4 w-4" /> Ошибки
+                    </TabsTrigger>
+                    <TabsTrigger value="devices" className="gap-2 shrink-0">
+                        <Smartphone className="h-4 w-4" /> Устройства и связи
+                    </TabsTrigger>
+                    <TabsTrigger value="wallet" className="gap-2 shrink-0">
+                        <WalletIcon className="h-4 w-4" /> Кошелёк
+                    </TabsTrigger>
+                    <TabsTrigger value="notify" className="gap-2 shrink-0">
+                        <Bell className="h-4 w-4" /> Уведомление
+                    </TabsTrigger>
+                </TabsList>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* ── Identity ── */}
-                <SectionCard title="Идентификация" icon={UserIcon}>
-                    <div className="divide-y divide-border">
-                        <InfoRow icon={Hash} label="ID" onCopy={() => copy(String(user.id))}>
-                            {user.id}
-                        </InfoRow>
-                        <InfoRow icon={UserIcon} label="ФИО">
-                            {[user.surname, user.name, user.patronymic].filter(Boolean).join(' ') || '—'}
-                        </InfoRow>
-                        <InfoRow icon={Fingerprint} label="Username">
-                            @{user.username}
-                        </InfoRow>
-                        <InfoRow icon={Globe} label="Провайдер">
-                            <span className="capitalize">{user.provider || '—'}</span>
-                        </InfoRow>
-                        <InfoRow icon={ShieldCheck} label="Роль">
-                            {user.role_slug || '—'}
-                        </InfoRow>
-                        <InfoRow icon={Calendar} label="Регистрация">
-                            {fmt(user.created_at, false)}
-                        </InfoRow>
-                        <InfoRow icon={Clock} label="Был онлайн">
-                            {online ? (
-                                <span className="text-emerald-600 dark:text-emerald-400">сейчас</span>
-                            ) : (
-                                fmt(user.last_online_at)
-                            )}
-                        </InfoRow>
+                {/* ══════════════════ PROFILE TAB ══════════════════ */}
+                <TabsContent value="profile" className="space-y-6">
+                    {/* ── Trips stat tiles ── */}
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                        <StatTile label="Поездок всего" icon={Route} value={summary?.total ?? '—'} />
+                        <StatTile label="Как водитель" icon={Car} accent={ACCENT.blue} value={summary?.driver ?? '—'} />
+                        <StatTile label="Как пассажир" icon={Users} value={summary?.passenger ?? '—'} />
+                        <StatTile label="Активные" icon={Activity} accent={ACCENT.emerald} value={summary?.active ?? '—'} />
+                        <StatTile label="Завершённые" icon={CheckCircle} accent={ACCENT.emerald} value={summary?.completed ?? '—'} />
+                        <StatTile label="Отменённые" icon={XCircle} accent={ACCENT.rose} value={summary?.cancelled ?? '—'} />
                     </div>
-                </SectionCard>
 
-                {/* ── Contacts ── */}
-                <SectionCard title="Контакты" icon={Phone}>
-                    <div className="divide-y divide-border">
-                        <InfoRow icon={Phone} label="Телефон" onCopy={user.phone ? () => copy(user.phone) : undefined}>
-                            {user.phone || '—'}
-                        </InfoRow>
-                        <InfoRow icon={Mail} label="Email" onCopy={user.email ? () => copy(user.email) : undefined}>
-                            {user.email || '—'}
-                        </InfoRow>
-                        <InfoRow icon={UserIcon} label="Пол">
-                            <span className="capitalize">{user.gender || '—'}</span>
-                        </InfoRow>
-                        <InfoRow icon={Star} label="Рейтинг">
-                            {user.rating ? `${Number(user.rating).toFixed(1)} (${user.review_count ?? 0})` : '—'}
-                        </InfoRow>
-                    </div>
-                </SectionCard>
+                    <Link
+                        href={`/admin/trips?user_id=${user.id}`}
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                        <Route className="h-4 w-4" /> Открыть поездки пользователя →
+                    </Link>
 
-                {/* ── Wallets ── */}
-                <SectionCard
-                    title="Кошельки"
-                    icon={Wallet}
-                    action={
-                        Object.keys(totals).length > 0 ? (
-                            <span className="text-sm font-semibold tabular-nums text-foreground">
-                                {Object.entries(totals)
-                                    .map(([cur, val]) => `${val.toLocaleString()} ${cur}`)
-                                    .join(' · ')}
-                            </span>
-                        ) : undefined
-                    }
-                >
-                    {wallets.isLoading ? (
-                        <Skeleton className="h-20 w-full" />
-                    ) : walletItems.length === 0 ? (
-                        <p className="py-6 text-center text-sm italic text-muted-foreground">
-                            Нет кошельков
-                        </p>
-                    ) : (
-                        <div className="divide-y divide-border">
-                            {walletItems.map(w => (
-                                <div key={w.id} className="flex items-center justify-between gap-3 py-2.5">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-medium text-foreground">
-                                            {w.name}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {w.product} · {w.tx_count} операций
-                                        </p>
-                                    </div>
-                                    <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                                        {w.balance.toLocaleString()} {w.currency}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </SectionCard>
-            </div>
-
-            {/* ── Trip types breakdown ── */}
-            {summary && summary.by_type.length > 0 && (
-                <SectionCard title="Поездки по типам" icon={Route}>
-                    <div className="flex flex-wrap gap-2">
-                        {summary.by_type.map(t => (
-                            <Pill key={t.trip_type ?? 'unknown'} tone="blue">
-                                {t.trip_type ?? '—'}
-                                <span className="font-bold tabular-nums">{t.count}</span>
-                            </Pill>
-                        ))}
-                    </div>
-                </SectionCard>
-            )}
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* ── Devices ── */}
-                <SectionCard
-                    title="Устройства (push)"
-                    icon={Smartphone}
-                    action={
-                        <span className="text-sm text-muted-foreground tabular-nums">
-                            {devices.data?.length ?? 0}
-                        </span>
-                    }
-                >
-                    {devices.isLoading ? (
-                        <Skeleton className="h-20 w-full" />
-                    ) : !devices.data || devices.data.length === 0 ? (
-                        <p className="py-6 text-center text-sm italic text-muted-foreground">
-                            Нет устройств
-                        </p>
-                    ) : (
-                        <div className="divide-y divide-border">
-                            {devices.data.map(d => (
-                                <div key={d.id} className="flex items-center justify-between gap-3 py-2.5">
-                                    <div className="min-w-0">
-                                        <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-                                            <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
-                                            <span className="capitalize">{d.device_type}</span>
-                                            {d.app_version && (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        {/* ── Basic info (id/username/provider/role/dates/gender/rating
+                             live in the header pills + quick-facts strip) ── */}
+                        <SectionCard title="Основное" icon={UserIcon}>
+                            <div className="divide-y divide-border">
+                                <InfoRow icon={UserIcon} label="ФИО">
+                                    {[user.surname, user.name, user.patronymic].filter(Boolean).join(' ') || '—'}
+                                </InfoRow>
+                                <InfoRow icon={Phone} label="Телефон" onCopy={user.phone ? () => copy(user.phone) : undefined}>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        {user.phone || '—'}
+                                        {user.phone && (
+                                            <>
+                                                <PhoneVerifiedBadge verified={!!user.phone_verified} />
                                                 <span className="text-xs text-muted-foreground">
-                                                    v{d.app_version}
+                                                    {user.phone_verified ? 'подтверждён' : 'не подтверждён'}
                                                 </span>
-                                            )}
-                                        </p>
-                                        <p className="truncate text-xs text-muted-foreground">
-                                            {d.device_info ?? '—'}
-                                        </p>
-                                    </div>
-                                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                                        {fmt(d.created_at, false)}
+                                            </>
+                                        )}
                                     </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </SectionCard>
+                                </InfoRow>
+                                <InfoRow icon={Mail} label="Email" onCopy={user.email ? () => copy(user.email) : undefined}>
+                                    {user.email || '—'}
+                                </InfoRow>
+                            </div>
+                        </SectionCard>
 
-                {/* ── Sessions ── */}
-                <SectionCard
-                    title="Сессии"
-                    icon={Monitor}
-                    action={
-                        <span className="text-sm text-muted-foreground tabular-nums">
-                            {sessions.data?.length ?? 0}
-                        </span>
-                    }
-                >
-                    {sessions.isLoading ? (
-                        <Skeleton className="h-20 w-full" />
-                    ) : !sessions.data || sessions.data.length === 0 ? (
-                        <p className="py-6 text-center text-sm italic text-muted-foreground">
-                            Нет сессий
-                        </p>
-                    ) : (
-                        <div className="divide-y divide-border">
-                            {sessions.data.map(s => {
-                                const active = s.is_deleted != null ? !s.is_deleted : !!s.is_active
-                                return (
-                                    <div key={s.id} className="flex items-center justify-between gap-3 py-2.5">
-                                        <div className="min-w-0">
-                                            <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-                                                {active ? (
-                                                    <Pill tone="emerald">активна</Pill>
-                                                ) : (
-                                                    <Pill>закрыта</Pill>
-                                                )}
-                                                {s.app_version && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        v{s.app_version}
-                                                    </span>
-                                                )}
-                                            </p>
-                                            <p className="truncate text-xs text-muted-foreground">
-                                                {s.device_info ?? '—'}
-                                                {s.ip_address ? ` · ${s.ip_address}` : ''}
-                                            </p>
-                                        </div>
-                                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                                            {s.last_used_at ? fmt(s.last_used_at) : fmt(s.created_at)}
-                                        </span>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    )}
-                </SectionCard>
-            </div>
+                        {/* ── Feature overrides ── */}
+                        <SectionCard title="Фичи (переопределения)" icon={Flag}>
+                            <UserFeatureOverridesForm userId={id} />
+                        </SectionCard>
+
+                        {/* ── App notice ── */}
+                        <SectionCard title="Уведомление в приложении" icon={Bell}>
+                            <UserAppNoticeForm userId={id} />
+                        </SectionCard>
+
+                        {/* ── Pre-block warning (legacy) ── */}
+                        <SectionCard title="Предупреждение перед блокировкой (Legacy)" icon={AlertTriangle}>
+                            <p className="mb-3 text-xs text-muted-foreground">
+                                Для старых версий приложения — новые показывают
+                                «Уведомление в приложении» выше. Будет удалено
+                                после поднятия минимальной версии.
+                            </p>
+                            <UserPreBlockWarningForm userId={id} />
+                        </SectionCard>
+
+                    </div>
+
+                    <VehiclesCard uid={uid} />
+                </TabsContent>
+
+                {/* ══════════════════ ANALYTICS TAB ══════════════════ */}
+                <TabsContent value="analytics" className="space-y-5">
+                    <AnalyticsTab uid={uid} period={period} setPeriod={setPeriod} product={product} setProduct={setProduct} />
+                </TabsContent>
+
+                {/* ══════════════════ ERRORS TAB ══════════════════ */}
+                <TabsContent value="errors" className="space-y-5">
+                    <ErrorsTab uid={uid} period={period} setPeriod={setPeriod} product={product} setProduct={setProduct} />
+                </TabsContent>
+
+                {/* ══════════════════ DEVICES & RELATED TAB ══════════════════ */}
+                <TabsContent value="devices" className="space-y-6">
+                    <DevicesTab uid={uid} />
+                    <RelatedAccountsTab userId={id} />
+                </TabsContent>
+
+                {/* ══════════════════ WALLET TAB ══════════════════ */}
+                <TabsContent value="wallet" className="space-y-6">
+                    <WalletsCard uid={uid} />
+                </TabsContent>
+
+                {/* ══════════════════ NOTIFY TAB ══════════════════ */}
+                <TabsContent value="notify" className="space-y-6">
+                    <UserSendNotificationForm userId={id} />
+
+                    <UserNotificationsCard uid={uid} />
+                </TabsContent>
+            </Tabs>
 
             {/* ── Ban confirm ── */}
             <Dialog open={confirmBan} onOpenChange={setConfirmBan}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            {user.is_active ? 'Забанить' : 'Разбанить'} {user.username}?
+                            {user.status !== 'banned' ? 'Забанить' : 'Разбанить'} {user.username}?
                         </DialogTitle>
                         <DialogDescription>
-                            {user.is_active
+                            {user.status !== 'banned'
                                 ? 'Пользователь потеряет доступ к аккаунту до разбана.'
                                 : 'Пользователю вернётся доступ к аккаунту.'}
                         </DialogDescription>
@@ -588,19 +597,19 @@ export default function UserDetailPage() {
                             <Button variant="outline">Отмена</Button>
                         </DialogClose>
                         <Button
-                            variant={user.is_active ? 'destructive' : 'default'}
+                            variant={user.status !== 'banned' ? 'destructive' : 'default'}
                             onClick={handleBan}
                             disabled={banUser.isPending}
                             className="gap-2"
                         >
                             {banUser.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : user.is_active ? (
+                            ) : user.status !== 'banned' ? (
                                 <Ban className="h-4 w-4" />
                             ) : (
                                 <CheckCircle2 className="h-4 w-4" />
                             )}
-                            {user.is_active ? 'Забанить' : 'Разбанить'}
+                            {user.status !== 'banned' ? 'Забанить' : 'Разбанить'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -608,3 +617,8 @@ export default function UserDetailPage() {
         </div>
     )
 }
+
+/* ────────────────────────── analytics sub-components ────────────────────────── */
+
+// Client-side row limiter — renders first `step` rows with a "show more" toggle
+// so analytics tables stay compact instead of dumping hundreds of rows.

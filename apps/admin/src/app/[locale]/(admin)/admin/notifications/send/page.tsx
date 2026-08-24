@@ -2,6 +2,7 @@
 
 import { AdminBroadcastFilters } from '@/apis/admin'
 import {
+    useAdminNewsList,
     useAdminNotificationRoles,
     useAdminPreviewAudience,
 } from '@/hooks/queries/admin'
@@ -36,6 +37,13 @@ import { Link, useRouter } from '@doska/i18n'
 import { ArrowLeft, CalendarClock, Save, Send, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
+import { useConfirm, usePrompt } from '@/components/admin/ConfirmProvider'
+import {
+    BUILT_IN_TEMPLATES,
+    loadTemplates,
+    saveTemplates,
+    type NotificationTemplate as Template,
+} from '@/lib/notification-templates'
 
 const ALL = '__all__'
 
@@ -57,40 +65,10 @@ const CLICK_ACTION_PRESETS: { value: string; label: string }[] = [
     { value: '/profile/reviews', label: '/profile/reviews — отзывы' },
 ]
 
-const TEMPLATE_STORAGE_KEY = 'admin:notification-templates:v1'
-
-type Template = {
-    name: string
-    tab: 'user' | 'broadcast'
-    title: string
-    body: string
-    type: string
-    category: string
-    clickAction: string
-    dataJson: string
-    isDataOnly: boolean
-    filters: AdminBroadcastFilters
-}
-
-function loadTemplates(): Template[] {
-    if (typeof window === 'undefined') return []
-    try {
-        const raw = localStorage.getItem(TEMPLATE_STORAGE_KEY)
-        if (!raw) return []
-        const parsed = JSON.parse(raw)
-        return Array.isArray(parsed) ? parsed : []
-    } catch {
-        return []
-    }
-}
-
-function saveTemplates(templates: Template[]) {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
-}
-
 export default function AdminSendNotificationPage() {
     const router = useRouter()
+    const confirm = useConfirm()
+    const prompt = usePrompt()
     const [tab, setTab] = useState<'user' | 'broadcast'>('user')
     const [mode, setMode] = useState<'now' | 'schedule'>('now')
     const [scheduledAt, setScheduledAt] = useState('') // datetime-local value
@@ -111,7 +89,7 @@ export default function AdminSendNotificationPage() {
     // Broadcast filters
     const [roleId, setRoleId] = useState<string>(ALL)
     const [deviceType, setDeviceType] = useState<string>(ALL)
-    const [isActive, setIsActive] = useState<string>(ALL)
+    const [userStatus, setUserStatus] = useState<string>(ALL)
     const [minVersion, setMinVersion] = useState('')
     const [maxVersion, setMaxVersion] = useState('')
     const [guestsOnly, setGuestsOnly] = useState(false)
@@ -120,6 +98,8 @@ export default function AdminSendNotificationPage() {
     const [deviceIdsRaw, setDeviceIdsRaw] = useState('')
 
     const { data: roles } = useAdminNotificationRoles()
+    const { data: newsPage } = useAdminNewsList(1, 50, { status: 'published' })
+    const publishedNews = newsPage?.items ?? []
 
     const sendMutation = useAdminSendNotification()
     const broadcastMutation = useAdminBroadcastNotification()
@@ -169,7 +149,7 @@ export default function AdminSendNotificationPage() {
     const broadcastFilters: AdminBroadcastFilters = useMemo(
         () => ({
             role_id: guestsOnly ? null : roleId === ALL ? null : Number(roleId),
-            is_active: guestsOnly ? null : isActive === ALL ? null : isActive === 'true',
+            status: guestsOnly ? null : userStatus === ALL ? null : userStatus,
             device_type: deviceType === ALL ? null : deviceType,
             min_version: minVersion.trim() || null,
             max_version: maxVersion.trim() || null,
@@ -177,7 +157,7 @@ export default function AdminSendNotificationPage() {
             user_ids: userIds.length > 0 ? userIds : null,
             device_ids: deviceIds.length > 0 ? deviceIds : null,
         }),
-        [roleId, isActive, deviceType, minVersion, maxVersion, guestsOnly, userIds, deviceIds],
+        [roleId, userStatus, deviceType, minVersion, maxVersion, guestsOnly, userIds, deviceIds],
     )
 
     const {
@@ -205,9 +185,7 @@ export default function AdminSendNotificationPage() {
         setIsDataOnly(!!tpl.isDataOnly)
         setRoleId(tpl.filters.role_id != null ? String(tpl.filters.role_id) : ALL)
         setDeviceType(tpl.filters.device_type ?? ALL)
-        setIsActive(
-            tpl.filters.is_active == null ? ALL : tpl.filters.is_active ? 'true' : 'false',
-        )
+        setUserStatus(tpl.filters.status ?? ALL)
         setMinVersion(tpl.filters.min_version ?? '')
         setMaxVersion(tpl.filters.max_version ?? '')
         setGuestsOnly(!!tpl.filters.guests_only)
@@ -215,8 +193,28 @@ export default function AdminSendNotificationPage() {
         setDeviceIdsRaw((tpl.filters.device_ids ?? []).join('\n'))
     }
 
-    const saveTemplate = () => {
-        const name = prompt('Название шаблона:')
+    // Встроенные шаблоны применяют только текстовую часть: активная вкладка
+    // (пользователь/рассылка) и настроенные фильтры аудитории сохраняются.
+    const applyBuiltIn = (tpl: Template) => {
+        setTitle(tpl.title)
+        setBody(tpl.body)
+        setType(tpl.type || 'info')
+        setCategory(tpl.category || '')
+        const isPreset = CLICK_ACTION_PRESETS.some((p) => p.value === tpl.clickAction)
+        setClickActionPreset(isPreset ? tpl.clickAction : ALL)
+        setClickActionCustom(isPreset ? '' : tpl.clickAction || '')
+        setDataJson(tpl.dataJson || '')
+        setIsDataOnly(!!tpl.isDataOnly)
+    }
+
+    const saveTemplate = async () => {
+        const name = await prompt({
+            title: 'Сохранить шаблон',
+            label: 'Название шаблона',
+            placeholder: 'Например: Приветствие',
+            required: true,
+            confirmText: 'Сохранить',
+        })
         if (!name) return
         const tpl: Template = {
             name,
@@ -235,8 +233,8 @@ export default function AdminSendNotificationPage() {
         saveTemplates(next)
     }
 
-    const deleteTemplate = (name: string) => {
-        if (!confirm(`Удалить шаблон «${name}»?`)) return
+    const deleteTemplate = async (name: string) => {
+        if (!(await confirm(`Удалить шаблон «${name}»?`))) return
         const next = templates.filter((t) => t.name !== name)
         setTemplates(next)
         saveTemplates(next)
@@ -294,9 +292,9 @@ export default function AdminSendNotificationPage() {
             if (
                 audience &&
                 audience.devices > 0 &&
-                !confirm(
+                !(await confirm(
                     `Отправить ${audience.devices} устройствам (${audience.users} пользователей)?`,
-                )
+                ))
             ) {
                 return
             }
@@ -390,10 +388,10 @@ export default function AdminSendNotificationPage() {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label>Активность</Label>
+                                        <Label>Статус</Label>
                                         <Select
-                                            value={isActive}
-                                            onValueChange={setIsActive}
+                                            value={userStatus}
+                                            onValueChange={setUserStatus}
                                             disabled={guestsOnly}
                                         >
                                             <SelectTrigger>
@@ -401,8 +399,8 @@ export default function AdminSendNotificationPage() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value={ALL}>Все</SelectItem>
-                                                <SelectItem value="true">Только активные</SelectItem>
-                                                <SelectItem value="false">Только неактивные</SelectItem>
+                                                <SelectItem value="active">Только активные</SelectItem>
+                                                <SelectItem value="banned">Только забаненные</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -547,6 +545,43 @@ export default function AdminSendNotificationPage() {
                                 По нажатию приложение откроет указанный экран. Если пусто —
                                 откроется главный экран.
                             </p>
+                            <div className="mt-2">
+                                <Select
+                                    value={ALL}
+                                    onValueChange={(v) => {
+                                        const n = publishedNews.find(
+                                            (x) => String(x.id) === v,
+                                        )
+                                        if (!n) return
+                                        setClickActionPreset(ALL)
+                                        setClickActionCustom(n.click_action)
+                                        if (!title.trim()) setTitle(n.title)
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="…или открыть новость" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {publishedNews.length === 0 && (
+                                            <SelectItem value={ALL} disabled>
+                                                Нет опубликованных новостей
+                                            </SelectItem>
+                                        )}
+                                        {publishedNews.map((n) => (
+                                            <SelectItem
+                                                key={n.id}
+                                                value={String(n.id)}
+                                            >
+                                                #{n.id} — {n.title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Подставит диплинк выбранной новости (полноэкранная
+                                    статья). Создать новость: «BulBul Go → Новости».
+                                </p>
+                            </div>
                         </div>
 
                         <div>
@@ -689,6 +724,27 @@ export default function AdminSendNotificationPage() {
                             <CardTitle className="text-base">Шаблоны</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Готовые
+                            </p>
+                            {BUILT_IN_TEMPLATES.map((tpl) => (
+                                <button
+                                    key={tpl.name}
+                                    type="button"
+                                    className="block w-full rounded border px-2 py-1 text-left hover:bg-muted/50"
+                                    onClick={() => applyBuiltIn(tpl)}
+                                    title={tpl.body}
+                                >
+                                    <span className="text-sm">{tpl.name}</span>
+                                    <span className="block truncate text-xs text-muted-foreground">
+                                        {tpl.title}
+                                    </span>
+                                </button>
+                            ))}
+
+                            <p className="pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Мои
+                            </p>
                             {templates.length === 0 ? (
                                 <p className="text-xs text-muted-foreground">
                                     Сохранённых шаблонов нет. Нажмите «Сохранить как шаблон» под

@@ -128,7 +128,7 @@ export function TripCard({ trip }: TripCardProps) {
                         {trip.user?.username !== 'chat_parser_user' ? (
                             <Link href={`/users/${trip.user?.id}`} className="flex items-center gap-3 group/user">
                                 <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-primary/10 transition-all group-hover/user:ring-primary/30">
-                                    <AvatarImage src={trip.user?.data?.avatar_thumbnail} alt={trip.user?.username} />
+                                    <AvatarImage src={trip.user?.avatar_thumbnail_url ?? trip.user?.avatar_url} alt={trip.user?.username} />
                                     <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
                                         {trip.user?.username?.[0]?.toUpperCase()}
                                     </AvatarFallback>
@@ -140,7 +140,7 @@ export function TripCard({ trip }: TripCardProps) {
                                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-primary/5 px-1.5 py-0.5 rounded-full w-fit">
                                         <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
                                         <span className="font-bold text-amber-600">
-                                            {trip.user?.data?.rating || "5.0"}
+                                            {trip.user?.rating || "5.0"}
                                         </span>
                                     </div>
                                 </div>

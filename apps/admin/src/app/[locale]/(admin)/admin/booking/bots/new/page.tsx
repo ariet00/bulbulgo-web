@@ -14,6 +14,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { CompanyCombobox } from '@/components/admin/selectors/CompanyCombobox'
+import { BotTypeSelect, useBotTypeSpec } from '@/components/admin/bots/BotTypeSelect'
+import { BOT_FIELD_COMPANY, BOT_FIELD_MINI_APP_URL } from '@/apis/admin'
 
 export default function NewBookingBotPage() {
     const router = useRouter()
@@ -27,6 +29,7 @@ export default function NewBookingBotPage() {
     const [botType, setBotType] = useState('booking')
     const [miniAppUrl, setMiniAppUrl] = useState('')
     const [companyId, setCompanyId] = useState<number | null>(null)
+    const { spec, hasField } = useBotTypeSpec(botType)
 
     const submit = async () => {
         if (!slug.trim() || !token.trim()) return
@@ -97,43 +100,42 @@ export default function NewBookingBotPage() {
                             Без <code>@</code>. Нужен для входа через браузер (Login Widget).
                         </p>
                     </div>
-                    <div>
-                        <Label>Тип бота</Label>
-                        <select
-                            value={botType}
-                            onChange={(e) => setBotType(e.target.value)}
-                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-                        >
-                            <option value="booking">booking</option>
-                            <option value="akcha">akcha</option>
-                            <option value="popytka">popytka</option>
-                        </select>
-                    </div>
-                    <div>
-                        <Label>Mini App URL</Label>
-                        <Input
-                            value={miniAppUrl}
-                            onChange={(e) => setMiniAppUrl(e.target.value)}
-                            placeholder="https://akcha.example.com"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            URL Telegram Mini App. Хранится в{' '}
-                            <code>telegram_bots.data.mini_app_url</code>.
+                    <BotTypeSelect value={botType} onChange={setBotType} />
+                    {hasField(BOT_FIELD_MINI_APP_URL) && (
+                        <div>
+                            <Label>Mini App URL</Label>
+                            <Input
+                                value={miniAppUrl}
+                                onChange={(e) => setMiniAppUrl(e.target.value)}
+                                placeholder="https://akcha.example.com"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                URL Telegram Mini App. Хранится в{' '}
+                                <code>telegram_bots.data.mini_app_url</code>.
+                            </p>
+                        </div>
+                    )}
+                    {hasField(BOT_FIELD_COMPANY) && (
+                        <div>
+                            <Label>Компания (опционально)</Label>
+                            <CompanyCombobox
+                                value={companyId}
+                                onChange={setCompanyId}
+                                typeFilter="booking"
+                                allowClear
+                                placeholder="Выберите booking-компанию…"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Если пусто — бот создастся непривязанным, можно привязать позже.
+                            </p>
+                        </div>
+                    )}
+                    {spec?.settings_href && (
+                        <p className="text-sm text-muted-foreground">
+                            Остальные настройки этого типа — на отдельной странице, она
+                            станет доступна после создания бота.
                         </p>
-                    </div>
-                    <div>
-                        <Label>Компания (опционально)</Label>
-                        <CompanyCombobox
-                            value={companyId}
-                            onChange={setCompanyId}
-                            typeFilter="booking"
-                            allowClear
-                            placeholder="Выберите booking-компанию…"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Если пусто — бот создастся непривязанным, можно привязать позже.
-                        </p>
-                    </div>
+                    )}
                     <Button onClick={submit} disabled={pending}>
                         Создать
                     </Button>

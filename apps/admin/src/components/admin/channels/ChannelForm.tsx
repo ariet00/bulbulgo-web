@@ -1,0 +1,382 @@
+'use client'
+
+import type { ChannelType, TelegramChannel, TripRole } from '@doska/shared'
+import { Link } from '@doska/i18n'
+import { CHANNEL_TYPES, CHANNEL_TYPE_LABELS } from '@doska/shared'
+import {
+    Button,
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    Checkbox,
+    Input,
+    Label,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    Switch,
+    Textarea,
+} from '@doska/ui'
+
+const ALL_ROLES: { value: TripRole; label: string }[] = [
+    { value: 'driver', label: 'Водители' },
+    { value: 'passenger', label: 'Пассажиры' },
+    { value: 'parcel', label: 'Посылки' },
+]
+
+export type ChannelFormState = {
+    chat_id: string
+    title: string
+    bot_id: string // string so empty input → null
+    is_active: boolean
+    channel_type: ChannelType
+    use_parser_ai: boolean
+    ai_fallback: boolean
+    limit_message: number
+    skip_keywords: string // newline-separated
+    sort_order: number
+    bot_username: string
+    allowed_roles: TripRole[]
+    filters_json: string // raw JSON for data.parser.filters; '' = none
+}
+
+export const emptyChannel: ChannelFormState = {
+    chat_id: '',
+    title: '',
+    bot_id: '',
+    is_active: true,
+    channel_type: 'parse',
+    use_parser_ai: false,
+    ai_fallback: false,
+    limit_message: 5,
+    skip_keywords: '',
+    sort_order: 100,
+    bot_username: '',
+    allowed_roles: [],
+    filters_json: '',
+}
+
+/** Parse the filters JSON field. Returns `{ value }` on success (undefined =
+ * empty/cleared), or `{ error }` when the text isn't a JSON object. */
+export function parseFiltersJson(
+    raw: string,
+): { value?: Record<string, any>; error?: string } {
+    const t = raw.trim()
+    if (!t) return { value: undefined }
+    let parsed: unknown
+    try {
+        parsed = JSON.parse(t)
+    } catch {
+        return { error: 'Невалидный JSON' }
+    }
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        return { error: 'Ожидается JSON-объект, например { "price": { … } }' }
+    }
+    return { value: parsed as Record<string, any> }
+}
+
+export function channelFromRow(row: TelegramChannel): ChannelFormState {
+    return {
+        chat_id: row.chat_id,
+        title: row.title ?? '',
+        bot_id: row.bot_id == null ? '' : String(row.bot_id),
+        is_active: row.is_active,
+        channel_type: row.channel_type,
+        use_parser_ai: row.parser.use_parser_ai,
+        ai_fallback: row.parser.ai_fallback,
+        limit_message: row.parser.limit_message,
+        skip_keywords: (row.parser.skip_keywords || []).join('\n'),
+        sort_order: row.parser.sort_order,
+        bot_username: row.parser.bot_username || '',
+        allowed_roles: (row.parser.allowed_roles || []) as TripRole[],
+        filters_json: row.parser.filters
+            ? JSON.stringify(row.parser.filters, null, 2)
+            : '',
+    }
+}
+
+export function channelToBody(s: ChannelFormState) {
+    const bot_id = s.bot_id.trim() ? Number(s.bot_id) : null
+    const filters = parseFiltersJson(s.filters_json)
+    if (filters.error) {
+        // Guard against saving invalid JSON — the form also surfaces this inline.
+        throw new Error(`filters: ${filters.error}`)
+    }
+    return {
+        chat_id: s.chat_id.trim(),
+        title: s.title.trim(),
+        bot_id: Number.isFinite(bot_id as number) ? (bot_id as number | null) : null,
+        is_active: s.is_active,
+        channel_type: s.channel_type,
+        parser: {
+            use_parser_ai: s.use_parser_ai,
+            ai_fallback: s.ai_fallback,
+            limit_message: Number(s.limit_message) || 5,
+            skip_keywords: s.skip_keywords
+                .split('\n')
+                .map((k) => k.trim())
+                .filter(Boolean),
+            sort_order: Number(s.sort_order) || 100,
+            bot_username: s.bot_username.trim(),
+            allowed_roles: s.allowed_roles,
+            // null when cleared → backend drops the filters key (no filtering).
+            filters: filters.value ?? null,
+        },
+    }
+}
+
+type Props = {
+    value: ChannelFormState
+    onChange: (next: ChannelFormState) => void
+}
+
+export function ChannelForm({ value: v, onChange }: Props) {
+    const set = (patch: Partial<ChannelFormState>) => onChange({ ...v, ...patch })
+    const filtersError = parseFiltersJson(v.filters_json).error
+    // Поля формы зависят от роли чата: парсерный блок нужен только тем, кого
+    // парсер действительно читает, у групп модерации настройки свои.
+    const isParseSource = v.channel_type === 'parse' || v.channel_type === 'both'
+    const isModerated = v.channel_type === 'moderate'
+
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Основное</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <Label>chat_id</Label>
+                            <Input
+                                value={v.chat_id}
+                                onChange={(e) => set({ chat_id: e.target.value })}
+                                placeholder="taksibatken или -1001234..."
+                            />
+                        </div>
+                        <div>
+                            <Label>Название (опц.)</Label>
+                            <Input
+                                value={v.title}
+                                onChange={(e) => set({ title: e.target.value })}
+                                placeholder="как называть чат в списке"
+                            />
+                        </div>
+                        <div>
+                            <Label>bot_id (опц.)</Label>
+                            <Input
+                                value={v.bot_id}
+                                onChange={(e) => set({ bot_id: e.target.value })}
+                                placeholder="оставь пусто, если без бота"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Switch
+                            checked={v.is_active}
+                            onCheckedChange={(c) => set({ is_active: c })}
+                        />
+                        <Label>Активен (парсер читает / публикатор постит)</Label>
+                    </div>
+                    <div>
+                        <Label>Тип канала</Label>
+                        <Select
+                            value={v.channel_type}
+                            onValueChange={(c) => set({ channel_type: c as ChannelType })}
+                        >
+                            <SelectTrigger className="w-full sm:max-w-xs">
+                                <SelectValue placeholder="Выбери тип" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CHANNEL_TYPES.map((t) => (
+                                    <SelectItem key={t} value={t}>
+                                        {CHANNEL_TYPE_LABELS[t]}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            <b>Парсинг</b> — парсер читает сообщения из чата.{' '}
+                            <b>Публикация</b> — бот публикует сюда трипы.{' '}
+                            <b>И то, и другое</b> — оба режима.{' '}
+                            <b>Модерация</b> — группа под ботом-модератором.{' '}
+                            <b>Не используется</b> — выключен (parked).
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Ниже показываются настройки выбранного типа.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {isModerated && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Модерация</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-muted-foreground">
+                        <p>
+                            Правила (стоп-слова, ссылки) общие для всех групп бота и живут на
+                            своей странице.
+                        </p>
+                        <Link href="/admin/moderation" className="text-primary inline-flex">
+                            Открыть настройки модерации
+                        </Link>
+                        <p className="text-xs">
+                            Строки таких групп заводит сам бот, когда его добавляют
+                            администратором.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
+
+            {isParseSource && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Парсер</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Switch
+                            checked={v.use_parser_ai}
+                            onCheckedChange={(c) => set({ use_parser_ai: c })}
+                        />
+                        <Label>
+                            Использовать ИИ-парсер (free-form). Иначе — regex-парсер.
+                        </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Switch
+                            checked={v.ai_fallback}
+                            onCheckedChange={(c) => set({ ai_fallback: c })}
+                            disabled={v.use_parser_ai}
+                        />
+                        <Label>
+                            AI fallback (имеет смысл только если ИИ-парсер выключен — regex
+                            пробует первым, ИИ подключается когда regex не справился).
+                        </Label>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <Label>limit_message</Label>
+                            <Input
+                                type="number"
+                                value={v.limit_message}
+                                onChange={(e) =>
+                                    set({ limit_message: Number(e.target.value) })
+                                }
+                            />
+                        </div>
+                        <div>
+                            <Label>sort_order</Label>
+                            <Input
+                                type="number"
+                                value={v.sort_order}
+                                onChange={(e) =>
+                                    set({ sort_order: Number(e.target.value) })
+                                }
+                            />
+                        </div>
+                        <div>
+                            <Label>bot_username (опц.)</Label>
+                            <Input
+                                value={v.bot_username}
+                                onChange={(e) => set({ bot_username: e.target.value })}
+                                placeholder="Poputka_KG_rides_Bot"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <Label>skip_keywords (по одному на строку)</Label>
+                        <Textarea
+                            value={v.skip_keywords}
+                            onChange={(e) => set({ skip_keywords: e.target.value })}
+                            rows={4}
+                            placeholder={'по бишкеку\nреклама'}
+                        />
+                    </div>
+                    <div>
+                        <Label>Какие роли парсить</Label>
+                        <div className="flex flex-wrap gap-3 sm:gap-4 mt-2">
+                            {ALL_ROLES.map(({ value, label }) => {
+                                const checked = v.allowed_roles.includes(value)
+                                return (
+                                    <label
+                                        key={value}
+                                        className="flex items-center gap-2 cursor-pointer"
+                                    >
+                                        <Checkbox
+                                            checked={checked}
+                                            onCheckedChange={(c) => {
+                                                const next = c
+                                                    ? Array.from(new Set([...v.allowed_roles, value]))
+                                                    : v.allowed_roles.filter((r) => r !== value)
+                                                set({ allowed_roles: next })
+                                            }}
+                                        />
+                                        <span className="text-sm">{label}</span>
+                                    </label>
+                                )
+                            })}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Если ничего не выбрано — парсим все роли (driver / passenger / parcel).
+                        </p>
+                    </div>
+                    <div>
+                        <Label>Фильтры (JSON, опц.)</Label>
+                        <Textarea
+                            value={v.filters_json}
+                            onChange={(e) => set({ filters_json: e.target.value })}
+                            rows={8}
+                            className="font-mono text-xs"
+                            placeholder={FILTERS_PLACEHOLDER}
+                        />
+                        {filtersError ? (
+                            <p className="text-xs text-destructive mt-1">{filtersError}</p>
+                        ) : (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Фильтр цены по ролям. min/max — границы (null = без
+                                ограничения), enabled=false — фильтр для роли выключен.
+                                Если фильтр роли включён, а цена не распознана —
+                                объявление отбрасывается. Пусто — фильтров нет.
+                            </p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+            )}
+        </div>
+    )
+}
+
+const FILTERS_PLACEHOLDER = `{
+  "price": {
+    "driver":    { "enabled": true,  "min": 200, "max": 8000 },
+    "passenger": { "enabled": false, "min": 0,   "max": 5000 },
+    "parcel":    { "enabled": false, "min": 0,   "max": 3000 }
+  }
+}`
+
+type ActionsProps = {
+    onSave: () => void
+    onCancel: () => void
+    saveLabel: string
+    saving: boolean
+}
+
+export function ChannelFormActions({ onSave, onCancel, saveLabel, saving }: ActionsProps) {
+    return (
+        <div className="flex gap-2">
+            <Button onClick={onSave} disabled={saving}>
+                {saveLabel}
+            </Button>
+            <Button variant="ghost" onClick={onCancel}>
+                Отмена
+            </Button>
+        </div>
+    )
+}

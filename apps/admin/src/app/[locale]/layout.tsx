@@ -1,5 +1,5 @@
-import { getMe, authOptions, Providers, NotificationSystem, NotificationHandler } from '@doska/shared'
-import type { Metadata } from 'next'
+import { authOptions, Providers, NotificationSystem, NotificationHandler } from '@doska/shared'
+import type { Metadata, Viewport } from 'next'
 import { getServerSession } from 'next-auth'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
@@ -22,6 +22,13 @@ export const metadata: Metadata = {
   description: 'Bulletin Board',
 }
 
+// Отдаёт <meta name="color-scheme" content="light dark"> в <head> ещё до
+// загрузки CSS — браузер красит холст документа по системной теме с первого
+// кадра, поэтому при навигации нет белой вспышки у системно-тёмных.
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
+}
+
 
 export default async function RootLayout({
   children,
@@ -40,14 +47,8 @@ export default async function RootLayout({
     // crash the whole app — render logged-out instead of a Server Components 500.
     console.error("getServerSession failed in layout:", error)
   }
-  if (session) {
-    try {
-      const user = await getMe()
-      session.user = user || session.user || {}
-    } catch (error) {
-      console.warn("Failed to fetch user in layout:", error)
-    }
-  }
+  // Backend-session liveness (and re-fetching the fresh user) is handled in the
+  // (admin) layout, which redirects to /login on a dead session.
   return (
     <html lang={locale} suppressHydrationWarning>
       <body

@@ -28,6 +28,7 @@ import { Link, useRouter } from '@doska/i18n'
 import { CalendarClock, Send, Trash2 } from 'lucide-react'
 import { useState, type MouseEvent } from 'react'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
 
@@ -73,12 +74,13 @@ export default function AdminNotificationsPage() {
 
     const deleteMutation = useAdminDeleteNotification()
     const router = useRouter()
+    const confirm = useConfirm()
 
     const resetPage = () => setPage(1)
 
-    const handleDelete = (e: MouseEvent, id: number) => {
+    const handleDelete = async (e: MouseEvent, id: number) => {
         e.stopPropagation()
-        if (confirm(`Удалить уведомление #${id}?`)) {
+        if (await confirm(`Удалить уведомление #${id}?`)) {
             deleteMutation.mutate(id)
         }
     }
