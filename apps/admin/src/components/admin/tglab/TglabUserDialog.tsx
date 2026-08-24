@@ -26,6 +26,17 @@ import { useAdminTglabRoles } from '@/hooks/queries/admin'
 // Дефолты берём такие же, как в apps/tglab/constants.py.
 const DEFAULT_MAX_ACCOUNTS = 10
 const DEFAULT_MAX_RUNNING_TASKS = 3
+// Совпадает с AdminTglabUserCreate на бэке — если разойдётся, форма пропустит
+// то, что сервер отвергнет.
+const MIN_USERNAME = 3
+const MIN_PASSWORD = 6
+
+/** Пароль для выдачи оператору: читаемый вслух, без похожих символов. */
+function generatePassword(length = 12): string {
+    const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+    const bytes = crypto.getRandomValues(new Uint32Array(length))
+    return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('')
+}
 
 interface Props {
     open: boolean
@@ -48,6 +59,7 @@ export function TglabUserDialog({ open, onOpenChange, user }: Props) {
     const [roleSlug, setRoleSlug] = useState('')
     const [maxAccounts, setMaxAccounts] = useState(DEFAULT_MAX_ACCOUNTS)
     const [maxRunningTasks, setMaxRunningTasks] = useState(DEFAULT_MAX_RUNNING_TASKS)
+    const [showErrors, setShowErrors] = useState(false)
 
     useEffect(() => {
         if (!open) return
@@ -56,16 +68,45 @@ export function TglabUserDialog({ open, onOpenChange, user }: Props) {
         setEmail(user?.email ?? '')
         setName('')
         setSurname('')
-        setRoleSlug(user?.role_slug ?? roles.data?.[0]?.slug ?? '')
+        setRoleSlug(user?.role_slug ?? '')
         setMaxAccounts(user?.max_accounts ?? DEFAULT_MAX_ACCOUNTS)
         setMaxRunningTasks(user?.max_running_tasks ?? DEFAULT_MAX_RUNNING_TASKS)
-    }, [open, user, roles.data])
+        setShowErrors(false)
+    }, [open, user])
 
-    const canSubmit = isEdit
-        ? Boolean(roleSlug)
-        : username.trim().length >= 3 && password.length >= 6 && Boolean(roleSlug)
+    // Роли приезжают отдельным запросом — подставляем первую, пока выбора нет.
+    // Отдельным эффектом: в общем сбросе их приход затирал введённые поля.
+    useEffect(() => {
+        if (!open || roleSlug) return
+        const first = roles.data?.[0]?.slug
+        if (first) setRoleSlug(first)
+    }, [open, roleSlug, roles.data])
+
+    // Что мешает сохранить — показываем текстом, а не гасим кнопку молча.
+    const problems: string[] = []
+    if (!isEdit && username.trim().length < MIN_USERNAME) {
+        problems.push(`Логин — минимум ${MIN_USERNAME} символа`)
+    }
+    if (!isEdit && password.length < MIN_PASSWORD) {
+        problems.push(`Пароль — минимум ${MIN_PASSWORD} символов`)
+    }
+    if (isEdit && password && password.length < MIN_PASSWORD) {
+        problems.push(`Новый пароль — минимум ${MIN_PASSWORD} символов`)
+    }
+    if (!roleSlug) {
+        problems.push(
+            roles.data && roles.data.length === 0
+                ? 'Ролей нет в базе — запустите сидер tglab_roles'
+                : 'Выберите роль',
+        )
+    }
+
 
     const submit = () => {
+        if (problems.length) {
+            setShowErrors(true)
+            return
+        }
         const done = { onSuccess: () => onOpenChange(false) }
         const common = {
             email: email || null,
@@ -119,12 +160,27 @@ export function TglabUserDialog({ open, onOpenChange, user }: Props) {
                         <Label htmlFor="password">
                             {isEdit ? 'Новый пароль (пусто — не менять)' : 'Пароль'}
                         </Label>
-                        <Input
-                            id="password"
-                            type="text"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                        <div className="flex gap-2">
+                            <Input
+                                id="password"
+                                // Открытым текстом намеренно: админ выдаёт пароль
+                                // оператору руками, скрывать его не от кого.
+                                type="text"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setPassword(generatePassword())}
+                            >
+                                Сгенерировать
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Минимум {MIN_PASSWORD} символов. Логин и пароль передайте
+                            оператору — восстановления пароля в кабинете нет.
+                        </p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
@@ -191,13 +247,20 @@ export function TglabUserDialog({ open, onOpenChange, user }: Props) {
                         </div>
                     </div>
                 </div>
+                {showErrors && problems.length > 0 && (
+                    <div className="space-y-1 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {problems.map((problem) => (
+                            <div key={problem}>{problem}</div>
+                        ))}
+                    </div>
+                )}
                 <DialogFooter>
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
                         Отмена
                     </Button>
                     <Button
                         onClick={submit}
-                        disabled={!canSubmit || create.isPending || update.isPending}
+                        disabled={create.isPending || update.isPending}
                     >
                         {isEdit ? 'Сохранить' : 'Создать'}
                     </Button>
