@@ -1,6 +1,6 @@
 'use client'
 
-import { useCreateParserSetting } from '@doska/shared'
+import { useCreateSetting } from '@doska/shared'
 import { Button } from '@doska/ui'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -12,12 +12,12 @@ import {
     SettingForm,
     SettingFormActions,
     validateSetting,
-} from '@/components/admin/parser/SettingForm'
+} from '@/components/admin/settings-registry/SettingForm'
 
-export default function NewParserSettingPage() {
+export default function NewSettingPage() {
     const router = useRouter()
     const params = useSearchParams()
-    const create = useCreateParserSetting()
+    const create = useCreateSetting()
     const [state, setState] = useState({
         ...emptySetting,
         group: params?.get('group') ?? '',
@@ -31,13 +31,13 @@ export default function NewParserSettingPage() {
             return
         }
         await create.mutateAsync(v.body)
-        router.push('/admin/parser/settings')
+        router.push('/admin/common/settings')
     }
 
     return (
         <div className="space-y-6 max-w-4xl">
             <div className="flex flex-wrap items-center gap-2">
-                <Link href="/admin/parser/settings">
+                <Link href="/admin/common/settings">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="size-4 mr-1" /> К списку
                     </Button>
@@ -54,7 +54,7 @@ export default function NewParserSettingPage() {
 
             <SettingFormActions
                 onSave={save}
-                onCancel={() => router.push('/admin/parser/settings')}
+                onCancel={() => router.push('/admin/common/settings')}
                 saveLabel="Создать"
                 saving={create.isPending}
             />

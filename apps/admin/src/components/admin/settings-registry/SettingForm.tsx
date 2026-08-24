@@ -1,6 +1,6 @@
 'use client'
 
-import type { ParserSetting } from '@doska/shared'
+import type { SettingRow } from '@doska/shared'
 import {
     Button,
     Card,
@@ -29,7 +29,7 @@ export const emptySetting: SettingFormState = {
     dataText: '{}',
 }
 
-export function settingFromRow(row: ParserSetting): SettingFormState {
+export function settingFromRow(row: SettingRow): SettingFormState {
     return {
         group: row.group,
         key: row.key,

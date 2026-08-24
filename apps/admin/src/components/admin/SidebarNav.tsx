@@ -68,6 +68,7 @@ const sections: NavSection[] = [
             { name: 'Сервисы', href: '/admin/services', icon: LayoutGrid },
             { name: 'Жалобы', href: '/admin/complaints', icon: Flag },
             { name: 'Отзывы', href: '/admin/reviews', icon: Star },
+            { name: 'Общие настройки', href: '/admin/common/settings', icon: SettingsIcon },
         ],
     },
     {
@@ -115,9 +116,8 @@ const sections: NavSection[] = [
         label: 'Telegram',
         items: [
             { name: 'Боты', href: '/admin/booking/bots', icon: Bot },
+            { name: 'Каналы', href: '/admin/telegram/channels', icon: Radio },
             { name: 'Модерация групп', href: '/admin/moderation', icon: ShieldBan },
-            { name: 'Каналы парсера', href: '/admin/parser/channels', icon: Radio },
-            { name: 'Настройки парсера', href: '/admin/parser/settings', icon: SettingsIcon },
         ],
     },
     {

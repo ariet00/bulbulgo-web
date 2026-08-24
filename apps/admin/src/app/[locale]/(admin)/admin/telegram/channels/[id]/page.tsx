@@ -1,6 +1,6 @@
 'use client'
 
-import { useParserChannel, useUpdateParserChannel } from '@doska/shared'
+import { useTelegramChannel, useUpdateTelegramChannel } from '@doska/shared'
 import { Button } from '@doska/ui'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -14,15 +14,15 @@ import {
     channelFromRow,
     channelToBody,
     emptyChannel,
-} from '@/components/admin/parser/ChannelForm'
+} from '@/components/admin/channels/ChannelForm'
 
-export default function EditParserChannelPage() {
+export default function EditChannelPage() {
     const router = useRouter()
     const params = useParams<{ id: string }>()
     const channelId = Number(params.id)
 
-    const { data: channel, isLoading } = useParserChannel(channelId)
-    const update = useUpdateParserChannel()
+    const { data: channel, isLoading } = useTelegramChannel(channelId)
+    const update = useUpdateTelegramChannel()
 
     const [state, setState] = useState(emptyChannel)
     useEffect(() => {
@@ -45,7 +45,7 @@ export default function EditParserChannelPage() {
     return (
         <div className="space-y-6 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-                <Link href="/admin/parser/channels">
+                <Link href="/admin/telegram/channels">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="size-4 mr-1" /> К списку
                     </Button>
@@ -59,7 +59,7 @@ export default function EditParserChannelPage() {
 
             <ChannelFormActions
                 onSave={save}
-                onCancel={() => router.push('/admin/parser/channels')}
+                onCancel={() => router.push('/admin/telegram/channels')}
                 saveLabel="Сохранить"
                 saving={update.isPending}
             />

@@ -42,18 +42,21 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Аккаунты',
     icon: Users,
     permission: TGLAB_PERMISSIONS.ACCOUNTS_VIEW,
+    ready: true,
   },
   {
     href: '/proxies',
     label: 'Прокси',
     icon: Shield,
     permission: TGLAB_PERMISSIONS.PROXIES_VIEW,
+    ready: true,
   },
   {
     href: '/audiences',
     label: 'Базы',
     icon: Contact,
     permission: TGLAB_PERMISSIONS.AUDIENCES_VIEW,
+    ready: true,
   },
   {
     href: '/tasks',

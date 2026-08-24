@@ -1,10 +1,10 @@
 'use client'
 
 import {
-    type ParserSetting,
+    type SettingRow,
     useDebounce,
-    useDeleteParserSetting,
-    useParserSettings,
+    useDeleteSetting,
+    useSettingsRegistry,
 } from '@doska/shared'
 import { Link } from '@doska/i18n'
 import {
@@ -36,7 +36,7 @@ function dataPreview(value: any): string {
     return String(value)
 }
 
-function scopeLabel(s: ParserSetting): string {
+function scopeLabel(s: SettingRow): string {
     const parts: string[] = []
     if (s.user_id) parts.push(`user=${s.user_id}`)
     if (s.company_id) parts.push(`company=${s.company_id}`)
@@ -44,7 +44,7 @@ function scopeLabel(s: ParserSetting): string {
     return parts.length ? parts.join(' · ') : '—'
 }
 
-export default function ParserSettingsPage() {
+export default function SettingsRegistryPage() {
     const [page, setPage] = useState(1)
     const [size, setSize] = useState(40)
     const [q, setQ] = useState('')
@@ -52,16 +52,16 @@ export default function ParserSettingsPage() {
     const dq = useDebounce(q, 300)
     const dGroup = useDebounce(groupFilter, 300)
 
-    const { data, isLoading } = useParserSettings(
+    const { data, isLoading } = useSettingsRegistry(
         page,
         size,
         dGroup || undefined,
         dq || undefined,
     )
-    const remove = useDeleteParserSetting()
+    const remove = useDeleteSetting()
     const confirm = useConfirm()
 
-    const handleDelete = async (row: ParserSetting) => {
+    const handleDelete = async (row: SettingRow) => {
         if (await confirm(`Удалить ${row.group}/${row.key}?`)) {
             remove.mutate(row.id)
         }
@@ -70,8 +70,8 @@ export default function ParserSettingsPage() {
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h1 className="text-2xl font-bold">Парсер · Настройки</h1>
-                <Link href="/admin/parser/settings/new">
+                <h1 className="text-2xl font-bold">Общие настройки</h1>
+                <Link href="/admin/common/settings/new">
                     <Button size="sm">
                         <Plus className="size-4 mr-1" /> Создать
                     </Button>
@@ -142,7 +142,7 @@ export default function ParserSettingsPage() {
                                             <TableCell>
                                                 <div className="flex space-x-2">
                                                     <Link
-                                                        href={`/admin/parser/settings/${row.id}`}
+                                                        href={`/admin/common/settings/${row.id}`}
                                                     >
                                                         <Button variant="outline" size="sm">
                                                             <Pencil className="h-4 w-4" />

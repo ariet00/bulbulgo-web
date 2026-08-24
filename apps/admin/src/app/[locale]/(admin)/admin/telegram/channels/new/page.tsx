@@ -1,6 +1,6 @@
 'use client'
 
-import { useCreateParserChannel } from '@doska/shared'
+import { useCreateTelegramChannel } from '@doska/shared'
 import { Button } from '@doska/ui'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -13,11 +13,11 @@ import {
     ChannelFormActions,
     channelToBody,
     emptyChannel,
-} from '@/components/admin/parser/ChannelForm'
+} from '@/components/admin/channels/ChannelForm'
 
-export default function NewParserChannelPage() {
+export default function NewChannelPage() {
     const router = useRouter()
-    const create = useCreateParserChannel()
+    const create = useCreateTelegramChannel()
     const [state, setState] = useState(emptyChannel)
 
     const save = async () => {
@@ -30,13 +30,13 @@ export default function NewParserChannelPage() {
             return
         }
         await create.mutateAsync(body)
-        router.push('/admin/parser/channels')
+        router.push('/admin/telegram/channels')
     }
 
     return (
         <div className="space-y-6 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-                <Link href="/admin/parser/channels">
+                <Link href="/admin/telegram/channels">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="size-4 mr-1" /> К списку
                     </Button>
@@ -48,7 +48,7 @@ export default function NewParserChannelPage() {
 
             <ChannelFormActions
                 onSave={save}
-                onCancel={() => router.push('/admin/parser/channels')}
+                onCancel={() => router.push('/admin/telegram/channels')}
                 saveLabel="Создать"
                 saving={create.isPending}
             />

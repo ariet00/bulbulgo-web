@@ -5,9 +5,9 @@ import {
     CHANNEL_PURPOSE_LABELS,
     CHANNEL_TYPE_LABELS,
     useDebounce,
-    useDeleteParserChannel,
-    useParserChannels,
-    useUpdateParserChannel,
+    useDeleteTelegramChannel,
+    useTelegramChannels,
+    useUpdateTelegramChannel,
 } from '@doska/shared'
 import type { ChannelPurpose } from '@doska/shared'
 import { Link } from '@doska/i18n'
@@ -33,6 +33,9 @@ import { useEffect, useState } from 'react'
 import { useFilterParams } from '@/hooks/useFilterParams'
 import { useConfirm } from '@/components/admin/ConfirmProvider'
 
+/** Парсерные колонки имеют смысл только там, где парсер читает канал. */
+const isParseRow = (type: string) => type === 'parse' || type === 'both'
+
 const FILTER_DEFAULTS = {
     page: 1,
     size: 40,
@@ -40,7 +43,7 @@ const FILTER_DEFAULTS = {
     purpose: 'parse',
 }
 
-export default function ParserChannelsPage() {
+export default function ChannelsPage() {
     const { values, setValues } = useFilterParams(FILTER_DEFAULTS)
     const [qInput, setQInput] = useState(values.q)
     const dq = useDebounce(qInput, 300)
@@ -48,14 +51,14 @@ export default function ParserChannelsPage() {
         if (dq !== values.q) setValues({ q: dq })
     }, [dq, values.q, setValues])
 
-    const { data, isLoading } = useParserChannels(
+    const { data, isLoading } = useTelegramChannels(
         values.page,
         values.size,
         values.purpose as ChannelPurpose,
         values.q || undefined,
     )
-    const remove = useDeleteParserChannel()
-    const update = useUpdateParserChannel()
+    const remove = useDeleteTelegramChannel()
+    const update = useUpdateTelegramChannel()
     const confirm = useConfirm()
 
     const handleDelete = async (id: number, chatId: string) => {
@@ -67,8 +70,8 @@ export default function ParserChannelsPage() {
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h1 className="text-2xl font-bold">Парсер · Каналы</h1>
-                <Link href="/admin/parser/channels/new">
+                <h1 className="text-2xl font-bold">Каналы Telegram</h1>
+                <Link href="/admin/telegram/channels/new">
                     <Button size="sm">
                         <Plus className="size-4 mr-1" /> Добавить канал
                     </Button>
@@ -77,7 +80,7 @@ export default function ParserChannelsPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Telegram-каналы</CardTitle>
+                    <CardTitle>Каналы и группы</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex flex-wrap items-center gap-2">
@@ -94,7 +97,7 @@ export default function ParserChannelsPage() {
                     </div>
 
                     <Input
-                        placeholder="Поиск по chat_id…"
+                        placeholder="Поиск по chat_id или названию…"
                         value={qInput}
                         onChange={(e) => setQInput(e.target.value)}
                         className="w-full sm:max-w-md"
@@ -108,6 +111,7 @@ export default function ParserChannelsPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>ID</TableHead>
+                                        <TableHead>Название</TableHead>
                                         <TableHead>chat_id</TableHead>
                                         <TableHead>Активен</TableHead>
                                         <TableHead>Роль</TableHead>
@@ -124,6 +128,9 @@ export default function ParserChannelsPage() {
                                     {data?.items.map((row) => (
                                         <TableRow key={row.id}>
                                             <TableCell>{row.id}</TableCell>
+                                            <TableCell className="text-sm">
+                                                {row.title ?? '—'}
+                                            </TableCell>
                                             <TableCell className="font-mono text-xs">
                                                 {row.chat_id}
                                             </TableCell>
@@ -150,29 +157,43 @@ export default function ParserChannelsPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                {row.parser.use_parser_ai ? (
+                                                {!isParseRow(row.channel_type) ? (
+                                                    <span className="text-muted-foreground">—</span>
+                                                ) : row.parser.use_parser_ai ? (
                                                     <Badge variant="outline">AI</Badge>
                                                 ) : (
                                                     <Badge variant="outline">regex</Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell>{row.parser.limit_message}</TableCell>
                                             <TableCell>
-                                                {row.parser.ai_fallback ? '✓' : '—'}
+                                                {isParseRow(row.channel_type)
+                                                    ? row.parser.limit_message
+                                                    : '—'}
+                                            </TableCell>
+                                            <TableCell>
+                                                {isParseRow(row.channel_type) && row.parser.ai_fallback
+                                                    ? '✓'
+                                                    : '—'}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">
                                                 {row.parser.bot_username || '—'}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">
-                                                {row.parser.allowed_roles?.length
-                                                    ? row.parser.allowed_roles.join(', ')
-                                                    : 'все'}
+                                                {!isParseRow(row.channel_type)
+                                                    ? '—'
+                                                    : row.parser.allowed_roles?.length
+                                                      ? row.parser.allowed_roles.join(', ')
+                                                      : 'все'}
                                             </TableCell>
-                                            <TableCell>{row.parser.sort_order}</TableCell>
+                                            <TableCell>
+                                                {isParseRow(row.channel_type)
+                                                    ? row.parser.sort_order
+                                                    : '—'}
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex space-x-2">
                                                     <Link
-                                                        href={`/admin/parser/channels/${row.id}`}
+                                                        href={`/admin/telegram/channels/${row.id}`}
                                                     >
                                                         <Button variant="outline" size="sm">
                                                             <Pencil className="h-4 w-4" />

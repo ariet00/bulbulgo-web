@@ -1,6 +1,7 @@
 'use client'
 
-import type { ChannelType, ParserChannel, TripRole } from '@doska/shared'
+import type { ChannelType, TelegramChannel, TripRole } from '@doska/shared'
+import { Link } from '@doska/i18n'
 import { CHANNEL_TYPES, CHANNEL_TYPE_LABELS } from '@doska/shared'
 import {
     Button,
@@ -28,6 +29,7 @@ const ALL_ROLES: { value: TripRole; label: string }[] = [
 
 export type ChannelFormState = {
     chat_id: string
+    title: string
     bot_id: string // string so empty input → null
     is_active: boolean
     channel_type: ChannelType
@@ -43,6 +45,7 @@ export type ChannelFormState = {
 
 export const emptyChannel: ChannelFormState = {
     chat_id: '',
+    title: '',
     bot_id: '',
     is_active: true,
     channel_type: 'parse',
@@ -75,9 +78,10 @@ export function parseFiltersJson(
     return { value: parsed as Record<string, any> }
 }
 
-export function channelFromRow(row: ParserChannel): ChannelFormState {
+export function channelFromRow(row: TelegramChannel): ChannelFormState {
     return {
         chat_id: row.chat_id,
+        title: row.title ?? '',
         bot_id: row.bot_id == null ? '' : String(row.bot_id),
         is_active: row.is_active,
         channel_type: row.channel_type,
@@ -103,6 +107,7 @@ export function channelToBody(s: ChannelFormState) {
     }
     return {
         chat_id: s.chat_id.trim(),
+        title: s.title.trim(),
         bot_id: Number.isFinite(bot_id as number) ? (bot_id as number | null) : null,
         is_active: s.is_active,
         channel_type: s.channel_type,
@@ -131,6 +136,10 @@ type Props = {
 export function ChannelForm({ value: v, onChange }: Props) {
     const set = (patch: Partial<ChannelFormState>) => onChange({ ...v, ...patch })
     const filtersError = parseFiltersJson(v.filters_json).error
+    // Поля формы зависят от роли чата: парсерный блок нужен только тем, кого
+    // парсер действительно читает, у групп модерации настройки свои.
+    const isParseSource = v.channel_type === 'parse' || v.channel_type === 'both'
+    const isModerated = v.channel_type === 'moderate'
 
     return (
         <div className="space-y-6">
@@ -146,6 +155,14 @@ export function ChannelForm({ value: v, onChange }: Props) {
                                 value={v.chat_id}
                                 onChange={(e) => set({ chat_id: e.target.value })}
                                 placeholder="taksibatken или -1001234..."
+                            />
+                        </div>
+                        <div>
+                            <Label>Название (опц.)</Label>
+                            <Input
+                                value={v.title}
+                                onChange={(e) => set({ title: e.target.value })}
+                                placeholder="как называть чат в списке"
                             />
                         </div>
                         <div>
@@ -185,12 +202,38 @@ export function ChannelForm({ value: v, onChange }: Props) {
                             <b>Парсинг</b> — парсер читает сообщения из чата.{' '}
                             <b>Публикация</b> — бот публикует сюда трипы.{' '}
                             <b>И то, и другое</b> — оба режима.{' '}
+                            <b>Модерация</b> — группа под ботом-модератором.{' '}
                             <b>Не используется</b> — выключен (parked).
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Ниже показываются настройки выбранного типа.
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
+            {isModerated && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Модерация</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-muted-foreground">
+                        <p>
+                            Правила (стоп-слова, ссылки) общие для всех групп бота и живут на
+                            своей странице.
+                        </p>
+                        <Link href="/admin/moderation" className="text-primary inline-flex">
+                            Открыть настройки модерации
+                        </Link>
+                        <p className="text-xs">
+                            Строки таких групп заводит сам бот, когда его добавляют
+                            администратором.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
+
+            {isParseSource && (
             <Card>
                 <CardHeader>
                     <CardTitle>Парсер</CardTitle>
@@ -305,6 +348,7 @@ export function ChannelForm({ value: v, onChange }: Props) {
                     </div>
                 </CardContent>
             </Card>
+            )}
         </div>
     )
 }
