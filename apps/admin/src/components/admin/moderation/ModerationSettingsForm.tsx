@@ -51,6 +51,10 @@ export function ModerationSettingsForm() {
     const [ruleEnabled, setRuleEnabled] = useState(true)
     const [action, setAction] = useState<ModerationAction>('delete')
     const [wordsText, setWordsText] = useState('')
+    const [linksEnabled, setLinksEnabled] = useState(false)
+    const [linksAction, setLinksAction] = useState<ModerationAction>('delete')
+    const [allowTelegram, setAllowTelegram] = useState(false)
+    const [allowDomainsText, setAllowDomainsText] = useState('')
 
     useEffect(() => {
         if (!data) return
@@ -61,10 +65,20 @@ export function ModerationSettingsForm() {
         setRuleEnabled(c.rules.stop_words.enabled)
         setAction(c.rules.stop_words.action)
         setWordsText(c.rules.stop_words.words.join('\n'))
+        setLinksEnabled(c.rules.links.enabled)
+        setLinksAction(c.rules.links.action)
+        setAllowTelegram(c.rules.links.allow_telegram)
+        setAllowDomainsText(c.rules.links.allow_domains.join('\n'))
     }, [data])
 
     const words = useMemo(() => parseWords(wordsText), [wordsText])
     const invalidWords = useMemo(() => words.filter(tooShort), [words])
+    const allowDomains = useMemo(() => parseWords(allowDomainsText), [allowDomainsText])
+    // Бэкенд отвергает строку без точки — ловим до отправки.
+    const invalidDomains = useMemo(
+        () => allowDomains.filter((d) => !d.replace(/^https?:\/\//, '').split('/')[0].includes('.')),
+        [allowDomains],
+    )
 
     if (isLoading) return <div className="text-sm text-muted-foreground">Загрузка…</div>
 
@@ -93,7 +107,15 @@ export function ModerationSettingsForm() {
             enabled,
             check_edited: checkEdited,
             exempt: { admins: exemptAdmins },
-            rules: { stop_words: { enabled: ruleEnabled, action, words } },
+            rules: {
+                stop_words: { enabled: ruleEnabled, action, words },
+                links: {
+                    enabled: linksEnabled,
+                    action: linksAction,
+                    allow_domains: allowDomains,
+                    allow_telegram: allowTelegram,
+                },
+            },
         }
         save.mutate(config)
     }
@@ -192,8 +214,81 @@ export function ModerationSettingsForm() {
                 </CardContent>
             </Card>
 
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ссылки</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Toggle
+                        id="rule-links"
+                        label="Удалять сообщения со ссылками"
+                        hint="Ловятся и адреса в тексте, и ссылки, спрятанные за словом"
+                        checked={linksEnabled}
+                        onChange={setLinksEnabled}
+                    />
+                    <Toggle
+                        id="rule-links-telegram"
+                        label="Разрешить ссылки на Telegram"
+                        hint="t.me и родственные хосты — например, ссылки на ваши каналы"
+                        checked={allowTelegram}
+                        onChange={setAllowTelegram}
+                    />
+
+                    <div className="space-y-1.5 max-w-xs">
+                        <Label>Действие при совпадении</Label>
+                        <Select
+                            value={linksAction}
+                            onValueChange={(v) => setLinksAction(v as ModerationAction)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MODERATION_ACTIONS.map((a) => (
+                                    <SelectItem
+                                        key={a}
+                                        value={a}
+                                        disabled={!IMPLEMENTED_MODERATION_ACTIONS.includes(a)}
+                                    >
+                                        {MODERATION_ACTION_LABELS[a]}
+                                        {!IMPLEMENTED_MODERATION_ACTIONS.includes(a) && ' — скоро'}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="allow-domains">Домены-исключения</Label>
+                        <Textarea
+                            id="allow-domains"
+                            rows={5}
+                            value={allowDomainsText}
+                            onChange={(e) => setAllowDomainsText(e.target.value)}
+                            placeholder={'bulbul.asia\ninstagram.com'}
+                            className="font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            По одному домену в строке. Поддомены разрешаются вместе с
+                            доменом: <code>bulbul.asia</code> пропускает и{' '}
+                            <code>app.bulbul.asia</code>.
+                        </p>
+                        {invalidDomains.length > 0 && (
+                            <p className="text-xs text-destructive">
+                                Не похоже на домены: {invalidDomains.join(', ')}
+                            </p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="flex items-center gap-3">
-                <Button onClick={submit} disabled={save.isPending || invalidWords.length > 0}>
+                <Button
+                    onClick={submit}
+                    disabled={
+                        save.isPending || invalidWords.length > 0 || invalidDomains.length > 0
+                    }
+                >
                     {save.isPending ? 'Сохраняю…' : 'Сохранить'}
                 </Button>
                 <span className="text-xs text-muted-foreground">

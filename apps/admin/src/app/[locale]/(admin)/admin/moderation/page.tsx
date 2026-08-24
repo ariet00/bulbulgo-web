@@ -19,14 +19,14 @@ function ModerationTabs() {
             <div>
                 <h1 className="text-2xl font-bold">Модерация групп</h1>
                 <p className="text-sm text-muted-foreground">
-                    Бот проверяет сообщения и подписи в группах и удаляет совпавшие со
-                    стоп-словами.
+                    Бот проверяет сообщения и подписи в группах и удаляет те, что
+                    попали под правила: стоп-слова и ссылки.
                 </p>
             </div>
 
             <Tabs value={active} onValueChange={(v) => setValues({ tab: v })}>
                 <TabsList>
-                    <TabsTrigger value="settings">Стоп-слова</TabsTrigger>
+                    <TabsTrigger value="settings">Правила</TabsTrigger>
                     <TabsTrigger value="chats">Группы</TabsTrigger>
                     <TabsTrigger value="log">Журнал</TabsTrigger>
                 </TabsList>

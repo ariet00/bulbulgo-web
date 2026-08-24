@@ -4,10 +4,11 @@ import { requests } from './base'
 // Наборы правил и действий заданы на бэкенде в
 // apps/telegram/moderation/constants.py — значения держим в паре с ним.
 
-export const MODERATION_RULES = ['stop_words'] as const
+export const MODERATION_RULES = ['stop_words', 'links'] as const
 export type ModerationRule = (typeof MODERATION_RULES)[number]
 export const MODERATION_RULE_LABELS: Record<ModerationRule, string> = {
     stop_words: 'Стоп-слова',
+    links: 'Ссылки',
 }
 
 export const MODERATION_ACTIONS = ['delete', 'warn', 'mute', 'ban', 'report'] as const
@@ -33,11 +34,23 @@ export interface ModerationStopWordsRule {
     words: string[]
 }
 
+export interface ModerationLinksRule {
+    enabled: boolean
+    action: ModerationAction
+    /** домены-исключения; поддомены разрешаются вместе с доменом */
+    allow_domains: string[]
+    /** разрешить ссылки на Telegram (t.me и родственные хосты) */
+    allow_telegram: boolean
+}
+
 export interface ModerationConfig {
     enabled: boolean
     check_edited: boolean
     exempt: { admins: boolean }
-    rules: { stop_words: ModerationStopWordsRule }
+    rules: {
+        stop_words: ModerationStopWordsRule
+        links: ModerationLinksRule
+    }
 }
 
 export interface ModerationSettings {
