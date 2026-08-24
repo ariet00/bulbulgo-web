@@ -33,12 +33,17 @@ export async function createAccount(payload: AccountInput) {
 export async function importAccountFile(payload: {
   sessionFile: File
   metaFile?: File | null
+  /** Only needed when the `.json` doesn't carry them. */
+  apiId?: number | null
+  apiHash?: string | null
   projectId?: number | null
   proxyId?: number | null
 }) {
   const form = new FormData()
   form.append('session_file', payload.sessionFile)
   if (payload.metaFile) form.append('meta_file', payload.metaFile)
+  if (payload.apiId) form.append('api_id', String(payload.apiId))
+  if (payload.apiHash) form.append('api_hash', payload.apiHash)
   if (payload.projectId) form.append('project_id', String(payload.projectId))
   if (payload.proxyId) form.append('proxy_id', String(payload.proxyId))
   const { data } = await api.post<Account>('/tglab/accounts/import-file', form)

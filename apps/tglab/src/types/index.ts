@@ -150,8 +150,9 @@ export interface AccountsPage {
 
 export interface AccountInput {
   session_string: string
-  api_id?: number | null
-  api_hash?: string | null
+  /** Required: a session only opens with the app it was created under. */
+  api_id: number
+  api_hash: string
   twofa_password?: string | null
   phone?: string | null
   project_id?: number | null
