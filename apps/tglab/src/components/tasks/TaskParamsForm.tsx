@@ -74,6 +74,22 @@ export function TaskParamsForm({ taskType, value, onChange }: Props) {
             />
           </div>
         )}
+        <div className="rounded-md bg-muted p-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="warm">Прогревать по исходному чату</Label>
+            <Switch
+              id="warm"
+              checked={Boolean(value.warm_from_source)}
+              onCheckedChange={(warm_from_source) => patch({ warm_from_source })}
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Нужно, если базу собирал один аккаунт, а работают другие: Telegram
+            выдаёт доступ к человеку каждому аккаунту отдельно. Аккаунт один раз
+            за тик пройдёт по участникам исходного чата — он должен в нём
+            состоять. Если база собрана теми же аккаунтами, включать не нужно.
+          </p>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="auto-stop">Автостоп при выбытии, % аккаунтов</Label>
           <Input
@@ -105,6 +121,22 @@ export function TaskParamsForm({ taskType, value, onChange }: Props) {
             checked={Boolean(value.delete_dialog)}
             onCheckedChange={(delete_dialog) => patch({ delete_dialog })}
           />
+        </div>
+        <div className="rounded-md bg-muted p-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="warm">Прогревать по исходному чату</Label>
+            <Switch
+              id="warm"
+              checked={Boolean(value.warm_from_source)}
+              onCheckedChange={(warm_from_source) => patch({ warm_from_source })}
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Нужно, если базу собирал один аккаунт, а работают другие: Telegram
+            выдаёт доступ к человеку каждому аккаунту отдельно. Аккаунт один раз
+            за тик пройдёт по участникам исходного чата — он должен в нём
+            состоять. Если база собрана теми же аккаунтами, включать не нужно.
+          </p>
         </div>
       </div>
     )
@@ -258,6 +290,22 @@ export function TaskParamsForm({ taskType, value, onChange }: Props) {
           <p className="text-xs text-muted-foreground">
             Одна история — одно действие по лимиту, но отмечает сразу несколько
             человек.
+          </p>
+        </div>
+        <div className="rounded-md bg-muted p-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="warm">Прогревать по исходному чату</Label>
+            <Switch
+              id="warm"
+              checked={Boolean(value.warm_from_source)}
+              onCheckedChange={(warm_from_source) => patch({ warm_from_source })}
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Нужно, если базу собирал один аккаунт, а работают другие: Telegram
+            выдаёт доступ к человеку каждому аккаунту отдельно. Аккаунт один раз
+            за тик пройдёт по участникам исходного чата — он должен в нём
+            состоять. Если база собрана теми же аккаунтами, включать не нужно.
           </p>
         </div>
       </div>
