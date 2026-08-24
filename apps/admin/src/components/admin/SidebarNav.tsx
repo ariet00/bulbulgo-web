@@ -8,7 +8,7 @@ import {
     BarChart,
     Bell,
     BellRing,
-    CalendarCheck,
+    Bot,
     Car,
     Coins,
     Database,
@@ -28,6 +28,7 @@ import {
     Newspaper,
     Radio,
     Settings as SettingsIcon,
+    ShieldBan,
     Smartphone,
     Star,
     Tags,
@@ -109,16 +110,13 @@ const sections: NavSection[] = [
         ],
     },
     {
-        label: 'Booking',
+        // Всё, что про Telegram: сами боты, каналы парсера и модерация групп.
+        label: 'Telegram',
         items: [
-            { name: 'Bots', href: '/admin/booking/bots', icon: CalendarCheck },
-        ],
-    },
-    {
-        label: 'Парсер',
-        items: [
-            { name: 'Настройки', href: '/admin/parser/settings', icon: SettingsIcon },
-            { name: 'Каналы', href: '/admin/parser/channels', icon: Radio },
+            { name: 'Боты', href: '/admin/booking/bots', icon: Bot },
+            { name: 'Модерация групп', href: '/admin/moderation', icon: ShieldBan },
+            { name: 'Каналы парсера', href: '/admin/parser/channels', icon: Radio },
+            { name: 'Настройки парсера', href: '/admin/parser/settings', icon: SettingsIcon },
         ],
     },
 ]

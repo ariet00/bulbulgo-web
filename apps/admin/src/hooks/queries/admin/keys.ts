@@ -59,6 +59,13 @@ export const adminKeys = {
     referralSettings: () => [...adminKeys.all, 'referral', 'settings'] as const,
     referralReport: (limit: number) =>
         [...adminKeys.all, 'referral', 'report', limit] as const,
+    botTypes: () => [...adminKeys.all, 'bot-types'] as const,
+    moderation: () => [...adminKeys.all, 'moderation'] as const,
+    moderationBots: () => [...adminKeys.moderation(), 'bots'] as const,
+    moderationSettings: (botId?: number) =>
+        [...adminKeys.moderation(), 'settings', botId ?? null] as const,
+    moderationChats: () => [...adminKeys.moderation(), 'chats'] as const,
+    moderationLogs: () => [...adminKeys.moderation(), 'logs'] as const,
     fuelStations: () => [...adminKeys.all, 'fuel', 'stations'] as const,
     fuelReports: () => [...adminKeys.all, 'fuel', 'reports'] as const,
 }

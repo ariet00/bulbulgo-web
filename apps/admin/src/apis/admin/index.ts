@@ -21,6 +21,8 @@ export * from './referral'
 export * from './reports'
 export * from './currencies'
 export * from './fuel'
+export * from './moderation'
+export * from './telegram'
 
 import { regionsAdminApi } from './regions'
 import { usersAdminApi } from './users'
@@ -44,6 +46,8 @@ import { referralAdminApi } from './referral'
 import { reportsAdminApi } from './reports'
 import { currenciesAdminApi } from './currencies'
 import { fuelAdminApi } from './fuel'
+import { moderationAdminApi } from './moderation'
+import { telegramAdminApi } from './telegram'
 
 // Единый объект-агрегат — публичный контракт `adminApi` не изменился.
 export const adminApi = {
@@ -69,4 +73,6 @@ export const adminApi = {
     ...reportsAdminApi,
     ...fuelAdminApi,
     ...currenciesAdminApi,
+    ...moderationAdminApi,
+    ...telegramAdminApi,
 }
