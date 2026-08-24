@@ -255,6 +255,8 @@ export interface AudienceItem {
   username: string | null
   /** Accounts holding an access hash for this entry — see `AudienceReach`. */
   hash_accounts: number[]
+  /** Collected from a message, so any account seeing that chat can reach them. */
+  has_message_ref: boolean
   /** Bitmask of what already happened to this entry. */
   flags: number
   cycles: number
@@ -271,6 +273,7 @@ export interface AudienceItemsPage {
 export interface AudienceReach {
   total: number
   with_username: number
+  with_message: number
   unreachable: number
   accounts: { account_id: number; label: string; items: number }[]
 }

@@ -82,6 +82,12 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
                 </span>
                 <span>{reach.with_username}</span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  По сообщению — любому аккаунту, который видит исходный чат
+                </span>
+                <span>{reach.with_message}</span>
+              </div>
               {reach.accounts.map((entry) => (
                 <div key={entry.account_id} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
@@ -97,10 +103,10 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Telegram выдаёт доступ к человеку каждому аккаунту отдельно. Записи
-                без логина видит только тот аккаунт, который их собрал — пересоберите
-                базу нужным аккаунтом либо включите в задаче «Прогревать по исходному
-                чату».
+                Люди без логина адресуются либо сохранённым доступом (только тот
+                аккаунт, который их собрал), либо ссылкой на их сообщение — а она
+                годится любому аккаунту, который видит исходный чат. Поэтому сбор
+                «Писавшие в группе» даёт куда более пригодную базу, чем «Участники».
               </p>
             </div>
           )}
@@ -192,7 +198,14 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
                 <span className="flex items-center gap-2">
                   {item.username ? `@${item.username}` : item.tg_user_id}
                   {!item.username &&
-                    (item.hash_accounts.length ? (
+                    (item.has_message_ref ? (
+                      <span
+                        className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-600 dark:text-emerald-400"
+                        title="Есть ссылка на его сообщение — доступен любому аккаунту, который видит чат"
+                      >
+                        по сообщению
+                      </span>
+                    ) : item.hash_accounts.length ? (
                       <span
                         className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
                         title="Доступен аккаунтам, которые его собрали"
