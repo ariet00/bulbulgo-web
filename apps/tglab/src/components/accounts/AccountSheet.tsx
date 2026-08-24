@@ -13,6 +13,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  Switch,
   Textarea,
 } from '@doska/ui'
 import { Loader2, LogOut, RefreshCw, ShieldAlert } from 'lucide-react'
@@ -162,10 +163,32 @@ export function AccountSheet({ account, onOpenChange }: Props) {
                 <div key={key} className="flex justify-between rounded-md bg-muted px-3 py-2">
                   <span className="text-muted-foreground">{key}</span>
                   <span>
-                    {account.usage_today[key] ?? 0} / {limit}
+                    {account.usage_today[key] ?? 0} / {account.limits_today?.[key] ?? limit}
                   </span>
                 </div>
               ))}
+            </div>
+            <div className="flex items-center justify-between rounded-md border px-3 py-2">
+              <div className="space-y-0.5">
+                <div className="text-sm">Прогрев аккаунта</div>
+                <p className="text-xs text-muted-foreground">
+                  {account.warmup?.active
+                    ? `День ${account.warmup.day} из ${account.warmup.ramp_days} · сегодня ${Math.round(
+                        account.warmup.fraction * 100,
+                      )}% лимитов`
+                    : 'Полные лимиты'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Выдержан</span>
+                <Switch
+                  checked={account.warmup?.skipped ?? false}
+                  disabled={update.isPending}
+                  onCheckedChange={(checked) =>
+                    update.mutate({ id: account.id, skip_warmup: checked })
+                  }
+                />
+              </div>
             </div>
           </div>
 

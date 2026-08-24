@@ -29,6 +29,7 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    Checkbox,
     Dialog,
     DialogClose,
     DialogContent,
@@ -253,6 +254,8 @@ export default function UserDetailPage() {
 
     const banUser = useAdminBanUser()
     const [confirmBan, setConfirmBan] = useState(false)
+    // Только для разбана: снять и авто-баны, раскрученные от этого юзера.
+    const [cascadeUnban, setCascadeUnban] = useState(false)
 
     const queryClient = useQueryClient()
     const isFetching = useIsFetching() > 0
@@ -288,8 +291,13 @@ export default function UserDetailPage() {
     const online = isOnline(user.last_online_at)
 
     const handleBan = () => {
+        const unbanning = user.status === 'banned'
         banUser.mutate(
-            { id: user.id, status: user.status === 'banned' ? 'active' : 'banned' },
+            {
+                id: user.id,
+                status: unbanning ? 'active' : 'banned',
+                cascade: unbanning && cascadeUnban ? true : undefined,
+            },
             { onSettled: () => setConfirmBan(false) },
         )
     }
@@ -580,7 +588,13 @@ export default function UserDetailPage() {
             </Tabs>
 
             {/* ── Ban confirm ── */}
-            <Dialog open={confirmBan} onOpenChange={setConfirmBan}>
+            <Dialog
+                open={confirmBan}
+                onOpenChange={(open) => {
+                    setConfirmBan(open)
+                    if (!open) setCascadeUnban(false)
+                }}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
@@ -592,6 +606,23 @@ export default function UserDetailPage() {
                                 : 'Пользователю вернётся доступ к аккаунту.'}
                         </DialogDescription>
                     </DialogHeader>
+                    {user.status === 'banned' && (
+                        <label className="flex items-start gap-2 text-sm">
+                            <Checkbox
+                                checked={cascadeUnban}
+                                onCheckedChange={(v) => setCascadeUnban(v === true)}
+                                className="mt-0.5"
+                            />
+                            <span>
+                                Снять и каскадные авто-баны
+                                <span className="block text-muted-foreground">
+                                    Разбанит аккаунты и устройства, авто-забаненные
+                                    из-за этого пользователя (девайс-honeypot, ввод
+                                    его номера/почты).
+                                </span>
+                            </span>
+                        </label>
+                    )}
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline">Отмена</Button>

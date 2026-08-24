@@ -133,6 +133,15 @@ export interface Account {
   is_frozen: boolean
   is_premium: boolean
   limits: Record<string, number>
+  /** today's effective caps with the warm-up ramp folded in */
+  limits_today: Record<string, number>
+  warmup: {
+    active: boolean
+    skipped: boolean
+    fraction: number
+    day: number
+    ramp_days: number
+  }
   usage_today: Record<string, number>
   profile: { first_name?: string | null; last_name?: string | null; about?: string | null }
   last_error: { code?: string; message?: string; at?: string } | null
@@ -166,6 +175,8 @@ export interface AccountUpdateInput {
   note?: string | null
   /** 0 releases the account, N pauses it for N hours. */
   freeze_hours?: number | null
+  /** run at full caps from day one (aged / already-warmed session) */
+  skip_warmup?: boolean
 }
 
 export interface AccountBulkInput extends AccountUpdateInput {

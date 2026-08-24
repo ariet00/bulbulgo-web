@@ -219,8 +219,13 @@ export const usersAdminApi = {
         requests.put<AdminDeviceToken>(`/admin/users/devices/${id}/ban?status=${status}`, {}),
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
-    banUser: (id: number, status: 'active' | 'banned') =>
-        requests.put<any>(`/admin/users/${id}/ban?status=${status}`, {}),
+    // cascade — только при разбане: снять и авто-баны, раскрученные от юзера
+    // (девайс-honeypot, ввод его номера/почты).
+    banUser: (id: number, status: 'active' | 'banned', cascade?: boolean) =>
+        requests.put<any>(
+            `/admin/users/${id}/ban?status=${status}${cascade ? '&cascade=true' : ''}`,
+            {},
+        ),
     getBannedIdentifiers: (
         page = 1,
         size = 40,
