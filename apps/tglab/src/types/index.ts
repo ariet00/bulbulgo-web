@@ -54,6 +54,9 @@ export interface MetaFlag {
 /** GET /tglab/meta — every value set of the domain with its label. */
 export interface TglabMeta {
   parse_modes: MetaOption[]
+  invite_modes: MetaOption[]
+  on_ban_modes: MetaOption[]
+  mention_modes: MetaOption[]
   last_seen_filters: MetaOption[]
   max_audience_items: number
   task_types: MetaOption[]
@@ -265,4 +268,80 @@ export interface AudienceImportResult {
   skipped: number
   errors: string[]
   audience: Audience
+}
+
+
+// ── tasks ─────────────────────────────────────────────────────────────────────
+
+export interface TaskProgress {
+  done_today: number
+  done_total: number
+  failed_total: number
+  last_tick_at: string | null
+}
+
+export interface TaskInput {
+  name: string
+  task_type: string
+  account_ids: number[]
+  main_account_id?: number | null
+  audience_id?: number | null
+  project_id?: number | null
+  daily_limit?: number | null
+  delay_from: number
+  delay_to: number
+  autostart_at?: string | null
+  params: Record<string, unknown>
+}
+
+/** What a broadcast sends — shared by the DM and chat tools. */
+export interface MessageContentInput {
+  text?: string
+  image_url?: string | null
+  repost?: { chat: string; message_id: number } | null
+  silent?: boolean
+  hide_author?: boolean
+}
+
+export interface Task {
+  id: number
+  project_id: number | null
+  audience_id: number | null
+  audience_name: string | null
+  name: string
+  task_type: string
+  status: string
+  daily_limit: number | null
+  delay_from: number
+  delay_to: number
+  autostart_at: string | null
+  started_at: string | null
+  finished_at: string | null
+  params: Record<string, unknown>
+  account_ids: number[]
+  main_account_id: number | null
+  progress: TaskProgress
+  created_at: string
+}
+
+export interface TaskLog {
+  id: number
+  level: string
+  message: string
+  account_id: number | null
+  created_at: string
+}
+
+export interface TaskLogsPage {
+  items: TaskLog[]
+  total: number
+}
+
+// ── live stream ───────────────────────────────────────────────────────────────
+
+/** One message off the cabinet's socket. */
+export interface LiveEvent {
+  type: string
+  data: Record<string, any>
+  ts: string
 }

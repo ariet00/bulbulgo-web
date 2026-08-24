@@ -5,11 +5,15 @@ import { Contact, FolderKanban, ListChecks, Shield, Users } from 'lucide-react'
 
 import { Link } from '@/i18n/routing'
 import { StatusChip } from '@/components/common/StatusChip'
-import { useAccounts, useAudiences, useMeta, useProjects, useProxies } from '@/hooks/queries'
+import {
+  useAccounts,
+  useAudiences,
+  useMeta,
+  useProjects,
+  useProxies,
+  useTasks,
+} from '@/hooks/queries'
 import { useAuthStore } from '@/store/useAuthStore'
-
-/** Sections that exist in the domain model but ship in later stages. */
-const PENDING = [{ label: 'Задачи', icon: ListChecks }]
 
 function StatCard({
   label,
@@ -52,6 +56,7 @@ export default function DashboardPage() {
   const { data: proxies, isLoading: proxiesLoading } = useProxies()
   const { data: accounts, isLoading: accountsLoading } = useAccounts({ size: 200 })
   const { data: audiences, isLoading: audiencesLoading } = useAudiences()
+  const { data: tasks, isLoading: tasksLoading } = useTasks()
   const { data: meta } = useMeta()
 
   // Status breakdown of the accounts — the number that actually matters daily.
@@ -102,9 +107,13 @@ export default function DashboardPage() {
           value={audiences?.length ?? 0}
           loading={audiencesLoading}
         />
-        {PENDING.map(({ label, icon }) => (
-          <StatCard key={label} label={label} icon={icon} />
-        ))}
+        <StatCard
+          label="Задачи"
+          icon={ListChecks}
+          href="/tasks"
+          value={tasks?.length ?? 0}
+          loading={tasksLoading}
+        />
       </div>
 
       {Object.keys(byStatus).length > 0 && (

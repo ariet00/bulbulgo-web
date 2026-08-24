@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { useLogout } from '@/hooks/mutations'
 import { useMe } from '@/hooks/queries'
+import { useTglabSocket } from '@/hooks/useTglabSocket'
 import { useRouter } from '@/i18n/routing'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -32,6 +33,9 @@ export function CabinetShell({ children }: { children: React.ReactNode }) {
   const logout = useLogout()
 
   const { data: me, isError, error } = useMe()
+  // One socket for the whole cabinet: task status, log lines, account and
+  // collection state arrive here instead of being polled.
+  useTglabSocket()
 
   useEffect(() => {
     if (hydrated && !token) router.replace('/login')

@@ -3,7 +3,6 @@ import {
   FolderKanban,
   LayoutDashboard,
   ListChecks,
-  Send,
   Shield,
   Users,
 } from 'lucide-react'
@@ -63,11 +62,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Задачи',
     icon: ListChecks,
     permission: TGLAB_PERMISSIONS.TASKS_VIEW,
-  },
-  {
-    href: '/tasks/sending',
-    label: 'Рассылки',
-    icon: Send,
-    permission: TGLAB_PERMISSIONS.TASKS_VIEW,
+    ready: true,
   },
 ]

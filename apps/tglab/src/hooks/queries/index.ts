@@ -7,6 +7,8 @@ import { getAccountSessions, getAccounts } from '@/apis/accounts'
 import type { ItemFilters } from '@/apis/audiences'
 import { getAudienceItems, getAudiences } from '@/apis/audiences'
 import { getMe } from '@/apis/auth'
+import type { TaskFilters } from '@/apis/tasks'
+import { getTaskLogs, getTasks } from '@/apis/tasks'
 import { getMeta } from '@/apis/meta'
 import { getProjects } from '@/apis/projects'
 import { getProxies } from '@/apis/proxies'
@@ -98,5 +100,26 @@ export function useAudienceItems(audienceId: number | null, filters: ItemFilters
     queryFn: () => getAudienceItems(audienceId as number, filters),
     enabled: Boolean(audienceId),
     placeholderData: (previous) => previous,
+  })
+}
+
+export function useTasks(filters: TaskFilters = {}) {
+  const token = useAuthStore((s) => s.token)
+  return useQuery({
+    queryKey: [...tglabKeys.tasks, filters],
+    queryFn: () => getTasks(filters),
+    enabled: Boolean(token),
+    placeholderData: (previous) => previous,
+  })
+}
+
+/** Tail of a task's log — the panel seeds itself from this, then the socket
+ *  keeps appending. */
+export function useTaskLogs(taskId: number | null) {
+  return useQuery({
+    queryKey: tglabKeys.taskLogs(taskId ?? 0),
+    queryFn: () => getTaskLogs(taskId as number, { limit: 200 }),
+    enabled: Boolean(taskId),
+    staleTime: 0,
   })
 }

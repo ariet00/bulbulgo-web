@@ -25,6 +25,7 @@ import {
   uploadAudienceItems,
 } from '@/apis/audiences'
 import { login as loginRequest, logout as logoutRequest } from '@/apis/auth'
+import { createTask, deleteTask, startTask, stopTask, updateTask } from '@/apis/tasks'
 import { createProject, deleteProject, updateProject } from '@/apis/projects'
 import {
   checkProxy,
@@ -45,6 +46,7 @@ import type {
   ProjectInput,
   ProxyBulkInput,
   ProxyInput,
+  TaskInput,
 } from '@/types'
 
 export function useLogin() {
@@ -353,6 +355,64 @@ export function useAddAudienceItems() {
       toast.success(`Добавлено: ${result.added}, пропущено: ${result.skipped}`)
       if (result.errors.length) toast.error(`Строк с ошибками: ${result.errors.length}`)
       queryClient.invalidateQueries({ queryKey: tglabKeys.audiences })
+    },
+  })
+}
+
+// ── tasks ─────────────────────────────────────────────────────────────────────
+
+export function useStartTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => startTask(id),
+    onSuccess: () => {
+      toast.success('Задача запущена — первый тик в течение минуты')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.tasks })
+    },
+  })
+}
+
+export function useStopTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => stopTask(id),
+    onSuccess: () => {
+      toast.success('Задача остановлена')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.tasks })
+    },
+  })
+}
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => deleteTask(id),
+    onSuccess: () => {
+      toast.success('Задача удалена')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.tasks })
+    },
+  })
+}
+
+export function useCreateTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: TaskInput) => createTask(payload),
+    onSuccess: () => {
+      toast.success('Задача создана — запустите её, когда будете готовы')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.tasks })
+    },
+  })
+}
+
+export function useUpdateTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...payload }: Partial<TaskInput> & { id: number }) =>
+      updateTask(id, payload),
+    onSuccess: () => {
+      toast.success('Задача обновлена')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.tasks })
     },
   })
 }
