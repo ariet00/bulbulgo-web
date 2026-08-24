@@ -3,6 +3,7 @@
 import { Button } from '@doska/ui'
 import { LogOut } from 'lucide-react'
 
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { useLogout } from '@/hooks/mutations'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -18,6 +19,7 @@ export function Header() {
           {user?.quotas.max_accounts} аккаунтов · {user?.quotas.max_running_tasks} задач
         </div>
       </div>
+      <ThemeToggle />
       <Button
         variant="ghost"
         size="icon"
