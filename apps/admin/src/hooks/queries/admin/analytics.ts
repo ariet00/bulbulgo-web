@@ -15,6 +15,7 @@ export const useAdminAnalyticsEvents = (params: {
     event_type?: string
     user_id?: number
     platform?: string
+    client?: string
     subtype?: string
     device_id?: string
     product?: string
@@ -27,10 +28,10 @@ export const useAdminAnalyticsEvents = (params: {
     })
 }
 
-export const useAdminAnalyticsTopEvents = (period: string = '7d', limit: number = 20, product?: string) => {
+export const useAdminAnalyticsTopEvents = (period: string = '7d', limit: number = 20, product?: string, client?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'top', period, limit, product ?? null],
-        queryFn: () => adminApi.getTopAnalyticsEvents({ period, limit, product }),
+        queryKey: [...adminKeys.analytics(), 'top', period, limit, product ?? null, client ?? null],
+        queryFn: () => adminApi.getTopAnalyticsEvents({ period, limit, product, client }),
     })
 }
 
@@ -40,10 +41,11 @@ export const useAdminAnalyticsEventSummary = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-summary', eventType, period, product ?? null, platform ?? null, subtype ?? null],
-        queryFn: () => adminApi.getEventAnalyticsSummary(eventType, { period, product, platform, subtype }),
+        queryKey: [...adminKeys.analytics(), 'event-summary', eventType, period, product ?? null, platform ?? null, subtype ?? null, client ?? null],
+        queryFn: () => adminApi.getEventAnalyticsSummary(eventType, { period, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -55,11 +57,12 @@ export const useAdminAnalyticsEventTimeseries = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-timeseries', eventType, period, granularity, product ?? null, platform ?? null, subtype ?? null],
+        queryKey: [...adminKeys.analytics(), 'event-timeseries', eventType, period, granularity, product ?? null, platform ?? null, subtype ?? null, client ?? null],
         queryFn: () =>
-            adminApi.getEventAnalyticsTimeseries(eventType, { period, granularity, product, platform, subtype }),
+            adminApi.getEventAnalyticsTimeseries(eventType, { period, granularity, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -70,10 +73,11 @@ export const useAdminAnalyticsEventFrequency = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-frequency', eventType, period, product ?? null, platform ?? null, subtype ?? null],
-        queryFn: () => adminApi.getEventAnalyticsFrequency(eventType, { period, product, platform, subtype }),
+        queryKey: [...adminKeys.analytics(), 'event-frequency', eventType, period, product ?? null, platform ?? null, subtype ?? null, client ?? null],
+        queryFn: () => adminApi.getEventAnalyticsFrequency(eventType, { period, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -84,10 +88,11 @@ export const useAdminAnalyticsEventHeatmap = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-heatmap', eventType, period, product ?? null, platform ?? null, subtype ?? null],
-        queryFn: () => adminApi.getEventAnalyticsHeatmap(eventType, { period, product, platform, subtype }),
+        queryKey: [...adminKeys.analytics(), 'event-heatmap', eventType, period, product ?? null, platform ?? null, subtype ?? null, client ?? null],
+        queryFn: () => adminApi.getEventAnalyticsHeatmap(eventType, { period, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -98,10 +103,11 @@ export const useAdminAnalyticsEventAudience = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-audience', eventType, period, product ?? null, platform ?? null, subtype ?? null],
-        queryFn: () => adminApi.getEventAnalyticsAudience(eventType, { period, product, platform, subtype }),
+        queryKey: [...adminKeys.analytics(), 'event-audience', eventType, period, product ?? null, platform ?? null, subtype ?? null, client ?? null],
+        queryFn: () => adminApi.getEventAnalyticsAudience(eventType, { period, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -112,10 +118,11 @@ export const useAdminAnalyticsEventRepeat = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-repeat', eventType, period, product ?? null, platform ?? null, subtype ?? null],
-        queryFn: () => adminApi.getEventAnalyticsRepeat(eventType, { period, product, platform, subtype }),
+        queryKey: [...adminKeys.analytics(), 'event-repeat', eventType, period, product ?? null, platform ?? null, subtype ?? null, client ?? null],
+        queryFn: () => adminApi.getEventAnalyticsRepeat(eventType, { period, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -127,11 +134,12 @@ export const useAdminAnalyticsEventTopUsers = (
     product?: string,
     platform?: string,
     subtype?: string,
+    client?: string,
 ) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'event-top-users', eventType, period, limit, product ?? null, platform ?? null, subtype ?? null],
+        queryKey: [...adminKeys.analytics(), 'event-top-users', eventType, period, limit, product ?? null, platform ?? null, subtype ?? null, client ?? null],
         queryFn: () =>
-            adminApi.getEventAnalyticsTopUsers(eventType, { period, limit, product, platform, subtype }),
+            adminApi.getEventAnalyticsTopUsers(eventType, { period, limit, product, platform, subtype, client }),
         enabled: !!eventType,
     })
 }
@@ -151,10 +159,10 @@ export const useAdminAnalyticsActiveUsers = (period: string = '30d', granularity
     })
 }
 
-export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: string, eventType?: string) => {
+export const useAdminAnalyticsPlatforms = (period: string = '7d', product?: string, eventType?: string, client?: string) => {
     return useQuery({
-        queryKey: [...adminKeys.analytics(), 'platforms', period, product ?? null, eventType ?? null],
-        queryFn: () => adminApi.getPlatformsBreakdown(period, product, eventType),
+        queryKey: [...adminKeys.analytics(), 'platforms', period, product ?? null, eventType ?? null, client ?? null],
+        queryFn: () => adminApi.getPlatformsBreakdown(period, product, eventType, client),
     })
 }
 
@@ -346,6 +354,17 @@ export const useAdminAnalyticsProducts = (period: string = '7d') => {
     return useQuery({
         queryKey: [...adminKeys.analytics(), 'products', period],
         queryFn: () => adminApi.getProductsBreakdown(period),
+    })
+}
+
+export const useAdminAnalyticsClients = (
+    period: string = '7d',
+    product?: string,
+    eventType?: string,
+) => {
+    return useQuery({
+        queryKey: [...adminKeys.analytics(), 'clients', period, product ?? null, eventType ?? null],
+        queryFn: () => adminApi.getClientsBreakdown(period, product, eventType),
     })
 }
 

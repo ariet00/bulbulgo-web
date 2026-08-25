@@ -153,6 +153,7 @@ export const analyticsAdminApi = {
         event_type?: string
         user_id?: number
         platform?: string
+        client?: string
         subtype?: string
         device_id?: string
         product?: string
@@ -165,23 +166,25 @@ export const analyticsAdminApi = {
         })
         return requests.get<Page<any>>(`/admin/analytics/events?${qs.toString()}`)
     },
-    getTopAnalyticsEvents: (params: { period?: string; limit?: number; product?: string }) => {
+    getTopAnalyticsEvents: (params: { period?: string; limit?: number; product?: string; client?: string }) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.limit) qs.set('limit', String(params.limit))
         if (params.product) qs.set('product', params.product)
+        if (params.client) qs.set('client', params.client)
         return requests.get<Array<{ event_type: string; count: number }>>(
             `/admin/analytics/events/top?${qs.toString()}`,
         )
     },
     getEventAnalyticsSummary: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<{
             total: number
@@ -196,13 +199,14 @@ export const analyticsAdminApi = {
     },
     getEventAnalyticsTimeseries: (
         eventType: string,
-        params: { period?: string; granularity?: string; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; granularity?: string; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.granularity) qs.set('granularity', params.granularity)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<Array<{ bucket: string; events: number; users: number }>>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/timeseries?${qs.toString()}`,
@@ -210,12 +214,13 @@ export const analyticsAdminApi = {
     },
     getEventAnalyticsFrequency: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<Array<{ bucket: string; users: number }>>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/frequency?${qs.toString()}`,
@@ -223,12 +228,13 @@ export const analyticsAdminApi = {
     },
     getEventAnalyticsHeatmap: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<Array<{ dow: number; hour: number; events: number }>>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/heatmap?${qs.toString()}`,
@@ -236,12 +242,13 @@ export const analyticsAdminApi = {
     },
     getEventAnalyticsAudience: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<{ active: number; new: number; returning: number }>(
             `/admin/analytics/events/${encodeURIComponent(eventType)}/audience?${qs.toString()}`,
@@ -249,12 +256,13 @@ export const analyticsAdminApi = {
     },
     getEventAnalyticsRepeat: (
         eventType: string,
-        params: { period?: string; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<{
             cohort: number
@@ -265,13 +273,14 @@ export const analyticsAdminApi = {
     },
     getEventAnalyticsTopUsers: (
         eventType: string,
-        params: { period?: string; limit?: number; product?: string; platform?: string; subtype?: string },
+        params: { period?: string; limit?: number; product?: string; platform?: string; client?: string; subtype?: string },
     ) => {
         const qs = new URLSearchParams()
         if (params.period) qs.set('period', params.period)
         if (params.limit) qs.set('limit', String(params.limit))
         if (params.product) qs.set('product', params.product)
         if (params.platform) qs.set('platform', params.platform)
+        if (params.client) qs.set('client', params.client)
         if (params.subtype) qs.set('subtype', params.subtype)
         return requests.get<
             Array<{
@@ -300,10 +309,11 @@ export const analyticsAdminApi = {
             `/admin/analytics/users/active?${qs.toString()}`,
         )
     },
-    getPlatformsBreakdown: (period: string = '7d', product?: string, eventType?: string) => {
+    getPlatformsBreakdown: (period: string = '7d', product?: string, eventType?: string, client?: string) => {
         const qs = new URLSearchParams({ period })
         if (product) qs.set('product', product)
         if (eventType) qs.set('event_type', eventType)
+        if (client) qs.set('client', client)
         return requests.get<Array<{ platform: string | null; events: number; users: number }>>(
             `/admin/analytics/platforms?${qs.toString()}`,
         )
@@ -312,6 +322,14 @@ export const analyticsAdminApi = {
         requests.get<Array<{ product: string; events: number; users: number }>>(
             `/admin/analytics/products?period=${period}`,
         ),
+    getClientsBreakdown: (period: string = '7d', product?: string, eventType?: string) => {
+        const qs = new URLSearchParams({ period })
+        if (product) qs.set('product', product)
+        if (eventType) qs.set('event_type', eventType)
+        return requests.get<Array<{ client: string | null; events: number; users: number }>>(
+            `/admin/analytics/clients?${qs.toString()}`,
+        )
+    },
     getAppVersionsBreakdown: (
         period: string = '7d',
         product?: string,

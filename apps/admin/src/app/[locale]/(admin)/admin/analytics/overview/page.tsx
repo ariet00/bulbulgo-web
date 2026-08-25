@@ -6,6 +6,7 @@ import {
     useAdminAnalytics,
     useAdminAnalyticsActiveUsers,
     useAdminAnalyticsMiddlewareToggle,
+    useAdminAnalyticsClients,
     useAdminAnalyticsPlatforms,
     useAdminAnalyticsProducts,
     useAdminAnalyticsTopEvents,
@@ -44,6 +45,7 @@ export default function AnalyticsOverviewPage() {
     const top = useAdminAnalyticsTopEvents(period, 20, product || undefined)
     const platforms = useAdminAnalyticsPlatforms(period, product || undefined)
     const products = useAdminAnalyticsProducts(period)
+    const clients = useAdminAnalyticsClients(period, product || undefined)
     const active = useAdminAnalyticsActiveUsers(period, period === '24h' ? 'hour' : 'day', product || undefined)
     const toggle = useAdminAnalyticsMiddlewareToggle()
     const setToggle = useSetAnalyticsMiddlewareToggle()
@@ -53,6 +55,7 @@ export default function AnalyticsOverviewPage() {
         top.isFetching ||
         platforms.isFetching ||
         products.isFetching ||
+        clients.isFetching ||
         active.isFetching ||
         toggle.isFetching
     const refreshAll = () => {
@@ -60,6 +63,7 @@ export default function AnalyticsOverviewPage() {
         top.refetch()
         platforms.refetch()
         products.refetch()
+        clients.refetch()
         active.refetch()
         toggle.refetch()
     }
@@ -154,6 +158,51 @@ export default function AnalyticsOverviewPage() {
                                         <TableRow key={row.product}>
                                             <TableCell className="font-mono text-sm">
                                                 {row.product}
+                                            </TableCell>
+                                            <TableCell className="text-right">{row.events}</TableCell>
+                                            <TableCell className="text-right">{row.users}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>По клиентам ({period})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {clients.isLoading ? (
+                        <div>Загрузка…</div>
+                    ) : !clients.data || clients.data.length === 0 ? (
+                        <div className="text-muted-foreground">Нет данных</div>
+                    ) : (
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <CountPieChart
+                                data={clients.data.map(row => ({
+                                    ...row,
+                                    client: row.client ?? '—',
+                                }))}
+                                dataKey="events"
+                                nameKey="client"
+                            />
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Клиент</TableHead>
+                                        <TableHead className="w-24 text-right">События</TableHead>
+                                        <TableHead className="w-24 text-right">Польз.</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {clients.data.map(row => (
+                                        <TableRow key={row.client ?? 'null'}>
+                                            <TableCell className="font-mono text-sm">
+                                                {row.client ?? '—'}
                                             </TableCell>
                                             <TableCell className="text-right">{row.events}</TableCell>
                                             <TableCell className="text-right">{row.users}</TableCell>

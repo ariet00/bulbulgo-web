@@ -31,7 +31,7 @@ import {
 import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { EventTimeseriesChart, FrequencyBarChart } from '@/components/admin/analytics/charts-lazy'
 import { EventHeatmap } from '@/components/admin/analytics/EventHeatmap'
-import { ProductSelector } from '@/components/admin/ProductSelector'
+import { ClientSelector, ProductSelector } from '@/components/admin/ProductSelector'
 
 const PERIODS = [
     { value: '24h', label: '24 часа' },
@@ -116,20 +116,22 @@ export default function AnalyticsEventDetailPage() {
     const [granularity, setGranularity] = useState('day')
     const [product, setProduct] = useState('')
     const [platform, setPlatform] = useState('')
+    const [client, setClient] = useState('')
     const [subtype, setSubtype] = useState('')
 
     const p = product || undefined
     const pl = platform || undefined
+    const cl = client || undefined
     const st = subtype || undefined
 
-    const summary = useAdminAnalyticsEventSummary(eventType, period, p, pl, st)
-    const series = useAdminAnalyticsEventTimeseries(eventType, period, granularity, p, pl, st)
-    const frequency = useAdminAnalyticsEventFrequency(eventType, period, p, pl, st)
-    const topUsers = useAdminAnalyticsEventTopUsers(eventType, period, TOP_USERS_LIMIT, p, pl, st)
-    const heatmap = useAdminAnalyticsEventHeatmap(eventType, period, p, pl, st)
-    const audience = useAdminAnalyticsEventAudience(eventType, period, p, pl, st)
-    const repeat = useAdminAnalyticsEventRepeat(eventType, period, p, pl, st)
-    const platforms = useAdminAnalyticsPlatforms(period, p, eventType)
+    const summary = useAdminAnalyticsEventSummary(eventType, period, p, pl, st, cl)
+    const series = useAdminAnalyticsEventTimeseries(eventType, period, granularity, p, pl, st, cl)
+    const frequency = useAdminAnalyticsEventFrequency(eventType, period, p, pl, st, cl)
+    const topUsers = useAdminAnalyticsEventTopUsers(eventType, period, TOP_USERS_LIMIT, p, pl, st, cl)
+    const heatmap = useAdminAnalyticsEventHeatmap(eventType, period, p, pl, st, cl)
+    const audience = useAdminAnalyticsEventAudience(eventType, period, p, pl, st, cl)
+    const repeat = useAdminAnalyticsEventRepeat(eventType, period, p, pl, st, cl)
+    const platforms = useAdminAnalyticsPlatforms(period, p, eventType, cl)
     const versions = useAdminAnalyticsAppVersions(period, p, pl, eventType)
     const subtypes = useAdminAnalyticsEventSubtypes(eventType, period)
 
@@ -186,6 +188,9 @@ export default function AnalyticsEventDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
                 <ProductSelector value={product} onChange={setProduct} />
             </div>
+
+            {/* Клиент: с какого приложения/кабинета пришло действие */}
+            <ClientSelector value={client} onChange={setClient} />
 
             <div className="flex flex-wrap gap-1">
                 {PLATFORMS.map((pf) => (
