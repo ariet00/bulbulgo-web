@@ -11,6 +11,7 @@ export function labelOf(options: MetaOption[] | undefined, value: string | null)
 export const STATUS_TONES: Record<string, string> = {
   active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   ok: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  running: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   not_connected: 'bg-muted text-muted-foreground',
   unchecked: 'bg-muted text-muted-foreground',
   unauthorized: 'bg-destructive/10 text-destructive',

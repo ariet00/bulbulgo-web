@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -10,6 +11,7 @@ import {
     BellRing,
     Bot,
     Car,
+    ChevronRight,
     Coins,
     Database,
     ClipboardList,
@@ -41,6 +43,9 @@ import { cn } from '@doska/shared'
 
 type NavItem = { name: string; href: string; icon: typeof LayoutDashboard }
 type NavSection = { label?: string; items: NavItem[] }
+
+// Раскрытые/свёрнутые группы переживают перезагрузку страницы.
+const OPEN_SECTIONS_KEY = 'admin:sidebar:open-sections'
 
 const sections: NavSection[] = [
     {
@@ -138,33 +143,97 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`)
 
+    // Группа текущей страницы всегда раскрыта — иначе активный пункт не видно.
+    const activeLabel = useMemo(
+        () =>
+            sections.find(
+                (section) =>
+                    section.label && section.items.some((item) => isActive(item.href)),
+            )?.label,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [pathname],
+    )
+
+    // На сервере localStorage нет, поэтому стартуем с детерминированного
+    // состояния (открыта только активная группа) и подмешиваем сохранённое
+    // после монтирования — иначе будет расхождение гидратации.
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+        activeLabel ? { [activeLabel]: true } : {},
+    )
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(OPEN_SECTIONS_KEY)
+            if (saved) {
+                setOpenSections(JSON.parse(saved) as Record<string, boolean>)
+            }
+        } catch {
+            // приватный режим / битый JSON — остаёмся на дефолте
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!activeLabel) return
+        setOpenSections((prev) =>
+            prev[activeLabel] ? prev : { ...prev, [activeLabel]: true },
+        )
+    }, [activeLabel])
+
+    const toggleSection = (label: string) =>
+        setOpenSections((prev) => {
+            const next = { ...prev, [label]: !prev[label] }
+            try {
+                localStorage.setItem(OPEN_SECTIONS_KEY, JSON.stringify(next))
+            } catch {
+                // запись недоступна — состояние просто не переживёт перезагрузку
+            }
+            return next
+        })
+
     return (
-        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-4 space-y-4">
-            {sections.map((section, idx) => (
-                <div key={section.label ?? idx} className="space-y-1">
-                    {section.label && (
-                        <div className="px-4 pb-1 text-[10px] uppercase tracking-wider text-gray-500">
-                            {section.label}
-                        </div>
-                    )}
-                    {section.items.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            onClick={onNavigate}
-                            className={cn(
-                                'flex items-center px-4 py-2 text-sm font-medium rounded-md group transition-colors',
-                                isActive(item.href)
-                                    ? 'bg-gray-800 dark:bg-gray-800 text-white'
-                                    : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-                            )}
-                        >
-                            <item.icon className="mr-3 h-5 w-5" aria-hidden="true" />
-                            {item.name}
-                        </Link>
-                    ))}
-                </div>
-            ))}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-4 space-y-2">
+            {sections.map((section, idx) => {
+                const isOpen = section.label ? !!openSections[section.label] : true
+
+                return (
+                    <div key={section.label ?? idx} className="space-y-1">
+                        {section.label && (
+                            <button
+                                type="button"
+                                onClick={() => toggleSection(section.label!)}
+                                aria-expanded={isOpen}
+                                className="w-full flex items-center gap-2 px-4 py-1.5 rounded-md text-[10px] uppercase tracking-wider text-gray-500 hover:text-gray-300 hover:bg-gray-800/60 transition-colors"
+                            >
+                                <ChevronRight
+                                    className={cn(
+                                        'h-3 w-3 shrink-0 transition-transform',
+                                        isOpen && 'rotate-90',
+                                    )}
+                                    aria-hidden="true"
+                                />
+                                <span className="truncate">{section.label}</span>
+                            </button>
+                        )}
+                        {isOpen &&
+                            section.items.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={onNavigate}
+                                    className={cn(
+                                        'flex items-center px-4 py-2 text-sm font-medium rounded-md group transition-colors',
+                                        isActive(item.href)
+                                            ? 'bg-gray-800 dark:bg-gray-800 text-white'
+                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+                                    )}
+                                >
+                                    <item.icon className="mr-3 h-5 w-5" aria-hidden="true" />
+                                    {item.name}
+                                </Link>
+                            ))}
+                    </div>
+                )
+            })}
         </nav>
     )
 }
