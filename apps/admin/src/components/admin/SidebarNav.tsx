@@ -10,12 +10,15 @@ import {
     Bell,
     BellRing,
     Bot,
+    Boxes,
     Car,
+    ChartColumn,
     ChevronRight,
     Coins,
     Database,
     ClipboardList,
     Flag,
+    FlaskConical,
     FolderTree,
     Fuel,
     Gift,
@@ -29,20 +32,24 @@ import {
     MessageSquare,
     Newspaper,
     Radio,
+    Route,
+    Send,
     Settings as SettingsIcon,
     ShieldBan,
     Smartphone,
     Star,
+    Store,
     Tags,
     Timer,
     Trophy,
     UserCog,
     Users,
+    Wrench,
 } from 'lucide-react'
 import { cn } from '@doska/shared'
 
 type NavItem = { name: string; href: string; icon: typeof LayoutDashboard }
-type NavSection = { label?: string; items: NavItem[] }
+type NavSection = { label?: string; icon?: typeof LayoutDashboard; items: NavItem[] }
 
 // Раскрытые/свёрнутые группы переживают перезагрузку страницы.
 const OPEN_SECTIONS_KEY = 'admin:sidebar:open-sections'
@@ -55,6 +62,7 @@ const sections: NavSection[] = [
     },
     {
         label: 'Ops',
+        icon: Wrench,
         items: [
             { name: 'Celery', href: '/admin/celery', icon: Timer },
             { name: 'Сидеры', href: '/admin/seeders', icon: Database },
@@ -62,6 +70,7 @@ const sections: NavSection[] = [
     },
     {
         label: 'Common',
+        icon: Boxes,
         items: [
             { name: 'Users', href: '/admin/users', icon: Users },
             { name: 'Устройства', href: '/admin/devices', icon: Smartphone },
@@ -78,6 +87,7 @@ const sections: NavSection[] = [
     },
     {
         label: 'Маркетплейс',
+        icon: Store,
         items: [
             { name: 'Категории', href: '/admin/marketplace/categories', icon: FolderTree },
             { name: 'Атрибуты', href: '/admin/marketplace/attributes', icon: Tags },
@@ -86,6 +96,7 @@ const sections: NavSection[] = [
     },
     {
         label: 'Analytics',
+        icon: ChartColumn,
         items: [
             { name: 'Обзор', href: '/admin/analytics/overview', icon: LineChart },
             { name: 'BulBul Go', href: '/admin/analytics/bulbulgo', icon: LineChart },
@@ -97,6 +108,7 @@ const sections: NavSection[] = [
     },
     {
         label: 'BulBul Go',
+        icon: Route,
         items: [
             { name: 'Trips', href: '/admin/trips', icon: List },
             { name: 'Подписки', href: '/admin/subscriptions', icon: BellRing },
@@ -110,6 +122,7 @@ const sections: NavSection[] = [
     },
     {
         label: 'Где Бензин',
+        icon: Fuel,
         items: [
             { name: 'Метки топлива', href: '/admin/fuel/reports', icon: Fuel },
             { name: 'АЗС', href: '/admin/fuel/stations', icon: MapPin },
@@ -119,6 +132,7 @@ const sections: NavSection[] = [
     {
         // Всё, что про Telegram: сами боты, каналы парсера и модерация групп.
         label: 'Telegram',
+        icon: Send,
         items: [
             { name: 'Боты', href: '/admin/booking/bots', icon: Bot },
             { name: 'Каналы', href: '/admin/telegram/channels', icon: Radio },
@@ -129,6 +143,7 @@ const sections: NavSection[] = [
         // Внутренний кабинет продвижения (apps/tglab) — здесь только операторы,
         // сама работа идёт в отдельном приложении @doska/tglab.
         label: 'Tglab',
+        icon: FlaskConical,
         items: [
             { name: 'Операторы', href: '/admin/tglab', icon: UserCog },
         ],
@@ -204,18 +219,28 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                                 onClick={() => toggleSection(section.label!)}
                                 aria-expanded={isOpen}
                                 className={cn(
-                                    'w-full flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors hover:bg-gray-800/60 hover:text-white',
+                                    'w-full flex items-center gap-3 px-4 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors hover:bg-gray-800/60 hover:text-white',
                                     hasActive ? 'text-white' : 'text-gray-400',
                                 )}
                             >
+                                {section.icon && (
+                                    // gap-3 + px-4 держат иконку в одной колонке
+                                    // с иконками пунктов (у тех mr-3)
+                                    <section.icon
+                                        className="h-4 w-4 shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                                <span className="flex-1 truncate text-left">
+                                    {section.label}
+                                </span>
                                 <ChevronRight
                                     className={cn(
-                                        'h-3 w-3 shrink-0 transition-transform',
+                                        'h-3.5 w-3.5 shrink-0 transition-transform',
                                         isOpen && 'rotate-90',
                                     )}
                                     aria-hidden="true"
                                 />
-                                <span className="truncate">{section.label}</span>
                             </button>
                         )}
                         {isOpen &&

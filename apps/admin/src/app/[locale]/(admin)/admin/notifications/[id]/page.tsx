@@ -2,7 +2,7 @@
 
 import { useAdminDeleteNotification } from '@/hooks/mutations/admin'
 import { useAdminNotification } from '@/hooks/queries/admin'
-import { useRouter } from '@doska/i18n'
+import { Link, useRouter } from '@doska/i18n'
 import {
     BackButton,
     Badge,
@@ -37,6 +37,26 @@ function statusBadge(status?: string) {
         default:
             return <span className="text-muted-foreground">—</span>
     }
+}
+
+// Ссылка на карточку пользователя. `name` — user.full_name с бэка; вложенный
+// user есть только у получателя (и full_name пустой, если ФИО не заполнено),
+// у отправителя показываем id.
+function UserLink({ id, name }: { id?: number | null; name?: string | null }) {
+    if (!id) return <span className="text-muted-foreground">—</span>
+    return (
+        <Link
+            href={`/admin/users/${id}`}
+            className="text-primary hover:underline"
+        >
+            {name || `#${id}`}
+            {name && (
+                <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">
+                    #{id}
+                </span>
+            )}
+        </Link>
+    )
 }
 
 function Field({
@@ -113,7 +133,9 @@ export default function NotificationDetailPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <Field label="Пользователь">{n.user_id ?? '—'}</Field>
+                        <Field label="Пользователь">
+                            <UserLink id={n.user_id} name={n.user?.full_name} />
+                        </Field>
                         <Field label="Тип">
                             {n.type}
                             {n.category ? ` / ${n.category}` : ''}
@@ -127,7 +149,9 @@ export default function NotificationDetailPage() {
                                 <Badge variant="outline">Нет</Badge>
                             )}
                         </Field>
-                        <Field label="Отправитель">{n.sent_by_id ?? '—'}</Field>
+                        <Field label="Отправитель">
+                            <UserLink id={n.sent_by_id} />
+                        </Field>
                         <Field label="Успешно">{n.success_count ?? '—'}</Field>
                         <Field label="Ошибок">{n.failure_count ?? '—'}</Field>
                         <Field label="Создано">

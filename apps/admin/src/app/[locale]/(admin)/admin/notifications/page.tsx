@@ -214,7 +214,26 @@ export default function AdminNotificationsPage() {
                                             }
                                         >
                                             <TableCell>{n.id}</TableCell>
-                                            <TableCell>{n.user_id ?? '—'}</TableCell>
+                                            <TableCell>
+                                                {n.user_id ? (
+                                                    <Link
+                                                        href={`/admin/users/${n.user_id}`}
+                                                        // строка кликабельна целиком и ведёт на
+                                                        // само уведомление — не даём ей перехватить клик
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="flex flex-col text-primary hover:underline"
+                                                    >
+                                                        <span>{n.user?.full_name || `#${n.user_id}`}</span>
+                                                        {n.user?.full_name && (
+                                                            <span className="text-xs text-muted-foreground tabular-nums">
+                                                                #{n.user_id}
+                                                            </span>
+                                                        )}
+                                                    </Link>
+                                                ) : (
+                                                    '—'
+                                                )}
+                                            </TableCell>
                                             <TableCell
                                                 className="font-medium max-w-[260px] whitespace-pre-wrap break-words"
                                                 title={n.title}
