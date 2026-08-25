@@ -81,6 +81,7 @@ export default function AdminServicesPage() {
                                         <TableHead>Название</TableHead>
                                         <TableHead>Slug</TableHead>
                                         <TableHead>Тип</TableHead>
+                                        <TableHead>Группа</TableHead>
                                         <TableHead>Бейдж</TableHead>
                                         <TableHead>В табах</TableHead>
                                         <TableHead>Включён</TableHead>
@@ -119,6 +120,9 @@ export default function AdminServicesPage() {
                                                         </>
                                                     )}
                                                 </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {s.group ?? '—'}
                                             </TableCell>
                                             <TableCell>
                                                 {s.badge === 'new' && <Badge>NEW</Badge>}
