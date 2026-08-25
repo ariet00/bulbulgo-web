@@ -19,7 +19,11 @@ import { Button } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw, Trash2 } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
-import { DataCell } from '@/components/admin/analytics/DataCell'
+import {
+    DataCell,
+    DataTableCell,
+    DATA_COLUMN_WIDTH,
+} from '@/components/admin/analytics/DataCell'
 
 const SIZE = 50
 
@@ -237,7 +241,7 @@ export default function AnalyticsEventsPage() {
                                             <TableHead className="w-28">client</TableHead>
                                             <TableHead className="w-24">app_version</TableHead>
                                             <TableHead className="w-40">device_id</TableHead>
-                                            <TableHead>data</TableHead>
+                                            <TableHead className={DATA_COLUMN_WIDTH}>data</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -289,9 +293,10 @@ export default function AnalyticsEventsPage() {
                                                         '—'
                                                     )}
                                                 </TableCell>
-                                                <TableCell>
-                                                    <DataCell data={ev.data} eventType={ev.event_type} />
-                                                </TableCell>
+                                                <DataTableCell
+                                                    data={ev.data}
+                                                    eventType={ev.event_type}
+                                                />
                                             </TableRow>
                                         ))}
                                     </TableBody>

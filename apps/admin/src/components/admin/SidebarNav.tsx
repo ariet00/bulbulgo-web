@@ -194,6 +194,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-4 space-y-2">
             {sections.map((section, idx) => {
                 const isOpen = section.label ? !!openSections[section.label] : true
+                const hasActive = section.label === activeLabel
 
                 return (
                     <div key={section.label ?? idx} className="space-y-1">
@@ -202,7 +203,10 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                                 type="button"
                                 onClick={() => toggleSection(section.label!)}
                                 aria-expanded={isOpen}
-                                className="w-full flex items-center gap-2 px-4 py-1.5 rounded-md text-[10px] uppercase tracking-wider text-gray-500 hover:text-gray-300 hover:bg-gray-800/60 transition-colors"
+                                className={cn(
+                                    'w-full flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors hover:bg-gray-800/60 hover:text-white',
+                                    hasActive ? 'text-white' : 'text-gray-400',
+                                )}
                             >
                                 <ChevronRight
                                     className={cn(
