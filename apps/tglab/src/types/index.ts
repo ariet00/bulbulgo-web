@@ -73,6 +73,7 @@ export interface TglabMeta {
   log_levels: MetaOption[]
   account_limit_keys: string[]
   default_account_limits: Record<string, number>
+  proxy_soft_account_cap: number
 }
 
 
@@ -371,6 +372,23 @@ export interface LiveEvent {
   type: string
   data: Record<string, any>
   ts: string
+}
+
+// ── mass import ─────────────────────────────────────────────────────────────────
+
+/** One line of a batch import — imported, or failed with the reason. */
+export interface AccountImportItemResult {
+  index: number
+  label: string
+  status: 'imported' | 'failed'
+  account_id: number | null
+  error: string | null
+}
+
+export interface AccountBulkImportResult {
+  imported: number
+  failed: number
+  results: AccountImportItemResult[]
 }
 
 // ── statistics (stage 5) ────────────────────────────────────────────────────────

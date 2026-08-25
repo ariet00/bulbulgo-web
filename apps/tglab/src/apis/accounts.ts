@@ -1,6 +1,7 @@
 import { api } from '@/apis/client'
 import type {
   Account,
+  AccountBulkImportResult,
   AccountBulkInput,
   AccountCheckResult,
   AccountInput,
@@ -47,6 +48,46 @@ export async function importAccountFile(payload: {
   if (payload.projectId) form.append('project_id', String(payload.projectId))
   if (payload.proxyId) form.append('proxy_id', String(payload.proxyId))
   const { data } = await api.post<Account>('/tglab/accounts/import-file', form)
+  return data
+}
+
+/** Mass import: many session strings sharing one app pair. */
+export async function importAccountStrings(payload: {
+  sessions: string[]
+  apiId: number
+  apiHash: string
+  projectId?: number | null
+  proxyId?: number | null
+}) {
+  const { data } = await api.post<AccountBulkImportResult>('/tglab/accounts/import-strings', {
+    sessions: payload.sessions,
+    api_id: payload.apiId,
+    api_hash: payload.apiHash,
+    project_id: payload.projectId ?? null,
+    proxy_id: payload.proxyId ?? null,
+  })
+  return data
+}
+
+/** Mass import: a ZIP of bought accounts (`.session` + `.json` pairs). */
+export async function importAccountArchive(payload: {
+  archive: File
+  /** Fallback for entries whose `.json` lacks the pair (or is missing). */
+  apiId?: number | null
+  apiHash?: string | null
+  projectId?: number | null
+  proxyId?: number | null
+}) {
+  const form = new FormData()
+  form.append('archive', payload.archive)
+  if (payload.apiId) form.append('api_id', String(payload.apiId))
+  if (payload.apiHash) form.append('api_hash', payload.apiHash)
+  if (payload.projectId) form.append('project_id', String(payload.projectId))
+  if (payload.proxyId) form.append('proxy_id', String(payload.proxyId))
+  const { data } = await api.post<AccountBulkImportResult>(
+    '/tglab/accounts/import-archive',
+    form,
+  )
   return data
 }
 

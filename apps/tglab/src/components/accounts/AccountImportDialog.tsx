@@ -8,11 +8,6 @@ import {
   DialogTitle,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Tabs,
   TabsContent,
   TabsList,
@@ -21,9 +16,10 @@ import {
 } from '@doska/ui'
 import { useEffect, useRef, useState } from 'react'
 
-import { ProjectSelect, NONE_VALUE } from '@/components/common/ProjectSelect'
+import { AccountMassImport } from '@/components/accounts/AccountMassImport'
+import { ProjectSelect } from '@/components/common/ProjectSelect'
+import { ProxySelect } from '@/components/common/ProxySelect'
 import { useCreateAccount, useImportAccountFile } from '@/hooks/mutations'
-import { useProxies } from '@/hooks/queries'
 
 interface Props {
   open: boolean
@@ -36,7 +32,6 @@ interface Props {
  * — the `.session` + `.json` pair a bought account ships as.
  */
 export function AccountImportDialog({ open, onOpenChange }: Props) {
-  const { data: proxies } = useProxies()
   const create = useCreateAccount()
   const importFile = useImportAccountFile()
 
@@ -132,22 +127,7 @@ export function AccountImportDialog({ open, onOpenChange }: Props) {
       </div>
       <div className="space-y-2">
         <Label>Прокси</Label>
-        <Select
-          value={proxyId ? String(proxyId) : NONE_VALUE}
-          onValueChange={(v) => setProxyId(v === NONE_VALUE ? null : Number(v))}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Без прокси" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE_VALUE}>Без прокси</SelectItem>
-            {proxies?.map((proxy) => (
-              <SelectItem key={proxy.id} value={String(proxy.id)}>
-                {proxy.name || `${proxy.host}:${proxy.port}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ProxySelect value={proxyId} onChange={setProxyId} />
       </div>
     </div>
   )
@@ -163,6 +143,7 @@ export function AccountImportDialog({ open, onOpenChange }: Props) {
           <TabsList className="mb-4">
             <TabsTrigger value="string">Строка сессии</TabsTrigger>
             <TabsTrigger value="files">Файлы</TabsTrigger>
+            <TabsTrigger value="bulk">Массово</TabsTrigger>
           </TabsList>
 
           <TabsContent value="string" className="space-y-4">
@@ -232,6 +213,16 @@ export function AccountImportDialog({ open, onOpenChange }: Props) {
               </Button>
               <Button onClick={submitFiles} disabled={importFile.isPending}>
                 Импортировать
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bulk" className="space-y-4">
+            {placement}
+            <AccountMassImport projectId={projectId} proxyId={proxyId} />
+            <div className="flex justify-end">
+              <Button variant="ghost" onClick={close}>
+                Готово
               </Button>
             </div>
           </TabsContent>

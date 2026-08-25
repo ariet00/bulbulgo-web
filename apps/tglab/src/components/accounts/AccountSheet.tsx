@@ -4,11 +4,6 @@ import {
   Button,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -19,7 +14,8 @@ import {
 import { Loader2, LogOut, RefreshCw, ShieldAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { NONE_VALUE, ProjectSelect } from '@/components/common/ProjectSelect'
+import { ProjectSelect } from '@/components/common/ProjectSelect'
+import { ProxySelect } from '@/components/common/ProxySelect'
 import { StatusChip } from '@/components/common/StatusChip'
 import {
   useCheckAccount,
@@ -28,7 +24,7 @@ import {
   useUpdateAccount,
   useUpdateAccountProfile,
 } from '@/hooks/mutations'
-import { useAccountSessions, useMeta, useProxies } from '@/hooks/queries'
+import { useAccountSessions, useMeta } from '@/hooks/queries'
 import type { Account } from '@/types'
 
 interface Props {
@@ -44,7 +40,6 @@ export function AccountSheet({ account, onOpenChange }: Props) {
   const updateProfile = useUpdateAccountProfile()
   const terminate = useTerminateAccountSessions()
   const update = useUpdateAccount()
-  const { data: proxies } = useProxies()
   // Listing devices is a live Telegram call — only while the panel is open.
   const sessions = useAccountSessions(account?.id ?? null)
 
@@ -106,28 +101,10 @@ export function AccountSheet({ account, onOpenChange }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Прокси</Label>
-              <Select
-                value={account.proxy_id ? String(account.proxy_id) : NONE_VALUE}
-                onValueChange={(value) =>
-                  update.mutate({
-                    id: account.id,
-                    proxy_id: value === NONE_VALUE ? null : Number(value),
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Без прокси" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>Без прокси</SelectItem>
-                  {proxies?.map((proxy) => (
-                    <SelectItem key={proxy.id} value={String(proxy.id)}>
-                      {proxy.name || `${proxy.host}:${proxy.port}`}
-                      {proxy.status === 'failed' ? ' · не отвечает' : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ProxySelect
+                value={account.proxy_id}
+                onChange={(proxy_id) => update.mutate({ id: account.id, proxy_id })}
+              />
             </div>
             <div className="space-y-2">
               <Label>Проект</Label>
