@@ -13,6 +13,8 @@ export const tglabKeys = {
   audiences: ['tglab', 'audiences'] as const,
   tasks: ['tglab', 'tasks'] as const,
   taskLogs: (id: number) => ['tglab', 'tasks', id, 'logs'] as const,
+  statsOverview: ['tglab', 'stats', 'overview'] as const,
+  taskStats: (id: number) => ['tglab', 'stats', 'tasks', id] as const,
   audienceReach: (id: number) => ['tglab', 'audiences', id, 'reach'] as const,
   audienceItems: (id: number, filters: ItemFilters) =>
     ['tglab', 'audiences', id, 'items', filters] as const,

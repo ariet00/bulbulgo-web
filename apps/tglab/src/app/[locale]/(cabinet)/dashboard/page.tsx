@@ -5,14 +5,17 @@ import { Contact, FolderKanban, ListChecks, Shield, Users } from 'lucide-react'
 
 import { Link } from '@/i18n/routing'
 import { StatusChip } from '@/components/common/StatusChip'
+import { ActivityBars, OutcomeBar, OutcomeLegend } from '@/components/stats/StatsBits'
 import {
   useAccounts,
   useAudiences,
   useMeta,
   useProjects,
   useProxies,
+  useStatsOverview,
   useTasks,
 } from '@/hooks/queries'
+import { labelOf } from '@/lib/labels'
 import { useAuthStore } from '@/store/useAuthStore'
 
 function StatCard({
@@ -57,7 +60,13 @@ export default function DashboardPage() {
   const { data: accounts, isLoading: accountsLoading } = useAccounts({ size: 200 })
   const { data: audiences, isLoading: audiencesLoading } = useAudiences()
   const { data: tasks, isLoading: tasksLoading } = useTasks()
+  const { data: overview } = useStatsOverview()
   const { data: meta } = useMeta()
+
+  const todayTotal = (overview?.today ?? []).reduce(
+    (sum, row) => sum + row.ok + row.skipped + row.failed,
+    0,
+  )
 
   // Status breakdown of the accounts — the number that actually matters daily.
   const byStatus = (accounts?.items ?? []).reduce<Record<string, number>>((acc, account) => {
@@ -136,9 +145,71 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium">{frozen}</span>
               </div>
             )}
+            {(overview?.tasks_running ?? 0) > 0 && (
+              <div className="flex items-center gap-2">
+                <StatusChip value="running" options={meta?.task_statuses} />
+                <span className="text-sm font-medium">{overview?.tasks_running}</span>
+                <span className="text-xs text-muted-foreground">задач в работе</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Сегодня
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {todayTotal === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Сегодня действий ещё не было.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(overview?.today ?? []).map((row) => (
+                  <div key={row.type} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">
+                        {labelOf(meta?.action_types, row.type)}
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {row.ok + row.skipped + row.failed}
+                      </span>
+                    </div>
+                    <OutcomeBar value={row} />
+                    <OutcomeLegend value={row} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Активность за 7 дней
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <ActivityBars series={overview?.series ?? []} />
+            <OutcomeLegend
+              value={(overview?.series ?? []).reduce(
+                (sum, d) => ({
+                  ok: sum.ok + d.ok,
+                  skipped: sum.skipped + d.skipped,
+                  failed: sum.failed + d.failed,
+                }),
+                { ok: 0, skipped: 0, failed: 0 },
+              )}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

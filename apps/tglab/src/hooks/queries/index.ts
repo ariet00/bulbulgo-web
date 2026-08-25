@@ -12,6 +12,7 @@ import { getTaskLogs, getTasks } from '@/apis/tasks'
 import { getMeta } from '@/apis/meta'
 import { getProjects } from '@/apis/projects'
 import { getProxies } from '@/apis/proxies'
+import { getOverview, getTaskStats } from '@/apis/stats'
 import { tglabKeys } from '@/hooks/queries/keys'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -130,5 +131,27 @@ export function useAudienceReach(audienceId: number | null) {
     queryKey: tglabKeys.audienceReach(audienceId ?? 0),
     queryFn: () => getAudienceReach(audienceId as number),
     enabled: Boolean(audienceId),
+  })
+}
+
+/** Dashboard summary — fleet health, today's actions, a week trend. Refreshes
+ *  itself while the tab is open so a running task's numbers keep moving. */
+export function useStatsOverview() {
+  const token = useAuthStore((s) => s.token)
+  return useQuery({
+    queryKey: tglabKeys.statsOverview,
+    queryFn: getOverview,
+    enabled: Boolean(token),
+    refetchInterval: 30_000,
+  })
+}
+
+/** Per-task breakdown behind the log — only fetched while its panel is open. */
+export function useTaskStats(taskId: number | null) {
+  return useQuery({
+    queryKey: tglabKeys.taskStats(taskId ?? 0),
+    queryFn: () => getTaskStats(taskId as number),
+    enabled: Boolean(taskId),
+    refetchInterval: 30_000,
   })
 }

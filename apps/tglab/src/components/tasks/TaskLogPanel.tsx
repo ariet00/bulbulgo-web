@@ -6,6 +6,7 @@ import { Play, Square } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 import { StatusChip } from '@/components/common/StatusChip'
+import { TaskStatsBlock } from '@/components/tasks/TaskStatsBlock'
 import { useStartTask, useStopTask } from '@/hooks/mutations'
 import { useMeta, useTaskLogs } from '@/hooks/queries'
 import { useLiveStore } from '@/store/useLiveStore'
@@ -95,6 +96,8 @@ export function TaskLogPanel({ task, onOpenChange }: Props) {
             </Button>
           )}
         </div>
+
+        <TaskStatsBlock taskId={task.id} />
 
         <div className="mt-2 flex-1 overflow-y-auto border-t px-4 py-3 font-mono text-xs">
           {lines.length === 0 ? (

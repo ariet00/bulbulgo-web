@@ -206,60 +206,71 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         })
 
     return (
-        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-4 space-y-2">
+        <nav className="flex-1 min-h-0 overflow-y-auto py-4 space-y-1">
             {sections.map((section, idx) => {
                 const isOpen = section.label ? !!openSections[section.label] : true
                 const hasActive = section.label === activeLabel
 
-                return (
-                    <div key={section.label ?? idx} className="space-y-1">
-                        {section.label && (
-                            <button
-                                type="button"
-                                onClick={() => toggleSection(section.label!)}
-                                aria-expanded={isOpen}
-                                className={cn(
-                                    'w-full flex items-center gap-3 px-4 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors hover:bg-gray-800/60 hover:text-white',
-                                    hasActive ? 'text-white' : 'text-gray-400',
-                                )}
-                            >
-                                {section.icon && (
-                                    // gap-3 + px-4 держат иконку в одной колонке
-                                    // с иконками пунктов (у тех mr-3)
-                                    <section.icon
-                                        className="h-4 w-4 shrink-0"
-                                        aria-hidden="true"
-                                    />
-                                )}
-                                <span className="flex-1 truncate text-left">
-                                    {section.label}
-                                </span>
-                                <ChevronRight
-                                    className={cn(
-                                        'h-3.5 w-3.5 shrink-0 transition-transform',
-                                        isOpen && 'rotate-90',
-                                    )}
-                                    aria-hidden="true"
-                                />
-                            </button>
+                const items = section.items.map((item) => (
+                    <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={onNavigate}
+                        className={cn(
+                            'flex items-center px-3 py-2 text-sm rounded-md group transition-colors',
+                            isActive(item.href)
+                                ? 'bg-gray-800 dark:bg-gray-800 text-white font-medium'
+                                : 'text-gray-400 hover:bg-gray-800/70 hover:text-white',
                         )}
-                        {isOpen &&
-                            section.items.map((item) => (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    onClick={onNavigate}
+                    >
+                        <item.icon className="mr-2.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span className="truncate">{item.name}</span>
+                    </Link>
+                ))
+
+                return (
+                    <div key={section.label ?? idx}>
+                        {section.label ? (
+                            <>
+                                {/* Заголовок — полоса во всю ширину с разделителем:
+                                    так секция читается как шапка, а не как пункт */}
+                                <button
+                                    type="button"
+                                    onClick={() => toggleSection(section.label!)}
+                                    aria-expanded={isOpen}
                                     className={cn(
-                                        'flex items-center px-4 py-2 text-sm font-medium rounded-md group transition-colors',
-                                        isActive(item.href)
-                                            ? 'bg-gray-800 dark:bg-gray-800 text-white'
-                                            : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+                                        'w-full flex items-center gap-2.5 border-b border-gray-800 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors hover:bg-gray-800/50 hover:text-white',
+                                        hasActive ? 'text-white' : 'text-gray-400',
                                     )}
                                 >
-                                    <item.icon className="mr-3 h-5 w-5" aria-hidden="true" />
-                                    {item.name}
-                                </Link>
-                            ))}
+                                    {section.icon && (
+                                        <section.icon
+                                            className="h-4 w-4 shrink-0"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                    <span className="flex-1 truncate text-left">
+                                        {section.label}
+                                    </span>
+                                    <ChevronRight
+                                        className={cn(
+                                            'h-3.5 w-3.5 shrink-0 transition-transform',
+                                            isOpen && 'rotate-90',
+                                        )}
+                                        aria-hidden="true"
+                                    />
+                                </button>
+                                {isOpen && (
+                                    // Пункты уходят вправо под направляющую —
+                                    // видно, что они принадлежат секции
+                                    <div className="my-1 ml-6 space-y-0.5 border-l border-gray-800 pl-2 pr-2">
+                                        {items}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="space-y-0.5 px-2 pb-1">{items}</div>
+                        )}
                     </div>
                 )
             })}

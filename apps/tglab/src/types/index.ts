@@ -69,6 +69,7 @@ export interface TglabMeta {
   audience_flags: MetaFlag[]
   action_types: MetaOption[]
   action_statuses: MetaOption[]
+  error_code_labels: Record<string, string>
   log_levels: MetaOption[]
   account_limit_keys: string[]
   default_account_limits: Record<string, number>
@@ -370,4 +371,58 @@ export interface LiveEvent {
   type: string
   data: Record<string, any>
   ts: string
+}
+
+// ── statistics (stage 5) ────────────────────────────────────────────────────────
+
+/** One day of the activity series — a Moscow calendar day. */
+export interface DayPoint {
+  date: string
+  ok: number
+  failed: number
+  skipped: number
+}
+
+/** Outcome split of one action kind over a window. */
+export interface TypeBreakdown {
+  type: string
+  ok: number
+  failed: number
+  skipped: number
+}
+
+export interface ErrorCount {
+  code: string
+  count: number
+}
+
+export interface AccountBreakdown {
+  account_id: number
+  label: string
+  ok: number
+  failed: number
+  skipped: number
+}
+
+/** GET /tglab/stats/overview — the dashboard's numbers. */
+export interface StatsOverview {
+  accounts_total: number
+  accounts_by_status: Record<string, number>
+  accounts_frozen: number
+  tasks_total: number
+  tasks_running: number
+  today: TypeBreakdown[]
+  series: DayPoint[]
+}
+
+/** GET /tglab/stats/tasks/:id — per-task breakdown behind the log. */
+export interface TaskStats {
+  task_id: number
+  ok: number
+  failed: number
+  skipped: number
+  top_errors: ErrorCount[]
+  by_account: AccountBreakdown[]
+  series: DayPoint[]
+  last_action_at: string | null
 }
