@@ -46,6 +46,9 @@ export function AudienceDetail({ audience }: Props) {
   const [raw, setRaw] = useState('')
   const [sources, setSources] = useState<AudienceSourceInput[]>([])
   const [collectAccount, setCollectAccount] = useState('')
+  const [collectLimit, setCollectLimit] = useState('')
+
+  const perRunCap = meta?.max_collect_per_run ?? 10000
 
   // Reset the editable source list whenever a different base is opened.
   useEffect(() => {
@@ -55,6 +58,13 @@ export function AudienceDetail({ audience }: Props) {
   useEffect(() => {
     if (!collectAccount && accounts?.items[0]) setCollectAccount(String(accounts.items[0].id))
   }, [accounts, collectAccount])
+
+  // Prefill the per-run amount with the cap; the operator can lower it.
+  useEffect(() => {
+    if (!collectLimit && meta?.max_collect_per_run) {
+      setCollectLimit(String(meta.max_collect_per_run))
+    }
+  }, [meta, collectLimit])
 
   const filters =
     flagFilter === NO_FILTER ? {} : { has_flags: Number(flagFilter) }
@@ -101,6 +111,17 @@ export function AudienceDetail({ audience }: Props) {
                 Сохранить группы
               </Button>
               <div className="ml-auto flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Input
+                    className="w-24"
+                    inputMode="numeric"
+                    aria-label="Сколько собрать за раз"
+                    title="Сколько собрать за раз"
+                    value={collectLimit}
+                    onChange={(e) => setCollectLimit(e.target.value.replace(/\D/g, ''))}
+                  />
+                  <span className="text-xs text-muted-foreground">за раз</span>
+                </div>
                 <Select value={collectAccount} onValueChange={setCollectAccount}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="аккаунт" />
@@ -122,7 +143,11 @@ export function AudienceDetail({ audience }: Props) {
                     sources.every((s) => !s.target.trim())
                   }
                   onClick={() =>
-                    recollect.mutate({ id: audience.id, account_id: Number(collectAccount) })
+                    recollect.mutate({
+                      id: audience.id,
+                      account_id: Number(collectAccount),
+                      limit: Math.min(Number(collectLimit) || perRunCap, perRunCap),
+                    })
                   }
                 >
                   <RefreshCw className="mr-1 h-4 w-4" />
@@ -130,6 +155,11 @@ export function AudienceDetail({ audience }: Props) {
                 </Button>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              «Собрать новых» переобходит группы и добавляет только новых участников. За один
+              заход не больше {perRunCap.toLocaleString('ru-RU')} — базу больше набирайте
+              повторными заходами.
+            </p>
             {collecting && (
               <p className="text-xs text-muted-foreground">
                 Идёт сбор… собрано {audience.collect?.collected ?? 0}
