@@ -15,13 +15,18 @@ import {
   SheetTitle,
   Textarea,
 } from '@doska/ui'
-import { Download, Upload } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { Download, RefreshCw, Upload } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { exportAudience } from '@/apis/audiences'
-import { useAddAudienceItems } from '@/hooks/mutations'
-import { useAudienceItems, useAudienceReach, useMeta } from '@/hooks/queries'
-import type { Audience } from '@/types'
+import { SourceListEditor } from '@/components/audiences/SourceListEditor'
+import {
+  useAddAudienceItems,
+  useRecollectAudience,
+  useUpdateAudience,
+} from '@/hooks/mutations'
+import { useAccounts, useAudienceItems, useAudienceReach, useMeta } from '@/hooks/queries'
+import type { Audience, AudienceSourceInput } from '@/types'
 
 const PAGE_SIZE = 100
 const NO_FILTER = 'all'
@@ -35,11 +40,25 @@ interface Props {
 export function AudienceSheet({ audience, onOpenChange }: Props) {
   const { data: meta } = useMeta()
   const addItems = useAddAudienceItems()
+  const update = useUpdateAudience()
+  const recollect = useRecollectAudience()
+  const { data: accounts } = useAccounts({ status: 'active', size: 200 })
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [page, setPage] = useState(1)
   const [flagFilter, setFlagFilter] = useState(NO_FILTER)
   const [raw, setRaw] = useState('')
+  const [sources, setSources] = useState<AudienceSourceInput[]>([])
+  const [collectAccount, setCollectAccount] = useState('')
+
+  // Reset the editable source list whenever a different base is opened.
+  useEffect(() => {
+    setSources((audience?.sources ?? []).map((s) => ({ target: s.target, mode: s.type })))
+  }, [audience?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!collectAccount && accounts?.items[0]) setCollectAccount(String(accounts.items[0].id))
+  }, [accounts, collectAccount])
 
   const filters =
     flagFilter === NO_FILTER ? {} : { has_flags: Number(flagFilter) }
@@ -53,6 +72,8 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
   if (!audience) return null
 
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE))
+  const collecting = ['running', 'scheduled'].includes(audience.collect?.status ?? '')
+  const editableSources = sources.length ? sources : [{ target: '', mode: 'members' }]
 
   /** Names of every flag set on an entry — its work history in one line. */
   const flagLabels = (flags: number) =>
@@ -70,7 +91,62 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
         <div className="space-y-6 p-4">
           <div className="text-sm text-muted-foreground">
             Записей: {audience.items_count}
-            {audience.source?.target ? ` · источник ${audience.source.target}` : ''}
+          </div>
+
+          <div className="space-y-3 rounded-md border p-3">
+            <div className="text-sm font-medium">Группы базы</div>
+            <SourceListEditor value={editableSources} onChange={setSources} />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={update.isPending}
+                onClick={() =>
+                  update.mutate({
+                    id: audience.id,
+                    sources: sources
+                      .map((s) => ({ target: s.target.trim(), mode: s.mode }))
+                      .filter((s) => s.target),
+                  })
+                }
+              >
+                Сохранить группы
+              </Button>
+              <div className="ml-auto flex items-center gap-2">
+                <Select value={collectAccount} onValueChange={setCollectAccount}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="аккаунт" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts?.items.map((account) => (
+                      <SelectItem key={account.id} value={String(account.id)}>
+                        {account.username ? `@${account.username}` : account.phone || account.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  disabled={
+                    !collectAccount ||
+                    collecting ||
+                    recollect.isPending ||
+                    sources.every((s) => !s.target.trim())
+                  }
+                  onClick={() =>
+                    recollect.mutate({ id: audience.id, account_id: Number(collectAccount) })
+                  }
+                >
+                  <RefreshCw className="mr-1 h-4 w-4" />
+                  Собрать новых
+                </Button>
+              </div>
+            </div>
+            {collecting && (
+              <p className="text-xs text-muted-foreground">
+                Идёт сбор… собрано {audience.collect?.collected ?? 0}
+              </p>
+            )}
           </div>
 
           {reach && (

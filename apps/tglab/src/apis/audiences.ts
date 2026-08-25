@@ -6,6 +6,7 @@ import type {
   AudienceInput,
   AudienceItemsPage,
   AudienceReach,
+  AudienceRecollectInput,
 } from '@/types'
 
 export interface ItemFilters {
@@ -35,6 +36,12 @@ export async function collectAudience(payload: AudienceCollectInput) {
 
 export async function stopCollection(id: number) {
   const { data } = await api.post<Audience>(`/tglab/audiences/${id}/collect/stop`)
+  return data
+}
+
+/** Re-run collection over a base's stored groups — picks up newcomers. */
+export async function recollectAudience(id: number, payload: AudienceRecollectInput) {
+  const { data } = await api.post<Audience>(`/tglab/audiences/${id}/recollect`, payload)
   return data
 }
 

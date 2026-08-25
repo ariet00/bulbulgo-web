@@ -102,9 +102,11 @@ export default function AudiencesPage() {
                       <TableCell>
                         <div className="font-medium">{audience.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {audience.source?.target
-                            ? `${labelOf(meta?.parse_modes, audience.source.type ?? null)} · ${audience.source.target}`
-                            : 'загружена вручную'}
+                          {audience.sources.length === 0
+                            ? 'загружена вручную'
+                            : audience.sources.length === 1
+                              ? `${labelOf(meta?.parse_modes, audience.sources[0].type ?? null)} · ${audience.sources[0].target}`
+                              : `${audience.sources.length} групп`}
                         </div>
                       </TableCell>
                       <TableCell>{labelOf(meta?.audience_kinds, audience.kind)}</TableCell>

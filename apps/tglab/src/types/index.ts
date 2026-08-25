@@ -228,6 +228,12 @@ export interface CollectProgress {
   finished_at: string | null
 }
 
+/** One group a base collects from — each with its own mode. */
+export interface AudienceSource {
+  type: string
+  target: string
+}
+
 export interface Audience {
   id: number
   project_id: number | null
@@ -235,7 +241,8 @@ export interface Audience {
   kind: string
   items_count: number
   note: string | null
-  source: { type?: string; target?: string } | null
+  /** Groups this base collects from (union, deduped). */
+  sources: AudienceSource[]
   /** State of the collection that filled (or is filling) this base. */
   collect: CollectProgress | null
   created_at: string
@@ -246,12 +253,19 @@ export interface AudienceInput {
   kind: string
   project_id?: number | null
   note?: string | null
+  /** replace the source list (add/remove groups after creation); sent as {target, mode} */
+  sources?: AudienceSourceInput[]
+}
+
+/** A source as the collect form sends it: target + mode. */
+export interface AudienceSourceInput {
+  target: string
+  mode: string
 }
 
 export interface AudienceCollectInput {
   name: string
-  source: string
-  mode: string
+  sources: AudienceSourceInput[]
   account_id: number
   project_id?: number | null
   limit: number
@@ -260,6 +274,11 @@ export interface AudienceCollectInput {
   exclude_bots: boolean
   exclude_admins: boolean
   last_seen: string
+}
+
+export interface AudienceRecollectInput {
+  account_id: number
+  limit?: number | null
 }
 
 export interface AudienceItem {

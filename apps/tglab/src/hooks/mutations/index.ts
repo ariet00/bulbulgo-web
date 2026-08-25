@@ -22,6 +22,7 @@ import {
   collectAudience,
   createAudience,
   deleteAudience,
+  recollectAudience,
   stopCollection,
   updateAudience,
   uploadAudienceItems,
@@ -42,6 +43,7 @@ import type {
   AccountBulkInput,
   AudienceCollectInput,
   AudienceInput,
+  AudienceRecollectInput,
   AccountInput,
   AccountProfileInput,
   AccountUpdateInput,
@@ -340,6 +342,18 @@ export function useCollectAudience() {
     mutationFn: (payload: AudienceCollectInput) => collectAudience(payload),
     onSuccess: () => {
       toast.success('Сбор запущен')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.audiences })
+    },
+  })
+}
+
+export function useRecollectAudience() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...payload }: AudienceRecollectInput & { id: number }) =>
+      recollectAudience(id, payload),
+    onSuccess: () => {
+      toast.success('Досбор запущен — новые участники добавятся')
       queryClient.invalidateQueries({ queryKey: tglabKeys.audiences })
     },
   })
