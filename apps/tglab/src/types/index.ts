@@ -59,6 +59,7 @@ export interface TglabMeta {
   mention_modes: MetaOption[]
   last_seen_filters: MetaOption[]
   max_audience_items: number
+  max_collect_per_run: number
   task_types: MetaOption[]
   task_statuses: MetaOption[]
   task_account_roles: MetaOption[]

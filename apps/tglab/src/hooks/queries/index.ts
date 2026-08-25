@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AccountFilters } from '@/apis/accounts'
 import { getAccountSessions, getAccounts } from '@/apis/accounts'
 import type { ItemFilters } from '@/apis/audiences'
-import { getAudienceItems, getAudienceReach, getAudiences } from '@/apis/audiences'
+import { getAudience, getAudienceItems, getAudienceReach, getAudiences } from '@/apis/audiences'
 import { getMe } from '@/apis/auth'
 import type { TaskFilters } from '@/apis/tasks'
 import { getTaskLogs, getTasks } from '@/apis/tasks'
@@ -92,6 +92,18 @@ export function useAudiences(params?: { project_id?: number }) {
       )
       return running ? 3000 : false
     },
+  })
+}
+
+/** One base for its own detail screen — polls itself while a collection runs. */
+export function useAudience(audienceId: number | null) {
+  const token = useAuthStore((s) => s.token)
+  return useQuery({
+    queryKey: tglabKeys.audience(audienceId ?? 0),
+    queryFn: () => getAudience(audienceId as number),
+    enabled: Boolean(token) && Boolean(audienceId),
+    refetchInterval: (query) =>
+      ['scheduled', 'running'].includes(query.state.data?.collect?.status ?? '') ? 3000 : false,
   })
 }
 

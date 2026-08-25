@@ -11,6 +11,7 @@ export const tglabKeys = {
   accountsList: (filters: AccountFilters) => ['tglab', 'accounts', filters] as const,
   accountSessions: (id: number) => ['tglab', 'accounts', id, 'sessions'] as const,
   audiences: ['tglab', 'audiences'] as const,
+  audience: (id: number) => ['tglab', 'audiences', id] as const,
   tasks: ['tglab', 'tasks'] as const,
   taskLogs: (id: number) => ['tglab', 'tasks', id, 'logs'] as const,
   statsOverview: ['tglab', 'stats', 'overview'] as const,

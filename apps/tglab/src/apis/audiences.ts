@@ -23,6 +23,11 @@ export async function getAudiences(params?: { project_id?: number }) {
   return data
 }
 
+export async function getAudience(id: number) {
+  const { data } = await api.get<Audience>(`/tglab/audiences/${id}`)
+  return data
+}
+
 export async function createAudience(payload: AudienceInput) {
   const { data } = await api.post<Audience>('/tglab/audiences', payload)
   return data

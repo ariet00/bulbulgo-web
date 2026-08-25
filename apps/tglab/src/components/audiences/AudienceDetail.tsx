@@ -9,10 +9,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
   Textarea,
 } from '@doska/ui'
 import { Download, RefreshCw, Upload } from 'lucide-react'
@@ -32,12 +28,12 @@ const PAGE_SIZE = 100
 const NO_FILTER = 'all'
 
 interface Props {
-  audience: Audience | null
-  onOpenChange: (open: boolean) => void
+  audience: Audience
 }
 
-/** The base itself: what's inside, what already happened to it, how to fill it. */
-export function AudienceSheet({ audience, onOpenChange }: Props) {
+/** The base itself: what's inside, what already happened to it, how to fill it.
+ *  Rendered as its own screen (`/audiences/[id]`). */
+export function AudienceDetail({ audience }: Props) {
   const { data: meta } = useMeta()
   const addItems = useAddAudienceItems()
   const update = useUpdateAudience()
@@ -62,14 +58,12 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
 
   const filters =
     flagFilter === NO_FILTER ? {} : { has_flags: Number(flagFilter) }
-  const { data } = useAudienceItems(audience?.id ?? null, {
+  const { data } = useAudienceItems(audience.id, {
     page,
     size: PAGE_SIZE,
     ...filters,
   })
-  const { data: reach } = useAudienceReach(audience?.id ?? null)
-
-  if (!audience) return null
+  const { data: reach } = useAudienceReach(audience.id)
 
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE))
   const collecting = ['running', 'scheduled'].includes(audience.collect?.status ?? '')
@@ -82,13 +76,7 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
       .map((flag) => flag.label)
 
   return (
-    <Sheet open={Boolean(audience)} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader>
-          <SheetTitle>{audience.name}</SheetTitle>
-        </SheetHeader>
-
-        <div className="space-y-6 p-4">
+    <div className="space-y-6">
           <div className="text-sm text-muted-foreground">
             Записей: {audience.items_count}
           </div>
@@ -333,8 +321,6 @@ export function AudienceSheet({ audience, onOpenChange }: Props) {
               </Button>
             </div>
           )}
-        </div>
-      </SheetContent>
-    </Sheet>
+    </div>
   )
 }
