@@ -77,6 +77,10 @@ api.interceptors.request.use((config) => {
   config.headers = config.headers ?? {}
   if (token) config.headers.Authorization = `Bearer ${token}`
   if (slug) config.headers['X-Bot-Slug'] = slug
+  // Канонический заголовок клиента (ось analytics_events.client);
+  // X-Product — легаси-дубль на время выката, убрать вместе со снятием
+  // алиаса на беке (TODO.md «Продукты»).
+  config.headers['X-Client'] = 'akcha'
   config.headers['X-Product'] = 'akcha'
   const deviceId = readOrCreate(DEVICE_ID_KEY)
   if (deviceId) config.headers['X-Device-Id'] = deviceId

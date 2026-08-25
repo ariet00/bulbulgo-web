@@ -1,6 +1,11 @@
 import { requester } from '@doska/shared'
 import { AxiosResponse } from 'axios'
 
+// Ось «с какого клиента пришло действие» (analytics_events.client): без
+// заголовка события админки падали в product=unknown. requester общий по
+// коду, но инстанс — свой на каждый Next-бандл, другие приложения не заденет.
+requester.defaults.headers.common['X-Client'] = 'admin'
+
 const responseBody = <T>(response: AxiosResponse<T>) => response.data
 
 export const requests = {

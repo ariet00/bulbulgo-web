@@ -14,6 +14,10 @@ api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
   config.headers = config.headers ?? {}
   if (token) config.headers.Authorization = `Bearer ${token}`
+  // Канонический заголовок клиента (ось analytics_events.client);
+  // X-Product — легаси-дубль на время выката, убрать вместе со снятием
+  // алиаса на беке (TODO.md «Продукты»).
+  config.headers['X-Client'] = 'tglab'
   config.headers['X-Product'] = 'tglab'
 
   // File uploads must NOT inherit the instance's JSON content type: without a
