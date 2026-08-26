@@ -134,7 +134,9 @@ export default function AdminServicesPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {s.show_in_tabs ? (
+                                                {s.hidden ? (
+                                                    <Badge variant="outline">скрыт</Badge>
+                                                ) : s.show_in_tabs ? (
                                                     <Check className="size-4 text-green-600" />
                                                 ) : (
                                                     <span className="text-muted-foreground">

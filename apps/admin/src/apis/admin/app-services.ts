@@ -20,6 +20,8 @@ export interface AdminService {
     color: string | null
     badge: 'new' | 'soon' | null
     show_in_tabs: boolean
+    /** true — нигде не показывается, открывается только по диплинку/переходу */
+    hidden: boolean
     url: string | null
     auth: boolean
     // false — вебвью без нативной шапки (страница рисует свою)
@@ -40,6 +42,7 @@ export interface AdminServiceCreate {
     color?: string | null
     badge?: 'new' | 'soon' | null
     show_in_tabs?: boolean
+    hidden?: boolean
     url?: string | null
     auth?: boolean
     app_bar?: boolean

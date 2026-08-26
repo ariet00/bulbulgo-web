@@ -93,6 +93,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     const [color, setColor] = useState(initial?.color ?? '')
     const [badge, setBadge] = useState(initial?.badge ?? NO_BADGE)
     const [showInTabs, setShowInTabs] = useState(initial?.show_in_tabs ?? true)
+    const [hidden, setHidden] = useState(initial?.hidden ?? false)
     const [url, setUrl] = useState(initial?.url ?? '')
     const [auth, setAuth] = useState(initial?.auth ?? false)
     const [appBar, setAppBar] = useState(initial?.app_bar ?? true)
@@ -134,6 +135,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             color: color.trim() || null,
             badge: badge === NO_BADGE ? null : (badge as 'new' | 'soon'),
             show_in_tabs: showInTabs,
+            hidden,
             url: type === 'webview' ? url.trim() : null,
             auth: type === 'webview' ? auth : false,
             app_bar: type === 'webview' ? appBar : true,
@@ -277,6 +279,17 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                             </p>
                         </div>
                         <Switch checked={showInTabs} onCheckedChange={setShowInTabs} />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-md border p-3">
+                        <div>
+                            <Label>Скрыт из списка</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Нет ни на «Главной», ни в табах — открывается
+                                только по диплинку или переходу из приложения
+                            </p>
+                        </div>
+                        <Switch checked={hidden} onCheckedChange={setHidden} />
                     </div>
 
                     <div className="flex items-center justify-between rounded-md border p-3">
