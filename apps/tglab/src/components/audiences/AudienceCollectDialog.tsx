@@ -70,6 +70,7 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
     .filter((s) => s.target)
   const walksHistory = cleanSources.some((s) => HISTORY_MODES.includes(s.mode))
   const perRunCap = meta?.max_collect_per_run ?? 10000
+  const scanCap = meta?.max_scan_per_run ?? 10000
 
   const submit = () =>
     collect.mutate(
@@ -122,7 +123,7 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="limit">Сколько собрать за раз</Label>
+              <Label htmlFor="limit">Сколько новых собрать за раз</Label>
               <Input
                 id="limit"
                 inputMode="numeric"
@@ -130,8 +131,10 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
                 onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))}
               />
               <p className="text-xs text-muted-foreground">
-                Не больше {perRunCap.toLocaleString('ru-RU')} за один заход. Базу больше
-                набирайте «Собрать новых» — так безопаснее для аккаунта.
+                Считаются только новые записи — те, кого в базе ещё нет. Не больше{' '}
+                {perRunCap.toLocaleString('ru-RU')} за заход, и за один заход аккаунт
+                просматривает не больше {scanCap.toLocaleString('ru-RU')} человек. Базу
+                больше набирайте «Собрать новых» — так безопаснее для аккаунта.
               </p>
             </div>
           </div>

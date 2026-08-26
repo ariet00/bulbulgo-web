@@ -59,7 +59,10 @@ export interface TglabMeta {
   mention_modes: MetaOption[]
   last_seen_filters: MetaOption[]
   max_audience_items: number
+  /** Сколько НОВЫХ записей может принести один заход. */
   max_collect_per_run: number
+  /** Сколько людей заход имеет право просмотреть (уже собранные — тоже). */
+  max_scan_per_run: number
   task_types: MetaOption[]
   task_statuses: MetaOption[]
   task_account_roles: MetaOption[]
@@ -326,7 +329,17 @@ export interface TaskProgress {
   done_total: number
   failed_total: number
   last_tick_at: string | null
+  /** Today's *enforced* ceiling — can be lower than the `daily_limit` the
+   *  operator set, because the target group's size caps inviting too. */
+  daily_cap: number | null
+  daily_cap_source: DailyCapSource | null
+  /** Members of the target group, when its cap is the binding one. */
+  group_members: number | null
 }
+
+/** Which limit produced `daily_cap` — mirrors
+ *  `backend/apps/tglab/constants.py:DAILY_CAP_SOURCES`. */
+export type DailyCapSource = 'task' | 'group'
 
 export interface TaskInput {
   name: string
@@ -413,7 +426,7 @@ export interface AccountBulkImportResult {
 
 // ── statistics (stage 5) ────────────────────────────────────────────────────────
 
-/** One day of the activity series — a Moscow calendar day. */
+/** One day of the activity series — a limit day (Bishkek). */
 export interface DayPoint {
   date: string
   ok: number

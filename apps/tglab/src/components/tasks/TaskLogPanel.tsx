@@ -9,6 +9,7 @@ import { StatusChip } from '@/components/common/StatusChip'
 import { TaskStatsBlock } from '@/components/tasks/TaskStatsBlock'
 import { useStartTask, useStopTask } from '@/hooks/mutations'
 import { useMeta, useTaskLogs } from '@/hooks/queries'
+import { todayCounter } from '@/lib/labels'
 import { useLiveStore } from '@/store/useLiveStore'
 import type { Task, TaskLog } from '@/types'
 
@@ -59,6 +60,7 @@ export function TaskLogPanel({ task, onOpenChange }: Props) {
 
   if (!task) return null
   const isRunning = RUNNING.includes(task.status)
+  const today = todayCounter(task)
 
   return (
     <Sheet open={Boolean(task)} onOpenChange={onOpenChange}>
@@ -76,7 +78,12 @@ export function TaskLogPanel({ task, onOpenChange }: Props) {
         </SheetHeader>
 
         <div className="flex flex-wrap items-center gap-3 px-4 text-sm text-muted-foreground">
-          <span>сегодня: {task.progress.done_today}</span>
+          <span title={today.hint}>
+            сегодня: {today.text}
+            {today.note ? (
+              <span className="text-amber-600 dark:text-amber-400"> ({today.note})</span>
+            ) : null}
+          </span>
           <span>всего: {task.progress.done_total}</span>
           <span>ошибок: {task.progress.failed_total}</span>
           {task.audience_name && <span>база: {task.audience_name}</span>}

@@ -28,7 +28,7 @@ import { TaskWizard } from '@/components/tasks/TaskWizard'
 import { useDeleteTask, useStartTask, useStopTask } from '@/hooks/mutations'
 import { useMeta, useTasks } from '@/hooks/queries'
 import { TGLAB_PERMISSIONS } from '@/lib/constants'
-import { labelOf } from '@/lib/labels'
+import { labelOf, todayCounter } from '@/lib/labels'
 import { useHasPermission } from '@/store/useAuthStore'
 import type { Task } from '@/types'
 
@@ -126,6 +126,7 @@ export default function TasksPage() {
               <TableBody>
                 {tasks.map((task) => {
                   const isRunning = RUNNING.includes(task.status)
+                  const today = todayCounter(task)
                   return (
                     <TableRow
                       key={task.id}
@@ -144,9 +145,16 @@ export default function TasksPage() {
                         <StatusChip value={task.status} options={meta?.task_statuses} />
                       </TableCell>
                       <TableCell className="text-sm">
-                        сегодня {task.progress.done_today}
-                        {task.daily_limit ? ` / ${task.daily_limit}` : ''}
+                        <span title={today.hint}>сегодня {today.text}</span>
                         <div className="text-xs text-muted-foreground">
+                          {today.note ? (
+                            <span
+                              className="text-amber-600 dark:text-amber-400"
+                              title={today.hint}
+                            >
+                              {today.note} ·{' '}
+                            </span>
+                          ) : null}
                           всего {task.progress.done_total} · ошибок{' '}
                           {task.progress.failed_total}
                         </div>

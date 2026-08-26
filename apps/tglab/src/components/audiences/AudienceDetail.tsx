@@ -49,6 +49,7 @@ export function AudienceDetail({ audience }: Props) {
   const [collectLimit, setCollectLimit] = useState('')
 
   const perRunCap = meta?.max_collect_per_run ?? 10000
+  const scanCap = meta?.max_scan_per_run ?? 10000
 
   // Reset the editable source list whenever a different base is opened.
   useEffect(() => {
@@ -115,12 +116,12 @@ export function AudienceDetail({ audience }: Props) {
                   <Input
                     className="w-24"
                     inputMode="numeric"
-                    aria-label="Сколько собрать за раз"
-                    title="Сколько собрать за раз"
+                    aria-label="Сколько новых собрать за раз"
+                    title="Сколько новых собрать за раз"
                     value={collectLimit}
                     onChange={(e) => setCollectLimit(e.target.value.replace(/\D/g, ''))}
                   />
-                  <span className="text-xs text-muted-foreground">за раз</span>
+                  <span className="text-xs text-muted-foreground">новых за раз</span>
                 </div>
                 <Select value={collectAccount} onValueChange={setCollectAccount}>
                   <SelectTrigger className="w-40">
@@ -156,9 +157,10 @@ export function AudienceDetail({ audience }: Props) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              «Собрать новых» переобходит группы и добавляет только новых участников. За один
-              заход не больше {perRunCap.toLocaleString('ru-RU')} — базу больше набирайте
-              повторными заходами.
+              «Собрать новых» переобходит группы и добавляет только тех, кого в базе ещё нет:
+              лимит считает именно новых, не больше {perRunCap.toLocaleString('ru-RU')} за
+              заход. Уже собранные тратят не лимит, а обход — за раз аккаунт просматривает
+              не больше {scanCap.toLocaleString('ru-RU')} человек, дальше повторный заход.
             </p>
             {collecting && (
               <p className="text-xs text-muted-foreground">
