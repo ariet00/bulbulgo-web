@@ -21,6 +21,12 @@ export function ThemeSync() {
                     'dark',
                     theme === 'dark',
                 )
+                // .light подавляет анти-FOUC медиазапрос в globals.css
+                // (:root:not(.light)) на системно-тёмных устройствах.
+                document.documentElement.classList.toggle(
+                    'light',
+                    theme === 'light',
+                )
                 document.documentElement.style.colorScheme = theme
                 // Согласуем с инлайн-скриптом layout'а (?theme= →
                 // sessionStorage), чтобы внутренние переходы не мигали.
