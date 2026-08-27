@@ -6,10 +6,12 @@ import { Play, Square } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 import { StatusChip } from '@/components/common/StatusChip'
+import { TaskStatsBlock } from '@/components/tasks/TaskStatsBlock'
 import { useStartTask, useStopTask } from '@/hooks/mutations'
 import { useMeta, useTaskLogs } from '@/hooks/queries'
+import { todayCounter } from '@/lib/labels'
 import { useLiveStore } from '@/store/useLiveStore'
-import type { Task } from '@/types'
+import type { Task, TaskLog } from '@/types'
 
 /** Colour per log level — an error has to be findable in a long tail. */
 const LEVEL_TONES: Record<string, string> = {
@@ -21,6 +23,14 @@ const LEVEL_TONES: Record<string, string> = {
 
 const RUNNING = ['running', 'scheduled']
 
+/** Stable reference for "no lines yet".
+ *
+ * zustand 5 reads through `useSyncExternalStore`, which compares snapshots by
+ * identity — a selector that builds a fresh `[]` on every call looks like an
+ * endless stream of changes and re-renders until React gives up. So the empty
+ * case has to be one and the same array. */
+const NO_LINES: TaskLog[] = []
+
 interface Props {
   task: Task | null
   onOpenChange: (open: boolean) => void
@@ -30,7 +40,9 @@ interface Props {
 export function TaskLogPanel({ task, onOpenChange }: Props) {
   const { data: meta } = useMeta()
   const { data: tail } = useTaskLogs(task?.id ?? null)
-  const lines = useLiveStore((s) => (task ? s.logs[task.id] ?? [] : []))
+  // The selector returns only what the store already holds (or undefined) —
+  // never a freshly built value.
+  const lines = useLiveStore((s) => (task ? s.logs[task.id] : undefined)) ?? NO_LINES
   const primeLogs = useLiveStore((s) => s.primeLogs)
   const connected = useLiveStore((s) => s.connected)
   const start = useStartTask()
@@ -48,6 +60,7 @@ export function TaskLogPanel({ task, onOpenChange }: Props) {
 
   if (!task) return null
   const isRunning = RUNNING.includes(task.status)
+  const today = todayCounter(task)
 
   return (
     <Sheet open={Boolean(task)} onOpenChange={onOpenChange}>
@@ -65,7 +78,12 @@ export function TaskLogPanel({ task, onOpenChange }: Props) {
         </SheetHeader>
 
         <div className="flex flex-wrap items-center gap-3 px-4 text-sm text-muted-foreground">
-          <span>сегодня: {task.progress.done_today}</span>
+          <span title={today.hint}>
+            сегодня: {today.text}
+            {today.note ? (
+              <span className="text-amber-600 dark:text-amber-400"> ({today.note})</span>
+            ) : null}
+          </span>
           <span>всего: {task.progress.done_total}</span>
           <span>ошибок: {task.progress.failed_total}</span>
           {task.audience_name && <span>база: {task.audience_name}</span>}
@@ -85,6 +103,8 @@ export function TaskLogPanel({ task, onOpenChange }: Props) {
             </Button>
           )}
         </div>
+
+        <TaskStatsBlock taskId={task.id} />
 
         <div className="mt-2 flex-1 overflow-y-auto border-t px-4 py-3 font-mono text-xs">
           {lines.length === 0 ? (

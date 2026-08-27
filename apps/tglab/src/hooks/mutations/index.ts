@@ -10,7 +10,9 @@ import {
   checkAccountSpamBlock,
   createAccount,
   deleteAccount,
+  importAccountArchive,
   importAccountFile,
+  importAccountStrings,
   terminateAccountSessions,
   updateAccount,
   updateAccountProfile,
@@ -20,6 +22,7 @@ import {
   collectAudience,
   createAudience,
   deleteAudience,
+  recollectAudience,
   stopCollection,
   updateAudience,
   uploadAudienceItems,
@@ -40,6 +43,7 @@ import type {
   AccountBulkInput,
   AudienceCollectInput,
   AudienceInput,
+  AudienceRecollectInput,
   AccountInput,
   AccountProfileInput,
   AccountUpdateInput,
@@ -205,6 +209,36 @@ export function useImportAccountFile() {
   })
 }
 
+/** Toast + list refresh shared by both mass-import lanes. */
+function onBulkImported(queryClient: ReturnType<typeof useQueryClient>) {
+  return (result: { imported: number; failed: number }) => {
+    if (result.imported > 0) {
+      toast.success(`Импортировано: ${result.imported}${result.failed ? `, не удалось: ${result.failed}` : ''}`)
+    } else {
+      toast.error('Ни один аккаунт не импортирован')
+    }
+    queryClient.invalidateQueries({ queryKey: tglabKeys.accounts })
+  }
+}
+
+export function useImportAccountStrings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof importAccountStrings>[0]) =>
+      importAccountStrings(payload),
+    onSuccess: onBulkImported(queryClient),
+  })
+}
+
+export function useImportAccountArchive() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof importAccountArchive>[0]) =>
+      importAccountArchive(payload),
+    onSuccess: onBulkImported(queryClient),
+  })
+}
+
 export function useUpdateAccount() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -213,6 +247,8 @@ export function useUpdateAccount() {
     onSuccess: () => {
       toast.success('Аккаунт обновлён')
       queryClient.invalidateQueries({ queryKey: tglabKeys.accounts })
+      // proxy attachment may have changed → refresh their load counts
+      queryClient.invalidateQueries({ queryKey: tglabKeys.proxies })
     },
   })
 }
@@ -306,6 +342,18 @@ export function useCollectAudience() {
     mutationFn: (payload: AudienceCollectInput) => collectAudience(payload),
     onSuccess: () => {
       toast.success('Сбор запущен')
+      queryClient.invalidateQueries({ queryKey: tglabKeys.audiences })
+    },
+  })
+}
+
+export function useRecollectAudience() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...payload }: AudienceRecollectInput & { id: number }) =>
+      recollectAudience(id, payload),
+    onSuccess: () => {
+      toast.success('Досбор запущен — новые участники добавятся')
       queryClient.invalidateQueries({ queryKey: tglabKeys.audiences })
     },
   })

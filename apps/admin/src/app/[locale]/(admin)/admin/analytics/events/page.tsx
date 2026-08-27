@@ -19,7 +19,11 @@ import { Button } from '@doska/ui'
 import { Link } from '@doska/i18n'
 import { RefreshCw, Trash2 } from 'lucide-react'
 import { ProductSelector } from '@/components/admin/ProductSelector'
-import { DataCell } from '@/components/admin/analytics/DataCell'
+import {
+    DataCell,
+    DataTableCell,
+    DATA_COLUMN_WIDTH,
+} from '@/components/admin/analytics/DataCell'
 
 const SIZE = 50
 
@@ -28,6 +32,7 @@ const FILTER_DEFAULTS = {
     event_type: '',
     user_id: 0,
     platform: '',
+    client: '',
     subtype: '',
     device_id: '',
     product: '',
@@ -39,11 +44,13 @@ export default function AnalyticsEventsPage() {
     const [eventTypeInput, setEventTypeInput] = useState(values.event_type)
     const [userIdInput, setUserIdInput] = useState(values.user_id ? String(values.user_id) : '')
     const [platformInput, setPlatformInput] = useState(values.platform)
+    const [clientInput, setClientInput] = useState(values.client)
     const [subtypeInput, setSubtypeInput] = useState(values.subtype)
     const [deviceIdInput, setDeviceIdInput] = useState(values.device_id)
     const dEventType = useDebounce(eventTypeInput, 400)
     const dUserId = useDebounce(userIdInput, 400)
     const dPlatform = useDebounce(platformInput, 400)
+    const dClient = useDebounce(clientInput, 400)
     const dSubtype = useDebounce(subtypeInput, 400)
     const dDeviceId = useDebounce(deviceIdInput, 400)
     useEffect(() => {
@@ -57,6 +64,9 @@ export default function AnalyticsEventsPage() {
         if (dPlatform !== values.platform) setValues({ platform: dPlatform })
     }, [dPlatform, values.platform, setValues])
     useEffect(() => {
+        if (dClient !== values.client) setValues({ client: dClient })
+    }, [dClient, values.client, setValues])
+    useEffect(() => {
         if (dSubtype !== values.subtype) setValues({ subtype: dSubtype })
     }, [dSubtype, values.subtype, setValues])
     useEffect(() => {
@@ -69,6 +79,7 @@ export default function AnalyticsEventsPage() {
         event_type: values.event_type || undefined,
         user_id: values.user_id || undefined,
         platform: values.platform || undefined,
+        client: values.client || undefined,
         subtype: values.subtype || undefined,
         device_id: values.device_id || undefined,
         product: values.product || undefined,
@@ -131,6 +142,11 @@ export default function AnalyticsEventsPage() {
                             onChange={e => setPlatformInput(e.target.value)}
                         />
                         <Input
+                            placeholder="client (bulbulgo / booking / akcha / staff / tglab / admin / <bot slug>)"
+                            value={clientInput}
+                            onChange={e => setClientInput(e.target.value)}
+                        />
+                        <Input
                             placeholder="device_id"
                             value={deviceIdInput}
                             onChange={e => setDeviceIdInput(e.target.value)}
@@ -191,6 +207,7 @@ export default function AnalyticsEventsPage() {
                                                 )}
                                             </span>
                                             <span>platform: {ev.platform ?? '—'}</span>
+                                            <span>client: {ev.client ?? '—'}</span>
                                             <span>v: {ev.app_version ?? '—'}</span>
                                         </div>
 
@@ -221,9 +238,10 @@ export default function AnalyticsEventsPage() {
                                             <TableHead>Событие</TableHead>
                                             <TableHead className="w-24">user_id</TableHead>
                                             <TableHead className="w-32">platform</TableHead>
+                                            <TableHead className="w-28">client</TableHead>
                                             <TableHead className="w-24">app_version</TableHead>
                                             <TableHead className="w-40">device_id</TableHead>
-                                            <TableHead>data</TableHead>
+                                            <TableHead className={DATA_COLUMN_WIDTH}>data</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -258,6 +276,7 @@ export default function AnalyticsEventsPage() {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>{ev.platform ?? '—'}</TableCell>
+                                                <TableCell>{ev.client ?? '—'}</TableCell>
                                                 <TableCell className="text-xs whitespace-nowrap">
                                                     {ev.app_version ?? '—'}
                                                 </TableCell>
@@ -274,9 +293,10 @@ export default function AnalyticsEventsPage() {
                                                         '—'
                                                     )}
                                                 </TableCell>
-                                                <TableCell>
-                                                    <DataCell data={ev.data} eventType={ev.event_type} />
-                                                </TableCell>
+                                                <DataTableCell
+                                                    data={ev.data}
+                                                    eventType={ev.event_type}
+                                                />
                                             </TableRow>
                                         ))}
                                     </TableBody>

@@ -5,13 +5,14 @@ import { useQuery } from '@tanstack/react-query'
 import type { AccountFilters } from '@/apis/accounts'
 import { getAccountSessions, getAccounts } from '@/apis/accounts'
 import type { ItemFilters } from '@/apis/audiences'
-import { getAudienceItems, getAudiences } from '@/apis/audiences'
+import { getAudience, getAudienceItems, getAudienceReach, getAudiences } from '@/apis/audiences'
 import { getMe } from '@/apis/auth'
 import type { TaskFilters } from '@/apis/tasks'
 import { getTaskLogs, getTasks } from '@/apis/tasks'
 import { getMeta } from '@/apis/meta'
 import { getProjects } from '@/apis/projects'
 import { getProxies } from '@/apis/proxies'
+import { getOverview, getTaskStats } from '@/apis/stats'
 import { tglabKeys } from '@/hooks/queries/keys'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -94,6 +95,18 @@ export function useAudiences(params?: { project_id?: number }) {
   })
 }
 
+/** One base for its own detail screen — polls itself while a collection runs. */
+export function useAudience(audienceId: number | null) {
+  const token = useAuthStore((s) => s.token)
+  return useQuery({
+    queryKey: tglabKeys.audience(audienceId ?? 0),
+    queryFn: () => getAudience(audienceId as number),
+    enabled: Boolean(token) && Boolean(audienceId),
+    refetchInterval: (query) =>
+      ['scheduled', 'running'].includes(query.state.data?.collect?.status ?? '') ? 3000 : false,
+  })
+}
+
 export function useAudienceItems(audienceId: number | null, filters: ItemFilters = {}) {
   return useQuery({
     queryKey: tglabKeys.audienceItems(audienceId ?? 0, filters),
@@ -121,5 +134,36 @@ export function useTaskLogs(taskId: number | null) {
     queryFn: () => getTaskLogs(taskId as number, { limit: 200 }),
     enabled: Boolean(taskId),
     staleTime: 0,
+  })
+}
+
+/** Per-account coverage of a base — the answer to «почему никого не приглашает». */
+export function useAudienceReach(audienceId: number | null) {
+  return useQuery({
+    queryKey: tglabKeys.audienceReach(audienceId ?? 0),
+    queryFn: () => getAudienceReach(audienceId as number),
+    enabled: Boolean(audienceId),
+  })
+}
+
+/** Dashboard summary — fleet health, today's actions, a week trend. Refreshes
+ *  itself while the tab is open so a running task's numbers keep moving. */
+export function useStatsOverview() {
+  const token = useAuthStore((s) => s.token)
+  return useQuery({
+    queryKey: tglabKeys.statsOverview,
+    queryFn: getOverview,
+    enabled: Boolean(token),
+    refetchInterval: 30_000,
+  })
+}
+
+/** Per-task breakdown behind the log — only fetched while its panel is open. */
+export function useTaskStats(taskId: number | null) {
+  return useQuery({
+    queryKey: tglabKeys.taskStats(taskId ?? 0),
+    queryFn: () => getTaskStats(taskId as number),
+    enabled: Boolean(taskId),
+    refetchInterval: 30_000,
   })
 }

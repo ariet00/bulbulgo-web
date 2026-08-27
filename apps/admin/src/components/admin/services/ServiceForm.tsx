@@ -17,6 +17,7 @@ import {
     Switch,
 } from '@doska/ui'
 import { Plus, Trash2 } from 'lucide-react'
+import { useAdminServiceGroups } from '@/hooks/queries/admin'
 import { LocalizedInputs } from './LocalizedInputs'
 import { IconColorInput } from './IconColorInput'
 import type {
@@ -27,9 +28,11 @@ import type {
 } from '@/apis/admin'
 
 const NO_BADGE = '__none__'
+const NO_GROUP = '__ungrouped__'
 
-// Зеркало AppService._icons (app_service.dart). Новое имя работает только
-// после релиза приложения — старые сборки его молча проигнорируют.
+// Зеркало AppService._icons (app_service.dart): имена — свои, приложение
+// рисует их значками Lucide. Новое имя работает только после релиза
+// приложения — старые сборки его молча проигнорируют.
 const SERVICE_ICONS = [
     'car',
     'garage',
@@ -90,6 +93,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     const [color, setColor] = useState(initial?.color ?? '')
     const [badge, setBadge] = useState(initial?.badge ?? NO_BADGE)
     const [showInTabs, setShowInTabs] = useState(initial?.show_in_tabs ?? true)
+    const [hidden, setHidden] = useState(initial?.hidden ?? false)
     const [url, setUrl] = useState(initial?.url ?? '')
     const [auth, setAuth] = useState(initial?.auth ?? false)
     const [appBar, setAppBar] = useState(initial?.app_bar ?? true)
@@ -98,6 +102,10 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     )
     const [enabled, setEnabled] = useState(initial?.enabled ?? true)
     const [position, setPosition] = useState(initial?.position ?? 0)
+    // Группа у сервиса одна — поэтому она и правится здесь, а не галочками на
+    // странице групп (там остаётся порядок внутри группы).
+    const [group, setGroup] = useState(initial?.group ?? NO_GROUP)
+    const { data: groups } = useAdminServiceGroups()
 
     const addNavItem = () =>
         setNavItems((p) => [
@@ -127,6 +135,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             color: color.trim() || null,
             badge: badge === NO_BADGE ? null : (badge as 'new' | 'soon'),
             show_in_tabs: showInTabs,
+            hidden,
             url: type === 'webview' ? url.trim() : null,
             auth: type === 'webview' ? auth : false,
             app_bar: type === 'webview' ? appBar : true,
@@ -134,6 +143,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                 type === 'webview' ? navItems.filter((i) => i.value.trim()) : [],
             enabled,
             position,
+            group: group === NO_GROUP ? null : group,
         })
     }
 
@@ -181,6 +191,10 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                         label="Описание"
                     />
                     <IconColorInput value={color} onChange={setColor} />
+                    <p className="-mt-2 text-xs text-muted-foreground">
+                        «Главная» сейчас рисует значки одним акцентным цветом —
+                        это поле на неё не влияет.
+                    </p>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
@@ -204,6 +218,28 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                                 onChange={(e) => setPosition(Number(e.target.value))}
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Группа</Label>
+                        <Select value={group} onValueChange={setGroup}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={NO_GROUP}>Без группы</SelectItem>
+                                {groups?.groups.map((g) => (
+                                    <SelectItem key={g.slug} value={g.slug}>
+                                        {g.label?.ru ?? g.slug}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                            Группа одна на сервис — выбор новой переносит его из
+                            прежней. На «Главной» секции сейчас не рисуются:
+                            сервисы идут одной сеткой.
+                        </p>
                     </div>
 
                     <div className="space-y-1.5">
@@ -243,6 +279,17 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                             </p>
                         </div>
                         <Switch checked={showInTabs} onCheckedChange={setShowInTabs} />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-md border p-3">
+                        <div>
+                            <Label>Скрыт из списка</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Нет ни на «Главной», ни в табах — открывается
+                                только по диплинку или переходу из приложения
+                            </p>
+                        </div>
+                        <Switch checked={hidden} onCheckedChange={setHidden} />
                     </div>
 
                     <div className="flex items-center justify-between rounded-md border p-3">

@@ -6,9 +6,13 @@ import { cn } from '@doska/shared'
 import { NAV_ITEMS } from '@/lib/nav'
 import { useAuthStore } from '@/store/useAuthStore'
 
+/** Same reason as in TaskLogPanel: a zustand selector must not build a new
+ *  array per render, or `useSyncExternalStore` spins forever. */
+const NO_PERMISSIONS: string[] = []
+
 export function Sidebar() {
   const pathname = usePathname()
-  const permissions = useAuthStore((s) => s.user?.permissions ?? [])
+  const permissions = useAuthStore((s) => s.user?.permissions) ?? NO_PERMISSIONS
 
   return (
     <aside className="hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col border-r bg-background">

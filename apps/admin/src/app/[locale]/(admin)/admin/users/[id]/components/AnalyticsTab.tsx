@@ -27,7 +27,11 @@ import {
 } from '@/hooks/queries/admin'
 import { ProductSelector } from '@/components/admin/ProductSelector'
 import { DailyStackedBarChart } from '@/components/admin/analytics/charts-lazy'
-import { DataCell } from '@/components/admin/analytics/DataCell'
+import {
+    DataCell,
+    DataTableCell,
+    DATA_COLUMN_WIDTH,
+} from '@/components/admin/analytics/DataCell'
 import { LimitedRows, Metric, PERIODS, SummaryCard, type PeriodProductProps } from './shared'
 import { UserLimitCard } from './UserLimitCard'
 
@@ -376,7 +380,7 @@ export function AnalyticsTab({ uid, period, setPeriod, product, setProduct }: Pe
                                                     <TableHead className="w-32">platform</TableHead>
                                                     <TableHead className="w-24">app_version</TableHead>
                                                     <TableHead className="w-40">device_id</TableHead>
-                                                    <TableHead>data</TableHead>
+                                                    <TableHead className={DATA_COLUMN_WIDTH}>data</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -400,9 +404,10 @@ export function AnalyticsTab({ uid, period, setPeriod, product, setProduct }: Pe
                                                         <TableCell className="font-mono text-xs break-all">
                                                             {ev.device_id ?? '—'}
                                                         </TableCell>
-                                                        <TableCell>
-                                                            <DataCell data={ev.data} eventType={ev.event_type} />
-                                                        </TableCell>
+                                                        <DataTableCell
+                                                            data={ev.data}
+                                                            eventType={ev.event_type}
+                                                        />
                                                     </TableRow>
                                                 ))}
                                             </TableBody>

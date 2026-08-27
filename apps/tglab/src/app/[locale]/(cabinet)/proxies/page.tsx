@@ -17,6 +17,8 @@ import { ru } from 'date-fns/locale'
 import { Pencil, Plus, RefreshCw, Shield, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
+import { cn } from '@doska/shared'
+
 import { StatusChip } from '@/components/common/StatusChip'
 import { ProxyDialog } from '@/components/proxies/ProxyDialog'
 import { useCheckProxy, useDeleteProxy } from '@/hooks/mutations'
@@ -115,7 +117,20 @@ export default function ProxiesPage() {
                         : '—'}
                       {proxy.latency_ms ? ` · ${proxy.latency_ms} мс` : ''}
                     </TableCell>
-                    <TableCell className="text-right">{proxy.accounts_count}</TableCell>
+                    <TableCell
+                      className={cn(
+                        'text-right tabular-nums',
+                        proxy.accounts_count >= (meta?.proxy_soft_account_cap ?? 5) &&
+                          'font-medium text-amber-600 dark:text-amber-400',
+                      )}
+                      title={
+                        proxy.accounts_count >= (meta?.proxy_soft_account_cap ?? 5)
+                          ? `Многовато аккаунтов на одном IP (порог ${meta?.proxy_soft_account_cap ?? 5})`
+                          : undefined
+                      }
+                    >
+                      {proxy.accounts_count}
+                    </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       {canManage && (
                         <>

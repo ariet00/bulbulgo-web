@@ -20,6 +20,8 @@ export interface AdminService {
     color: string | null
     badge: 'new' | 'soon' | null
     show_in_tabs: boolean
+    /** true — нигде не показывается, открывается только по диплинку/переходу */
+    hidden: boolean
     url: string | null
     auth: boolean
     // false — вебвью без нативной шапки (страница рисует свою)
@@ -27,6 +29,8 @@ export interface AdminService {
     nav_items: AdminServiceNavItem[]
     enabled: boolean
     created_at: string | null
+    /** slug группы «Главной»; группа у сервиса одна, null — вне групп */
+    group: string | null
 }
 
 export interface AdminServiceCreate {
@@ -38,12 +42,15 @@ export interface AdminServiceCreate {
     color?: string | null
     badge?: 'new' | 'soon' | null
     show_in_tabs?: boolean
+    hidden?: boolean
     url?: string | null
     auth?: boolean
     app_bar?: boolean
     nav_items?: AdminServiceNavItem[]
     enabled?: boolean
     position?: number
+    /** slug группы; null — оставить/убрать вне групп */
+    group?: string | null
 }
 
 // slug/type иммутабельны после создания (бэк их игнорирует в PATCH)

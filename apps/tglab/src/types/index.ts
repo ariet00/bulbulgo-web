@@ -59,6 +59,10 @@ export interface TglabMeta {
   mention_modes: MetaOption[]
   last_seen_filters: MetaOption[]
   max_audience_items: number
+  /** Сколько НОВЫХ записей может принести один заход. */
+  max_collect_per_run: number
+  /** Сколько людей заход имеет право просмотреть (уже собранные — тоже). */
+  max_scan_per_run: number
   task_types: MetaOption[]
   task_statuses: MetaOption[]
   task_account_roles: MetaOption[]
@@ -69,9 +73,11 @@ export interface TglabMeta {
   audience_flags: MetaFlag[]
   action_types: MetaOption[]
   action_statuses: MetaOption[]
+  error_code_labels: Record<string, string>
   log_levels: MetaOption[]
   account_limit_keys: string[]
   default_account_limits: Record<string, number>
+  proxy_soft_account_cap: number
 }
 
 
@@ -133,6 +139,15 @@ export interface Account {
   is_frozen: boolean
   is_premium: boolean
   limits: Record<string, number>
+  /** today's effective caps with the warm-up ramp folded in */
+  limits_today: Record<string, number>
+  warmup: {
+    active: boolean
+    skipped: boolean
+    fraction: number
+    day: number
+    ramp_days: number
+  }
   usage_today: Record<string, number>
   profile: { first_name?: string | null; last_name?: string | null; about?: string | null }
   last_error: { code?: string; message?: string; at?: string } | null
@@ -150,8 +165,9 @@ export interface AccountsPage {
 
 export interface AccountInput {
   session_string: string
-  api_id?: number | null
-  api_hash?: string | null
+  /** Required: a session only opens with the app it was created under. */
+  api_id: number
+  api_hash: string
   twofa_password?: string | null
   phone?: string | null
   project_id?: number | null
@@ -165,6 +181,8 @@ export interface AccountUpdateInput {
   note?: string | null
   /** 0 releases the account, N pauses it for N hours. */
   freeze_hours?: number | null
+  /** run at full caps from day one (aged / already-warmed session) */
+  skip_warmup?: boolean
 }
 
 export interface AccountBulkInput extends AccountUpdateInput {
@@ -214,6 +232,12 @@ export interface CollectProgress {
   finished_at: string | null
 }
 
+/** One group a base collects from — each with its own mode. */
+export interface AudienceSource {
+  type: string
+  target: string
+}
+
 export interface Audience {
   id: number
   project_id: number | null
@@ -221,7 +245,8 @@ export interface Audience {
   kind: string
   items_count: number
   note: string | null
-  source: { type?: string; target?: string } | null
+  /** Groups this base collects from (union, deduped). */
+  sources: AudienceSource[]
   /** State of the collection that filled (or is filling) this base. */
   collect: CollectProgress | null
   created_at: string
@@ -232,12 +257,19 @@ export interface AudienceInput {
   kind: string
   project_id?: number | null
   note?: string | null
+  /** replace the source list (add/remove groups after creation); sent as {target, mode} */
+  sources?: AudienceSourceInput[]
+}
+
+/** A source as the collect form sends it: target + mode. */
+export interface AudienceSourceInput {
+  target: string
+  mode: string
 }
 
 export interface AudienceCollectInput {
   name: string
-  source: string
-  mode: string
+  sources: AudienceSourceInput[]
   account_id: number
   project_id?: number | null
   limit: number
@@ -248,10 +280,19 @@ export interface AudienceCollectInput {
   last_seen: string
 }
 
+export interface AudienceRecollectInput {
+  account_id: number
+  limit?: number | null
+}
+
 export interface AudienceItem {
   id: number
   tg_user_id: number | null
   username: string | null
+  /** Accounts holding an access hash for this entry — see `AudienceReach`. */
+  hash_accounts: number[]
+  /** Collected from a message, so any account seeing that chat can reach them. */
+  has_message_ref: boolean
   /** Bitmask of what already happened to this entry. */
   flags: number
   cycles: number
@@ -261,6 +302,16 @@ export interface AudienceItem {
 export interface AudienceItemsPage {
   items: AudienceItem[]
   total: number
+}
+
+/** Who can actually work with a base: Telegram issues the access hash per
+ *  account, so a bare id is addressable only by the account that saw it. */
+export interface AudienceReach {
+  total: number
+  with_username: number
+  with_message: number
+  unreachable: number
+  accounts: { account_id: number; label: string; items: number }[]
 }
 
 export interface AudienceImportResult {
@@ -278,7 +329,17 @@ export interface TaskProgress {
   done_total: number
   failed_total: number
   last_tick_at: string | null
+  /** Today's *enforced* ceiling — can be lower than the `daily_limit` the
+   *  operator set, because the target group's size caps inviting too. */
+  daily_cap: number | null
+  daily_cap_source: DailyCapSource | null
+  /** Members of the target group, when its cap is the binding one. */
+  group_members: number | null
 }
+
+/** Which limit produced `daily_cap` — mirrors
+ *  `backend/apps/tglab/constants.py:DAILY_CAP_SOURCES`. */
+export type DailyCapSource = 'task' | 'group'
 
 export interface TaskInput {
   name: string
@@ -344,4 +405,75 @@ export interface LiveEvent {
   type: string
   data: Record<string, any>
   ts: string
+}
+
+// ── mass import ─────────────────────────────────────────────────────────────────
+
+/** One line of a batch import — imported, or failed with the reason. */
+export interface AccountImportItemResult {
+  index: number
+  label: string
+  status: 'imported' | 'failed'
+  account_id: number | null
+  error: string | null
+}
+
+export interface AccountBulkImportResult {
+  imported: number
+  failed: number
+  results: AccountImportItemResult[]
+}
+
+// ── statistics (stage 5) ────────────────────────────────────────────────────────
+
+/** One day of the activity series — a limit day (Bishkek). */
+export interface DayPoint {
+  date: string
+  ok: number
+  failed: number
+  skipped: number
+}
+
+/** Outcome split of one action kind over a window. */
+export interface TypeBreakdown {
+  type: string
+  ok: number
+  failed: number
+  skipped: number
+}
+
+export interface ErrorCount {
+  code: string
+  count: number
+}
+
+export interface AccountBreakdown {
+  account_id: number
+  label: string
+  ok: number
+  failed: number
+  skipped: number
+}
+
+/** GET /tglab/stats/overview — the dashboard's numbers. */
+export interface StatsOverview {
+  accounts_total: number
+  accounts_by_status: Record<string, number>
+  accounts_frozen: number
+  tasks_total: number
+  tasks_running: number
+  today: TypeBreakdown[]
+  series: DayPoint[]
+}
+
+/** GET /tglab/stats/tasks/:id — per-task breakdown behind the log. */
+export interface TaskStats {
+  task_id: number
+  ok: number
+  failed: number
+  skipped: number
+  top_errors: ErrorCount[]
+  by_account: AccountBreakdown[]
+  series: DayPoint[]
+  last_action_at: string | null
 }

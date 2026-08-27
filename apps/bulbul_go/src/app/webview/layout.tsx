@@ -36,6 +36,12 @@ const themeInitJs = `(function () {
     if (t === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.style.colorScheme = 'dark';
+    } else if (t === 'light') {
+      // .light подавляет анти-FOUC медиазапрос в globals.css
+      // (:root:not(.light)) — без него светлая тема приложения на
+      // системно-тёмном устройстве красилась бы в тёмные токены.
+      document.documentElement.classList.add('light');
+      document.documentElement.style.colorScheme = 'light';
     }
     var ql = qs.get('locale');
     if (ql) sessionStorage.setItem('bbg_locale', ql);

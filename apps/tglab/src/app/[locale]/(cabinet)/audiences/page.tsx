@@ -18,10 +18,10 @@ import { useState } from 'react'
 import { exportAudience } from '@/apis/audiences'
 import { AudienceCollectDialog } from '@/components/audiences/AudienceCollectDialog'
 import { AudienceCreateDialog } from '@/components/audiences/AudienceCreateDialog'
-import { AudienceSheet } from '@/components/audiences/AudienceSheet'
 import { StatusChip } from '@/components/common/StatusChip'
 import { useDeleteAudience, useStopCollection } from '@/hooks/mutations'
 import { useAudiences, useMeta } from '@/hooks/queries'
+import { useRouter } from '@/i18n/routing'
 import { TGLAB_PERMISSIONS } from '@/lib/constants'
 import { labelOf } from '@/lib/labels'
 import { useHasPermission } from '@/store/useAuthStore'
@@ -36,14 +36,10 @@ export default function AudiencesPage() {
   const canManage = useHasPermission(TGLAB_PERMISSIONS.AUDIENCES_MANAGE)
   const remove = useDeleteAudience()
   const stop = useStopCollection()
+  const router = useRouter()
 
   const [collectOpen, setCollectOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const [opened, setOpened] = useState<Audience | null>(null)
-
-  const openedAudience = opened
-    ? audiences?.find((a) => a.id === opened.id) ?? opened
-    : null
 
   const onDelete = (audience: Audience) => {
     if (confirm(`Удалить базу «${audience.name}» со всеми записями?`)) {
@@ -97,14 +93,16 @@ export default function AudiencesPage() {
                     <TableRow
                       key={audience.id}
                       className="cursor-pointer"
-                      onClick={() => setOpened(audience)}
+                      onClick={() => router.push(`/audiences/${audience.id}`)}
                     >
                       <TableCell>
                         <div className="font-medium">{audience.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {audience.source?.target
-                            ? `${labelOf(meta?.parse_modes, audience.source.type ?? null)} · ${audience.source.target}`
-                            : 'загружена вручную'}
+                          {audience.sources.length === 0
+                            ? 'загружена вручную'
+                            : audience.sources.length === 1
+                              ? `${labelOf(meta?.parse_modes, audience.sources[0].type ?? null)} · ${audience.sources[0].target}`
+                              : `${audience.sources.length} групп`}
                         </div>
                       </TableCell>
                       <TableCell>{labelOf(meta?.audience_kinds, audience.kind)}</TableCell>
@@ -190,10 +188,6 @@ export default function AudiencesPage() {
 
       <AudienceCollectDialog open={collectOpen} onOpenChange={setCollectOpen} />
       <AudienceCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
-      <AudienceSheet
-        audience={openedAudience}
-        onOpenChange={(open) => !open && setOpened(null)}
-      />
     </div>
   )
 }

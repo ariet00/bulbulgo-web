@@ -18,9 +18,11 @@ import {
 } from '@doska/ui'
 import { useEffect, useState } from 'react'
 
+import { SourceListEditor } from '@/components/audiences/SourceListEditor'
 import { ProjectSelect } from '@/components/common/ProjectSelect'
 import { useCollectAudience } from '@/hooks/mutations'
 import { useAccounts, useMeta } from '@/hooks/queries'
+import type { AudienceSourceInput } from '@/types'
 
 /** Modes that walk message history rather than a member list. */
 const HISTORY_MODES = ['writers', 'channel_comments', 'channel_discussion']
@@ -37,8 +39,9 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
   const collect = useCollectAudience()
 
   const [name, setName] = useState('')
-  const [source, setSource] = useState('')
-  const [mode, setMode] = useState('members')
+  const [sources, setSources] = useState<AudienceSourceInput[]>([
+    { target: '', mode: 'members' },
+  ])
   const [accountId, setAccountId] = useState<string>('')
   const [projectId, setProjectId] = useState<number | null>(null)
   const [limit, setLimit] = useState('10000')
@@ -51,8 +54,7 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
   useEffect(() => {
     if (!open) return
     setName('')
-    setSource('')
-    setMode('members')
+    setSources([{ target: '', mode: 'members' }])
     setAccountId(accounts?.items[0] ? String(accounts.items[0].id) : '')
     setProjectId(null)
     setLimit('10000')
@@ -63,17 +65,21 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
     setLastSeen('any')
   }, [open, accounts])
 
-  const walksHistory = HISTORY_MODES.includes(mode)
+  const cleanSources = sources
+    .map((s) => ({ target: s.target.trim(), mode: s.mode }))
+    .filter((s) => s.target)
+  const walksHistory = cleanSources.some((s) => HISTORY_MODES.includes(s.mode))
+  const perRunCap = meta?.max_collect_per_run ?? 10000
+  const scanCap = meta?.max_scan_per_run ?? 10000
 
   const submit = () =>
     collect.mutate(
       {
         name: name.trim(),
-        source: source.trim(),
-        mode,
+        sources: cleanSources,
         account_id: Number(accountId),
         project_id: projectId,
-        limit: Number(limit) || 10000,
+        limit: Math.min(Number(limit) || perRunCap, perRunCap),
         messages_limit: messagesLimit ? Number(messagesLimit) : null,
         since_days: sinceDays ? Number(sinceDays) : null,
         exclude_bots: excludeBots,
@@ -96,32 +102,8 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="source">Группа или канал</Label>
-            <Input
-              id="source"
-              placeholder="@chatname или https://t.me/chatname"
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Что собираем</Label>
-            <Select value={mode} onValueChange={setMode}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(meta?.parse_modes ?? []).map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              У канала нет списка участников — его аудиторию видно только по
-              комментариям или по группе обсуждений.
-            </p>
+            <Label>Группы и каналы</Label>
+            <SourceListEditor value={sources} onChange={setSources} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -141,13 +123,19 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="limit">Сколько собрать</Label>
+              <Label htmlFor="limit">Сколько новых собрать за раз</Label>
               <Input
                 id="limit"
                 inputMode="numeric"
                 value={limit}
                 onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))}
               />
+              <p className="text-xs text-muted-foreground">
+                Считаются только новые записи — те, кого в базе ещё нет. Не больше{' '}
+                {perRunCap.toLocaleString('ru-RU')} за заход, и за один заход аккаунт
+                просматривает не больше {scanCap.toLocaleString('ru-RU')} человек. Базу
+                больше набирайте «Собрать новых» — так безопаснее для аккаунта.
+              </p>
             </div>
           </div>
 
@@ -217,7 +205,9 @@ export function AudienceCollectDialog({ open, onOpenChange }: Props) {
           </Button>
           <Button
             onClick={submit}
-            disabled={!name.trim() || !source.trim() || !accountId || collect.isPending}
+            disabled={
+              !name.trim() || cleanSources.length === 0 || !accountId || collect.isPending
+            }
           >
             Запустить сбор
           </Button>

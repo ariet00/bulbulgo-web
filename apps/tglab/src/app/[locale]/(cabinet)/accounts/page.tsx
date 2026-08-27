@@ -27,8 +27,9 @@ import { useState } from 'react'
 import { AccountBulkBar } from '@/components/accounts/AccountBulkBar'
 import { AccountImportDialog } from '@/components/accounts/AccountImportDialog'
 import { AccountSheet } from '@/components/accounts/AccountSheet'
+import { ProxySelect } from '@/components/common/ProxySelect'
 import { StatusChip } from '@/components/common/StatusChip'
-import { useCheckAccount } from '@/hooks/mutations'
+import { useCheckAccount, useUpdateAccount } from '@/hooks/mutations'
 import { useAccounts, useMeta } from '@/hooks/queries'
 import { TGLAB_PERMISSIONS } from '@/lib/constants'
 import { useAuthStore, useHasPermission } from '@/store/useAuthStore'
@@ -51,6 +52,7 @@ export default function AccountsPage() {
   const quotas = useAuthStore((s) => s.user?.quotas)
   const canManage = useHasPermission(TGLAB_PERMISSIONS.ACCOUNTS_MANAGE)
   const check = useCheckAccount()
+  const update = useUpdateAccount()
 
   const items = data?.items ?? []
   const allSelected = items.length > 0 && selected.length === items.length
@@ -159,9 +161,19 @@ export default function AccountsPage() {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm">
-                      {account.proxy_label ?? (
-                        <span className="text-muted-foreground">без прокси</span>
+                    <TableCell className="text-sm" onClick={(e) => e.stopPropagation()}>
+                      {canManage ? (
+                        <ProxySelect
+                          value={account.proxy_id}
+                          onChange={(proxyId) =>
+                            update.mutate({ id: account.id, proxy_id: proxyId })
+                          }
+                          className="h-8"
+                        />
+                      ) : (
+                        account.proxy_label ?? (
+                          <span className="text-muted-foreground">без прокси</span>
+                        )
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

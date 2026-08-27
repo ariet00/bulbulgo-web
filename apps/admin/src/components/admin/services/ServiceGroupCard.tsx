@@ -33,8 +33,9 @@ const ADD_PLACEHOLDER = '__add__'
 /**
  * Карточка группы: заголовок, видимость, позиция секции и её состав.
  *
- * Состав правится здесь, а не галочками в карточке сервиса: сервис может
- * входить в несколько групп, и в каждой у него свой порядок.
+ * Группа у сервиса одна и выбирается в его карточке; здесь — порядок внутри
+ * группы. Добавленный сюда чужой сервис переезжает из прежней группы, поэтому
+ * такой перенос спрашивается заранее.
  */
 export function ServiceGroupCard({
     group,
@@ -70,7 +71,17 @@ export function ServiceGroupCard({
     const remove = (slug: string) =>
         saveItems(group.services.filter((s) => s !== slug))
 
-    const add = (slug: string) => saveItems([...group.services, slug])
+    const add = async (slug: string) => {
+        // Сервис лежит ровно в одной группе: добавление чужого — это перенос.
+        const from = bySlug.get(slug)?.group
+        if (from && from !== group.slug) {
+            const ok = await confirm(
+                `«${title(slug)}» сейчас в группе «${from}». Перенести сюда?`,
+            )
+            if (!ok) return
+        }
+        saveItems([...group.services, slug])
+    }
 
     const handleDelete = async () => {
         // Бэк запрещает удалять непустую группу (FK на CASCADE — иначе её
@@ -227,6 +238,9 @@ export function ServiceGroupCard({
                                     <SelectItem key={s.slug} value={s.slug}>
                                         {s.label?.ru ?? s.slug}
                                         {!s.enabled && ' (выключен)'}
+                                        {s.group && s.group !== group.slug
+                                            ? ` · из «${s.group}»`
+                                            : ''}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

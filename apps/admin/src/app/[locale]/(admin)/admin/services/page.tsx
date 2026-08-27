@@ -81,6 +81,7 @@ export default function AdminServicesPage() {
                                         <TableHead>Название</TableHead>
                                         <TableHead>Slug</TableHead>
                                         <TableHead>Тип</TableHead>
+                                        <TableHead>Группа</TableHead>
                                         <TableHead>Бейдж</TableHead>
                                         <TableHead>В табах</TableHead>
                                         <TableHead>Включён</TableHead>
@@ -120,6 +121,9 @@ export default function AdminServicesPage() {
                                                     )}
                                                 </Badge>
                                             </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {s.group ?? '—'}
+                                            </TableCell>
                                             <TableCell>
                                                 {s.badge === 'new' && <Badge>NEW</Badge>}
                                                 {s.badge === 'soon' && (
@@ -130,7 +134,9 @@ export default function AdminServicesPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {s.show_in_tabs ? (
+                                                {s.hidden ? (
+                                                    <Badge variant="outline">скрыт</Badge>
+                                                ) : s.show_in_tabs ? (
                                                     <Check className="size-4 text-green-600" />
                                                 ) : (
                                                     <span className="text-muted-foreground">
