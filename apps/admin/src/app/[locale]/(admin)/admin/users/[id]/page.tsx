@@ -3,10 +3,14 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
-import { Link } from '@doska/i18n'
+import { Link, useRouter } from '@doska/i18n'
 import { format } from 'date-fns'
 import { useFilterParams } from '@/hooks/useFilterParams'
-import { useAdminUser, useAdminUserTripsSummary } from '@/hooks/queries/admin'
+import {
+    useAdminUser,
+    useAdminUserTripsSummary,
+    useOpenSupportChat,
+} from '@/hooks/queries/admin'
 import { useAdminBanUser } from '@/hooks/mutations/admin'
 import { UserFeatureOverridesForm } from '@/components/admin/users/UserFeatureOverridesForm'
 import { UserAppNoticeForm } from '@/components/admin/users/UserAppNoticeForm'
@@ -62,6 +66,7 @@ import {
     Copy,
     Flag,
     Hash,
+    Headset,
     Loader2,
     Mail,
     MoreVertical,
@@ -252,6 +257,9 @@ export default function UserDetailPage() {
 
     const tripsSummary = useAdminUserTripsSummary(id)
 
+    const router = useRouter()
+    const openSupportChat = useOpenSupportChat()
+
     const banUser = useAdminBanUser()
     const [confirmBan, setConfirmBan] = useState(false)
     // Только для разбана: снять и авто-баны, раскрученные от этого юзера.
@@ -367,6 +375,24 @@ export default function UserDetailPage() {
                             title="Обновить"
                         >
                             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="gap-2"
+                            disabled={openSupportChat.isPending}
+                            onClick={() =>
+                                openSupportChat.mutate(user.id, {
+                                    onSuccess: (chat: any) =>
+                                        router.push(`/admin/support?chat=${chat.id}`),
+                                })
+                            }
+                        >
+                            {openSupportChat.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Headset className="h-4 w-4" />
+                            )}
+                            Написать в поддержку
                         </Button>
                         <Button
                             variant={user.status !== 'banned' ? 'destructive' : 'default'}
