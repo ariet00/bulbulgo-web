@@ -11,9 +11,6 @@ import {
   CardTitle,
   Input,
   Label,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -27,7 +24,7 @@ import {
   TableRow,
   Textarea,
 } from '@doska/ui'
-import { Download, RefreshCw, Settings2, Upload } from 'lucide-react'
+import { Download, RefreshCw, Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { exportAudience } from '@/apis/audiences'
@@ -159,27 +156,39 @@ export function AudienceDetail({ audience }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           <SourceListEditor value={editableSources} onChange={setSources} />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={update.isPending}
+            onClick={() =>
+              update.mutate({
+                id: audience.id,
+                sources: sources
+                  .map((s) => ({ target: s.target.trim(), mode: s.mode }))
+                  .filter((s) => s.target),
+              })
+            }
+          >
+            Сохранить группы
+          </Button>
+        </CardContent>
+      </Card>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={update.isPending}
-              onClick={() =>
-                update.mutate({
-                  id: audience.id,
-                  sources: sources
-                    .map((s) => ({ target: s.target.trim(), mode: s.mode }))
-                    .filter((s) => s.target),
-                })
-              }
-            >
-              Сохранить группы
-            </Button>
-
-            <div className="ml-auto flex items-center gap-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Досбор</CardTitle>
+          <CardDescription>
+            Переобходит те же группы и добавляет только тех, кого в базе ещё нет
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="collect-account" className="text-xs">
+                Аккаунт-сборщик
+              </Label>
               <Select value={collectAccount} onValueChange={setCollectAccount}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger id="collect-account">
                   <SelectValue placeholder="аккаунт" />
                 </SelectTrigger>
                 <SelectContent>
@@ -190,100 +199,91 @@ export function AudienceDetail({ audience }: Props) {
                   ))}
                 </SelectContent>
               </Select>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button size="sm" variant="outline" aria-label="Настройки сбора">
-                    <Settings2 className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 space-y-3" align="end">
-                  <div className="space-y-1">
-                    <Label htmlFor="collect-limit" className="text-xs">
-                      Новых записей за раз
-                    </Label>
-                    <Input
-                      id="collect-limit"
-                      inputMode="numeric"
-                      value={collectLimit}
-                      onChange={(e) => setCollectLimit(e.target.value.replace(/\D/g, ''))}
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Не больше {perRunCap.toLocaleString('ru-RU')} за заход; уже собранные
-                      ничего не стоят — тратится только обзор, до{' '}
-                      {scanCap.toLocaleString('ru-RU')} человек за раз.
-                    </p>
-                  </div>
-                  {hasHistorySource && (
-                    <div className="space-y-2 border-t pt-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <Label htmlFor="collect-messages" className="text-xs">
-                            Сообщений просмотреть
-                          </Label>
-                          <Input
-                            id="collect-messages"
-                            inputMode="numeric"
-                            placeholder={defaultMessageScan.toLocaleString('ru-RU')}
-                            value={collectMessagesLimit}
-                            onChange={(e) =>
-                              setCollectMessagesLimit(e.target.value.replace(/\D/g, ''))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="collect-since" className="text-xs">
-                            …или дней назад
-                          </Label>
-                          <Input
-                            id="collect-since"
-                            inputMode="numeric"
-                            placeholder="любой срок"
-                            value={collectSinceDays}
-                            onChange={(e) =>
-                              setCollectSinceDays(e.target.value.replace(/\D/g, ''))
-                            }
-                          />
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        «Писавшие»/«комментаторы» без этих полей смотрят только последние{' '}
-                        {defaultMessageScan.toLocaleString('ru-RU')} сообщений группы.
-                      </p>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-
-              <Button
-                size="sm"
-                disabled={
-                  !collectAccount ||
-                  collecting ||
-                  recollect.isPending ||
-                  sources.every((s) => !s.target.trim())
-                }
-                onClick={() =>
-                  recollect.mutate({
-                    id: audience.id,
-                    account_id: Number(collectAccount),
-                    limit: Math.min(Number(collectLimit) || perRunCap, perRunCap),
-                    messages_limit: collectMessagesLimit ? Number(collectMessagesLimit) : null,
-                    since_days: collectSinceDays ? Number(collectSinceDays) : null,
-                  })
-                }
-              >
-                <RefreshCw className="mr-1 h-4 w-4" />
-                Собрать новых
-              </Button>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="collect-limit" className="text-xs">
+                Новых записей за раз
+              </Label>
+              <Input
+                id="collect-limit"
+                inputMode="numeric"
+                value={collectLimit}
+                onChange={(e) => setCollectLimit(e.target.value.replace(/\D/g, ''))}
+              />
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Не больше {perRunCap.toLocaleString('ru-RU')} новых за заход; уже собранные ничего
+            не стоят — тратится только обзор, до {scanCap.toLocaleString('ru-RU')} человек за
+            раз.
+          </p>
 
-          {collecting && (
-            <p className="text-xs text-muted-foreground">
-              Идёт сбор… собрано {audience.collect?.collected ?? 0}
-            </p>
+          {hasHistorySource && (
+            <div className="space-y-3 border-t pt-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="collect-messages" className="text-xs">
+                    Сообщений просмотреть
+                  </Label>
+                  <Input
+                    id="collect-messages"
+                    inputMode="numeric"
+                    placeholder={defaultMessageScan.toLocaleString('ru-RU')}
+                    value={collectMessagesLimit}
+                    onChange={(e) =>
+                      setCollectMessagesLimit(e.target.value.replace(/\D/g, ''))
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="collect-since" className="text-xs">
+                    …или дней назад
+                  </Label>
+                  <Input
+                    id="collect-since"
+                    inputMode="numeric"
+                    placeholder="любой срок"
+                    value={collectSinceDays}
+                    onChange={(e) => setCollectSinceDays(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                «Писавшие»/«комментаторы» без этих полей смотрят только последние{' '}
+                {defaultMessageScan.toLocaleString('ru-RU')} сообщений группы — новых писавших
+                за пределами этого окна досбор не увидит.
+              </p>
+            </div>
           )}
+
+          <div className="flex items-center gap-3 pt-1">
+            <Button
+              size="sm"
+              disabled={
+                !collectAccount ||
+                collecting ||
+                recollect.isPending ||
+                sources.every((s) => !s.target.trim())
+              }
+              onClick={() =>
+                recollect.mutate({
+                  id: audience.id,
+                  account_id: Number(collectAccount),
+                  limit: Math.min(Number(collectLimit) || perRunCap, perRunCap),
+                  messages_limit: collectMessagesLimit ? Number(collectMessagesLimit) : null,
+                  since_days: collectSinceDays ? Number(collectSinceDays) : null,
+                })
+              }
+            >
+              <RefreshCw className="mr-1 h-4 w-4" />
+              Собрать новых
+            </Button>
+            {collecting && (
+              <p className="text-xs text-muted-foreground">
+                Идёт сбор… собрано {audience.collect?.collected ?? 0}
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
