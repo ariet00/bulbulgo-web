@@ -50,6 +50,20 @@ export interface AdminDeviceSessionItem {
 export interface AdminDeviceDetail extends AdminDeviceListItem {
     data: Record<string, unknown>
     sessions: AdminDeviceSessionItem[]
+    // Способы входа, точечно отключённые для этого устройства (поверх
+    // глобальных тумблеров в «Фичи», см. FeatureFlagsSettingsForm).
+    login_methods_disabled: LoginMethod[]
+}
+
+// Способы входа, которые можно точечно отключить для устройства (карточка
+// «Способы входа» на /admin/devices/[id]) — синхронизировано с backend
+// apps.users.models.device.LOGIN_METHODS.
+export const LOGIN_METHODS = ['phone', 'google', 'apple'] as const
+export type LoginMethod = (typeof LOGIN_METHODS)[number]
+export const LOGIN_METHOD_LABELS: Record<LoginMethod, string> = {
+    phone: 'Телефон (SMS)',
+    google: 'Google',
+    apple: 'Apple',
 }
 
 export interface AdminUserSession {
@@ -217,6 +231,10 @@ export const usersAdminApi = {
         requests.get<AdminDeviceDetail>(`/admin/users/devices/${id}`),
     banDevice: (id: number, status: 'active' | 'banned') =>
         requests.put<AdminDeviceToken>(`/admin/users/devices/${id}/ban?status=${status}`, {}),
+    // disabled — способы входа, ЗАПРЕЩЁННЫЕ для этого устройства (поверх
+    // глобальных тумблеров в «Фичи»). Пустой массив снимает ограничение.
+    setDeviceLoginMethods: (id: number, disabled: LoginMethod[]) =>
+        requests.put<AdminDeviceToken>(`/admin/users/devices/${id}/login-methods`, { disabled }),
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     // cascade — только при разбане: снять и авто-баны, раскрученные от юзера

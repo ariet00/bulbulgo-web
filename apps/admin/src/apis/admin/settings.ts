@@ -35,6 +35,8 @@ export interface AdminAppFeaturesSettings {
     /** Легаси-копия для старых сборок (читают из /me); гейты — в правилах создания. */
     require_verified_phone: boolean
     phone_login_enabled: boolean
+    google_login_enabled: boolean
+    apple_login_enabled: boolean
     phone_view_insights_enabled: boolean
     phone_view_show_viewer_phone: boolean
     bookings_tab_enabled: boolean

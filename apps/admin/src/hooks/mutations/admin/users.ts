@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi, AdminBalanceAdjustBody, AdminUserAppNotice } from '@/apis/admin'
+import { adminApi, AdminBalanceAdjustBody, AdminUserAppNotice, LoginMethod } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
@@ -32,6 +32,18 @@ export const useAdminBanDevice = () => {
             queryClient.invalidateQueries({ queryKey: adminKeys.devices() })
             queryClient.invalidateQueries({ queryKey: adminKeys.device(id) })
             toast.success('Статус устройства обновлён')
+        },
+    })
+}
+
+export const useSetDeviceLoginMethods = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, disabled }: { id: number; disabled: LoginMethod[] }) =>
+            adminApi.setDeviceLoginMethods(id, disabled),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.device(id) })
+            toast.success('Способы входа обновлены')
         },
     })
 }
