@@ -26,6 +26,8 @@ import type { Audience, AudienceSourceInput } from '@/types'
 
 const PAGE_SIZE = 100
 const NO_FILTER = 'all'
+/** Modes that walk message history rather than a member list. */
+const HISTORY_MODES = ['writers', 'channel_comments', 'channel_discussion']
 
 interface Props {
   audience: Audience
@@ -47,9 +49,12 @@ export function AudienceDetail({ audience }: Props) {
   const [sources, setSources] = useState<AudienceSourceInput[]>([])
   const [collectAccount, setCollectAccount] = useState('')
   const [collectLimit, setCollectLimit] = useState('')
+  const [collectMessagesLimit, setCollectMessagesLimit] = useState('')
+  const [collectSinceDays, setCollectSinceDays] = useState('')
 
   const perRunCap = meta?.max_collect_per_run ?? 10000
   const scanCap = meta?.max_scan_per_run ?? 10000
+  const defaultMessageScan = meta?.default_writers_message_scan ?? 5000
 
   // Reset the editable source list whenever a different base is opened.
   useEffect(() => {
@@ -148,6 +153,8 @@ export function AudienceDetail({ audience }: Props) {
                       id: audience.id,
                       account_id: Number(collectAccount),
                       limit: Math.min(Number(collectLimit) || perRunCap, perRunCap),
+                      messages_limit: collectMessagesLimit ? Number(collectMessagesLimit) : null,
+                      since_days: collectSinceDays ? Number(collectSinceDays) : null,
                     })
                   }
                 >
@@ -162,6 +169,43 @@ export function AudienceDetail({ audience }: Props) {
               заход. Уже собранные тратят не лимит, а обход — за раз аккаунт просматривает
               не больше {scanCap.toLocaleString('ru-RU')} человек, дальше повторный заход.
             </p>
+            {editableSources.some((s) => HISTORY_MODES.includes(s.mode)) && (
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="recollect-messages" className="text-xs">
+                    Сообщений просмотреть
+                  </Label>
+                  <Input
+                    id="recollect-messages"
+                    className="w-36"
+                    inputMode="numeric"
+                    placeholder={`по умолчанию ${defaultMessageScan.toLocaleString('ru-RU')}`}
+                    value={collectMessagesLimit}
+                    onChange={(e) =>
+                      setCollectMessagesLimit(e.target.value.replace(/\D/g, ''))
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="recollect-since" className="text-xs">
+                    …или за последние, дней
+                  </Label>
+                  <Input
+                    id="recollect-since"
+                    className="w-32"
+                    inputMode="numeric"
+                    placeholder="без ограничения"
+                    value={collectSinceDays}
+                    onChange={(e) => setCollectSinceDays(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Режимы «писавшие»/«комментаторы» без этих полей смотрят только последние{' '}
+                  {defaultMessageScan.toLocaleString('ru-RU')} сообщений группы — новых
+                  писавших за пределами этого окна досбор не увидит.
+                </p>
+              </div>
+            )}
             {collecting && (
               <p className="text-xs text-muted-foreground">
                 Идёт сбор… собрано {audience.collect?.collected ?? 0}

@@ -106,6 +106,47 @@ export function TaskParamsForm({ taskType, value, onChange }: Props) {
             }
           />
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="group-pct">Доля от группы в день, %</Label>
+            <Input
+              id="group-pct"
+              inputMode="numeric"
+              placeholder="по умолчанию 5"
+              value={
+                value.group_invite_percent != null
+                  ? Math.round(value.group_invite_percent * 100)
+                  : ''
+              }
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '')
+                patch({ group_invite_percent: digits ? Number(digits) / 100 : null })
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="group-cap">Потолок группы в день</Label>
+            <Input
+              id="group-cap"
+              inputMode="numeric"
+              placeholder="по умолчанию 150"
+              value={value.group_invite_daily_cap ?? ''}
+              onChange={(e) =>
+                patch({
+                  group_invite_daily_cap: e.target.value
+                    ? Number(e.target.value.replace(/\D/g, ''))
+                    : null,
+                })
+              }
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Инвайты в один чат в день ограничены его размером — не больше доли участников
+          и не больше абсолютного потолка (по умолчанию 5% и 150 — рекомендация
+          tglab.pro против флага на сам чат). Если чат маленький и лимит задачи не
+          выбирается, поднимите долю/потолок здесь — до 50% и 1000 соответственно.
+        </p>
       </div>
     )
   }
