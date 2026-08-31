@@ -94,6 +94,13 @@ export const useAdminParcelTypesSettings = () => {
     })
 }
 
+export const useAdminFreightCargoTypesSettings = () => {
+    return useQuery({
+        queryKey: [...adminKeys.appSettings(), 'freight-cargo-types'] as const,
+        queryFn: () => adminApi.getFreightCargoTypesSettings(),
+    })
+}
+
 export const useAdminSupportSettings = () => {
     return useQuery({
         queryKey: [...adminKeys.appSettings(), 'support'] as const,

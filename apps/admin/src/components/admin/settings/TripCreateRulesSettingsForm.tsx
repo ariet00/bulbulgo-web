@@ -19,9 +19,11 @@ import {
 } from '@doska/ui'
 import { useEffect, useState } from 'react'
 
-// Жёсткий продуктовый потолок срока публикации (часов) — совпадает с
-// HARD_MAX_DURATION_HOURS на бэке; больше не сохранится и через API.
-const HARD_MAX_HOURS = 23
+// Потолок срока публикации (часов) — совпадает с HARD_MAX_DURATION_HOURS на
+// бэке; больше не сохранится и через API. Не продуктовое ограничение в сутки —
+// просто защита от опечатки. Если для роли выставить больше 24ч, в приложении
+// пикер срока покажет дни+часы вместо одного колеса часов.
+const HARD_MAX_HOURS = 24 * 30
 
 const DEFAULT_ROLE: AdminTripCreateRoleRules = {
     max_duration_hours: HARD_MAX_HOURS,
@@ -124,7 +126,8 @@ export function TripCreateRulesSettingsForm() {
                         />
                         <p className="text-[10px] text-muted-foreground">
                             max_duration_hours — потолок пикера срока в
-                            приложении, 1–{HARD_MAX_HOURS} ч.
+                            приложении, 1–{HARD_MAX_HOURS} ч. Больше 24 —
+                            пикер покажет дни и часы, не только часы.
                         </p>
                     </div>
 

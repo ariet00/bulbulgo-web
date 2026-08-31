@@ -99,6 +99,14 @@ export interface AdminParcelTypesSettings {
     types: AdminParcelType[]
 }
 
+export interface AdminCargoType {
+    label: string
+}
+
+export interface AdminCargoTypesSettings {
+    types: AdminCargoType[]
+}
+
 export interface AdminSupportSettings {
     in_app_enabled: boolean
     tg_enabled: boolean
@@ -324,6 +332,12 @@ export const settingsAdminApi = {
         requests.get<AdminParcelTypesSettings>('/admin/settings/parcel-types'),
     updateParcelTypesSettings: (body: AdminParcelTypesSettings) =>
         requests.put<AdminParcelTypesSettings>('/admin/settings/parcel-types', body),
+
+    // Cargo types for freight listings (Redis key `app:freight_cargo_types`)
+    getFreightCargoTypesSettings: () =>
+        requests.get<AdminCargoTypesSettings>('/admin/settings/freight-cargo-types'),
+    updateFreightCargoTypesSettings: (body: AdminCargoTypesSettings) =>
+        requests.put<AdminCargoTypesSettings>('/admin/settings/freight-cargo-types', body),
 
     // Support contact channels (Redis key `app:support`)
     getSupportSettings: () =>
