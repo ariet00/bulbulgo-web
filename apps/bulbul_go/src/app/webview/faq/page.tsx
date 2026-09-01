@@ -66,6 +66,28 @@ export default function FaqPage() {
         })
     }
 
+    // Вопросов ещё нет вообще (не пустой результат поиска) — поиск и чипы
+    // не нужны, показываем заглушку + кнопку поддержки.
+    if (FAQ_ITEMS.length === 0) {
+        return (
+            <main className="mx-auto max-w-lg px-5 pb-10 pt-8">
+                <EmptyState
+                    icon={<QuestionIcon />}
+                    title={t(FAQ_UI.emptyTitle)}
+                    text={t(FAQ_UI.emptyText)}
+                />
+                {inApp && (
+                    <button
+                        onClick={() => void openRoute('/support')}
+                        className="mt-2 h-11 w-full rounded-2xl bg-[var(--wv-accent)] text-[15px] font-semibold text-white active:opacity-85"
+                    >
+                        {t(FAQ_UI.ctaButton)}
+                    </button>
+                )}
+            </main>
+        )
+    }
+
     return (
         <main className="mx-auto max-w-lg px-5 pb-10">
             <div className="sticky top-0 z-10 -mx-5 bg-background/90 px-5 pb-3 pt-4 backdrop-blur">
@@ -240,6 +262,26 @@ function SearchIcon() {
         >
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
+        </svg>
+    )
+}
+
+function QuestionIcon() {
+    return (
+        <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+        >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9.3a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.2.9-1.2 1.9" />
+            <path d="M12 17h.01" />
         </svg>
     )
 }
