@@ -1,11 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { adminApi } from '@/apis/admin'
+import { adminApi, type AdminNewsKind } from '@/apis/admin'
 import { adminKeys } from './keys'
 
 export const useAdminNewsList = (
     page: number = 1,
     size: number = 40,
-    filters?: { q?: string; status?: string },
+    filters?: { q?: string; status?: string; kind?: AdminNewsKind },
 ) => {
     return useQuery({
         queryKey: [...adminKeys.news(), { page, size, ...(filters ?? {}) }],

@@ -57,6 +57,7 @@ export const adminKeys = {
     complaintReasons: () => [...adminKeys.all, 'complaint-reasons'] as const,
     reviews: () => [...adminKeys.all, 'reviews'] as const,
     news: () => [...adminKeys.all, 'news'] as const,
+    ideas: () => [...adminKeys.all, 'ideas'] as const,
     newsItem: (id: number) => [...adminKeys.news(), id] as const,
     referralSettings: () => [...adminKeys.all, 'referral', 'settings'] as const,
     referralReport: (limit: number) =>
