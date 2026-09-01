@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi, AdminAppFeaturesSettings, AdminAppVersionSettings, AdminMaintenanceSettings, AdminContactLimitsSettings, AdminBumpLimitsSettings, AdminActiveLimitsSettings, AdminTripCreateRulesSettings, AdminServicePrices, AdminParcelTypesSettings, AdminSupportSettings, AdminQuickMessages, AdminAttractivePricesSettings, AdminSubscriptionSettings, AdminPhoneViewSettings, CeleryPeriodicTaskCreate, CeleryPeriodicTaskUpdate } from '@/apis/admin'
+import { adminApi, AdminAppFeaturesSettings, AdminAppVersionSettings, AdminMaintenanceSettings, AdminContactLimitsSettings, AdminBumpLimitsSettings, AdminActiveLimitsSettings, AdminTripCreateRulesSettings, AdminServicePrices, AdminParcelTypesSettings, AdminCargoTypesSettings, AdminSupportSettings, AdminQuickMessages, AdminAttractivePricesSettings, AdminSubscriptionSettings, AdminPhoneViewSettings, CeleryPeriodicTaskCreate, CeleryPeriodicTaskUpdate } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
@@ -178,6 +178,18 @@ export const useUpdateAdminParcelTypesSettings = () => {
     return useMutation({
         mutationFn: (body: AdminParcelTypesSettings) =>
             adminApi.updateParcelTypesSettings(body),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
+            toast.success('Сохранено')
+        },
+    })
+}
+
+export const useUpdateAdminFreightCargoTypesSettings = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (body: AdminCargoTypesSettings) =>
+            adminApi.updateFreightCargoTypesSettings(body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.appSettings() })
             toast.success('Сохранено')

@@ -35,6 +35,8 @@ export interface AdminAppFeaturesSettings {
     /** Легаси-копия для старых сборок (читают из /me); гейты — в правилах создания. */
     require_verified_phone: boolean
     phone_login_enabled: boolean
+    google_login_enabled: boolean
+    apple_login_enabled: boolean
     phone_view_insights_enabled: boolean
     phone_view_show_viewer_phone: boolean
     bookings_tab_enabled: boolean
@@ -95,6 +97,14 @@ export interface AdminParcelType {
 export interface AdminParcelTypesSettings {
     enabled: boolean
     types: AdminParcelType[]
+}
+
+export interface AdminCargoType {
+    label: string
+}
+
+export interface AdminCargoTypesSettings {
+    types: AdminCargoType[]
 }
 
 export interface AdminSupportSettings {
@@ -322,6 +332,12 @@ export const settingsAdminApi = {
         requests.get<AdminParcelTypesSettings>('/admin/settings/parcel-types'),
     updateParcelTypesSettings: (body: AdminParcelTypesSettings) =>
         requests.put<AdminParcelTypesSettings>('/admin/settings/parcel-types', body),
+
+    // Cargo types for freight listings (Redis key `app:freight_cargo_types`)
+    getFreightCargoTypesSettings: () =>
+        requests.get<AdminCargoTypesSettings>('/admin/settings/freight-cargo-types'),
+    updateFreightCargoTypesSettings: (body: AdminCargoTypesSettings) =>
+        requests.put<AdminCargoTypesSettings>('/admin/settings/freight-cargo-types', body),
 
     // Support contact channels (Redis key `app:support`)
     getSupportSettings: () =>

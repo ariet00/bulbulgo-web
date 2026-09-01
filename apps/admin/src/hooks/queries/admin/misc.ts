@@ -103,3 +103,16 @@ export const useReplyToChat = (id: number) => {
         },
     })
 }
+
+// Get-or-create the support chat with a user (e.g. from the user detail page,
+// «Написать в поддержку») — seeds the query cache so opening /admin/support
+// with the returned chat id doesn't need a refetch.
+export const useOpenSupportChat = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (userId: number) => adminApi.openSupportChat(userId),
+        onSuccess: (chat: any) => {
+            if (chat?.id) queryClient.setQueryData(adminKeys.chat(chat.id), chat)
+        },
+    })
+}

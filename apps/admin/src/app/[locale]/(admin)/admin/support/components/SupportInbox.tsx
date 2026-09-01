@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAdminSupportChats } from '@/hooks/queries/admin'
 import { useSupportSocket } from '@/hooks/useSupportSocket'
 import { cn } from '@doska/shared'
@@ -10,7 +11,15 @@ import { ConversationView } from './ConversationView'
 import { displayName, otherParty, type SupportChat } from './utils'
 
 export function SupportInbox() {
-    const [selectedId, setSelectedId] = useState<number | null>(null)
+    // Deep-link from outside the inbox (e.g. «Написать в поддержку» на
+    // странице пользователя passes ?chat=<id>) — ConversationView loads the
+    // chat by id on its own, so this works even for a chat with zero
+    // messages yet (not in the inbox list, which requires messages.any()).
+    const searchParams = useSearchParams()
+    const chatParam = searchParams.get('chat')
+    const [selectedId, setSelectedId] = useState<number | null>(
+        chatParam ? Number(chatParam) || null : null,
+    )
     const [query, setQuery] = useState('')
 
     // Load the inbox (support endpoint returns newest-activity first, with a

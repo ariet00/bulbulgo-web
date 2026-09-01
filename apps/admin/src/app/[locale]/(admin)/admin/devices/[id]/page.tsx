@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
     Badge,
+    Checkbox,
     Table,
     TableBody,
     TableCell,
@@ -19,8 +20,13 @@ import {
 } from '@doska/ui'
 import { ArrowLeft, Ban, CheckCircle2 } from 'lucide-react'
 import { useAdminDevice } from '@/hooks/queries/admin'
-import { useAdminBanDevice } from '@/hooks/mutations/admin'
-import type { AdminDeviceSessionItem } from '@/apis/admin'
+import { useAdminBanDevice, useSetDeviceLoginMethods } from '@/hooks/mutations/admin'
+import {
+    LOGIN_METHODS,
+    LOGIN_METHOD_LABELS,
+    type AdminDeviceSessionItem,
+    type LoginMethod,
+} from '@/apis/admin'
 import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -51,6 +57,7 @@ export default function DeviceDetailPage() {
 
     const { data: device, isLoading } = useAdminDevice(id)
     const banDevice = useAdminBanDevice()
+    const setLoginMethods = useSetDeviceLoginMethods()
     const confirm = useConfirm()
 
     if (isLoading) return <div className="p-4">Загрузка...</div>
@@ -161,6 +168,48 @@ export default function DeviceDetailPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Способы входа</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                        Точечное ограничение поверх глобальных тумблеров в «Фичи» —
+                        снятая галочка запрещает способ входа только с этого
+                        устройства.
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                        {LOGIN_METHODS.map((method) => {
+                            const disabled = device.login_methods_disabled.includes(method)
+                            return (
+                                <label
+                                    key={method}
+                                    className="flex items-center gap-2 text-sm"
+                                >
+                                    <Checkbox
+                                        checked={!disabled}
+                                        disabled={setLoginMethods.isPending}
+                                        onCheckedChange={(checked) => {
+                                            const next = new Set(device.login_methods_disabled)
+                                            if (checked) {
+                                                next.delete(method)
+                                            } else {
+                                                next.add(method)
+                                            }
+                                            setLoginMethods.mutate({
+                                                id: device.id,
+                                                disabled: Array.from(next) as LoginMethod[],
+                                            })
+                                        }}
+                                    />
+                                    {LOGIN_METHOD_LABELS[method]}
+                                </label>
+                            )
+                        })}
+                    </div>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>

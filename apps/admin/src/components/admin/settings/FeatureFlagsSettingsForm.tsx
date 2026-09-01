@@ -83,6 +83,30 @@ const FLAGS: { key: FlagKey; title: string; description: ReactNode }[] = [
         ),
     },
     {
+        key: 'google_login_enabled',
+        title: 'Вход через Google',
+        description: (
+            <>
+                <code>google_login_enabled</code>. Показывает кнопку «Войти
+                через Google» на экране входа и открывает <code>/auth/google</code>.
+                Включено по умолчанию. Точечно для отдельного устройства —
+                карточка устройства в «Устройствах».
+            </>
+        ),
+    },
+    {
+        key: 'apple_login_enabled',
+        title: 'Вход через Apple',
+        description: (
+            <>
+                <code>apple_login_enabled</code>. Показывает кнопку «Войти
+                через Apple» на экране входа и открывает <code>/auth/apple</code>.
+                Включено по умолчанию. Точечно для отдельного устройства —
+                карточка устройства в «Устройствах».
+            </>
+        ),
+    },
+    {
         key: 'phone_view_insights_enabled',
         title: 'Просмотры номеров',
         description: (
@@ -137,6 +161,8 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     map_route_preview: false,
     require_verified_phone: false,
     phone_login_enabled: false,
+    google_login_enabled: true,
+    apple_login_enabled: true,
     phone_view_insights_enabled: false,
     phone_view_show_viewer_phone: false,
     bookings_tab_enabled: false,

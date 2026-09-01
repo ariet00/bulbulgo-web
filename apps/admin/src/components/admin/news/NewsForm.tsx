@@ -27,10 +27,19 @@ import {
 import { uploadFile } from '@doska/shared'
 import { toast } from 'sonner'
 import { Copy, ExternalLink, ImagePlus, Loader2, Video } from 'lucide-react'
-import type { AdminNews, AdminNewsInput } from '@/apis/admin'
+import {
+    GUIDE_CATEGORIES,
+    GUIDE_CATEGORY_LABELS,
+    type AdminNews,
+    type AdminNewsInput,
+    type AdminNewsKind,
+    type GuideCategory,
+} from '@/apis/admin'
 
 interface NewsFormProps {
     initial?: AdminNews
+    /** Вид записи для создания; при редактировании берётся из initial. */
+    kind?: AdminNewsKind
     saving: boolean
     onSubmit: (values: AdminNewsInput) => void
 }
@@ -48,14 +57,22 @@ const APP_LINK_PRESETS: { route: string; label: string }[] = [
     { route: '/profile/vehicles', label: 'Автомобили' },
 ]
 
-// Редактор новости: markdown + inline-HTML (для <video>). Медиа грузятся в
-// публичное хранилище (permanent URL) и вставляются сниппетом в текст.
-export function NewsForm({ initial, saving, onSubmit }: NewsFormProps) {
+// Редактор новости/гайда: markdown + inline-HTML (для <video>). Медиа
+// грузятся в публичное хранилище (permanent URL) и вставляются сниппетом в
+// текст. YouTube — вставить обычную ссылку на видео отдельной строкой,
+// страница отрендерит плеер.
+export function NewsForm({ initial, kind, saving, onSubmit }: NewsFormProps) {
+    const effectiveKind: AdminNewsKind = initial?.kind ?? kind ?? 'news'
+    const isGuide = effectiveKind === 'guide'
     const [title, setTitle] = useState(initial?.title ?? '')
     const [coverUrl, setCoverUrl] = useState(initial?.cover_url ?? '')
     const [status, setStatus] = useState<'draft' | 'published'>(
         initial?.status ?? 'draft',
     )
+    const [category, setCategory] = useState<GuideCategory>(
+        initial?.category ?? 'start',
+    )
+    const [position, setPosition] = useState(String(initial?.position ?? 0))
     const [content, setContent] = useState(initial?.content ?? '')
     const [uploading, setUploading] = useState<'image' | 'video' | null>(null)
 
@@ -109,8 +126,13 @@ export function NewsForm({ initial, saving, onSubmit }: NewsFormProps) {
         onSubmit({
             title: title.trim(),
             content,
+            kind: effectiveKind,
             status,
             cover_url: coverUrl.trim() || null,
+            ...(isGuide && {
+                category,
+                position: Number(position) || 0,
+            }),
         })
     }
 
@@ -119,7 +141,13 @@ export function NewsForm({ initial, saving, onSubmit }: NewsFormProps) {
             <Card>
                 <CardHeader>
                     <CardTitle>
-                        {initial ? 'Редактирование новости' : 'Новая новость'}
+                        {isGuide
+                            ? initial
+                                ? 'Редактирование гайда'
+                                : 'Новый гайд'
+                            : initial
+                              ? 'Редактирование новости'
+                              : 'Новая новость'}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -164,6 +192,43 @@ export function NewsForm({ initial, saving, onSubmit }: NewsFormProps) {
                             </p>
                         </div>
                     </div>
+
+                    {isGuide && (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Категория</Label>
+                                <Select
+                                    value={category}
+                                    onValueChange={(v) =>
+                                        setCategory(v as GuideCategory)
+                                    }
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {GUIDE_CATEGORIES.map((c) => (
+                                            <SelectItem key={c} value={c}>
+                                                {GUIDE_CATEGORY_LABELS[c]}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="guide-position">Позиция</Label>
+                                <Input
+                                    id="guide-position"
+                                    type="number"
+                                    value={position}
+                                    onChange={(e) => setPosition(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Порядок в списке гайдов: меньше — выше.
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <Tabs defaultValue="edit">
                         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -234,7 +299,8 @@ export function NewsForm({ initial, saving, onSubmit }: NewsFormProps) {
                                 placeholder={
                                     'Markdown: **жирный**, ## заголовок, - список, > цитата.\n' +
                                     'Фото, видео и ссылки в разделы приложения — кнопками выше.\n' +
-                                    'Ссылка в раздел вручную: [Текст](app:/real_estate).'
+                                    'Ссылка в раздел вручную: [Текст](app:/real_estate).\n' +
+                                    'YouTube: вставьте ссылку на видео отдельной строкой — страница отрендерит плеер.'
                                 }
                             />
                         </TabsContent>

@@ -4,6 +4,7 @@ export * from './users'
 export * from './complaints'
 export * from './reviews'
 export * from './news'
+export * from './ideas'
 export * from './companies'
 export * from './trips'
 export * from './misc'
@@ -30,6 +31,7 @@ import { usersAdminApi } from './users'
 import { complaintsAdminApi } from './complaints'
 import { reviewsAdminApi } from './reviews'
 import { newsAdminApi } from './news'
+import { ideasAdminApi } from './ideas'
 import { companiesAdminApi } from './companies'
 import { tripsAdminApi } from './trips'
 import { miscAdminApi } from './misc'
@@ -58,6 +60,7 @@ export const adminApi = {
     ...complaintsAdminApi,
     ...reviewsAdminApi,
     ...newsAdminApi,
+    ...ideasAdminApi,
     ...companiesAdminApi,
     ...tripsAdminApi,
     ...miscAdminApi,

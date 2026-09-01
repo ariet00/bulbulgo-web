@@ -1,0 +1,4 @@
+/* Акцент сервиса FAQ (переопределяет --wv-accent из theme.css). */
+:root {
+    --wv-accent: #8a4fbe;
+}

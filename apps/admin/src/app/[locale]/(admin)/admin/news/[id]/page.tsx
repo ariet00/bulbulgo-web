@@ -21,13 +21,21 @@ export default function AdminNewsEditPage({
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-3">
-                <Link href="/admin/news">
+                <Link
+                    href={
+                        news?.kind === 'guide'
+                            ? '/admin/news?kind=guide'
+                            : '/admin/news'
+                    }
+                >
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="h-4 w-4 mr-1" />
-                        Новости
+                        {news?.kind === 'guide' ? 'Гайды' : 'Новости'}
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold">Новость #{id}</h1>
+                <h1 className="text-2xl font-bold">
+                    {news?.kind === 'guide' ? 'Гайд' : 'Новость'} #{id}
+                </h1>
             </div>
             {isLoading && <div>Загрузка...</div>}
             {news && (

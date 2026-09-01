@@ -12,6 +12,7 @@ import { ActiveLimitsSettingsForm } from '@/components/admin/settings/ActiveLimi
 import { SubscriptionSettingsForm } from '@/components/admin/settings/SubscriptionSettingsForm'
 import { ServicePricesSettingsForm } from '@/components/admin/settings/ServicePricesSettingsForm'
 import { ParcelTypesSettingsForm } from '@/components/admin/settings/ParcelTypesSettingsForm'
+import { FreightCargoTypesSettingsForm } from '@/components/admin/settings/FreightCargoTypesSettingsForm'
 import { SupportSettingsForm } from '@/components/admin/settings/SupportSettingsForm'
 import { QuickMessagesSettingsForm } from '@/components/admin/settings/QuickMessagesSettingsForm'
 import { AttractivePricesSettingsForm } from '@/components/admin/settings/AttractivePricesSettingsForm'
@@ -24,6 +25,7 @@ const TABS = [
     { value: 'trip-create', label: 'Создание поездок', Form: TripCreateRulesSettingsForm },
     { value: 'services', label: 'Услуги', Form: ServicePricesSettingsForm },
     { value: 'parcel-types', label: 'Типы посылок', Form: ParcelTypesSettingsForm },
+    { value: 'freight-cargo-types', label: 'Типы груза', Form: FreightCargoTypesSettingsForm },
     { value: 'attractive-prices', label: 'Выгодные цены', Form: AttractivePricesSettingsForm },
     { value: 'contact-limits', label: 'Лимиты номеров', Form: ContactLimitsSettingsForm },
     { value: 'bump-limits', label: 'Лимиты поднятий', Form: BumpLimitsSettingsForm },

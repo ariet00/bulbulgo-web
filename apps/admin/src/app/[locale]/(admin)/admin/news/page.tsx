@@ -22,11 +22,18 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    Tabs,
+    TabsList,
+    TabsTrigger,
 } from '@doska/ui'
 import { useDebounce } from '@doska/shared'
 import { Copy, ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { AdminNews } from '@/apis/admin'
+import {
+    GUIDE_CATEGORY_LABELS,
+    type AdminNews,
+    type AdminNewsKind,
+} from '@/apis/admin'
 import { useAdminNewsList } from '@/hooks/queries/admin'
 import { useAdminDeleteNews } from '@/hooks/mutations/admin'
 import { useFilterParams } from '@/hooks/useFilterParams'
@@ -39,6 +46,7 @@ const FILTER_DEFAULTS = {
     size: 40,
     q: '',
     status: ALL,
+    kind: 'news',
 }
 
 export default function AdminNewsPage() {
@@ -50,26 +58,31 @@ export default function AdminNewsPage() {
         if (dq !== values.q) setValues({ q: dq })
     }, [dq, values.q, setValues])
 
+    const kind = (values.kind === 'guide' ? 'guide' : 'news') as AdminNewsKind
     const { data, isLoading } = useAdminNewsList(values.page, values.size, {
         q: values.q || undefined,
         status: values.status === ALL ? undefined : values.status,
+        kind,
     })
     const deleteNews = useAdminDeleteNews()
     const confirm = useConfirm()
 
     const handleDelete = async (n: AdminNews) => {
-        if (await confirm(`Удалить новость «${n.title}»?`)) {
+        const noun = n.kind === 'guide' ? 'гайд' : 'новость'
+        if (await confirm(`Удалить ${noun} «${n.title}»?`)) {
             deleteNews.mutate(n.id)
         }
     }
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Новости</h1>
+            <h1 className="text-2xl font-bold">Новости и обучение</h1>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Новости приложения</CardTitle>
-                    <Link href="/admin/news/new">
+                    <CardTitle>
+                        {kind === 'guide' ? 'Гайды обучения' : 'Новости приложения'}
+                    </CardTitle>
+                    <Link href={`/admin/news/new?kind=${kind}`}>
                         <Button size="sm">
                             <Plus className="h-4 w-4 mr-1" />
                             Создать
@@ -77,11 +90,33 @@ export default function AdminNewsPage() {
                     </Link>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    <Tabs
+                        value={kind}
+                        onValueChange={(v) => setValues({ kind: v, page: 1 })}
+                    >
+                        <TabsList>
+                            <TabsTrigger value="news">Новости</TabsTrigger>
+                            <TabsTrigger value="guide">Гайды обучения</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                     <p className="text-sm text-muted-foreground">
-                        Полноэкранные статьи в приложении: открываются пуш-рассылкой
-                        (кнопка «Диплинк для пуша») и из карточки «Новости» на Главной.
-                        Карточка и пуши работают, пока включён сервис <b>news</b> в
-                        разделе «Сервисы».
+                        {kind === 'guide' ? (
+                            <>
+                                Обучающие статьи сервиса «Обучение» (webview{' '}
+                                <b>training</b>): гайды и видео о том, как
+                                пользоваться приложением. Порядок в списке — поле
+                                «Позиция». Список виден, пока включён сервис{' '}
+                                <b>training</b> в разделе «Сервисы».
+                            </>
+                        ) : (
+                            <>
+                                Полноэкранные статьи в приложении: открываются
+                                пуш-рассылкой (кнопка «Диплинк для пуша») и из
+                                карточки «Новости» на Главной. Карточка и пуши
+                                работают, пока включён сервис <b>news</b> в разделе
+                                «Сервисы».
+                            </>
+                        )}
                     </p>
                     <div className="flex flex-wrap items-end gap-2">
                         <Input
@@ -113,6 +148,12 @@ export default function AdminNewsPage() {
                                     <TableRow>
                                         <TableHead>ID</TableHead>
                                         <TableHead>Заголовок</TableHead>
+                                        {kind === 'guide' && (
+                                            <>
+                                                <TableHead>Категория</TableHead>
+                                                <TableHead>Позиция</TableHead>
+                                            </>
+                                        )}
                                         <TableHead>Статус</TableHead>
                                         <TableHead>Публикация</TableHead>
                                         <TableHead>Действия</TableHead>
@@ -122,10 +163,12 @@ export default function AdminNewsPage() {
                                     {data?.items.length === 0 && (
                                         <TableRow>
                                             <TableCell
-                                                colSpan={5}
+                                                colSpan={kind === 'guide' ? 7 : 5}
                                                 className="text-center text-muted-foreground py-6"
                                             >
-                                                Пока нет новостей
+                                                {kind === 'guide'
+                                                    ? 'Пока нет гайдов'
+                                                    : 'Пока нет новостей'}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -140,6 +183,20 @@ export default function AdminNewsPage() {
                                                     {n.title}
                                                 </Link>
                                             </TableCell>
+                                            {kind === 'guide' && (
+                                                <>
+                                                    <TableCell className="whitespace-nowrap text-sm">
+                                                        {n.category
+                                                            ? GUIDE_CATEGORY_LABELS[
+                                                                  n.category
+                                                              ]
+                                                            : '—'}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">
+                                                        {n.position}
+                                                    </TableCell>
+                                                </>
+                                            )}
                                             <TableCell>
                                                 <span
                                                     className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${

@@ -5,14 +5,20 @@ export interface NewsListItem {
     title: string
     cover_url: string | null
     published_at: string | null
+    // Только у гайдов (kind='guide') — слаг категории (GUIDE_CATEGORIES).
+    category: string | null
 }
 
 export interface NewsArticle extends NewsListItem {
     content: string
 }
 
-export async function fetchNewsList(): Promise<NewsListItem[]> {
-    const r = await fetch(`${API_URL}/bulbulgo/news/?limit=50`)
+// Один эндпоинт на оба вида: 'news' — лента новостей, 'guide' — гайды
+// сервиса «Обучение» (/webview/training).
+export async function fetchNewsList(
+    kind: 'news' | 'guide' = 'news',
+): Promise<NewsListItem[]> {
+    const r = await fetch(`${API_URL}/bulbulgo/news/?limit=50&kind=${kind}`)
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
     return (await r.json()) as NewsListItem[]
 }

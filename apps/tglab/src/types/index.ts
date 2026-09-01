@@ -63,6 +63,8 @@ export interface TglabMeta {
   max_collect_per_run: number
   /** Сколько людей заход имеет право просмотреть (уже собранные — тоже). */
   max_scan_per_run: number
+  /** Без messages_limit/since_days «писавшие»/«комментаторы» смотрят это число сообщений. */
+  default_writers_message_scan: number
   task_types: MetaOption[]
   task_statuses: MetaOption[]
   task_account_roles: MetaOption[]
@@ -283,6 +285,10 @@ export interface AudienceCollectInput {
 export interface AudienceRecollectInput {
   account_id: number
   limit?: number | null
+  /** `writers`/`channel_*`: how deep into the history to go. Unset keeps the
+   *  last run's value (which itself falls back to a silent server default). */
+  messages_limit?: number | null
+  since_days?: number | null
 }
 
 export interface AudienceItem {

@@ -50,4 +50,7 @@ export const miscAdminApi = {
             content,
             parent_id: parentId,
         }),
+    // Get-or-create the support chat with a user — lets support write first.
+    openSupportChat: (userId: number) =>
+        requests.post<any>(`/admin/chats/support/${userId}`, {}),
 }
