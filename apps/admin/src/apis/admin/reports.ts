@@ -114,6 +114,36 @@ export interface AdminReferralTopRow {
 
 const REFERRAL_BASE = '/admin/analytics/reports/referral'
 
+// ── Services & screens report (/admin/analytics/reports/services) ──────────
+
+export interface AdminServiceUsageRow {
+    slug: string
+    label: string | null
+    type: 'native' | 'webview' | null
+    enabled: boolean | null
+    opens: number
+    users: number
+    prev_opens: number
+}
+
+export interface AdminWebviewQualityRow {
+    slug: string
+    label: string | null
+    loads: number
+    avg_load_ms: number | null
+    median_load_ms: number | null
+    errors: number
+}
+
+export interface AdminScreenUsageRow {
+    screen: string
+    views: number
+    users: number
+    prev_views: number
+}
+
+const SERVICES_BASE = '/admin/analytics/reports/services'
+
 export const reportsAdminApi = {
     getOtpReportSummary: (params: AdminReportParams) =>
         requests.get<AdminOtpReportSummary>(`${OTP_BASE}/summary?${qs(params)}`),
@@ -133,4 +163,10 @@ export const reportsAdminApi = {
         requests.get<AdminReferralRejectionRow[]>(`${REFERRAL_BASE}/rejections?${qs(params)}`),
     getReferralReportTopReferrers: (params: AdminReportParams) =>
         requests.get<AdminReferralTopRow[]>(`${REFERRAL_BASE}/top-referrers?${qs(params)}`),
+    getServicesReportUsage: (params: AdminReportParams) =>
+        requests.get<AdminServiceUsageRow[]>(`${SERVICES_BASE}/usage?${qs(params)}`),
+    getServicesReportWebviewQuality: (params: AdminReportParams) =>
+        requests.get<AdminWebviewQualityRow[]>(`${SERVICES_BASE}/webview-quality?${qs(params)}`),
+    getServicesReportScreens: (params: AdminReportParams) =>
+        requests.get<AdminScreenUsageRow[]>(`${SERVICES_BASE}/screens?${qs(params)}`),
 }

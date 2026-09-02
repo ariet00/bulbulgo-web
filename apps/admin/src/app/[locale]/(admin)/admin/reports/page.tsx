@@ -1,5 +1,5 @@
 import { Link } from '@doska/i18n'
-import { Gift, KeyRound, ChevronRight } from 'lucide-react'
+import { Gift, KeyRound, LayoutGrid, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@doska/ui'
 
 // Реестр отчётов: новый отчёт = запись здесь + страница в reports/<slug>/.
@@ -17,6 +17,13 @@ const REPORTS = [
         description:
             'Воронка приглашений, конверсия в выплату, кто сколько заработал, анти-фрод отклонения.',
         icon: Gift,
+    },
+    {
+        slug: 'services',
+        title: 'Сервисы и экраны',
+        description:
+            'Какие сервисы «Главной» открывают и как часто, качество webview, топ экранов приложения.',
+        icon: LayoutGrid,
     },
 ]
 
