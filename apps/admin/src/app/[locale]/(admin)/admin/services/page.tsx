@@ -122,12 +122,17 @@ export default function AdminServicesPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
-                                                {s.group ?? '—'}
+                                                {s.parent_slug
+                                                    ? `↳ ${s.parent_slug}`
+                                                    : (s.group ?? '—')}
                                             </TableCell>
                                             <TableCell>
                                                 {s.badge === 'new' && <Badge>NEW</Badge>}
                                                 {s.badge === 'soon' && (
                                                     <Badge variant="outline">СКОРО</Badge>
+                                                )}
+                                                {s.badge === 'hit' && (
+                                                    <Badge variant="destructive">ХИТ</Badge>
                                                 )}
                                                 {!s.badge && (
                                                     <span className="text-muted-foreground">—</span>
