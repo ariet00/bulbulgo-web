@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '../../_components/LegalLayout'
 
 export const metadata: Metadata = {
-  title: 'Data Deletion Status — BulBul Content Manager',
+  title: 'Data Deletion Status — BulBul Social',
 }
 
 interface PageProps {
@@ -37,7 +37,7 @@ export default async function DataDeletionStatusPage({ searchParams }: PageProps
       {!code && (
         <p>
           No confirmation code provided. If you received a status URL from Meta after removing
-          BulBul Content Manager from your account, open that URL directly.
+          BulBul Social from your account, open that URL directly.
         </p>
       )}
 

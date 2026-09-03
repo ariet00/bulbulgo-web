@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '../_components/LegalLayout'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — BulBul Content Manager',
+  title: 'Privacy Policy — BulBul Social',
   description:
-    'How BulBul Content Manager collects, uses, stores and shares your personal data and the data of your connected Meta (Facebook, Instagram, WhatsApp, Threads) accounts.',
+    'How BulBul Social collects, uses, stores and shares your personal data and the data of your connected Meta (Facebook, Instagram, WhatsApp, Threads) accounts.',
 }
 
 const LAST_UPDATED = 'May 18, 2026'
@@ -13,12 +13,12 @@ export default function PrivacyPage() {
   return (
     <LegalLayout
       title="Privacy Policy"
-      subtitle="BulBul Content Manager — a service that helps small businesses publish and manage their social media presence."
+      subtitle="BulBul Social — a service that helps small businesses publish and manage their social media presence."
       lastUpdated={LAST_UPDATED}
     >
       <h2>1. Who we are</h2>
       <p>
-        BulBul Content Manager (&ldquo;the Service&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is
+        BulBul Social (&ldquo;the Service&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is
         operated by <strong>[COMPANY LEGAL NAME]</strong>, registered at{' '}
         <strong>[REGISTERED ADDRESS]</strong>, registration number{' '}
         <strong>[REGISTRATION NUMBER]</strong>. You can reach us at{' '}
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
         This policy explains what personal data we collect, how we use it, the legal basis for
         processing, with whom we share it, how long we keep it, and your rights. It applies to the
         web application available at{' '}
-        <a href="https://content-manager.bulbul.asia">https://content-manager.bulbul.asia</a> and the supporting
+        <a href="https://social.bulbul.asia">https://social.bulbul.asia</a> and the supporting
         backend at <a href="https://api.bulbul.asia">https://api.bulbul.asia</a>.
       </p>
 
@@ -231,7 +231,7 @@ export default function PrivacyPage() {
 
       <h2 id="ru">Краткое содержание на русском</h2>
       <p>
-        <strong>BulBul Content Manager</strong> — сервис для управления соцсетями (Facebook,
+        <strong>BulBul Social</strong> — сервис для управления соцсетями (Facebook,
         Instagram, WhatsApp, Threads). Мы храним токены доступа к вашим аккаунтам Meta в
         зашифрованном виде, контент, который вы публикуете через сервис, и метаданные
         комментариев/сообщений, которые мы получаем по вашему поручению.

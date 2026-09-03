@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '../_components/LegalLayout'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — BulBul Content Manager',
+  title: 'Terms of Service — BulBul Social',
   description:
-    'The terms under which you may use BulBul Content Manager to publish and manage your social media accounts on Meta platforms.',
+    'The terms under which you may use BulBul Social to publish and manage your social media accounts on Meta platforms.',
 }
 
 const LAST_UPDATED = 'May 18, 2026'
@@ -13,12 +13,12 @@ export default function TermsPage() {
   return (
     <LegalLayout
       title="Terms of Service"
-      subtitle="By signing in to BulBul Content Manager you agree to these terms."
+      subtitle="By signing in to BulBul Social you agree to these terms."
       lastUpdated={LAST_UPDATED}
     >
       <h2>1. The Service</h2>
       <p>
-        BulBul Content Manager (the &ldquo;Service&rdquo;) is a software-as-a-service tool that
+        BulBul Social (the &ldquo;Service&rdquo;) is a software-as-a-service tool that
         helps you publish content, read comments and direct messages, and view analytics for the
         social media accounts you choose to connect — currently Facebook Pages, Instagram
         Business / Creator accounts, WhatsApp Business and Threads. The Service is operated by{' '}
