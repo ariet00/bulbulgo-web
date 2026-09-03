@@ -30,20 +30,13 @@ import {
   useStartThreadsOAuth,
   useSubmitThreads2FA,
   useThreadsAccountStatus,
+  PLATFORMS,
+  PLATFORM_LABELS,
   type Platform,
 } from '@doska/shared'
 import { Loader2 } from 'lucide-react'
 
 import { WhatsAppEmbeddedSignupButton } from '@/components/whatsapp/WhatsAppEmbeddedSignupButton'
-
-const PLATFORMS: { value: Platform; label: string }[] = [
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'threads', label: 'Threads' },
-  { value: 'pages', label: 'Facebook Page' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'telegram', label: 'Telegram' },
-]
 
 interface FormState {
   username: string
@@ -165,13 +158,14 @@ export function AddAccountDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Добавить аккаунт</Button>
+        <Button>Подключить аккаунт</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Новый аккаунт</DialogTitle>
+          <DialogTitle>Подключить аккаунт</DialogTitle>
           <DialogDescription>
-            Выберите платформу и заполните данные для подключения.
+            Выберите соцсеть. Для Threads, Instagram, WhatsApp и Facebook вход
+            проходит на стороне Meta, пароль нам не нужен.
           </DialogDescription>
         </DialogHeader>
 
@@ -188,8 +182,8 @@ export function AddAccountDialog() {
                 </SelectTrigger>
                 <SelectContent>
                   {PLATFORMS.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>
-                      {p.label}
+                    <SelectItem key={p} value={p}>
+                      {PLATFORM_LABELS[p]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -209,10 +203,9 @@ export function AddAccountDialog() {
               <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
                 <p className="font-medium">Подключение через Threads</p>
                 <p className="text-muted-foreground">
-                  Вы будете перенаправлены на threads.net, где разрешите BulBul
-                  Content Manager публиковать посты, читать ответы и собирать
-                  статистику от вашего имени. Мы никогда не запрашиваем ваш
-                  пароль.
+                  Вы перейдёте на threads.net и разрешите BulBul Social
+                  публиковать посты, читать ответы и собирать статистику от
+                  вашего имени. Пароль мы не запрашиваем.
                 </p>
                 <Button
                   type="button"

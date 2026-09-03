@@ -7,7 +7,8 @@ const withNextIntl = createNextIntlPlugin()
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_PRODUCT: 'admin',
+    // X-Product / X-Client value — must match backend shared/products.py:Product
+    NEXT_PUBLIC_PRODUCT: 'content_manager',
   },
   transpilePackages: ['@doska/shared', '@doska/ui'],
   images: {

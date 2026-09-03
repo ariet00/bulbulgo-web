@@ -1,12 +1,25 @@
 import { requester } from '../lib/requester'
 
-export type Platform =
-  | 'instagram'
-  | 'whatsapp'
-  | 'threads'
-  | 'tiktok'
-  | 'telegram'
-  | 'pages'
+// Mirrors backend `apps/content_manager/models.py:Platform`. Single source for
+// every platform-keyed UI map (labels here, visuals in the consuming app).
+export const PLATFORMS = [
+  'instagram',
+  'whatsapp',
+  'threads',
+  'tiktok',
+  'telegram',
+  'pages',
+] as const
+export type Platform = (typeof PLATFORMS)[number]
+
+export const PLATFORM_LABELS: Record<Platform, string> = {
+  instagram: 'Instagram',
+  whatsapp: 'WhatsApp',
+  threads: 'Threads',
+  tiktok: 'TikTok',
+  telegram: 'Telegram',
+  pages: 'Facebook Page',
+}
 
 export interface ContentAccount {
   id: number
