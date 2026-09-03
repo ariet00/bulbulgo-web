@@ -13,6 +13,23 @@ export const startThreadsOAuth = async (): Promise<{
 
 // ───── Direct publishing (OAuth-based) ─────────────────────────────────────
 
+// Threads API limits (docs: developers.facebook.com/docs/threads/posts).
+export const THREADS_TEXT_LIMIT = 500
+export const THREADS_CAROUSEL_MIN = 2
+export const THREADS_CAROUSEL_MAX = 20
+export const THREADS_IMAGE_MAX_BYTES = 8 * 1024 * 1024
+export const THREADS_VIDEO_MAX_BYTES = 1024 * 1024 * 1024
+
+// `media_type` values Threads returns for a user's posts.
+export const THREADS_MEDIA_TYPE_LABELS: Record<string, string> = {
+  TEXT_POST: 'Текст',
+  IMAGE: 'Фото',
+  VIDEO: 'Видео',
+  CAROUSEL_ALBUM: 'Карусель',
+  AUDIO: 'Аудио',
+  REPOST_FACADE: 'Репост',
+}
+
 export type ThreadsMediaType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'CAROUSEL'
 
 export interface ThreadsCarouselItem {

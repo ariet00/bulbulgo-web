@@ -1,3 +1,102 @@
 @import "../../../../packages/ui/src/globals.css";
 
 @source "../**/*.{ts,tsx}";
+
+/* BulBul Social — app-level tokens on top of the shared shadcn set.
+   Ink navy instead of black, a cool blue-grey workspace instead of white,
+   BulBul sky-blue as the single accent, teal reserved for "active" status. */
+@theme inline {
+  --font-sans: var(--font-golos);
+  --font-display: var(--font-unbounded);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #f3f6fb;
+  --foreground: #101b33;
+  --card: #ffffff;
+  --card-foreground: #101b33;
+  --popover: #ffffff;
+  --popover-foreground: #101b33;
+  --primary: #101b33;
+  --primary-foreground: #f7f9fd;
+  --secondary: #e9eef7;
+  --secondary-foreground: #101b33;
+  --muted: #e9eef7;
+  --muted-foreground: #5b6b86;
+  --accent: #e6f3fd;
+  --accent-foreground: #0b4f86;
+  --destructive: #d93a3a;
+  --border: #dce3ef;
+  --input: #dce3ef;
+  --ring: #34a5f5;
+  --brand: #34a5f5;
+  --brand-foreground: #ffffff;
+  --success: #1fae7f;
+}
+
+.dark {
+  --background: #0c1220;
+  --foreground: #e7ecf5;
+  --card: #141c2e;
+  --card-foreground: #e7ecf5;
+  --popover: #141c2e;
+  --popover-foreground: #e7ecf5;
+  --primary: #e7ecf5;
+  --primary-foreground: #101b33;
+  --secondary: #1e2940;
+  --secondary-foreground: #e7ecf5;
+  --muted: #1e2940;
+  --muted-foreground: #96a3ba;
+  --accent: #16304a;
+  --accent-foreground: #bfe0fb;
+  --destructive: #f26b6b;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #5eb9f7;
+  --brand: #5eb9f7;
+  --brand-foreground: #0c1220;
+  --success: #3ddba6;
+}
+
+/* Anti-FOUC for the system theme: next-themes adds `.dark` from JS after the
+   first paint, so a system-dark user would otherwise flash the light tokens. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --background: #0c1220;
+    --foreground: #e7ecf5;
+    --card: #141c2e;
+    --card-foreground: #e7ecf5;
+    --popover: #141c2e;
+    --popover-foreground: #e7ecf5;
+    --primary: #e7ecf5;
+    --primary-foreground: #101b33;
+    --secondary: #1e2940;
+    --secondary-foreground: #e7ecf5;
+    --muted: #1e2940;
+    --muted-foreground: #96a3ba;
+    --accent: #16304a;
+    --accent-foreground: #bfe0fb;
+    --destructive: #f26b6b;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.14);
+    --ring: #5eb9f7;
+    --brand: #5eb9f7;
+    --brand-foreground: #0c1220;
+    --success: #3ddba6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -24,19 +24,19 @@ export default function AccountDetailPage() {
 
   if (isLoading || !account) {
     return (
-      <div className="flex items-center justify-center h-[80vh]">
+      <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <Link
         href="/"
-        className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+        className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4 mr-1" /> К списку
+        <ArrowLeft className="mr-1 h-4 w-4" /> Аккаунты
       </Link>
 
       {account.platform === 'threads' ? (
