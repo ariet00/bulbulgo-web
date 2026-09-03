@@ -18,7 +18,7 @@ export interface AdminService {
     icon: string | null
     // HEX-цвет значка (#RRGGBB); null — приложение подберёт цвет само
     color: string | null
-    badge: 'new' | 'soon' | null
+    badge: 'new' | 'soon' | 'hit' | null
     show_in_tabs: boolean
     /** true — нигде не показывается, открывается только по диплинку/переходу */
     hidden: boolean
@@ -31,6 +31,8 @@ export interface AdminService {
     created_at: string | null
     /** slug группы «Главной»; группа у сервиса одна, null — вне групп */
     group: string | null
+    /** slug родителя: сервис — плитка раздела, на «Главной» не показывается */
+    parent_slug: string | null
 }
 
 export interface AdminServiceCreate {
@@ -40,7 +42,7 @@ export interface AdminServiceCreate {
     description?: LocalizedText
     icon?: string | null
     color?: string | null
-    badge?: 'new' | 'soon' | null
+    badge?: 'new' | 'soon' | 'hit' | null
     show_in_tabs?: boolean
     hidden?: boolean
     url?: string | null
@@ -51,6 +53,8 @@ export interface AdminServiceCreate {
     position?: number
     /** slug группы; null — оставить/убрать вне групп */
     group?: string | null
+    /** slug родителя; null — сервис остаётся карточкой «Главной» */
+    parent_slug?: string | null
 }
 
 // slug/type иммутабельны после создания (бэк их игнорирует в PATCH)

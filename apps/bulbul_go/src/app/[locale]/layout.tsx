@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { SITE_URL } from '@/lib/site-url'
+import { FACEBOOK_DOMAIN_VERIFICATION, SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 
 
@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+  },
+  verification: {
+    other: { 'facebook-domain-verification': FACEBOOK_DOMAIN_VERIFICATION },
   },
 }
 

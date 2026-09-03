@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import { LegalLayout } from '../_components/LegalLayout'
 
 export const metadata: Metadata = {
-  title: 'Data Deletion — BulBul Content Manager',
+  title: 'Data Deletion — BulBul Social',
   description:
-    'How to delete your BulBul Content Manager account and all data associated with your connected Meta accounts.',
+    'How to delete your BulBul Social account and all data associated with your connected Meta accounts.',
 }
 
 const LAST_UPDATED = 'May 18, 2026'
@@ -19,7 +19,7 @@ export default function DataDeletionPage() {
       <h2>Self-service (recommended)</h2>
       <ol>
         <li>
-          Sign in to <a href="https://content-manager.bulbul.asia">admin.bulbul.asia</a>.
+          Sign in to <a href="https://social.bulbul.asia">social.bulbul.asia</a>.
         </li>
         <li>
           For each connected social-media account, open the account&rsquo;s detail page and
@@ -46,7 +46,7 @@ export default function DataDeletionPage() {
 
       <h2>Revoking access from Meta&rsquo;s side</h2>
       <p>
-        You can also remove BulBul Content Manager from your Meta accounts directly. This stops
+        You can also remove BulBul Social from your Meta accounts directly. This stops
         all access on Meta&rsquo;s side immediately, even before we receive the deletion
         callback:
       </p>
@@ -59,7 +59,7 @@ export default function DataDeletionPage() {
           >
             Settings → Business Integrations
           </a>{' '}
-          → find &ldquo;BulBul Content Manager&rdquo; → Remove.
+          → find &ldquo;BulBul Social&rdquo; → Remove.
         </li>
         <li>
           WhatsApp Business:{' '}

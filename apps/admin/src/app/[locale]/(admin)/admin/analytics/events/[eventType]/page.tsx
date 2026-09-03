@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { Link } from '@doska/i18n'
 import {
     useAdminAnalyticsAppVersions,
@@ -111,13 +111,16 @@ function KpiCard({
 export default function AnalyticsEventDetailPage() {
     const params = useParams<{ eventType: string }>()
     const eventType = decodeURIComponent(params.eventType)
+    // Ссылки из других отчётов (напр. «Сервисы») сразу открывают конкретный
+    // подтип — дальше это обычный локальный фильтр, в URL не синхронизируется.
+    const searchParams = useSearchParams()
 
     const [period, setPeriod] = useState('7d')
     const [granularity, setGranularity] = useState('day')
     const [product, setProduct] = useState('')
     const [platform, setPlatform] = useState('')
     const [client, setClient] = useState('')
-    const [subtype, setSubtype] = useState('')
+    const [subtype, setSubtype] = useState(() => searchParams.get('subtype') ?? '')
 
     const p = product || undefined
     const pl = platform || undefined

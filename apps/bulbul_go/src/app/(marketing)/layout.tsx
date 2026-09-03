@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import { ThemeProvider } from 'next-themes'
-import { SITE_URL } from '@/lib/site-url'
+import { FACEBOOK_DOMAIN_VERIFICATION, SITE_URL } from '@/lib/site-url'
 import '../globals.css'
 import Navbar from './_components/Navbar'
 import Footer from './_components/Footer'
@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
+    },
+    verification: {
+        other: { 'facebook-domain-verification': FACEBOOK_DOMAIN_VERIFICATION },
     },
 }
 

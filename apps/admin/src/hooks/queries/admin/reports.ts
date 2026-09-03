@@ -64,3 +64,24 @@ export const useAdminReferralReportTopReferrers = (params: AdminReportParams) =>
         queryFn: () => adminApi.getReferralReportTopReferrers(params),
     })
 }
+
+export const useAdminServicesReportUsage = (params: AdminReportParams) => {
+    return useQuery({
+        queryKey: [...adminKeys.reports(), 'services', 'usage', params],
+        queryFn: () => adminApi.getServicesReportUsage(params),
+    })
+}
+
+export const useAdminServicesReportWebviewQuality = (params: AdminReportParams) => {
+    return useQuery({
+        queryKey: [...adminKeys.reports(), 'services', 'webview-quality', params],
+        queryFn: () => adminApi.getServicesReportWebviewQuality(params),
+    })
+}
+
+export const useAdminServicesReportScreens = (params: AdminReportParams) => {
+    return useQuery({
+        queryKey: [...adminKeys.reports(), 'services', 'screens', params],
+        queryFn: () => adminApi.getServicesReportScreens(params),
+    })
+}

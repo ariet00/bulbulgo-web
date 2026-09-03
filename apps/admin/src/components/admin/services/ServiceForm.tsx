@@ -17,7 +17,7 @@ import {
     Switch,
 } from '@doska/ui'
 import { Plus, Trash2 } from 'lucide-react'
-import { useAdminServiceGroups } from '@/hooks/queries/admin'
+import { useAdminServiceGroups, useAdminServices } from '@/hooks/queries/admin'
 import { LocalizedInputs } from './LocalizedInputs'
 import { IconColorInput } from './IconColorInput'
 import type {
@@ -29,6 +29,7 @@ import type {
 
 const NO_BADGE = '__none__'
 const NO_GROUP = '__ungrouped__'
+const NO_PARENT = '__root__'
 
 // Зеркало AppService._icons (app_service.dart): имена — свои, приложение
 // рисует их значками Lucide. Новое имя работает только после релиза
@@ -106,6 +107,14 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     // странице групп (там остаётся порядок внутри группы).
     const [group, setGroup] = useState(initial?.group ?? NO_GROUP)
     const { data: groups } = useAdminServiceGroups()
+    const [parent, setParent] = useState(initial?.parent_slug ?? NO_PARENT)
+    const { data: allServices } = useAdminServices()
+    // Кандидаты в родители: корневые сервисы (вложенность один уровень),
+    // кроме самого редактируемого.
+    const parentOptions = (allServices ?? []).filter(
+        (s) => !s.parent_slug && s.slug !== initial?.slug,
+    )
+    const isChild = parent !== NO_PARENT
 
     const addNavItem = () =>
         setNavItems((p) => [
@@ -133,7 +142,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             description,
             icon: icon.trim() || null,
             color: color.trim() || null,
-            badge: badge === NO_BADGE ? null : (badge as 'new' | 'soon'),
+            badge: badge === NO_BADGE ? null : (badge as 'new' | 'soon' | 'hit'),
             show_in_tabs: showInTabs,
             hidden,
             url: type === 'webview' ? url.trim() : null,
@@ -143,7 +152,9 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                 type === 'webview' ? navItems.filter((i) => i.value.trim()) : [],
             enabled,
             position,
-            group: group === NO_GROUP ? null : group,
+            // у дочернего сервиса группы «Главной» не бывает
+            group: isChild || group === NO_GROUP ? null : group,
+            parent_slug: isChild ? parent : null,
         })
     }
 
@@ -207,6 +218,7 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                                     <SelectItem value={NO_BADGE}>Без бейджа</SelectItem>
                                     <SelectItem value="new">NEW</SelectItem>
                                     <SelectItem value="soon">СКОРО</SelectItem>
+                                    <SelectItem value="hit">ХИТ</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -221,26 +233,52 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label>Группа</Label>
-                        <Select value={group} onValueChange={setGroup}>
+                        <Label>Родитель</Label>
+                        <Select value={parent} onValueChange={setParent}>
                             <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={NO_GROUP}>Без группы</SelectItem>
-                                {groups?.groups.map((g) => (
-                                    <SelectItem key={g.slug} value={g.slug}>
-                                        {g.label?.ru ?? g.slug}
+                                <SelectItem value={NO_PARENT}>
+                                    Нет — карточка «Главной»
+                                </SelectItem>
+                                {parentOptions.map((s) => (
+                                    <SelectItem key={s.slug} value={s.slug}>
+                                        {s.label?.ru ?? s.slug}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                            Группа одна на сервис — выбор новой переносит его из
-                            прежней. На «Главной» секции сейчас не рисуются:
-                            сервисы идут одной сеткой.
+                            С родителем сервис становится плиткой раздела
+                            («Что можно сделать» внутри продукта) и на
+                            «Главной» не показывается.
                         </p>
                     </div>
+
+                    {!isChild && (
+                        <div className="space-y-1.5">
+                            <Label>Группа</Label>
+                            <Select value={group} onValueChange={setGroup}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={NO_GROUP}>Без группы</SelectItem>
+                                    {groups?.groups.map((g) => (
+                                        <SelectItem key={g.slug} value={g.slug}>
+                                            {g.label?.ru ?? g.slug}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                                Группа одна на сервис — выбор новой переносит его из
+                                прежней. На «Главной» секции сейчас не рисуются:
+                                сервисы идут одной сеткой.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="space-y-1.5">
                         <Label>Иконка</Label>
@@ -271,15 +309,17 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-between rounded-md border p-3">
-                        <div>
-                            <Label>Показывать в табах</Label>
-                            <p className="text-xs text-muted-foreground">
-                                Выключено — сервис доступен только с «Главной»
-                            </p>
+                    {!isChild && (
+                        <div className="flex items-center justify-between rounded-md border p-3">
+                            <div>
+                                <Label>Показывать в табах</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Выключено — сервис доступен только с «Главной»
+                                </p>
+                            </div>
+                            <Switch checked={showInTabs} onCheckedChange={setShowInTabs} />
                         </div>
-                        <Switch checked={showInTabs} onCheckedChange={setShowInTabs} />
-                    </div>
+                    )}
 
                     <div className="flex items-center justify-between rounded-md border p-3">
                         <div>
