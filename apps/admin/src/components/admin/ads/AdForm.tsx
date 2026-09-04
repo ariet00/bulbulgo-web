@@ -29,6 +29,7 @@ import type { AdminAd, AdminAdColors, AdminAdCreate } from '@/apis/admin'
 export const PLACEMENTS = [
     { value: 'contacts', label: 'Контакты — лист (квадрат)' },
     { value: 'feed', label: 'Лента — поиск поездок (большой)' },
+    { value: 'home', label: 'Главная — баннер (лента 2:1)' },
 ]
 
 const LANGS = [
@@ -171,6 +172,11 @@ const IMAGE_SPEC: Record<string, { ratio: string; size: string; note: string }> 
         ratio: '≈ 16:9 (горизонтальная)',
         size: '1080×600 px',
         note: 'Большой слот в ленте поиска поездок.',
+    },
+    home: {
+        ratio: '2:1 (горизонтальная)',
+        size: '1080×540 px',
+        note: 'Лента баннеров первым рядом «Главной»: две карточки в ширину экрана и край третьей. Только картинка — заголовок и кнопка не рисуются, текст впечатывайте в саму картинку.',
     },
 }
 
@@ -777,8 +783,8 @@ function AdPreview({
     // фото»), как и в native_apps/.../custom_ad_widget.dart.
     const hasText = hasTitle || hasButton
     // Кликабельное фото без текста — маленький бейдж, чтобы было видно, что тап
-    // по самой картинке ведёт по действию.
-    const photoClickable = isInteractive && !hasText
+    // по самой картинке ведёт по действию. На «Главной» текста нет никогда.
+    const photoClickable = isInteractive && (!hasText || placement === 'home')
     const textBlock = hasText ? (
         <div className="space-y-2 p-3">
             {hasTitle && (
@@ -805,6 +811,29 @@ function AdPreview({
             фото кликабельно
         </span>
     ) : null
+
+    // Главная: карточка 2:1 только из картинки — заголовок и кнопка в
+    // приложении не рисуются (см. home_banners.dart), текст живёт в самом фото.
+    if (placement === 'home') {
+        return (
+            <div
+                className="relative aspect-[2/1] w-64 overflow-hidden rounded-2xl border"
+                style={{ backgroundColor: colors.background }}
+            >
+                {imageUrl ? (
+                    <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                    <div
+                        className="flex h-full w-full items-center justify-center text-xs opacity-50"
+                        style={{ color: colors.text }}
+                    >
+                        нет фото
+                    </div>
+                )}
+                {clickBadge}
+            </div>
+        )
+    }
 
     // Лента: картинка фиксированной высоты, текст снизу (как карточка поездки).
     if (placement === 'feed') {
