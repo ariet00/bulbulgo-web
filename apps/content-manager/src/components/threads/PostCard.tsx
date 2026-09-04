@@ -4,10 +4,17 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@doska/ui'
 import { Button } from '@doska/ui'
 import { Badge } from '@doska/ui'
-import { Check, CalendarDays, Edit2, Save, X, Rocket, Loader2, Trash2 } from 'lucide-react'
+import { Check, CalendarClock, CalendarDays, Edit2, Save, X, Rocket, Loader2, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Textarea } from '@doska/ui'
-import { useUpdateThreadsPost, usePublishThreadsPost, useDeleteThreadsPost } from '@doska/shared'
+import {
+  useUpdateThreadsPost,
+  usePublishThreadsPost,
+  useDeleteThreadsPost,
+  useScheduleThreadsDraft,
+} from '@doska/shared'
+
+import { ScheduleDialog } from '@/components/schedule/ScheduleDialog'
 
 interface PostCardProps {
   post: any
@@ -20,6 +27,9 @@ export function PostCard({ post }: PostCardProps) {
   const updatePost = useUpdateThreadsPost()
   const publishPost = usePublishThreadsPost()
   const deletePost = useDeleteThreadsPost()
+  const scheduleDraft = useScheduleThreadsDraft()
+  const [scheduling, setScheduling] = useState(false)
+  const scheduledPostId = post.data?.scheduled_post_id as number | undefined
 
   const isDraft = post.status === 'draft'
   const isApproved = post.status === 'approved'
@@ -121,7 +131,17 @@ export function PostCard({ post }: PostCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="flex justify-end gap-2 py-4 border-t bg-muted/5 mt-auto">
+      <CardFooter className="flex flex-wrap justify-end gap-2 py-4 border-t bg-muted/5 mt-auto">
+        {!isPublished && !isEditing && scheduledPostId && (
+          <span className="mr-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <CalendarClock className="h-3.5 w-3.5" /> В планировщике
+          </span>
+        )}
+        {!isPublished && !isEditing && (
+          <Button size="sm" variant="outline" className="h-9" onClick={() => setScheduling(true)}>
+            <CalendarClock className="h-3.5 w-3.5 mr-1" /> Запланировать
+          </Button>
+        )}
         {isDraft && !isEditing && (
           <>
             <Button size="sm" variant="ghost" className="h-9 text-destructive hover:bg-destructive/10" onClick={handleDelete} disabled={deletePost.isPending}>
@@ -165,6 +185,17 @@ export function PostCard({ post }: PostCardProps) {
           </Button>
         )}
       </CardFooter>
+
+      <ScheduleDialog
+        open={scheduling}
+        onOpenChange={setScheduling}
+        description="Черновик уйдёт в Threads сам в выбранное время."
+        pending={scheduleDraft.isPending}
+        onConfirm={async (iso, timezone) => {
+          await scheduleDraft.mutateAsync({ postId: post.id, scheduledAt: iso, timezone })
+          setScheduling(false)
+        }}
+      />
     </Card>
   )
 }

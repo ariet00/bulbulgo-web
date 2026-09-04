@@ -19,13 +19,17 @@ import {
   THREADS_TEXT_LIMIT,
   THREADS_VIDEO_MAX_BYTES,
   uploadFile,
+  useCreateScheduledPost,
   usePublishToThreads,
   useUserThreads,
   type ContentAccount,
+  type ScheduledContent,
   type ThreadsMediaType,
 } from '@doska/shared'
-import { ImagePlus, Loader2, Video, X } from 'lucide-react'
+import { CalendarClock, ImagePlus, Loader2, Video, X } from 'lucide-react'
 import { toast } from 'sonner'
+
+import { ScheduleDialog } from '@/components/schedule/ScheduleDialog'
 
 interface Attachment {
   id: string
@@ -54,7 +58,9 @@ export function ComposerTab({
 }) {
   const accountId = account.id
   const publish = usePublishToThreads()
+  const schedule = useCreateScheduledPost()
   const { data: myThreads } = useUserThreads(accountId)
+  const [scheduling, setScheduling] = useState(false)
 
   const [text, setText] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
@@ -141,6 +147,21 @@ export function ComposerTab({
     attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl))
     setAttachments([])
     setReplyTo(NO_REPLY)
+  }
+
+  // Same content the planner stores; the Threads publisher derives the media type.
+  const scheduledContent = (): ScheduledContent => ({
+    text: text.trim() || null,
+    media: attachments
+      .filter((a) => a.status === 'ready' && a.url)
+      .map((a) => ({ kind: a.kind, url: a.url! })),
+    platform_options: replyTo !== NO_REPLY ? { threads: { reply_to_id: replyTo } } : {},
+  })
+
+  const handleSchedule = async (iso: string, timezone: string) => {
+    await schedule.mutateAsync({ account_id: accountId, scheduled_at: iso, content: scheduledContent(), timezone })
+    setScheduling(false)
+    reset()
   }
 
   const handlePublish = async () => {
@@ -287,14 +308,28 @@ export function ComposerTab({
           </Select>
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t pt-4">
-          <p className="text-xs text-muted-foreground">{blocker ?? 'Пост появится в Threads сразу'}</p>
-          <Button onClick={handlePublish} disabled={!!blocker || publish.isPending}>
-            {publish.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Опубликовать
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
+          <p className="text-xs text-muted-foreground">{blocker ?? 'Сразу в Threads или в планировщик на нужное время'}</p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setScheduling(true)} disabled={!!blocker || publish.isPending}>
+              <CalendarClock className="mr-2 h-4 w-4" />
+              Запланировать
+            </Button>
+            <Button onClick={handlePublish} disabled={!!blocker || publish.isPending}>
+              {publish.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Опубликовать
+            </Button>
+          </div>
         </div>
       </section>
+
+      <ScheduleDialog
+        open={scheduling}
+        onOpenChange={setScheduling}
+        description="Пост уйдёт в Threads сам, следить за ним можно в планировщике."
+        pending={schedule.isPending}
+        onConfirm={handleSchedule}
+      />
 
       {/* Preview */}
       <aside className="space-y-3">

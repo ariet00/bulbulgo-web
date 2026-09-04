@@ -1,4 +1,5 @@
 import { requester } from '../lib/requester'
+import type { ScheduledPost } from './schedule'
 
 // Threads-specific operations on a content_manager account where platform = 'threads'.
 const ACCOUNT_BASE = '/content-manager/threads/accounts'
@@ -259,6 +260,15 @@ export const updateThreadsPost = async (postId: number, data: any) => {
 
 export const publishThreadsPost = async (postId: number) => {
   const response = await requester.post(`/content-manager/threads/posts/${postId}/publish`)
+  return response.data
+}
+
+/** Put an AI draft into the content planner (draft becomes `approved`). */
+export const scheduleThreadsDraft = async (
+  postId: number,
+  body: { scheduled_at: string; timezone?: string },
+): Promise<ScheduledPost> => {
+  const response = await requester.post(`/content-manager/threads/posts/${postId}/schedule`, body)
   return response.data
 }
 
