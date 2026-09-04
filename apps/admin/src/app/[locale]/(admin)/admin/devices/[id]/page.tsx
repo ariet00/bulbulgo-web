@@ -11,6 +11,11 @@ import {
     CardTitle,
     Badge,
     Checkbox,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
     Table,
     TableBody,
     TableCell,
@@ -20,12 +25,19 @@ import {
 } from '@doska/ui'
 import { ArrowLeft, Ban, CheckCircle2 } from 'lucide-react'
 import { useAdminDevice } from '@/hooks/queries/admin'
-import { useAdminBanDevice, useSetDeviceLoginMethods } from '@/hooks/mutations/admin'
+import {
+    useAdminBanDevice,
+    useSetDeviceLoginMethods,
+    useSetDeviceStartScreen,
+} from '@/hooks/mutations/admin'
 import {
     LOGIN_METHODS,
     LOGIN_METHOD_LABELS,
+    START_SCREEN_VALUES,
+    START_SCREEN_LABELS,
     type AdminDeviceSessionItem,
     type LoginMethod,
+    type StartScreenOverride,
 } from '@/apis/admin'
 import { useConfirm } from '@/components/admin/ConfirmProvider'
 
@@ -58,6 +70,7 @@ export default function DeviceDetailPage() {
     const { data: device, isLoading } = useAdminDevice(id)
     const banDevice = useAdminBanDevice()
     const setLoginMethods = useSetDeviceLoginMethods()
+    const setStartScreen = useSetDeviceStartScreen()
     const confirm = useConfirm()
 
     if (isLoading) return <div className="p-4">Загрузка...</div>
@@ -208,6 +221,43 @@ export default function DeviceDetailPage() {
                             )
                         })}
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Стартовый экран</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                        Форсирует экран холодного старта для этого устройства —
+                        сильнее и глобальной фичи в «Фичи», и личного выбора
+                        юзера («Настройка Главной» в приложении). «Не задан» —
+                        ограничения нет.
+                    </p>
+                    <Select
+                        value={device.start_screen_override ?? '__unset'}
+                        disabled={setStartScreen.isPending}
+                        onValueChange={(value) =>
+                            setStartScreen.mutate({
+                                id: device.id,
+                                override:
+                                    value === '__unset' ? null : (value as StartScreenOverride),
+                            })
+                        }
+                    >
+                        <SelectTrigger className="w-56">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="__unset">Не задан</SelectItem>
+                            {START_SCREEN_VALUES.map((value) => (
+                                <SelectItem key={value} value={value}>
+                                    {START_SCREEN_LABELS[value]}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </CardContent>
             </Card>
 
