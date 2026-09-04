@@ -164,6 +164,39 @@ export const getThreadMediaInsights = async (
   return response.data
 }
 
+// ───── AI draft generator (scraper/lab pipeline) ───────────────────────────
+
+// Mirrors backend apps/threeds/service/prompt_builder.py:GEN_MODES.
+export const THREADS_GEN_MODES = ['both', 'recs_only', 'persona_only'] as const
+export type ThreadsGenMode = (typeof THREADS_GEN_MODES)[number]
+export const THREADS_GEN_MODE_LABELS: Record<ThreadsGenMode, string> = {
+  both: 'Персона и тренды',
+  recs_only: 'Только по трендам',
+  persona_only: 'Только персона',
+}
+
+// Models the generator may be pointed at (OpenAI structured outputs).
+export const THREADS_AI_MODELS = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1'] as const
+
+export interface ThreadsGenerationPreview {
+  can_generate: boolean
+  blockers: string[]
+  system_prompt: string | null
+  user_prompt: string | null
+  model: string
+  mode: string
+  modes: string[]
+  num_posts: number
+  trends_count: number
+}
+
+export const getThreadsGenerationPreview = async (
+  accountId: number,
+): Promise<ThreadsGenerationPreview> => {
+  const response = await requester.get(`${ACCOUNT_BASE}/${accountId}/generation-preview`)
+  return response.data
+}
+
 export const getThreadsAccountStatus = async (accountId: number) => {
   const response = await requester.get(`${ACCOUNT_BASE}/${accountId}/status`)
   return response.data

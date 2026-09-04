@@ -1,10 +1,11 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   getThreadsAccountInsights,
   getThreadsAccountStatus,
+  getThreadsGenerationPreview,
   getThreadConversation,
   getThreadMediaInsights,
   getThreadReplies,
@@ -113,3 +114,18 @@ export const useThreadMediaInsights = (
     queryFn: () => getThreadMediaInsights(accountId!, mediaId!),
     enabled: !!accountId && !!mediaId,
   })
+
+export const THREADS_GENERATION_PREVIEW_KEY = ['threads', 'generation-preview'] as const
+
+export const useThreadsGenerationPreview = (accountId: number | null) =>
+  useQuery({
+    queryKey: [...THREADS_GENERATION_PREVIEW_KEY, accountId],
+    queryFn: () => getThreadsGenerationPreview(accountId!),
+    enabled: !!accountId,
+  })
+
+/** Call after saving persona/generation settings so the preview re-renders. */
+export const useInvalidateThreadsGenerationPreview = () => {
+  const qc = useQueryClient()
+  return () => qc.invalidateQueries({ queryKey: THREADS_GENERATION_PREVIEW_KEY })
+}

@@ -3,8 +3,14 @@
 import { useState } from 'react'
 
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@doska/ui'
-import { useCollectThreadsData, useGenerateThreadsDrafts, type ContentAccount } from '@doska/shared'
+import {
+  useCollectThreadsData,
+  useGenerateThreadsDrafts,
+  useThreadsGenerationPreview,
+  type ContentAccount,
+} from '@doska/shared'
 import { Loader2, RefreshCcw, Wand2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { ComposerTab } from './api/ComposerTab'
 import { InsightsTab } from './api/InsightsTab'
@@ -44,6 +50,18 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
 
   const collect = useCollectThreadsData()
   const generate = useGenerateThreadsDrafts()
+  const { data: preview } = useThreadsGenerationPreview(accountId)
+
+  // The backend refuses to generate without a complete persona; send the
+  // person to the settings instead of letting the task fail in the logs.
+  const handleGenerate = () => {
+    if (preview && !preview.can_generate) {
+      toast.error(preview.blockers[0] || 'Заполните персону в настройках')
+      setTab('settings')
+      return
+    }
+    generate.mutate(accountId)
+  }
 
   const openWith = (next: TabValue, mediaId: string | null = null) => {
     setFocusMediaId(mediaId)
@@ -64,7 +82,7 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
               )}
               Собрать тренды
             </Button>
-            <Button variant="outline" onClick={() => generate.mutate(accountId)} disabled={generate.isPending}>
+            <Button variant="outline" onClick={handleGenerate} disabled={generate.isPending}>
               {generate.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
