@@ -4,18 +4,23 @@ import { useState } from 'react'
 
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@doska/ui'
 import {
+  threadsCollectorKeywords,
   useCollectThreadsData,
   useGenerateThreadsDrafts,
   useThreadsGenerationPreview,
   type ContentAccount,
 } from '@doska/shared'
-import { Loader2, RefreshCcw, Wand2 } from 'lucide-react'
+import { useRouter } from '@doska/i18n'
+import { Loader2, RefreshCcw, Unplug, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
+
+import { DeleteAccountDialog } from '@/components/accounts/DeleteAccountDialog'
 
 import { ComposerTab } from './api/ComposerTab'
 import { InsightsTab } from './api/InsightsTab'
 import { PostsTab } from './api/PostsTab'
 import { RepliesTab } from './api/RepliesTab'
+import { SearchTab } from './api/SearchTab'
 import { DraftsTab } from './lab/DraftsTab'
 import { LogsTab } from './lab/LogsTab'
 import { PersonaSettingsTab } from './lab/PersonaSettingsTab'
@@ -23,10 +28,11 @@ import { TrendsTab } from './lab/TrendsTab'
 import { ThreadsHeader } from './ThreadsHeader'
 
 // First group talks to the official Threads API (what App Review sees);
-// second group is the trend scraper + AI drafts pipeline (kept as is).
+// second group is the lab: keyword-search trend collector + AI drafts.
 const API_TABS = [
   { value: 'compose', label: 'Публикация' },
   { value: 'posts', label: 'Посты' },
+  { value: 'search', label: 'Поиск' },
   { value: 'replies', label: 'Ответы' },
   { value: 'insights', label: 'Статистика' },
 ] as const
@@ -44,7 +50,9 @@ const triggerClass =
 
 export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
   const accountId = account.id
+  const router = useRouter()
   const [tab, setTab] = useState<TabValue>('compose')
+  const [disconnectOpen, setDisconnectOpen] = useState(false)
   // A post chosen in one tab (e.g. "Ответы" on a post) is opened in the next.
   const [focusMediaId, setFocusMediaId] = useState<string | null>(null)
 
@@ -63,6 +71,16 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
     generate.mutate(accountId)
   }
 
+  // The collector searches by the account's keywords; without them the task only logs an error.
+  const handleCollect = () => {
+    if (threadsCollectorKeywords(account).length === 0) {
+      toast.error('Добавьте ключевые слова для сбора трендов в настройках')
+      setTab('settings')
+      return
+    }
+    collect.mutate(accountId)
+  }
+
   const openWith = (next: TabValue, mediaId: string | null = null) => {
     setFocusMediaId(mediaId)
     setTab(next)
@@ -74,7 +92,7 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
         account={account}
         actions={
           <>
-            <Button variant="outline" onClick={() => collect.mutate(accountId)} disabled={collect.isPending}>
+            <Button variant="outline" onClick={handleCollect} disabled={collect.isPending}>
               {collect.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -90,8 +108,23 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
               )}
               Сгенерировать пост
             </Button>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => setDisconnectOpen(true)}
+            >
+              <Unplug className="mr-2 h-4 w-4" />
+              Отключить
+            </Button>
           </>
         }
+      />
+
+      <DeleteAccountDialog
+        account={account}
+        open={disconnectOpen}
+        onOpenChange={setDisconnectOpen}
+        onDeleted={() => router.push('/')}
       />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} className="w-full">
@@ -122,6 +155,9 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
             onCompose={() => openWith('compose')}
           />
         </TabsContent>
+        <TabsContent value="search" className="mt-6">
+          <SearchTab account={account} />
+        </TabsContent>
         <TabsContent value="replies" className="mt-6">
           <RepliesTab accountId={accountId} initialMediaId={focusMediaId} />
         </TabsContent>
@@ -130,7 +166,7 @@ export function ThreadsAccountDetail({ account }: { account: ContentAccount }) {
         </TabsContent>
 
         <TabsContent value="trends" className="mt-6">
-          <TrendsTab accountId={accountId} />
+          <TrendsTab account={account} onOpenSettings={() => openWith('settings')} />
         </TabsContent>
         <TabsContent value="drafts" className="mt-6">
           <DraftsTab accountId={accountId} />

@@ -4,28 +4,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   getThreadsAccountInsights,
-  getThreadsAccountStatus,
   getThreadsGenerationPreview,
   getThreadConversation,
   getThreadMediaInsights,
   getThreadReplies,
   getThreadsLogs,
   getThreadsPosts,
+  getThreadsRecentKeywords,
   getThreadsRecommendations,
   getUserThreads,
+  searchThreads,
+  searchThreadsLocations,
+  type ThreadsSearchParams,
+  type ThreadsTrendsQuery,
 } from '../../apis/threads'
-
-export const useThreadsAccountStatus = (accountId: number | null) => {
-  return useQuery({
-    queryKey: ['threads', 'account-status', accountId],
-    queryFn: () => getThreadsAccountStatus(accountId!),
-    enabled: !!accountId,
-    refetchInterval: (query) => {
-      const status = query.state?.data?.status
-      return status === 'completed' || status === 'failed' ? false : 1500
-    },
-  })
-}
 
 export const useThreadsPosts = (params?: {
   account_id?: number
@@ -42,15 +34,7 @@ export const useThreadsPosts = (params?: {
   })
 }
 
-export const useThreadsRecommendations = (params?: {
-  account_id?: number
-  skip?: number
-  limit?: number
-  sort_by?: string
-  order?: string
-  min_likes?: number
-  q?: string
-}) => {
+export const useThreadsRecommendations = (params?: ThreadsTrendsQuery) => {
   return useQuery({
     queryKey: ['threads', 'recommendations', params],
     queryFn: () => getThreadsRecommendations(params),
@@ -113,6 +97,33 @@ export const useThreadMediaInsights = (
     queryKey: ['threads', 'media-insights', accountId, mediaId],
     queryFn: () => getThreadMediaInsights(accountId!, mediaId!),
     enabled: !!accountId && !!mediaId,
+  })
+
+/** Runs only for a submitted query: every call burns one of the user's daily searches. */
+export const useThreadsSearch = (accountId: number | null, params: ThreadsSearchParams | null) =>
+  useQuery({
+    queryKey: ['threads', 'search', accountId, params],
+    queryFn: () => searchThreads(accountId!, params!),
+    enabled: !!accountId && !!params?.q,
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+
+export const useThreadsRecentKeywords = (accountId: number | null) =>
+  useQuery({
+    queryKey: ['threads', 'recent-keywords', accountId],
+    queryFn: () => getThreadsRecentKeywords(accountId!),
+    enabled: !!accountId,
+    staleTime: 60_000,
+  })
+
+export const useThreadsLocationSearch = (accountId: number | null, q: string) =>
+  useQuery({
+    queryKey: ['threads', 'locations', accountId, q.trim()],
+    queryFn: () => searchThreadsLocations(accountId!, { q: q.trim() }),
+    enabled: !!accountId && q.trim().length >= 2,
+    staleTime: 10 * 60_000,
+    retry: false,
   })
 
 export const THREADS_GENERATION_PREVIEW_KEY = ['threads', 'generation-preview'] as const

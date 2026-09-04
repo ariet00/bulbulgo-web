@@ -15,7 +15,6 @@ import {
   replyToThread,
   scheduleThreadsDraft,
   startThreadsOAuth,
-  submitThreadsAccount2FA,
   updateThreadsPost,
   type ThreadsPublishBody,
 } from '../../apis/threads'
@@ -30,13 +29,6 @@ export const useStartThreadsOAuth = () => {
           'Не удалось запустить подключение Threads',
       )
     },
-  })
-}
-
-export const useSubmitThreads2FA = () => {
-  return useMutation({
-    mutationFn: ({ accountId, code }: { accountId: number; code: string }) =>
-      submitThreadsAccount2FA(accountId, code),
   })
 }
 

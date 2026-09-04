@@ -11,14 +11,22 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Switch,
   Textarea,
 } from '@doska/ui'
 import {
   cn,
   THREADS_AI_MODELS,
+  THREADS_COLLECTOR_DEFAULT_LIMIT,
+  THREADS_COLLECTOR_DEFAULT_WINDOW_HOURS,
+  THREADS_COLLECTOR_MEDIA_TYPE_LABELS,
+  THREADS_COLLECTOR_MEDIA_TYPES,
+  THREADS_COLLECTOR_SEARCH_TYPE_LABELS,
+  THREADS_COLLECTOR_SEARCH_TYPES,
   THREADS_GEN_MODE_LABELS,
   THREADS_GEN_MODES,
+  THREADS_SEARCH_DAILY_QUERY_LIMIT,
+  THREADS_SEARCH_MAX_LIMIT,
+  threadsCollectorKeywords,
   useInvalidateThreadsGenerationPreview,
   useUpdateContentAccount,
   type ContentAccount,
@@ -30,11 +38,13 @@ import {
   PERSONA_FIELDS,
   PERSONA_TEMPLATE_PLACEHOLDERS,
 } from './personaFields'
+import { KeywordsInput } from './KeywordsInput'
 import { PromptPreview } from './PromptPreview'
 
-type Form = Record<string, string | number | boolean>
+type FormValue = string | number | boolean | string[]
+type Form = Record<string, FormValue>
 
-const NUMERIC_KEYS = ['persona_age', 'gen_num_posts', 'collector_limit', 'collector_min_likes'] as const
+const NUMERIC_KEYS = ['persona_age', 'gen_num_posts', 'collector_limit', 'collector_window_hours'] as const
 
 function initialForm(data: Record<string, any>): Form {
   const form: Form = {}
@@ -44,10 +54,11 @@ function initialForm(data: Record<string, any>): Form {
   form.ai_model = data.ai_model || THREADS_AI_MODELS[0]
   form.ai_persona_template = data.ai_persona_template || ''
   form.ai_generation_prompt = data.ai_generation_prompt || ''
-  form.collector_limit = data.collector_limit ?? 20
-  form.collector_min_likes = data.collector_min_likes ?? 0
-  form.collector_with_media_only = !!data.collector_with_media_only
-  form.collector_no_media_only = !!data.collector_no_media_only
+  form.collector_keywords = threadsCollectorKeywords({ data })
+  form.collector_search_type = data.collector_search_type || THREADS_COLLECTOR_SEARCH_TYPES[0]
+  form.collector_media_type = data.collector_media_type || THREADS_COLLECTOR_MEDIA_TYPES[0]
+  form.collector_limit = data.collector_limit ?? THREADS_COLLECTOR_DEFAULT_LIMIT
+  form.collector_window_hours = data.collector_window_hours ?? THREADS_COLLECTOR_DEFAULT_WINDOW_HOURS
   return form
 }
 
@@ -58,8 +69,12 @@ function toPayload(form: Form): Record<string, any> {
     out[key] = raw === '' ? null : Number.parseInt(raw, 10)
   }
   if (out.gen_num_posts === null || Number.isNaN(out.gen_num_posts) || out.gen_num_posts < 1) out.gen_num_posts = 1
-  if (out.collector_limit === null || Number.isNaN(out.collector_limit)) out.collector_limit = 20
-  if (out.collector_min_likes === null || Number.isNaN(out.collector_min_likes)) out.collector_min_likes = 0
+  if (out.collector_limit === null || Number.isNaN(out.collector_limit) || out.collector_limit < 1) {
+    out.collector_limit = THREADS_COLLECTOR_DEFAULT_LIMIT
+  }
+  if (out.collector_window_hours === null || Number.isNaN(out.collector_window_hours) || out.collector_window_hours < 0) {
+    out.collector_window_hours = 0
+  }
   if (Number.isNaN(out.persona_age)) out.persona_age = null
   for (const key of Object.keys(out)) {
     if (typeof out[key] === 'string') out[key] = (out[key] as string).trim()
@@ -79,7 +94,9 @@ export function PersonaSettingsTab({ account }: { account: ContentAccount }) {
     [form],
   )
 
-  const set = (key: string, value: string | number | boolean) => setForm((f) => ({ ...f, [key]: value }))
+  const set = (key: string, value: FormValue) => setForm((f) => ({ ...f, [key]: value }))
+  const keywords = Array.isArray(form.collector_keywords) ? form.collector_keywords : []
+  const searchTypes = form.collector_search_type === 'BOTH' ? 2 : 1
 
   const save = async () => {
     const payload = toPayload(form)
@@ -230,44 +247,73 @@ export function PersonaSettingsTab({ account }: { account: ContentAccount }) {
         <section className="space-y-4 rounded-xl border bg-card p-5">
           <div>
             <h3 className="font-medium">Сбор трендов</h3>
-            <p className="text-sm text-muted-foreground">Что попадает в ленту трендов для режимов с трендами.</p>
+            <p className="text-sm text-muted-foreground">
+              Коллектор ищет публичные посты Threads по этим словам через официальный API, а генератор берёт из
+              них темы. Слово с решёткой ищется как тег.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="col-keywords">Ключевые слова и теги</Label>
+            <KeywordsInput id="col-keywords" value={keywords} onChange={(next) => set('collector_keywords', next)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="col-limit">Лимит постов</Label>
+              <Label htmlFor="col-type">Что собирать</Label>
+              <Select value={String(form.collector_search_type)} onValueChange={(v) => set('collector_search_type', v)}>
+                <SelectTrigger id="col-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {THREADS_COLLECTOR_SEARCH_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {THREADS_COLLECTOR_SEARCH_TYPE_LABELS[t]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="col-media">Тип постов</Label>
+              <Select value={String(form.collector_media_type)} onValueChange={(v) => set('collector_media_type', v)}>
+                <SelectTrigger id="col-media">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {THREADS_COLLECTOR_MEDIA_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {THREADS_COLLECTOR_MEDIA_TYPE_LABELS[t]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="col-limit">Постов на одно слово</Label>
               <Input
                 id="col-limit"
                 type="number"
                 min={1}
-                value={String(form.collector_limit ?? 20)}
+                max={THREADS_SEARCH_MAX_LIMIT}
+                value={String(form.collector_limit ?? THREADS_COLLECTOR_DEFAULT_LIMIT)}
                 onChange={(e) => set('collector_limit', e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="col-likes">Минимум лайков</Label>
+              <Label htmlFor="col-window">Окно для свежих, часов</Label>
               <Input
-                id="col-likes"
+                id="col-window"
                 type="number"
                 min={0}
-                value={String(form.collector_min_likes ?? 0)}
-                onChange={(e) => set('collector_min_likes', e.target.value)}
+                value={String(form.collector_window_hours ?? THREADS_COLLECTOR_DEFAULT_WINDOW_HOURS)}
+                onChange={(e) => set('collector_window_hours', e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">0 — без ограничения по дате. На популярные не влияет.</p>
             </div>
-            <label className="flex items-center justify-between rounded-lg border p-3 text-sm">
-              Только с медиа
-              <Switch
-                checked={!!form.collector_with_media_only}
-                onCheckedChange={(v) => set('collector_with_media_only', v)}
-              />
-            </label>
-            <label className="flex items-center justify-between rounded-lg border p-3 text-sm">
-              Только текстовые
-              <Switch
-                checked={!!form.collector_no_media_only}
-                onCheckedChange={(v) => set('collector_no_media_only', v)}
-              />
-            </label>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Один запуск: {keywords.length * searchTypes} запрос(ов) из {THREADS_SEARCH_DAILY_QUERY_LIMIT} доступных
+            аккаунту в сутки.
+          </p>
         </section>
 
         <div className="sticky bottom-4 flex items-center justify-between gap-4 rounded-xl border bg-card/95 p-3 backdrop-blur">

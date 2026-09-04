@@ -1,7 +1,7 @@
 'use client'
 
 import { cn, THREADS_MEDIA_TYPE_LABELS, type ThreadsMedia } from '@doska/shared'
-import { ImageIcon, Video } from 'lucide-react'
+import { ImageIcon, MapPin, Video } from 'lucide-react'
 
 import { formatRelative } from '@/lib/format'
 
@@ -11,11 +11,16 @@ interface ThreadPostItemProps {
   onSelect?: () => void
   /** Row actions, rendered to the right; they receive clicks before `onSelect`. */
   actions?: React.ReactNode
+  /** For posts by other people (search results). */
+  showAuthor?: boolean
 }
+
+// `TEXT` comes from keyword search, `TEXT_POST` from the user's own feed.
+const TEXT_ONLY_TYPES = ['TEXT', 'TEXT_POST', 'REPOST_FACADE']
 
 function Thumb({ post }: { post: ThreadsMedia }) {
   const src = post.thumbnail_url || post.media_url
-  const isVisual = post.media_type !== 'TEXT_POST' && post.media_type !== 'REPOST_FACADE'
+  const isVisual = !TEXT_ONLY_TYPES.includes(post.media_type || '')
   if (!isVisual) return null
   if (src) {
     return (
@@ -31,8 +36,9 @@ function Thumb({ post }: { post: ThreadsMedia }) {
   )
 }
 
-export function ThreadPostItem({ post, selected, onSelect, actions }: ThreadPostItemProps) {
+export function ThreadPostItem({ post, selected, onSelect, actions, showAuthor }: ThreadPostItemProps) {
   const typeLabel = THREADS_MEDIA_TYPE_LABELS[post.media_type || ''] || post.media_type
+  const place = post.location ? [post.location.name, post.location.city].filter(Boolean).join(', ') : null
   const body = (
     <>
       <Thumb post={post} />
@@ -40,9 +46,18 @@ export function ThreadPostItem({ post, selected, onSelect, actions }: ThreadPost
         <p className={cn('line-clamp-2 text-sm', !post.text && 'italic text-muted-foreground')}>
           {post.text || `${typeLabel} без подписи`}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {typeLabel}
-          {post.timestamp && `, ${formatRelative(post.timestamp)}`}
+        <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+          {showAuthor && post.username && <span className="font-medium text-foreground">@{post.username}</span>}
+          <span>
+            {typeLabel}
+            {post.timestamp && `, ${formatRelative(post.timestamp)}`}
+          </span>
+          {place && (
+            <span className="inline-flex items-center gap-0.5">
+              <MapPin className="h-3 w-3" aria-hidden />
+              {place}
+            </span>
+          )}
         </p>
       </div>
     </>

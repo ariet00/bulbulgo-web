@@ -6,14 +6,12 @@ import { toast } from 'sonner'
 import {
   createInstagramAccount,
   createTelegramAccount,
-  createThreadsAccount,
   createTikTokAccount,
   createWhatsAppAccount,
   deleteContentAccount,
   updateContentAccount,
   type CreateInstagramAccountBody,
   type CreateTelegramAccountBody,
-  type CreateThreadsAccountBody,
   type CreateTikTokAccountBody,
   type CreateWhatsAppAccountBody,
   type Platform,
@@ -30,18 +28,6 @@ function describeError(error: any, fallback: string): string {
 
 function invalidateAccounts(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ['content-manager', 'accounts'] })
-}
-
-export const useCreateThreadsAccount = () => {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: CreateThreadsAccountBody) => createThreadsAccount(data),
-    onSuccess: () => {
-      toast.success('Аккаунт добавлен')
-      invalidateAccounts(qc)
-    },
-    onError: (e: any) => toast.error(describeError(e, 'Не удалось добавить аккаунт')),
-  })
 }
 
 export const useCreateInstagramAccount = () => {

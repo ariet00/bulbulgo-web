@@ -8,7 +8,7 @@ import { AlertCircle } from 'lucide-react'
 
 const PAGE_SIZE = 20
 
-// Background-task logs of the scraper/AI pipeline. Moved verbatim out of
+// Background-task logs of the collector/AI pipeline. Moved verbatim out of
 // ThreadsAccountDetail; behaviour intentionally unchanged.
 export function LogsTab({ accountId }: { accountId: number }) {
   const [logPage, setLogPage] = useState(1)

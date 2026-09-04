@@ -16,20 +16,26 @@ import {
   cn,
   THREADS_CAROUSEL_MAX,
   THREADS_IMAGE_MAX_BYTES,
+  THREADS_SCOPE_LOCATION_TAGGING,
   THREADS_TEXT_LIMIT,
   THREADS_VIDEO_MAX_BYTES,
+  threadsAccountHasScope,
   uploadFile,
   useCreateScheduledPost,
   usePublishToThreads,
   useUserThreads,
   type ContentAccount,
   type ScheduledContent,
+  type ThreadsLocation,
   type ThreadsMediaType,
 } from '@doska/shared'
-import { CalendarClock, ImagePlus, Loader2, Video, X } from 'lucide-react'
+import { CalendarClock, ImagePlus, Loader2, MapPin, Video, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { ScheduleDialog } from '@/components/schedule/ScheduleDialog'
+
+import { ReconnectNotice } from '../ReconnectNotice'
+import { describeLocation, LocationPicker } from './LocationPicker'
 
 interface Attachment {
   id: string
@@ -65,6 +71,8 @@ export function ComposerTab({
   const [text, setText] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [replyTo, setReplyTo] = useState<string>(NO_REPLY)
+  const [location, setLocation] = useState<ThreadsLocation | null>(null)
+  const canTagLocation = threadsAccountHasScope(account, THREADS_SCOPE_LOCATION_TAGGING)
   const imageInput = useRef<HTMLInputElement>(null)
   const videoInput = useRef<HTMLInputElement>(null)
 
@@ -147,7 +155,14 @@ export function ComposerTab({
     attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl))
     setAttachments([])
     setReplyTo(NO_REPLY)
+    setLocation(null)
   }
+
+  // Threads-only knobs the planner stores under platform_options.threads.
+  const threadsOptions = (): Record<string, unknown> => ({
+    ...(replyTo !== NO_REPLY ? { reply_to_id: replyTo } : {}),
+    ...(location ? { location_id: location.id } : {}),
+  })
 
   // Same content the planner stores; the Threads publisher derives the media type.
   const scheduledContent = (): ScheduledContent => ({
@@ -155,7 +170,7 @@ export function ComposerTab({
     media: attachments
       .filter((a) => a.status === 'ready' && a.url)
       .map((a) => ({ kind: a.kind, url: a.url! })),
-    platform_options: replyTo !== NO_REPLY ? { threads: { reply_to_id: replyTo } } : {},
+    platform_options: Object.keys(threadsOptions()).length ? { threads: threadsOptions() } : {},
   })
 
   const handleSchedule = async (iso: string, timezone: string) => {
@@ -179,6 +194,7 @@ export function ComposerTab({
             ? ready.map((a) => (a.kind === 'video' ? { video_url: a.url } : { image_url: a.url }))
             : undefined,
         reply_to_id: replyTo !== NO_REPLY ? replyTo : undefined,
+        location_id: location?.id,
       },
     })
     reset()
@@ -308,6 +324,17 @@ export function ComposerTab({
           </Select>
         </div>
 
+        <div className="space-y-2">
+          <Label>Место</Label>
+          {canTagLocation ? (
+            <LocationPicker accountId={accountId} value={location} onChange={setLocation} />
+          ) : (
+            <ReconnectNotice account={account} scope={THREADS_SCOPE_LOCATION_TAGGING}>
+              Отметить место можно после переподключения аккаунта.
+            </ReconnectNotice>
+          )}
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
           <p className="text-xs text-muted-foreground">{blocker ?? 'Сразу в Threads или в планировщик на нужное время'}</p>
           <div className="flex gap-2">
@@ -374,6 +401,12 @@ export function ComposerTab({
                     </div>
                   ))}
                 </div>
+              )}
+              {location && (
+                <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3" aria-hidden />
+                  {describeLocation(location)}
+                </p>
               )}
               {replyTo !== NO_REPLY && (
                 <p className="text-xs text-muted-foreground">Ответ на ваш пост</p>
