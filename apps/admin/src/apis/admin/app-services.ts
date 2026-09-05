@@ -8,6 +8,20 @@ export interface AdminServiceNavItem {
     value: string
 }
 
+/** Родитель чипов ленты «Главной» — backend HOME_FEED_PARENT_SLUG
+ *  (core/seeding/seeders/mobile_services.py). Дети этого сервиса и есть чипы. */
+export const HOME_FEED_PARENT_SLUG = 'home_feed'
+
+/** Шаблоны блока ленты. Повторяет FEED_TEMPLATES в
+ *  backend/apps/services/schemas.py и homeFeedTemplates в home_feed.dart:
+ *  шаблон рисует приложение, поэтому новый пункт = релиз приложения. */
+export const FEED_TEMPLATES = ['common'] as const
+export type FeedTemplate = (typeof FEED_TEMPLATES)[number]
+
+export const FEED_TEMPLATE_LABELS: Record<FeedTemplate, string> = {
+    common: 'common — шапка сервиса и список из фида',
+}
+
 export interface AdminService {
     id: number
     slug: string
@@ -33,6 +47,10 @@ export interface AdminService {
     group: string | null
     /** slug родителя: сервис — плитка раздела, на «Главной» не показывается */
     parent_slug: string | null
+    /** чип ленты «Главной»: slug сервиса, в который ведёт блок под чипом */
+    service: string | null
+    /** чип ленты «Главной»: шаблон блока; null — блок вшит в приложение по slug'у */
+    template: FeedTemplate | null
 }
 
 export interface AdminServiceCreate {
@@ -55,6 +73,9 @@ export interface AdminServiceCreate {
     group?: string | null
     /** slug родителя; null — сервис остаётся карточкой «Главной» */
     parent_slug?: string | null
+    /** чип ленты «Главной»: сервис-цель блока и шаблон блока */
+    service?: string | null
+    template?: FeedTemplate | null
 }
 
 // slug/type иммутабельны после создания (бэк их игнорирует в PATCH)

@@ -24,16 +24,25 @@ import type {
     AdminService,
     AdminServiceCreate,
     AdminServiceNavItem,
+    FeedTemplate,
     LocalizedText,
+} from '@/apis/admin'
+import {
+    FEED_TEMPLATE_LABELS,
+    FEED_TEMPLATES,
+    HOME_FEED_PARENT_SLUG,
 } from '@/apis/admin'
 
 const NO_BADGE = '__none__'
 const NO_GROUP = '__ungrouped__'
 const NO_PARENT = '__root__'
+const NO_TEMPLATE = '__builtin__'
+const NO_FEED_SERVICE = '__none__'
 
 // Зеркало AppService._icons (app_service.dart): имена — свои, приложение
-// рисует их значками Lucide. Новое имя работает только после релиза
-// приложения — старые сборки его молча проигнорируют.
+// рисует их своими значками. Новое имя работает только после релиза
+// приложения — старые сборки его молча проигнорируют (и падают на фолбэк:
+// иконка сервиса, а затем первая буква названия).
 const SERVICE_ICONS = [
     'car',
     'garage',
@@ -53,6 +62,28 @@ const SERVICE_ICONS = [
     'chat',
     'star',
     'heart',
+    'bolt',
+    'phone',
+    'map',
+    'pin',
+    'route',
+    'ticket',
+    'gift',
+    'cart',
+    'money',
+    'card',
+    'key',
+    'home',
+    'bank',
+    'school',
+    'shield',
+    'support',
+    'camera',
+    'sofa',
+    'wrench',
+    'box',
+    'pet',
+    'megaphone',
 ]
 
 // Синхронно с ServiceNavItem._icons во Flutter (app_service.dart)
@@ -108,6 +139,13 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
     const [group, setGroup] = useState(initial?.group ?? NO_GROUP)
     const { data: groups } = useAdminServiceGroups()
     const [parent, setParent] = useState(initial?.parent_slug ?? NO_PARENT)
+    // Чип ленты «Главной»: куда ведёт блок и каким шаблоном он нарисован.
+    const [feedService, setFeedService] = useState(
+        initial?.service ?? NO_FEED_SERVICE,
+    )
+    const [template, setTemplate] = useState<string>(
+        initial?.template ?? NO_TEMPLATE,
+    )
     const { data: allServices } = useAdminServices()
     // Кандидаты в родители: корневые сервисы (вложенность один уровень),
     // кроме самого редактируемого.
@@ -115,6 +153,9 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
         (s) => !s.parent_slug && s.slug !== initial?.slug,
     )
     const isChild = parent !== NO_PARENT
+    const isFeedChip = parent === HOME_FEED_PARENT_SLUG
+    // Куда чип может вести — любой корневой сервис реестра.
+    const feedTargets = parentOptions
 
     const addNavItem = () =>
         setNavItems((p) => [
@@ -155,6 +196,16 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
             // у дочернего сервиса группы «Главной» не бывает
             group: isChild || group === NO_GROUP ? null : group,
             parent_slug: isChild ? parent : null,
+            // Поля ленты держим только на чипах: у обычной карточки они
+            // ничего не значат и только путали бы в базе.
+            service:
+                isFeedChip && feedService !== NO_FEED_SERVICE
+                    ? feedService
+                    : null,
+            template:
+                isFeedChip && template !== NO_TEMPLATE
+                    ? (template as FeedTemplate)
+                    : null,
         })
     }
 
@@ -255,6 +306,67 @@ export function ServiceForm({ initial, submitLabel, submitting, onSubmit }: Prop
                             «Главной» не показывается.
                         </p>
                     </div>
+
+                    {isFeedChip && (
+                        <div className="space-y-4 rounded-md border p-3">
+                            <div className="space-y-1.5">
+                                <Label>Сервис блока</Label>
+                                <Select
+                                    value={feedService}
+                                    onValueChange={setFeedService}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={NO_FEED_SERVICE}>
+                                            Не выбран
+                                        </SelectItem>
+                                        {feedTargets.map((s) => (
+                                            <SelectItem key={s.slug} value={s.slug}>
+                                                {s.label?.ru ?? s.slug}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    Куда ведёт блок под чипом: нативный продукт
+                                    открывается своим экраном, webview-сервис —
+                                    вебвью.
+                                </p>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label>Шаблон блока</Label>
+                                <Select value={template} onValueChange={setTemplate}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={NO_TEMPLATE}>
+                                            Без шаблона — блок вшит в приложение
+                                        </SelectItem>
+                                        {FEED_TEMPLATES.map((t) => (
+                                            <SelectItem key={t} value={t}>
+                                                {FEED_TEMPLATE_LABELS[t]}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    С шаблоном чип появляется в ленте без релиза
+                                    приложения: шапка блока — название, описание
+                                    и значок самого чипа, а список под ней бэк
+                                    отдаёт по слагу сервиса. Данных у сервиса
+                                    ещё нет — остаётся одна шапка с переходом.
+                                    Без шаблона контент берётся из приложения по
+                                    slug'у чипа (попутки, недвижимость,
+                                    грузовые, авторынок) — незнакомый slug
+                                    приложение пропустит.
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {!isChild && (
                         <div className="space-y-1.5">
