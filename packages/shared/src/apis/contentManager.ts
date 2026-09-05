@@ -59,11 +59,6 @@ export const getContentAccount = async (accountId: number): Promise<ContentAccou
   return response.data
 }
 
-export interface CreateThreadsAccountBody {
-  username: string
-  display_name?: string
-  password: string
-}
 export interface CreateInstagramAccountBody {
   username: string
   display_name?: string
@@ -84,12 +79,6 @@ export interface CreateTelegramAccountBody {
   display_name?: string
 }
 
-export const createThreadsAccount = async (
-  data: CreateThreadsAccountBody,
-): Promise<ContentAccount> => {
-  const response = await requester.post('/content-manager/threads/accounts/', data)
-  return response.data
-}
 export const createInstagramAccount = async (
   data: CreateInstagramAccountBody,
 ): Promise<ContentAccount> => {

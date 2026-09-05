@@ -13,11 +13,12 @@ import {
   publishThreadsPost,
   publishToThreads,
   replyToThread,
+  scheduleThreadsDraft,
   startThreadsOAuth,
-  submitThreadsAccount2FA,
   updateThreadsPost,
   type ThreadsPublishBody,
 } from '../../apis/threads'
+import { SCHEDULE_KEY } from '../queries/schedule'
 
 export const useStartThreadsOAuth = () => {
   return useMutation({
@@ -28,13 +29,6 @@ export const useStartThreadsOAuth = () => {
           'Не удалось запустить подключение Threads',
       )
     },
-  })
-}
-
-export const useSubmitThreads2FA = () => {
-  return useMutation({
-    mutationFn: ({ accountId, code }: { accountId: number; code: string }) =>
-      submitThreadsAccount2FA(accountId, code),
   })
 }
 
@@ -204,6 +198,22 @@ export const useDeleteThreadsRecommendation = () => {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Не удалось удалить рекомендацию')
+    },
+  })
+}
+
+export const useScheduleThreadsDraft = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, scheduledAt, timezone }: { postId: number; scheduledAt: string; timezone?: string }) =>
+      scheduleThreadsDraft(postId, { scheduled_at: scheduledAt, timezone }),
+    onSuccess: () => {
+      toast.success('Черновик запланирован')
+      queryClient.invalidateQueries({ queryKey: ['threads', 'posts'] })
+      queryClient.invalidateQueries({ queryKey: SCHEDULE_KEY })
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Не удалось запланировать черновик')
     },
   })
 }

@@ -150,6 +150,20 @@ const FLAGS: { key: FlagKey; title: string; description: ReactNode }[] = [
             </>
         ),
     },
+    {
+        key: 'home_start_screen_enabled',
+        title: 'Стартовый экран — «Главная»',
+        description: (
+            <>
+                <code>home_start_screen_enabled</code>. Включено — приложение
+                открывается на «Главной», выключено — на первом видимом табе.
+                Включено по умолчанию. Слабее личного выбора юзера
+                («Настройка Главной» в приложении) и точечного оверрайда
+                устройства (карточка устройства в «Устройствах») — оба
+                побеждают этот флаг.
+            </>
+        ),
+    },
 ]
 
 const VERSION_RE = /^\d+(\.\d+)*$/
@@ -167,6 +181,7 @@ const DEFAULT_FORM: AdminAppFeaturesSettings = {
     phone_view_show_viewer_phone: false,
     bookings_tab_enabled: false,
     sort_trips_by_distance: true,
+    home_start_screen_enabled: true,
     min_versions: {},
 }
 

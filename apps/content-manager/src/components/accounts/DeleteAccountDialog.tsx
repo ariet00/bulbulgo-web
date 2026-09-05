@@ -20,16 +20,20 @@ export function DeleteAccountDialog({
   account,
   open,
   onOpenChange,
+  onDeleted,
 }: {
   account: ContentAccount
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Runs after the account is gone, e.g. to leave its page. */
+  onDeleted?: () => void
 }) {
   const remove = useDeleteContentAccount()
 
   const handleDelete = async () => {
     await remove.mutateAsync({ platform: account.platform, accountId: account.id })
     onOpenChange(false)
+    onDeleted?.()
   }
 
   return (

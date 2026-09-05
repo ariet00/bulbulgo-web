@@ -16,16 +16,26 @@ import {
   cn,
   THREADS_CAROUSEL_MAX,
   THREADS_IMAGE_MAX_BYTES,
+  THREADS_SCOPE_LOCATION_TAGGING,
   THREADS_TEXT_LIMIT,
   THREADS_VIDEO_MAX_BYTES,
+  threadsAccountHasScope,
   uploadFile,
+  useCreateScheduledPost,
   usePublishToThreads,
   useUserThreads,
   type ContentAccount,
+  type ScheduledContent,
+  type ThreadsLocation,
   type ThreadsMediaType,
 } from '@doska/shared'
-import { ImagePlus, Loader2, Video, X } from 'lucide-react'
+import { CalendarClock, ImagePlus, Loader2, MapPin, Video, X } from 'lucide-react'
 import { toast } from 'sonner'
+
+import { ScheduleDialog } from '@/components/schedule/ScheduleDialog'
+
+import { ReconnectNotice } from '../ReconnectNotice'
+import { describeLocation, LocationPicker } from './LocationPicker'
 
 interface Attachment {
   id: string
@@ -54,11 +64,15 @@ export function ComposerTab({
 }) {
   const accountId = account.id
   const publish = usePublishToThreads()
+  const schedule = useCreateScheduledPost()
   const { data: myThreads } = useUserThreads(accountId)
+  const [scheduling, setScheduling] = useState(false)
 
   const [text, setText] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [replyTo, setReplyTo] = useState<string>(NO_REPLY)
+  const [location, setLocation] = useState<ThreadsLocation | null>(null)
+  const canTagLocation = threadsAccountHasScope(account, THREADS_SCOPE_LOCATION_TAGGING)
   const imageInput = useRef<HTMLInputElement>(null)
   const videoInput = useRef<HTMLInputElement>(null)
 
@@ -141,6 +155,28 @@ export function ComposerTab({
     attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl))
     setAttachments([])
     setReplyTo(NO_REPLY)
+    setLocation(null)
+  }
+
+  // Threads-only knobs the planner stores under platform_options.threads.
+  const threadsOptions = (): Record<string, unknown> => ({
+    ...(replyTo !== NO_REPLY ? { reply_to_id: replyTo } : {}),
+    ...(location ? { location_id: location.id } : {}),
+  })
+
+  // Same content the planner stores; the Threads publisher derives the media type.
+  const scheduledContent = (): ScheduledContent => ({
+    text: text.trim() || null,
+    media: attachments
+      .filter((a) => a.status === 'ready' && a.url)
+      .map((a) => ({ kind: a.kind, url: a.url! })),
+    platform_options: Object.keys(threadsOptions()).length ? { threads: threadsOptions() } : {},
+  })
+
+  const handleSchedule = async (iso: string, timezone: string) => {
+    await schedule.mutateAsync({ account_id: accountId, scheduled_at: iso, content: scheduledContent(), timezone })
+    setScheduling(false)
+    reset()
   }
 
   const handlePublish = async () => {
@@ -158,6 +194,7 @@ export function ComposerTab({
             ? ready.map((a) => (a.kind === 'video' ? { video_url: a.url } : { image_url: a.url }))
             : undefined,
         reply_to_id: replyTo !== NO_REPLY ? replyTo : undefined,
+        location_id: location?.id,
       },
     })
     reset()
@@ -287,14 +324,39 @@ export function ComposerTab({
           </Select>
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t pt-4">
-          <p className="text-xs text-muted-foreground">{blocker ?? 'Пост появится в Threads сразу'}</p>
-          <Button onClick={handlePublish} disabled={!!blocker || publish.isPending}>
-            {publish.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Опубликовать
-          </Button>
+        <div className="space-y-2">
+          <Label>Место</Label>
+          {canTagLocation ? (
+            <LocationPicker accountId={accountId} value={location} onChange={setLocation} />
+          ) : (
+            <ReconnectNotice account={account} scope={THREADS_SCOPE_LOCATION_TAGGING}>
+              Отметить место можно после переподключения аккаунта.
+            </ReconnectNotice>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
+          <p className="text-xs text-muted-foreground">{blocker ?? 'Сразу в Threads или в планировщик на нужное время'}</p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setScheduling(true)} disabled={!!blocker || publish.isPending}>
+              <CalendarClock className="mr-2 h-4 w-4" />
+              Запланировать
+            </Button>
+            <Button onClick={handlePublish} disabled={!!blocker || publish.isPending}>
+              {publish.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Опубликовать
+            </Button>
+          </div>
         </div>
       </section>
+
+      <ScheduleDialog
+        open={scheduling}
+        onOpenChange={setScheduling}
+        description="Пост уйдёт в Threads сам, следить за ним можно в планировщике."
+        pending={schedule.isPending}
+        onConfirm={handleSchedule}
+      />
 
       {/* Preview */}
       <aside className="space-y-3">
@@ -339,6 +401,12 @@ export function ComposerTab({
                     </div>
                   ))}
                 </div>
+              )}
+              {location && (
+                <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3" aria-hidden />
+                  {describeLocation(location)}
+                </p>
               )}
               {replyTo !== NO_REPLY && (
                 <p className="text-xs text-muted-foreground">Ответ на ваш пост</p>

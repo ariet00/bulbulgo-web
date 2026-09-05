@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi, AdminBalanceAdjustBody, AdminUserAppNotice, LoginMethod } from '@/apis/admin'
+import { adminApi, AdminBalanceAdjustBody, AdminUserAppNotice, LoginMethod, StartScreenOverride } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
@@ -44,6 +44,18 @@ export const useSetDeviceLoginMethods = () => {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: adminKeys.device(id) })
             toast.success('Способы входа обновлены')
+        },
+    })
+}
+
+export const useSetDeviceStartScreen = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, override }: { id: number; override: StartScreenOverride | null }) =>
+            adminApi.setDeviceStartScreen(id, override),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.device(id) })
+            toast.success('Стартовый экран обновлён')
         },
     })
 }

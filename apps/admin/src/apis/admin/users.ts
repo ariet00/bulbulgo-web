@@ -53,6 +53,19 @@ export interface AdminDeviceDetail extends AdminDeviceListItem {
     // Способы входа, точечно отключённые для этого устройства (поверх
     // глобальных тумблеров в «Фичи», см. FeatureFlagsSettingsForm).
     login_methods_disabled: LoginMethod[]
+    // Стартовый экран, форсированный для этого устройства (поверх глобальной
+    // фичи в «Фичи» и личного выбора юзера) — null, если не задан.
+    start_screen_override: StartScreenOverride | null
+}
+
+// Стартовый экран, форсированный на конкретное устройство — карточка
+// устройства в «Устройствах»; синхронизировано с backend
+// apps.users.models.device.START_SCREEN_VALUES.
+export const START_SCREEN_VALUES = ['home', 'first_tab'] as const
+export type StartScreenOverride = (typeof START_SCREEN_VALUES)[number]
+export const START_SCREEN_LABELS: Record<StartScreenOverride, string> = {
+    home: 'Главная',
+    first_tab: 'Первая вкладка',
 }
 
 // Способы входа, которые можно точечно отключить для устройства (карточка
@@ -235,6 +248,10 @@ export const usersAdminApi = {
     // глобальных тумблеров в «Фичи»). Пустой массив снимает ограничение.
     setDeviceLoginMethods: (id: number, disabled: LoginMethod[]) =>
         requests.put<AdminDeviceToken>(`/admin/users/devices/${id}/login-methods`, { disabled }),
+    // override — null снимает ограничение (следовать личному выбору юзера /
+    // глобальной фиче).
+    setDeviceStartScreen: (id: number, override: StartScreenOverride | null) =>
+        requests.put<AdminDeviceToken>(`/admin/users/devices/${id}/start-screen`, { override }),
     searchUsers: (q: string, size = 20) =>
         requests.get<Page<any>>(`/admin/users/?q=${encodeURIComponent(q)}&page=1&size=${size}`),
     // cascade — только при разбане: снять и авто-баны, раскрученные от юзера

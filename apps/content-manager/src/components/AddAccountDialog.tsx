@@ -22,14 +22,11 @@ import {
 import {
   useCreateInstagramAccount,
   useCreateTelegramAccount,
-  useCreateThreadsAccount,
   useCreateTikTokAccount,
   useCreateWhatsAppAccount,
   useStartInstagramOAuth,
   useStartPagesOAuth,
   useStartThreadsOAuth,
-  useSubmitThreads2FA,
-  useThreadsAccountStatus,
   PLATFORMS,
   PLATFORM_LABELS,
   type Platform,
@@ -40,7 +37,6 @@ import { WhatsAppEmbeddedSignupButton } from '@/components/whatsapp/WhatsAppEmbe
 
 interface FormState {
   username: string
-  password: string
   accessToken: string
   phone: string
   apiToken: string
@@ -50,7 +46,6 @@ interface FormState {
 
 const EMPTY_FORM: FormState = {
   username: '',
-  password: '',
   accessToken: '',
   phone: '',
   apiToken: '',
@@ -62,26 +57,15 @@ export function AddAccountDialog() {
   const [open, setOpen] = useState(false)
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
-  const [createdId, setCreatedId] = useState<number | null>(null)
-  const [twoFaCode, setTwoFaCode] = useState('')
-
-  const createThreads = useCreateThreadsAccount()
   const createInstagram = useCreateInstagramAccount()
   const createTikTok = useCreateTikTokAccount()
   const createWhatsApp = useCreateWhatsAppAccount()
   const createTelegram = useCreateTelegramAccount()
-  const submit2FA = useSubmitThreads2FA()
   const startThreadsOAuth = useStartThreadsOAuth()
   const startInstagramOAuth = useStartInstagramOAuth()
   const startPagesOAuth = useStartPagesOAuth()
 
-  const { data: statusData } = useThreadsAccountStatus(
-    platform === 'threads' ? createdId : null,
-  )
-  const status = statusData?.status
-
   const isPending =
-    createThreads.isPending ||
     createInstagram.isPending ||
     createTikTok.isPending ||
     createWhatsApp.isPending ||
@@ -90,17 +74,9 @@ export function AddAccountDialog() {
   useEffect(() => {
     if (!open) {
       setForm(EMPTY_FORM)
-      setCreatedId(null)
-      setTwoFaCode('')
       setPlatform('instagram')
     }
   }, [open])
-
-  useEffect(() => {
-    if (status === 'completed') {
-      setTimeout(() => setOpen(false), 1500)
-    }
-  }, [status])
 
   const handleConnectThreads = async () => {
     const { authorize_url } = await startThreadsOAuth.mutateAsync()
@@ -148,13 +124,6 @@ export function AddAccountDialog() {
     }
   }
 
-  const handle2FA = async () => {
-    if (!createdId) return
-    await submit2FA.mutateAsync({ accountId: createdId, code: twoFaCode })
-  }
-
-  const showThreadsProgress = platform === 'threads' && createdId !== null
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -169,208 +138,158 @@ export function AddAccountDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        {!showThreadsProgress && (
-          <div className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label>Платформа</Label>
-              <Select
-                value={platform}
-                onValueChange={(v) => setPlatform(v as Platform)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PLATFORMS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {PLATFORM_LABELS[p]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label>Платформа</Label>
+            <Select
+              value={platform}
+              onValueChange={(v) => setPlatform(v as Platform)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORMS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {PLATFORM_LABELS[p]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Отображаемое имя (опционально)</Label>
-              <Input
-                value={form.displayName}
-                onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-                placeholder="Например: Личный профиль"
+          <div className="space-y-2">
+            <Label>Отображаемое имя (опционально)</Label>
+            <Input
+              value={form.displayName}
+              onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+              placeholder="Например: Личный профиль"
+            />
+          </div>
+
+          {platform === 'threads' && (
+            <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+              <p className="font-medium">Подключение через Threads</p>
+              <p className="text-muted-foreground">
+                Вы перейдёте на threads.net и разрешите BulBul Social
+                публиковать посты, читать ответы и собирать статистику от
+                вашего имени. Пароль мы не запрашиваем.
+              </p>
+              <Button
+                type="button"
+                className="w-full"
+                onClick={handleConnectThreads}
+                disabled={startThreadsOAuth.isPending}
+              >
+                {startThreadsOAuth.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Подключить Threads
+              </Button>
+            </div>
+          )}
+
+          {platform === 'instagram' && (
+            <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+              <p className="font-medium">Подключение через Instagram</p>
+              <p className="text-muted-foreground">
+                Используем Instagram Business Login. Аккаунт должен быть
+                бизнес- или авторским (Business/Creator). Мы запросим
+                разрешения на публикацию, чтение комментариев, Direct и
+                статистику.
+              </p>
+              <Button
+                type="button"
+                className="w-full"
+                onClick={handleConnectInstagram}
+                disabled={startInstagramOAuth.isPending}
+              >
+                {startInstagramOAuth.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Подключить Instagram
+              </Button>
+            </div>
+          )}
+
+          {platform === 'tiktok' && (
+            <>
+              <div className="space-y-2">
+                <Label>Username</Label>
+                <Input
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Access token</Label>
+                <Input
+                  value={form.accessToken}
+                  onChange={(e) => setForm({ ...form, accessToken: e.target.value })}
+                />
+              </div>
+            </>
+          )}
+
+          {platform === 'whatsapp' && (
+            <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+              <p className="font-medium">Подключение WhatsApp Business</p>
+              <p className="text-muted-foreground">
+                Откроется встроенная регистрация Meta (Embedded Signup):
+                выберите бизнес-аккаунт и номер. Требует пройденной Meta
+                Business Verification.
+              </p>
+              <WhatsAppEmbeddedSignupButton
+                onConnected={() => setOpen(false)}
               />
             </div>
+          )}
 
-            {platform === 'threads' && (
-              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
-                <p className="font-medium">Подключение через Threads</p>
-                <p className="text-muted-foreground">
-                  Вы перейдёте на threads.net и разрешите BulBul Social
-                  публиковать посты, читать ответы и собирать статистику от
-                  вашего имени. Пароль мы не запрашиваем.
-                </p>
-                <Button
-                  type="button"
-                  className="w-full"
-                  onClick={handleConnectThreads}
-                  disabled={startThreadsOAuth.isPending}
-                >
-                  {startThreadsOAuth.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Подключить Threads
-                </Button>
-              </div>
-            )}
-
-            {platform === 'instagram' && (
-              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
-                <p className="font-medium">Подключение через Instagram</p>
-                <p className="text-muted-foreground">
-                  Используем Instagram Business Login. Аккаунт должен быть
-                  бизнес- или авторским (Business/Creator). Мы запросим
-                  разрешения на публикацию, чтение комментариев, Direct и
-                  статистику.
-                </p>
-                <Button
-                  type="button"
-                  className="w-full"
-                  onClick={handleConnectInstagram}
-                  disabled={startInstagramOAuth.isPending}
-                >
-                  {startInstagramOAuth.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Подключить Instagram
-                </Button>
-              </div>
-            )}
-
-            {platform === 'tiktok' && (
-              <>
-                <div className="space-y-2">
-                  <Label>Username</Label>
-                  <Input
-                    value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Access token</Label>
-                  <Input
-                    value={form.accessToken}
-                    onChange={(e) => setForm({ ...form, accessToken: e.target.value })}
-                  />
-                </div>
-              </>
-            )}
-
-            {platform === 'whatsapp' && (
-              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
-                <p className="font-medium">Подключение WhatsApp Business</p>
-                <p className="text-muted-foreground">
-                  Откроется встроенная регистрация Meta (Embedded Signup):
-                  выберите бизнес-аккаунт и номер. Требует пройденной Meta
-                  Business Verification.
-                </p>
-                <WhatsAppEmbeddedSignupButton
-                  onConnected={() => setOpen(false)}
-                />
-              </div>
-            )}
-
-            {platform === 'pages' && (
-              <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
-                <p className="font-medium">Подключение Facebook Page</p>
-                <p className="text-muted-foreground">
-                  Войдите в Facebook и выберите Страницы, которыми хотите
-                  управлять. Подключим все выбранные сразу. Нужны права
-                  администратора Page.
-                </p>
-                <Button
-                  type="button"
-                  className="w-full bg-[#1877F2] hover:bg-[#1366d6] text-white"
-                  onClick={handleConnectPages}
-                  disabled={startPagesOAuth.isPending}
-                >
-                  {startPagesOAuth.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Подключить через Facebook
-                </Button>
-              </div>
-            )}
-
-            {platform === 'telegram' && (
-              <div className="space-y-2">
-                <Label>Bot token</Label>
-                <Input
-                  value={form.botToken}
-                  onChange={(e) => setForm({ ...form, botToken: e.target.value })}
-                  placeholder="123456:ABC-DEF..."
-                />
-              </div>
-            )}
-
-            {platform !== 'threads' &&
-              platform !== 'instagram' &&
-              platform !== 'whatsapp' &&
-              platform !== 'pages' && (
-                <DialogFooter>
-                  <Button onClick={handleSubmit} disabled={isPending}>
-                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Подключить
-                  </Button>
-                </DialogFooter>
-              )}
-          </div>
-        )}
-
-        {showThreadsProgress && (
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between p-3 border rounded">
-              <span className="font-semibold">Статус:</span>
-              <span className="text-sm px-2 py-1 bg-secondary rounded uppercase">
-                {status || 'initializing'}
-              </span>
+          {platform === 'pages' && (
+            <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+              <p className="font-medium">Подключение Facebook Page</p>
+              <p className="text-muted-foreground">
+                Войдите в Facebook и выберите Страницы, которыми хотите
+                управлять. Подключим все выбранные сразу. Нужны права
+                администратора Page.
+              </p>
+              <Button
+                type="button"
+                className="w-full bg-[#1877F2] hover:bg-[#1366d6] text-white"
+                onClick={handleConnectPages}
+                disabled={startPagesOAuth.isPending}
+              >
+                {startPagesOAuth.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Подключить через Facebook
+              </Button>
             </div>
+          )}
 
-            {(status === 'logging_in' ||
-              status === 'starting' ||
-              status === 'initializing') && (
-              <p className="text-sm text-muted-foreground animate-pulse">
-                Автоматический браузер выполняет вход. Пожалуйста, подождите...
-              </p>
-            )}
+          {platform === 'telegram' && (
+            <div className="space-y-2">
+              <Label>Bot token</Label>
+              <Input
+                value={form.botToken}
+                onChange={(e) => setForm({ ...form, botToken: e.target.value })}
+                placeholder="123456:ABC-DEF..."
+              />
+            </div>
+          )}
 
-            {status === 'pending_2fa' && (
-              <div className="space-y-2">
-                <Label>Код 2FA</Label>
-                <Input
-                  value={twoFaCode}
-                  onChange={(e) => setTwoFaCode(e.target.value)}
-                  placeholder="123456"
-                />
-                <Button onClick={handle2FA} disabled={submit2FA.isPending}>
-                  {submit2FA.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Отправить код
+          {platform !== 'threads' &&
+            platform !== 'instagram' &&
+            platform !== 'whatsapp' &&
+            platform !== 'pages' && (
+              <DialogFooter>
+                <Button onClick={handleSubmit} disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Подключить
                 </Button>
-              </div>
+              </DialogFooter>
             )}
-
-            {status === 'completed' && (
-              <p className="text-green-600 font-semibold p-2 border border-green-200 bg-green-50 rounded">
-                Готово! Аккаунт подключён.
-              </p>
-            )}
-
-            {typeof status === 'string' && status.startsWith('failed') && (
-              <p className="text-red-500 font-semibold p-2 border border-red-200 bg-red-50 rounded">
-                Не удалось войти. Проверьте логин/пароль и попробуйте снова.
-              </p>
-            )}
-          </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   )

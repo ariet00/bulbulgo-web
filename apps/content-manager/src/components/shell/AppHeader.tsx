@@ -7,7 +7,10 @@ import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { Wordmark } from './Wordmark'
 
-const NAV = [{ href: '/', label: 'Аккаунты' }] as const
+const NAV = [
+  { href: '/', label: 'Аккаунты' },
+  { href: '/schedule', label: 'Планировщик' },
+] as const
 
 export function AppHeader() {
   const pathname = usePathname()
