@@ -15,6 +15,7 @@ import {
     type MyIdea,
 } from './lib'
 import './ideas.css'
+import { Icon } from '../components/icons'
 
 // «Идеи и предложения» — webview-сервис `ideas` (пункт в профиле): форма
 // отправки идеи + свои идеи со статусами. Страница открывается без логина,
@@ -141,7 +142,7 @@ export default function IdeasPage() {
             {sent ? (
                 <div className="wv-rise flex flex-col items-center rounded-3xl border bg-[var(--wv-accent-soft)]/40 px-6 py-10 text-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--wv-primary)] text-white">
-                        <CheckIcon />
+                        <Icon name="check" size={26} />
                     </div>
                     <p className="mt-4 text-[17px] font-semibold">
                         Спасибо за идею!
@@ -203,7 +204,7 @@ export default function IdeasPage() {
                                     aria-label="Убрать фото"
                                     className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background"
                                 >
-                                    <CrossIcon />
+                                    <Icon name="x" size={14} />
                                 </button>
                             </div>
                         ))}
@@ -212,7 +213,7 @@ export default function IdeasPage() {
                                 onClick={() => void addPhotos()}
                                 className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-xl border border-dashed text-muted-foreground active:bg-muted"
                             >
-                                <CameraIcon />
+                                <Icon name="camera" size={22} />
                                 <span className="text-[11px]">Скриншот</span>
                             </button>
                         )}
@@ -301,56 +302,5 @@ function formatDate(iso: string): string {
     })
 }
 
-function CheckIcon() {
-    return (
-        <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <path d="m4.5 12.5 5 5 10-11" />
-        </svg>
-    )
-}
 
-function CrossIcon() {
-    return (
-        <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            aria-hidden
-        >
-            <path d="M6 6l12 12M18 6 6 18" />
-        </svg>
-    )
-}
 
-function CameraIcon() {
-    return (
-        <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <path d="M4 8h2.5l1.5-2.5h8L17.5 8H20a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
-            <circle cx="12" cy="13.5" r="3.5" />
-        </svg>
-    )
-}

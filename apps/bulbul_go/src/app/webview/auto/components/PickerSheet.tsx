@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import type { AttributeOption } from '../lib/types'
 import { pickLabel } from '../lib/format'
 import { BottomSheet } from '../../components/BottomSheet'
+import { Icon } from '../../components/icons'
 
 // Пикер опций словаря (марка/модель): поиск, группа «Популярные» сверху
 // (data.popular у топовых марок рынка), одиночный или множественный выбор.
@@ -79,9 +80,7 @@ export function PickerSheet({
                     style={active ? { background: 'var(--wv-primary)' } : undefined}
                 >
                     {active && (
-                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2 6.5L4.8 9 10 3.5" />
-                        </svg>
+                        <Icon name="check" size={14} />
                     )}
                 </span>
             </button>

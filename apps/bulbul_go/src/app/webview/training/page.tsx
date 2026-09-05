@@ -8,6 +8,7 @@ import { EmptyState } from '../components/EmptyState'
 import { fetchNewsList, type NewsListItem } from '../news/lib'
 import { GUIDE_CATEGORIES, guideCategoryLabel } from './lib'
 import './training.css'
+import { Icon } from '../components/icons'
 
 // Список гайдов — корневая страница webview-сервиса `training` (пункт
 // «Обучение» в профиле). Контент — записи news с kind='guide' (админка,
@@ -70,7 +71,7 @@ export default function TrainingPage() {
 
             {items?.length === 0 && (
                 <EmptyState
-                    icon={<BookIcon />}
+                    icon={<Icon name="book" size={24} />}
                     title="Гайдов пока нет"
                     text="Скоро здесь появятся инструкции и видео о том, как пользоваться приложением."
                 />
@@ -133,7 +134,7 @@ export default function TrainingPage() {
                                     />
                                 ) : (
                                     <div className="flex h-[64px] w-[88px] shrink-0 items-center justify-center rounded-xl bg-[var(--wv-accent-soft)] text-[var(--wv-accent)]">
-                                        <BookIcon />
+                                        <Icon name="book" size={24} />
                                     </div>
                                 )}
                             </button>
@@ -162,21 +163,3 @@ function ListSkeleton() {
     )
 }
 
-function BookIcon() {
-    return (
-        <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
-            <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" />
-        </svg>
-    )
-}

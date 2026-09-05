@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import * as bridge from '../../../bridge'
 import { uploadPhoto } from '../../lib/api'
 import type { Photo } from '../../lib/types'
+import { Icon } from '../../../components/icons'
 
 // Шаг фото: выбор через мост (нативный пикер, до 12) или <input multiple>
 // вне приложения; загрузка на бэк сразу, первое фото = обложка, любое можно
@@ -115,9 +116,7 @@ export function PhotosStep({
                             aria-label="Удалить фото"
                             className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white"
                         >
-                            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
-                                <path d="M3 3l10 10M13 3L3 13" />
-                            </svg>
+                            <Icon name="x" size={14} />
                         </button>
                     </div>
                 ))}
@@ -134,9 +133,7 @@ export function PhotosStep({
                         onClick={pick}
                         className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed text-muted-foreground active:bg-muted"
                     >
-                        <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                            <path d="M8 3v10M3 8h10" />
-                        </svg>
+                        <Icon name="plus" size={22} />
                         <span className="text-[11px] font-medium">Добавить</span>
                     </button>
                 )}

@@ -34,6 +34,7 @@ import type { EffectiveAttribute, ListingContact } from '../lib/types'
 import { navigateTo } from '../lib/nav'
 import { BottomSheet } from '../../components/BottomSheet'
 import { ListingCard } from './ListingCard'
+import { Icon, type IconName } from '../../components/icons'
 
 // Страница объявления: галерея, цена в обеих валютах, таблица характеристик,
 // описание, контакты за кнопкой («Показать контакты» = наш contact-эндпоинт
@@ -343,17 +344,14 @@ export function DetailClient({ id }: { id: number }) {
                         <IconBtn
                             onClick={toggleFav}
                             label="В избранное"
+                            name={fav ? 'heartFilled' : 'heart'}
                             active={fav}
-                        >
-                            <path d="M8 13.6C5 11.4 1.8 8.9 1.8 5.9a3.4 3.4 0 0 1 6.2-2 3.4 3.4 0 0 1 6.2 2c0 3-3.2 5.5-6.2 7.7Z" />
-                        </IconBtn>
-                        <IconBtn onClick={() => setMenuOpen(true)} label="Ещё">
-                            <>
-                                <circle cx="3" cy="8" r="1.3" fill="currentColor" stroke="none" />
-                                <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
-                                <circle cx="13" cy="8" r="1.3" fill="currentColor" stroke="none" />
-                            </>
-                        </IconBtn>
+                        />
+                        <IconBtn
+                            onClick={() => setMenuOpen(true)}
+                            label="Ещё"
+                            name="ellipsis"
+                        />
                     </div>
                 </div>
 
@@ -465,9 +463,7 @@ export function DetailClient({ id }: { id: number }) {
                         aria-label="Закрыть"
                         className="absolute right-4 top-[calc(env(safe-area-inset-top)+12px)] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
                     >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                            <path d="M3 3l10 10M13 3L3 13" />
-                        </svg>
+                        <Icon name="x" size={16} />
                     </button>
                     <div
                         ref={(el) => {
@@ -511,9 +507,7 @@ export function DetailClient({ id }: { id: number }) {
                     }}
                     className="flex w-full items-center gap-3 py-3.5 text-left text-[15px]"
                 >
-                    <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden>
-                        <path d="M12 5.5a2 2 0 1 0-1.9-2.6L5.9 5a2 2 0 1 0 0 3l4.2 2.1a2 2 0 1 0 .7-1.4L6.9 6.9a2 2 0 0 0 0-.8l3.9-2a2 2 0 0 0 1.2.4Z" />
-                    </svg>
+                    <Icon name="share" size={17} />
                     Поделиться
                 </button>
                 {!isOwner && (
@@ -525,9 +519,7 @@ export function DetailClient({ id }: { id: number }) {
                         disabled={complaintSent}
                         className="flex w-full items-center gap-3 border-t py-3.5 text-left text-[15px] text-red-500 disabled:opacity-60"
                     >
-                        <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <path d="M3 14.5V2.3M3 2.5c2.8-1.6 5.4 1.4 8.6 0v6.4c-3.2 1.4-5.8-1.6-8.6 0" />
-                        </svg>
+                        <Icon name="flag" size={17} />
                         {complaintSent ? 'Жалоба отправлена' : 'Пожаловаться'}
                     </button>
                 )}
@@ -586,9 +578,7 @@ export function DetailClient({ id }: { id: number }) {
                                 aria-label="WhatsApp"
                                 className="flex w-[52px] items-center justify-center rounded-xl border text-[#25d366] active:bg-muted disabled:opacity-60"
                             >
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                                    <path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.4A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-2.9.8.8-2.8-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.4-3c-.3-.4 0-.5.2-.7l.6-.8c.1-.2 0-.4 0-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.9.9-1.2 2.2-.4 3.7a12 12 0 0 0 4.6 4.6c1.8.9 2.7.8 3.6.6.6-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2 0-.1-.2-.2-.4-.3Z" />
-                                </svg>
+                                <Icon name="brandWhatsapp" size={22} />
                             </button>
                         )}
                     </div>
@@ -601,13 +591,13 @@ export function DetailClient({ id }: { id: number }) {
 function IconBtn({
     onClick,
     label,
+    name,
     active = false,
-    children,
 }: {
     onClick: () => void
     label: string
+    name: IconName
     active?: boolean
-    children: React.ReactNode
 }) {
     return (
         <button
@@ -624,18 +614,7 @@ function IconBtn({
                     : undefined
             }
         >
-            <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill={active ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-                aria-hidden
-            >
-                {children}
-            </svg>
+            <Icon name={name} size={16} />
         </button>
     )
 }

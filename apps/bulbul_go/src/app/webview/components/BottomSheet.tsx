@@ -6,6 +6,7 @@ import { Drawer } from 'vaul'
 // появления/закрытия и touch-action для жеста. Копия style.css лежит рядом:
 // npm-пакет не экспортирует './style.css' (см. шапку vaul.css)
 import './vaul.css'
+import { Icon } from './icons'
 
 // Общий bottom-sheet webview-сервисов поверх vaul (drawer-примитив на базе
 // Radix Dialog): свайп-вниз с корректным разруливанием против внутреннего
@@ -56,9 +57,7 @@ export function BottomSheet({
                             aria-label="Закрыть"
                             className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground active:bg-muted"
                         >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
-                                <path d="M3 3l10 10M13 3L3 13" />
-                            </svg>
+                            <Icon name="x" size={16} />
                         </button>
                     </div>
                     {/* overscroll-contain: доскроллив контент до края, жест не

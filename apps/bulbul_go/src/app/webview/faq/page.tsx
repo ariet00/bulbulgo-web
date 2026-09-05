@@ -20,6 +20,7 @@ import {
     type Localized,
 } from './content'
 import './faq.css'
+import { Icon } from '../components/icons'
 
 // FAQ — webview-сервис `faq` (пункт «Частые вопросы» в профиле). Контент
 // статический (content.ts, три локали); заголовок рисует нативный AppBar.
@@ -72,7 +73,7 @@ export default function FaqPage() {
         return (
             <main className="mx-auto max-w-lg px-5 pb-10 pt-8">
                 <EmptyState
-                    icon={<QuestionIcon />}
+                    icon={<Icon name="circleHelp" size={24} />}
                     title={t(FAQ_UI.emptyTitle)}
                     text={t(FAQ_UI.emptyText)}
                 />
@@ -93,7 +94,7 @@ export default function FaqPage() {
             <div className="sticky top-0 z-10 -mx-5 bg-background/90 px-5 pb-3 pt-4 backdrop-blur">
                 <div className="relative">
                     <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        <SearchIcon />
+                        <Icon name="search" size={18} />
                     </span>
                     <input
                         value={query}
@@ -107,7 +108,7 @@ export default function FaqPage() {
                             aria-label="Clear"
                             className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground active:bg-muted"
                         >
-                            <ClearIcon />
+                            <Icon name="x" size={14} />
                         </button>
                     )}
                 </div>
@@ -135,7 +136,7 @@ export default function FaqPage() {
 
             {items.length === 0 ? (
                 <EmptyState
-                    icon={<SearchIcon />}
+                    icon={<Icon name="search" size={18} />}
                     title={t(FAQ_UI.notFoundTitle)}
                     text={t(FAQ_UI.notFoundText)}
                 />
@@ -213,7 +214,7 @@ function FaqRow({
                             : 'text-muted-foreground/60'
                     }`}
                 >
-                    <ChevronIcon />
+                    <Icon name="chevronDown" size={18} />
                 </span>
             </button>
             <div
@@ -247,76 +248,6 @@ function Highlight({ text, query }: { text: string; query: string }) {
     )
 }
 
-function SearchIcon() {
-    return (
-        <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-        </svg>
-    )
-}
 
-function QuestionIcon() {
-    return (
-        <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 9.3a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.2.9-1.2 1.9" />
-            <path d="M12 17h.01" />
-        </svg>
-    )
-}
 
-function ClearIcon() {
-    return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            aria-hidden
-        >
-            <path d="M6 6l12 12M18 6 6 18" />
-        </svg>
-    )
-}
 
-function ChevronIcon() {
-    return (
-        <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <path d="m6 9 6 6 6-6" />
-        </svg>
-    )
-}

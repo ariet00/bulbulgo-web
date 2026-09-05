@@ -23,6 +23,7 @@ import { BISHKEK, useOrigin } from '../lib/useOrigin'
 import type { FuelStatus, Station } from '../lib/types'
 import { ReportSheet } from './ReportSheet'
 import { StationSheet } from './StationSheet'
+import { Icon } from '../../components/icons'
 
 // Подложка: OpenFreeMap — данные OSM, безлимит, без ключа. После деплоя
 // geo-стека заменить одной строкой на свой стиль:
@@ -402,11 +403,7 @@ export function FuelMap() {
                     }
                     className="fixed bottom-[calc(env(safe-area-inset-bottom)+104px)] right-3 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/95 text-[var(--wv-accent)] shadow-lg backdrop-blur active:bg-muted"
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
-                        <circle cx="12" cy="12" r="7" />
-                        <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
-                        <path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5" />
-                    </svg>
+                    <Icon name="locateFixed" size={20} />
                 </button>
             )}
 

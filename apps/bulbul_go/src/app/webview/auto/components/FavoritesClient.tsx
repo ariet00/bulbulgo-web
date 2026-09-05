@@ -17,6 +17,7 @@ import {
 } from '../lib/queries'
 import type { ListingPage } from '../lib/types'
 import { ListingCard } from './ListingCard'
+import { Icon } from '../../components/icons'
 
 // «Избранное»: сохранённые объявления карточками ленты + снятие с избранного.
 // Данные — React Query (общий кэш справочников, SWR списка).
@@ -111,9 +112,7 @@ export function FavoritesClient() {
                                 aria-label="Убрать из избранного"
                                 className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur"
                             >
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
-                                    <path d="M8 13.6C5 11.4 1.8 8.9 1.8 5.9a3.4 3.4 0 0 1 6.2-2 3.4 3.4 0 0 1 6.2 2c0 3-3.2 5.5-6.2 7.7Z" />
-                                </svg>
+                                <Icon name="heartFilled" size={16} />
                             </button>
                         </div>
                     ))

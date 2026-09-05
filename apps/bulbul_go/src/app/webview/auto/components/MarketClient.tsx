@@ -24,6 +24,7 @@ import {
     draftToFilters,
     type FilterDraft,
 } from './FilterSheet'
+import { Icon } from '../../components/icons'
 
 // Экран ленты авторынка: сегмент Продажа|Куплю, чипсы Марка/Модель/Фильтры,
 // бесконечная лента карточек. Данные — React Query: справочники из общего
@@ -272,23 +273,14 @@ export function MarketClient() {
                     className="flex items-center justify-center overflow-hidden text-muted-foreground transition-none"
                     style={{ height: pullY }}
                 >
-                    <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
+                    <Icon
+                        name="refreshCw"
+                        size={18}
                         style={{
                             transform: `rotate(${pullY * 3}deg)`,
                             opacity: Math.min(pullY / 55, 1),
                         }}
-                        aria-hidden
-                    >
-                        <path d="M8 2a6 6 0 1 1-5.6 3.9" />
-                        <path d="M2 2.6v3.6h3.6" />
-                    </svg>
+                    />
                 </div>
             )}
             {/* сегмент рынка: прикреплён fixed'ом (sticky ломает
@@ -519,9 +511,7 @@ export function MarketClient() {
                     >
                         {label}
                         {sort === value && (
-                            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                                <path d="M2 6.5L4.8 9 10 3.5" />
-                            </svg>
+                            <Icon name="check" size={16} />
                         )}
                     </button>
                 ))}

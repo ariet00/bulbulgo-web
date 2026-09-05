@@ -5,6 +5,7 @@ import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { bridgeAvailable, openRoute } from '../bridge'
+import { Icon } from '../components/icons'
 
 // Ссылки в разделы приложения: админ пишет [Текст](app:/real_estate) —
 // схема app: несёт go_router-маршрут, тап зовёт мостовой openRoute (нативный
@@ -51,15 +52,7 @@ function YouTubeEmbed({ id }: { id: string }) {
             />
             <span className="absolute inset-0 flex items-center justify-center">
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm">
-                    <svg
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="white"
-                        aria-hidden
-                    >
-                        <path d="M8 5.5v13l11-6.5-11-6.5Z" />
-                    </svg>
+                    <Icon name="playerPlayFilled" size={22} />
                 </span>
             </span>
         </button>

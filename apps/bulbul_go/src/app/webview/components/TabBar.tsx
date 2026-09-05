@@ -1,23 +1,32 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { Icon, type IconName } from './icons'
 
 // Стандартный нижний таббар webview-сервисов. Сервис описывает только табы
-// (и опционально центральное действие) — каркас общий: fixed-панель с blur,
+// (и опционально центральное действие) — каркас общий: fixed-панель,
 // подсветка активного оптимистично по тапу (пока Next грузит страницу),
 // префетч роутов, скрытие на глубоких экранах, переключение router.replace
 // (один нативный экран, история не растёт). Живёт в layout сегмента — не
 // перемонтируется при переходах.
+//
+// Вид повторяет бар приложения (BottomNavigationBar + bottomNavigationBarTheme
+// в core/theme/app_theme.dart, центральная кнопка — CreateTabIcon из
+// core/router/product_sub_nav.dart): плоская панель в цвет фона без тени и
+// делителя, активный пункт — accent, значок 24 и подпись 12/700, неактивный —
+// onSurfaceVariant (--muted-foreground), 22 и 11/500. Значки контурные и в
+// активном состоянии: залитый среди контурных читается как другой набор.
+
+/** Высота значка по состоянию — как selected/unselectedIconTheme в теме. */
+const ICON_SIZE_ACTIVE = 24
+const ICON_SIZE_IDLE = 22
 
 export interface TabItem {
     key: string
     path: string
     label: string
-    /** содержимое svg 16×16 (stroke=currentColor задаёт каркас) */
-    icon: ReactNode
-    /** заливать иконку при активности (сердечко «Избранных») */
-    fillWhenActive?: boolean
+    icon: IconName
 }
 
 export function TabBar({
@@ -25,8 +34,8 @@ export function TabBar({
     centerAction,
 }: {
     items: TabItem[]
-    /** акцентная приподнятая кнопка в центре («Создать» в авторынке) */
-    centerAction?: { label: string; ariaLabel: string; onPress: () => void }
+    /** круглая кнопка действия в центре бара («Создать» в авторынке) */
+    centerAction?: { ariaLabel: string; onPress: () => void }
 }) {
     const router = useRouter()
     const pathname = usePathname()
@@ -44,8 +53,12 @@ export function TabBar({
     const active =
         pending ?? items.find((t) => t.path === pathname)?.key ?? items[0]?.key
 
+    // Значок и подпись живут в блоках фиксированной высоты: активный крупнее,
+    // но строка не должна дёргаться при переключении (в баре приложения
+    // высота тоже постоянная — 56 плюс safe-area).
     const tab = (t: TabItem) => {
         const isActive = t.key === active
+        const size = isActive ? ICON_SIZE_ACTIVE : ICON_SIZE_IDLE
         return (
             <button
                 key={t.key}
@@ -56,25 +69,23 @@ export function TabBar({
                 }}
                 // touch-manipulation: WebKit не придерживает первый тап в
                 // ожидании двойного (зум) — срабатывание с первого касания
-                className="flex flex-1 touch-manipulation flex-col items-center gap-0.5 pt-2 pb-[calc(env(safe-area-inset-bottom)+26px)]"
-                style={
-                    isActive ? { color: 'var(--wv-accent)' } : { opacity: 0.55 }
-                }
+                className={`flex flex-1 touch-manipulation flex-col items-center gap-0.5 pt-2 pb-[calc(env(safe-area-inset-bottom)+26px)] ${
+                    isActive ? '' : 'text-muted-foreground'
+                }`}
+                style={isActive ? { color: 'var(--wv-accent)' } : undefined}
             >
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 16 16"
-                    fill={t.fillWhenActive && isActive ? 'currentColor' : 'none'}
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
+                <span className="flex h-6 items-center">
+                    <Icon name={t.icon} size={size} />
+                </span>
+                <span
+                    className={`flex h-4 items-center leading-none ${
+                        isActive
+                            ? 'text-[12px] font-bold'
+                            : 'text-[11px] font-medium'
+                    }`}
                 >
-                    {t.icon}
-                </svg>
-                <span className="text-[10px] font-medium">{t.label}</span>
+                    {t.label}
+                </span>
             </button>
         )
     }
@@ -85,7 +96,9 @@ export function TabBar({
         : [items, []]
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
+        // Панель плоская и непрозрачная — как бар приложения (elevation 0,
+        // фон surface): ни делителя сверху, ни подложки с blur.
+        <nav className="fixed inset-x-0 bottom-0 z-40 bg-background">
             {/* нижний запас (+26px к safe-area: во вьюве inset может быть 0)
                 живёт ВНУТРИ кнопок, не на контейнере — иначе нижняя часть
                 панели была бы мёртвой зоной и тапы «мимо иконки» терялись */}
@@ -96,21 +109,19 @@ export function TabBar({
                     <button
                         onClick={centerAction.onPress}
                         aria-label={centerAction.ariaLabel}
-                        className="flex flex-1 touch-manipulation flex-col items-center gap-0.5 pt-2 pb-[calc(env(safe-area-inset-bottom)+26px)]"
+                        className="relative flex-1 touch-manipulation"
                     >
+                        {/* круг 48 занимает обе строки ячейки (значок +
+                            подпись) и не растит бар — как OverflowBox в
+                            CreateTabIcon; подписи у кнопки в приложении нет */}
                         <span
-                            className="flex h-9 w-9 -translate-y-2.5 items-center justify-center rounded-full text-white shadow-lg"
-                            style={{ background: 'var(--wv-primary)' }}
+                            className="absolute left-1/2 top-1 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full"
+                            style={{
+                                background: 'var(--wv-primary)',
+                                color: 'var(--wv-on-primary)',
+                            }}
                         >
-                            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                                <path d="M8 3v10M3 8h10" />
-                            </svg>
-                        </span>
-                        <span
-                            className="-mt-2 text-[10px] font-medium"
-                            style={{ color: 'var(--wv-accent)' }}
-                        >
-                            {centerAction.label}
+                            <Icon name="plus" size={30} />
                         </span>
                     </button>
                 )}

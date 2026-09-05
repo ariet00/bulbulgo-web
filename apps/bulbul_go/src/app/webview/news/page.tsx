@@ -6,6 +6,7 @@ import { bridgeAvailable, openWebPage } from '../bridge'
 import { spectral } from './fonts'
 import { fetchNewsList, formatNewsDate, type NewsListItem } from './lib'
 import './news.css'
+import { Icon } from '../components/icons'
 
 // Лента новостей — корневая страница webview-сервиса `news` (карточка
 // «Новости» на Главной). Заголовок рисует нативный AppBar приложения.
@@ -126,7 +127,7 @@ function EmptyFeed() {
     return (
         <div className="news-rise flex flex-col items-center px-6 py-24 text-center">
             <div className="news-float flex h-20 w-20 items-center justify-center rounded-3xl bg-foreground/[0.05] text-foreground/60">
-                <NewspaperIcon />
+                <Icon name="newspaper" size={36} />
             </div>
             <h2 className="news-display mt-6 text-[19px] font-bold">
                 Пока нет новостей
@@ -139,26 +140,6 @@ function EmptyFeed() {
     )
 }
 
-function NewspaperIcon() {
-    return (
-        <svg
-            width="36"
-            height="36"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
-            <path d="M18 14h-8" />
-            <path d="M15 18h-5" />
-            <path d="M10 6h8v4h-8V6Z" />
-        </svg>
-    )
-}
 
 function Dateline({ date }: { date: string | null }) {
     if (!date) return null

@@ -34,6 +34,7 @@ import {
     modelYearRange,
     useParamAttrs,
 } from './fields'
+import { Icon } from '../../../components/icons'
 
 // Wizard подачи, управляемый категорией. Шаг 0 — выбор ветки (Легковые/
 // Грузовые/Мото/Запчасти/Сервисы), затем сторона (Продать/Куплю — только если
@@ -400,9 +401,7 @@ export function WizardClient() {
                     onClick={() => setCatId(null)}
                     className="mb-2 -ml-1 flex items-center gap-1 text-[14px] text-muted-foreground active:opacity-70"
                 >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                        <path d="M10 3 5 8l5 5" />
-                    </svg>
+                    <Icon name="chevronLeft" size={16} />
                     Ветка
                 </button>
                 <h1 className="text-[20px] font-bold tracking-tight">
@@ -414,9 +413,7 @@ export function WizardClient() {
                 <div className="mt-5 space-y-3">
                     <button onClick={() => choose('offer')} className={card}>
                         <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: 'var(--wv-primary)' }}>
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                                <path d="M2 8.5 8 2l6 6.5M3.5 7v6.5h9V7" />
-                            </svg>
+                            <Icon name="house" size={20} />
                         </span>
                         <span className="min-w-0">
                             <span className="block text-[16px] font-semibold">Продать</span>
@@ -428,10 +425,7 @@ export function WizardClient() {
                     </button>
                     <button onClick={() => choose('want')} className={card}>
                         <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border" style={{ color: 'var(--wv-accent)', borderColor: 'var(--wv-accent-border)', background: 'var(--wv-accent-soft)' }}>
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                                <circle cx="7" cy="7" r="4.6" />
-                                <path d="m10.6 10.6 3.4 3.4" />
-                            </svg>
+                            <Icon name="search" size={20} />
                         </span>
                         <span className="min-w-0">
                             <span className="block text-[16px] font-semibold">Куплю</span>

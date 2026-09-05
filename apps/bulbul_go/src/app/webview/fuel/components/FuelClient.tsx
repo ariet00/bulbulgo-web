@@ -14,6 +14,7 @@ import type { FuelType, Station } from '../lib/types'
 import { ReportSheet } from './ReportSheet'
 import { StationCard } from './StationCard'
 import { StationSheet } from './StationSheet'
+import { Icon } from '../../components/icons'
 
 // Каскадная анимация карточек — только при первом показе ленты за сессию
 // вебвью: при возврате с другого таба список из кэша появляется мгновенно,
@@ -180,21 +181,6 @@ function ListSkeleton() {
 
 export function PumpIcon() {
     return (
-        <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-        >
-            <path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" />
-            <path d="M3 21h14" />
-            <path d="M7 7h6v4H7z" />
-            <path d="M15 9h2.5a1.5 1.5 0 0 1 1.5 1.5V17a1.5 1.5 0 0 0 3 0v-6.6a2 2 0 0 0-.6-1.4L19 6.5" />
-        </svg>
+        <Icon name="fuel" size={22} />
     )
 }
