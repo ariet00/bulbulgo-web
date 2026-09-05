@@ -76,7 +76,7 @@ export function PickerSheet({
                     className={`flex h-5 w-5 items-center justify-center rounded-full border text-white transition-colors ${
                         active ? 'border-transparent' : 'border-muted-foreground/40'
                     }`}
-                    style={active ? { background: 'var(--wv-accent)' } : undefined}
+                    style={active ? { background: 'var(--wv-primary)' } : undefined}
                 >
                     {active && (
                         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -101,14 +101,14 @@ export function PickerSheet({
                             onClose()
                         }}
                         className="w-full rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90"
-                        style={{ background: 'var(--wv-accent)' }}
+                        style={{ background: 'var(--wv-primary)' }}
                     >
                         Выбрать{picked.length ? ` (${picked.length})` : ''}
                     </button>
                 ) : undefined
             }
         >
-            <div className="sticky top-0 z-10 -mx-4 bg-background px-4 pb-2">
+            <div className="sticky top-0 z-10 -mx-4 bg-card px-4 pb-2">
                 <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}

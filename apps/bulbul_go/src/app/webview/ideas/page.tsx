@@ -140,7 +140,7 @@ export default function IdeasPage() {
         <main className="mx-auto max-w-lg px-5 pb-12 pt-5">
             {sent ? (
                 <div className="wv-rise flex flex-col items-center rounded-3xl border bg-[var(--wv-accent-soft)]/40 px-6 py-10 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--wv-accent)] text-white">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--wv-primary)] text-white">
                         <CheckIcon />
                     </div>
                     <p className="mt-4 text-[17px] font-semibold">
@@ -235,7 +235,7 @@ export default function IdeasPage() {
                     <button
                         onClick={() => void submit()}
                         disabled={sending}
-                        className="mt-5 h-12 w-full rounded-2xl bg-[var(--wv-accent)] text-[15.5px] font-semibold text-white transition-opacity active:opacity-85 disabled:opacity-60"
+                        className="mt-5 h-12 w-full rounded-2xl bg-[var(--wv-primary)] text-[15.5px] font-semibold text-white transition-opacity active:opacity-85 disabled:opacity-60"
                     >
                         {sending ? 'Отправляем…' : 'Отправить идею'}
                     </button>

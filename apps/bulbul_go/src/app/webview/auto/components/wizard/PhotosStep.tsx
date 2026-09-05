@@ -98,7 +98,7 @@ export function PhotosStep({
                         {i === 0 ? (
                             <span
                                 className="absolute left-1 top-1 rounded px-1.5 py-px text-[10px] font-semibold text-white"
-                                style={{ background: 'var(--wv-accent)' }}
+                                style={{ background: 'var(--wv-primary)' }}
                             >
                                 Обложка
                             </span>

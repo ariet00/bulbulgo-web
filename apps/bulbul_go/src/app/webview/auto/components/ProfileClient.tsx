@@ -54,10 +54,10 @@ export function ProfileClient() {
         <div className="min-h-dvh px-4 pb-28 pt-4">
             <h1 className="text-[20px] font-bold tracking-tight">Профиль</h1>
 
-            <div className="mt-4 flex items-center gap-3.5 rounded-2xl border px-4 py-4">
+            <div className="mt-4 flex items-center gap-3.5 rounded-2xl border bg-card px-4 py-4">
                 <div
                     className="flex h-14 w-14 items-center justify-center rounded-full text-[20px] font-bold text-white"
-                    style={{ background: 'var(--wv-accent)' }}
+                    style={{ background: 'var(--wv-primary)' }}
                 >
                     {(me?.full_name ?? '·').slice(0, 1).toUpperCase()}
                 </div>
@@ -82,7 +82,7 @@ export function ProfileClient() {
                 </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border px-4">
+            <div className="mt-4 rounded-2xl border bg-card px-4">
                 <button
                     className={row}
                     onClick={() => router.replace('/webview/auto/my')}

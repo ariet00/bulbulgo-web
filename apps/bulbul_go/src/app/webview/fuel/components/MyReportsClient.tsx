@@ -49,12 +49,12 @@ export function MyReportsClient() {
                 />
             ) : authed === null || reports.isLoading ? (
                 <div className="flex flex-col gap-2.5">
-                    <div className="rounded-2xl border border-border p-4">
+                    <div className="rounded-2xl border border-border bg-card p-4">
                         <div className="wv-skeleton mb-2 h-5 w-1/3 rounded" />
                         <div className="wv-skeleton h-3 w-2/3 rounded" />
                     </div>
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="rounded-2xl border border-border p-3.5">
+                        <div key={i} className="rounded-2xl border border-border bg-card p-3.5">
                             <div className="wv-skeleton mb-2 h-4 w-1/2 rounded" />
                             <div className="wv-skeleton h-3 w-1/3 rounded" />
                         </div>
@@ -64,7 +64,7 @@ export function MyReportsClient() {
                 <div className="flex flex-col gap-4">
                     {/* уровень и баллы */}
                     {stats.data && (
-                        <section className="wv-rise rounded-2xl border border-border p-4">
+                        <section className="wv-rise rounded-2xl border border-border bg-card p-4">
                             <div className="flex items-baseline justify-between gap-3">
                                 <p className="text-[16px] font-bold">
                                     {stats.data.level.label}
@@ -112,7 +112,7 @@ export function MyReportsClient() {
 
                     {/* топ недели */}
                     {leaders.data && leaders.data.items.length > 0 && (
-                        <section className="wv-rise rounded-2xl border border-border p-4">
+                        <section className="wv-rise rounded-2xl border border-border bg-card p-4">
                             <p className="mb-2 text-[13px] font-semibold text-muted-foreground">
                                 Топ недели
                             </p>
@@ -164,7 +164,7 @@ export function MyReportsClient() {
                                     return (
                                         <li
                                             key={r.id}
-                                            className="wv-rise rounded-2xl border border-border p-3.5"
+                                            className="wv-rise rounded-2xl border border-border bg-card p-3.5"
                                             style={{ '--wv-delay': `${Math.min(i, 8) * 40}ms` } as React.CSSProperties}
                                         >
                                             <div className="flex items-baseline justify-between gap-3">

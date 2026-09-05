@@ -189,7 +189,7 @@ export function FilterSheet({
                             onClose()
                         }}
                         className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90"
-                        style={{ background: 'var(--wv-accent)' }}
+                        style={{ background: 'var(--wv-primary)' }}
                     >
                         {count === null ? 'Показать' : `Показать ${count}`}
                     </button>
@@ -211,8 +211,8 @@ export function FilterSheet({
                                 style={
                                     draft.priceCurrency === c
                                         ? {
-                                              background: 'var(--wv-accent)',
-                                              color: '#fff',
+                                              background: 'var(--wv-primary)',
+                                              color: 'var(--wv-on-primary)',
                                           }
                                         : undefined
                                 }
@@ -301,7 +301,7 @@ export function FilterSheet({
                                 className="relative h-6 w-10 rounded-full transition-colors"
                                 style={{
                                     background: draft.bools[a.key]
-                                        ? 'var(--wv-accent)'
+                                        ? 'var(--wv-primary)'
                                         : 'color-mix(in srgb, currentColor 20%, transparent)',
                                 }}
                             >

@@ -88,7 +88,7 @@ export function BoolToggle({
                 className="relative h-6 w-10 rounded-full transition-colors"
                 style={{
                     background: value
-                        ? 'var(--wv-accent)'
+                        ? 'var(--wv-primary)'
                         : 'color-mix(in srgb, currentColor 20%, transparent)',
                 }}
             >
@@ -161,7 +161,7 @@ export function RegionSheet({
 
     return (
         <BottomSheet open={open} onClose={onClose} title="Город / регион">
-            <div className="sticky top-0 z-10 -mx-4 bg-background px-4 pb-2">
+            <div className="sticky top-0 z-10 -mx-4 bg-card px-4 pb-2">
                 <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}

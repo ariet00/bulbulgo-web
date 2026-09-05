@@ -1,4 +1,7 @@
-/* Акцент сервиса FAQ (переопределяет --wv-accent из theme.css). */
+/* Акцент сервиса FAQ. Переопределяет обе роли фирменного цвета
+   из theme.css: --wv-accent (текст, значки, обводки) и --wv-primary
+   (заливки под --wv-on-primary). Цвет один на обе темы. */
 :root {
     --wv-accent: #8a4fbe;
+    --wv-primary: #8a4fbe;
 }

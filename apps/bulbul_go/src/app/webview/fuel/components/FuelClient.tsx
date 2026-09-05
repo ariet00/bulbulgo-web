@@ -95,7 +95,7 @@ export function FuelClient() {
                     text="Проверьте соединение и попробуйте ещё раз."
                     action={
                         <button
-                            className="mt-3 rounded-full bg-[var(--wv-accent)] px-5 py-2 text-[14px] font-semibold text-white active:opacity-80"
+                            className="mt-3 rounded-full bg-[var(--wv-primary)] px-5 py-2 text-[14px] font-semibold text-white active:opacity-80"
                             onClick={() => void stations.refetch()}
                         >
                             Повторить
@@ -162,7 +162,7 @@ function ListSkeleton() {
             {Array.from({ length: 6 }).map((_, i) => (
                 <div
                     key={i}
-                    className="rounded-2xl border border-border p-3.5"
+                    className="rounded-2xl border border-border bg-card p-3.5"
                 >
                     <div className="wv-skeleton mb-2 h-4 w-2/3 rounded" />
                     <div className="wv-skeleton mb-3 h-3 w-1/3 rounded" />

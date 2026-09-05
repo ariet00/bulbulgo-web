@@ -97,7 +97,10 @@ export function MyListingsClient() {
                         className="flex-1 rounded-[10px] py-1.5 transition-colors"
                         style={
                             status === value
-                                ? { background: 'var(--wv-accent)', color: '#fff' }
+                                ? {
+                                      background: 'var(--wv-primary)',
+                                      color: 'var(--wv-on-primary)',
+                                  }
                                 : { opacity: 0.7 }
                         }
                     >
@@ -124,7 +127,7 @@ export function MyListingsClient() {
                                     )
                                 }
                                 className="mt-4 rounded-xl px-5 py-2.5 text-[14px] font-semibold text-white"
-                                style={{ background: 'var(--wv-accent)' }}
+                                style={{ background: 'var(--wv-primary)' }}
                             >
                                 Подать объявление
                             </button>

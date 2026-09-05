@@ -1,11 +1,124 @@
-/* Стандартная тема webview-сервисов: токены акцента + общие utility-классы.
-   Подключается в webview/layout.tsx — доступна всем сервисам.
-   Переменные на :root (не на класс сервиса): шиты/модалки рендерятся
+/* Стандартная тема webview-сервисов: палитра мобильного приложения, токены
+   акцента и общие utility-классы. Подключается в webview/layout.tsx —
+   доступна всем сервисам.
+   Переменные на :root (не на классе сервиса): шиты/модалки рендерятся
    порталом в body, вне сервисного дерева. Сервис может переопределить
-   --wv-accent своим блоком :root в собственном css (грузится позже). */
+   --wv-accent/--wv-primary своим блоком :root в собственном css
+   (грузится позже). */
+
+/* Гамма один в один с приложением — native_apps/bulbul_go/lib/core/theme/
+   app_theme.dart (light/darkScheme). Значения перенесены числами: они
+   подобраны под WCAG AA относительно фона своей темы, пересчитывать их или
+   подгонять на глаз нельзя; меняется палитра в приложении — правится и
+   здесь (общей константы между Dart и CSS не сделать).
+   Правило гаммы: светлая — серый фон и белые карточки; тёмная — почти
+   чёрный фон и графитовые карточки. */
 
 :root {
-    --wv-accent: #1f6ff0;
+    /* Тёмная гамма объявлена один раз: её применяют оба блока ниже —
+       анти-FOUC медиазапрос и класс .dark. */
+    --wv-dark-surface: #0b0d0e; /* surface — фон экрана */
+    /* surfaceContainerLow — карточки, шиты, бары */
+    --wv-dark-container: #161618;
+    /* surfaceContainerHigh — чипы и прочие вложенные заливки */
+    --wv-dark-container-high: #2c2c2e;
+    --wv-dark-on-surface: #f5f5f7;
+    --wv-dark-on-surface-variant: #9e9ea7;
+    --wv-dark-outline-variant: #2c2c2e; /* границы карточек и делители */
+    --wv-dark-outline: #66666a; /* обводка полей */
+    --wv-dark-primary: #0081c2;
+    --wv-dark-accent: #62b2ef;
+    --wv-dark-error: #d84646;
+
+    /* Светлая гамма — сразу в токенах, второго потребителя у неё нет. */
+    --background: #f5f6f8;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --popover: #ffffff;
+    --popover-foreground: #1a1a1a;
+    --primary: #0072ab;
+    --primary-foreground: #ffffff;
+    --secondary: #f0f0f2;
+    --secondary-foreground: #1a1a1a;
+    --muted: #f0f0f2;
+    --muted-foreground: #6b6b6b;
+    /* --accent здесь — shadcn-токен подложки (hover, выделенный пункт),
+       фирменный синий живёт в --wv-accent ниже. */
+    --accent: #f0f0f2;
+    --accent-foreground: #1a1a1a;
+    --destructive: #d32f2f;
+    --border: #e5e5e8;
+    --input: #878c96;
+    --ring: #878c96;
+
+    /* Синий приложения по темам. Через отдельные --wv-app-*, а не прямо в
+       --wv-accent: тёмные блоки ниже специфичнее :root, и сервисный
+       override акцента (faq/ideas/training) им бы проигрывал. */
+    --wv-app-accent: #0072ab;
+    --wv-app-primary: #0072ab;
+}
+
+/* Анти-FOUC для system-темы (тот же приём, что в globals.css): класс .dark
+   приложение ставит скриптом, а системно-тёмный пользователь не должен
+   увидеть светлый первый кадр. */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+        color-scheme: dark;
+        --background: var(--wv-dark-surface);
+        --foreground: var(--wv-dark-on-surface);
+        --card: var(--wv-dark-container);
+        --card-foreground: var(--wv-dark-on-surface);
+        --popover: var(--wv-dark-container);
+        --popover-foreground: var(--wv-dark-on-surface);
+        --primary: var(--wv-dark-primary);
+        --primary-foreground: #ffffff;
+        --secondary: var(--wv-dark-container-high);
+        --secondary-foreground: var(--wv-dark-on-surface);
+        --muted: var(--wv-dark-container-high);
+        --muted-foreground: var(--wv-dark-on-surface-variant);
+        --accent: var(--wv-dark-container-high);
+        --accent-foreground: var(--wv-dark-on-surface);
+        --destructive: var(--wv-dark-error);
+        --border: var(--wv-dark-outline-variant);
+        --input: var(--wv-dark-outline);
+        --ring: var(--wv-dark-outline);
+        --wv-app-accent: var(--wv-dark-accent);
+        --wv-app-primary: var(--wv-dark-primary);
+    }
+}
+
+:root.dark {
+    --background: var(--wv-dark-surface);
+    --foreground: var(--wv-dark-on-surface);
+    --card: var(--wv-dark-container);
+    --card-foreground: var(--wv-dark-on-surface);
+    --popover: var(--wv-dark-container);
+    --popover-foreground: var(--wv-dark-on-surface);
+    --primary: var(--wv-dark-primary);
+    --primary-foreground: #ffffff;
+    --secondary: var(--wv-dark-container-high);
+    --secondary-foreground: var(--wv-dark-on-surface);
+    --muted: var(--wv-dark-container-high);
+    --muted-foreground: var(--wv-dark-on-surface-variant);
+    --accent: var(--wv-dark-container-high);
+    --accent-foreground: var(--wv-dark-on-surface);
+    --destructive: var(--wv-dark-error);
+    --border: var(--wv-dark-outline-variant);
+    --input: var(--wv-dark-outline);
+    --ring: var(--wv-dark-outline);
+    --wv-app-accent: var(--wv-dark-accent);
+    --wv-app-primary: var(--wv-dark-primary);
+}
+
+/* Две роли фирменного цвета — как AppColorScheme.accent в приложении:
+   --wv-accent для текста, значков, обводок и тинтов на поверхностях,
+   --wv-primary для опаковых заливок с --wv-on-primary поверх. В тёмной теме
+   это разные оттенки: светлый accent под белым текстом не читается. */
+:root {
+    --wv-accent: var(--wv-app-accent);
+    --wv-primary: var(--wv-app-primary);
+    --wv-on-primary: #ffffff;
     --wv-accent-soft: color-mix(in srgb, var(--wv-accent) 12%, transparent);
     --wv-accent-border: color-mix(in srgb, var(--wv-accent) 36%, transparent);
 }

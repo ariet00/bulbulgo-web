@@ -74,7 +74,7 @@ export function StationCard({
     return (
         <button
             onClick={onOpen}
-            className="w-full rounded-2xl border border-border bg-background p-3.5 text-left transition-colors active:bg-muted/60"
+            className="w-full rounded-2xl border border-border bg-card p-3.5 text-left transition-colors active:bg-muted/60"
         >
             <div className="flex items-start gap-3">
                 <StationAvatar station={station} />

@@ -69,7 +69,7 @@ export function StationSheet({
                 station && (
                     <button
                         onClick={() => onReport(station)}
-                        className="w-full rounded-xl bg-[var(--wv-accent)] py-3 text-[15px] font-semibold text-white active:opacity-80"
+                        className="w-full rounded-xl bg-[var(--wv-primary)] py-3 text-[15px] font-semibold text-white active:opacity-80"
                     >
                         Сообщить о наличии
                     </button>

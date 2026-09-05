@@ -44,7 +44,7 @@ export function BottomSheet({
                 <Drawer.Overlay className="fixed inset-0 z-50 bg-black/45" />
                 <Drawer.Content
                     aria-describedby={undefined}
-                    className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-2xl outline-none"
+                    className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-2xl bg-card shadow-2xl outline-none"
                 >
                     <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30" />
                     <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-3">

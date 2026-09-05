@@ -327,7 +327,7 @@ export function WizardClient() {
                 <button
                     onClick={async () => setAuthed(await ensureAuth())}
                     className="mt-6 rounded-xl px-6 py-3 text-[15px] font-semibold text-white"
-                    style={{ background: 'var(--wv-accent)' }}
+                    style={{ background: 'var(--wv-primary)' }}
                 >
                     Войти
                 </button>
@@ -337,7 +337,9 @@ export function WizardClient() {
 
     const selectBtn = `${inputCls} flex items-center justify-between text-left`
     const accent = (on: boolean): React.CSSProperties =>
-        on ? { background: 'var(--wv-accent)', color: '#fff' } : { opacity: 0.7 }
+        on
+            ? { background: 'var(--wv-primary)', color: 'var(--wv-on-primary)' }
+            : { opacity: 0.7 }
 
     // шаг 0 — выбор ветки
     if (catId === null) {
@@ -411,7 +413,7 @@ export function WizardClient() {
                 </p>
                 <div className="mt-5 space-y-3">
                     <button onClick={() => choose('offer')} className={card}>
-                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: 'var(--wv-accent)' }}>
+                        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: 'var(--wv-primary)' }}>
                             <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
                                 <path d="M2 8.5 8 2l6 6.5M3.5 7v6.5h9V7" />
                             </svg>
@@ -722,7 +724,7 @@ export function WizardClient() {
                             : submit()
                     }
                     className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90 disabled:opacity-40"
-                    style={{ background: 'var(--wv-accent)' }}
+                    style={{ background: 'var(--wv-primary)' }}
                 >
                     {submitting
                         ? 'Публикуем…'

@@ -79,7 +79,7 @@ export default function FaqPage() {
                 {inApp && (
                     <button
                         onClick={() => void openRoute('/support')}
-                        className="mt-2 h-11 w-full rounded-2xl bg-[var(--wv-accent)] text-[15px] font-semibold text-white active:opacity-85"
+                        className="mt-2 h-11 w-full rounded-2xl bg-[var(--wv-primary)] text-[15px] font-semibold text-white active:opacity-85"
                     >
                         {t(FAQ_UI.ctaButton)}
                     </button>
@@ -165,7 +165,7 @@ export default function FaqPage() {
                     </p>
                     <button
                         onClick={() => void openRoute('/support')}
-                        className="mt-4 h-11 w-full rounded-2xl bg-[var(--wv-accent)] text-[15px] font-semibold text-white active:opacity-85"
+                        className="mt-4 h-11 w-full rounded-2xl bg-[var(--wv-primary)] text-[15px] font-semibold text-white active:opacity-85"
                     >
                         {t(FAQ_UI.ctaButton)}
                     </button>

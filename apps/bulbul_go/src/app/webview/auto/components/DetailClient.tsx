@@ -297,7 +297,7 @@ export function DetailClient({ id }: { id: number }) {
                                 'Управление объявлением',
                             )
                         }
-                        className="mb-3 flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-[13px] font-medium"
+                        className="mb-3 flex w-full items-center justify-between rounded-xl border bg-card px-3.5 py-2.5 text-[13px] font-medium"
                         style={{
                             color: 'var(--wv-accent)',
                             borderColor: 'var(--wv-accent-border)',
@@ -309,7 +309,7 @@ export function DetailClient({ id }: { id: number }) {
                     </button>
                 )}
                 {inactive && (
-                    <div className="mb-3 rounded-xl border px-3.5 py-2.5 text-[13px] font-medium text-muted-foreground">
+                    <div className="mb-3 rounded-xl border bg-card px-3.5 py-2.5 text-[13px] font-medium text-muted-foreground">
                         Объявление снято с публикации
                     </div>
                 )}
@@ -400,10 +400,10 @@ export function DetailClient({ id }: { id: number }) {
                 )}
 
                 {/* продавец */}
-                <section className="mt-5 flex items-center gap-3 rounded-2xl border px-4 py-3">
+                <section className="mt-5 flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
                     <div
                         className="flex h-10 w-10 items-center justify-center rounded-full text-[15px] font-bold text-white"
-                        style={{ background: 'var(--wv-accent)' }}
+                        style={{ background: 'var(--wv-primary)' }}
                     >
                         {(l.user_name ?? '·').slice(0, 1).toUpperCase()}
                     </div>
@@ -571,7 +571,7 @@ export function DetailClient({ id }: { id: number }) {
                             onClick={callSeller}
                             disabled={contactLoading}
                             className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white active:opacity-90 disabled:opacity-60"
-                            style={{ background: 'var(--wv-accent)' }}
+                            style={{ background: 'var(--wv-primary)' }}
                         >
                             {contact
                                 ? 'Позвонить'

@@ -312,8 +312,8 @@ export function MarketClient() {
                                     style={
                                         on
                                             ? {
-                                                  background: 'var(--wv-accent)',
-                                                  color: '#fff',
+                                                  background: 'var(--wv-primary)',
+                                                  color: 'var(--wv-on-primary)',
                                               }
                                             : {
                                                   background:
@@ -345,8 +345,8 @@ export function MarketClient() {
                                 style={
                                     kind === k
                                         ? {
-                                              background: 'var(--wv-accent)',
-                                              color: '#fff',
+                                              background: 'var(--wv-primary)',
+                                              color: 'var(--wv-on-primary)',
                                           }
                                         : { color: 'inherit', opacity: 0.7 }
                                 }

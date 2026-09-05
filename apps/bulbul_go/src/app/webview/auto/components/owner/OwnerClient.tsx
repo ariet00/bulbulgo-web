@@ -427,7 +427,7 @@ export function OwnerClient({ id }: { id: number }) {
                                         className="relative h-6 w-10 shrink-0 rounded-full transition-colors"
                                         style={{
                                             background: attrValue(a.key)
-                                                ? 'var(--wv-accent)'
+                                                ? 'var(--wv-primary)'
                                                 : 'color-mix(in srgb, currentColor 20%, transparent)',
                                         }}
                                     >

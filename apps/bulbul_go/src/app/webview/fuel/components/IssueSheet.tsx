@@ -89,7 +89,7 @@ export function IssueSheet({
                 <button
                     disabled={reasonId == null || sending}
                     onClick={() => void submit()}
-                    className="w-full rounded-xl bg-[var(--wv-accent)] py-3 text-[15px] font-semibold text-white transition-opacity active:opacity-80 disabled:opacity-40"
+                    className="w-full rounded-xl bg-[var(--wv-primary)] py-3 text-[15px] font-semibold text-white transition-opacity active:opacity-80 disabled:opacity-40"
                 >
                     {sending ? 'Отправляем…' : 'Отправить'}
                 </button>
@@ -122,7 +122,7 @@ export function IssueSheet({
                         placeholder="Что именно не так? (необязательно)"
                         rows={3}
                         maxLength={500}
-                        className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-[14px] outline-none placeholder:text-muted-foreground/60 focus:border-[var(--wv-accent-border)]"
+                        className="w-full resize-none rounded-xl border border-border bg-card px-3 py-2.5 text-[14px] outline-none placeholder:text-muted-foreground/60 focus:border-[var(--wv-accent-border)]"
                     />
                 </div>
             )}

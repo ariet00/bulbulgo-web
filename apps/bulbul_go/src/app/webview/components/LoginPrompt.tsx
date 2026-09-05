@@ -23,7 +23,7 @@ export function LoginPrompt({
             </p>
             <button
                 onClick={() => void onLogin()}
-                className="mt-4 rounded-full bg-[var(--wv-accent)] px-6 py-2.5 text-[14px] font-semibold text-white active:opacity-80"
+                className="mt-4 rounded-full bg-[var(--wv-primary)] px-6 py-2.5 text-[14px] font-semibold text-white active:opacity-80"
             >
                 Войти
             </button>

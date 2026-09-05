@@ -3,6 +3,7 @@ import '../globals.css'
 import './theme.css'
 import { AuthWarmup } from './AuthWarmup'
 import { BridgeNav } from './BridgeNav'
+import { inter } from './fonts'
 import { QueryProvider } from './QueryProvider'
 import { ThemeSync } from './ThemeSync'
 import { WebviewErrorBoundary } from './WebviewErrorBoundary'
@@ -64,13 +65,13 @@ export default function WebviewLayout({
         // suppressHydrationWarning: класс dark ставится до гидрации.
         <html
             lang="ru"
-            className="overflow-x-hidden bg-background"
+            className={`${inter.variable} overflow-x-hidden bg-background`}
             suppressHydrationWarning
         >
             <head>
                 <script dangerouslySetInnerHTML={{ __html: themeInitJs }} />
             </head>
-            <body className="overflow-x-hidden max-w-[100vw] bg-background text-foreground antialiased">
+            <body className="overflow-x-hidden max-w-[100vw] bg-background font-sans text-foreground antialiased">
                 <ThemeSync />
                 <BridgeNav />
                 <AuthWarmup />
