@@ -8,7 +8,7 @@ import type { AdminService, AdminServiceCreate } from '@/apis/admin'
 import { useAdminServiceGroups, useAdminServices } from '@/hooks/queries/admin'
 import { BasicsSection } from './BasicsSection'
 import { FeedChipSection } from './FeedChipSection'
-import { NativeSection } from './NativeSection'
+import { MarketplaceSection } from './MarketplaceSection'
 import { PlacementSection } from './PlacementSection'
 import { ServicePreview } from './ServicePreview'
 import { WebviewSection } from './WebviewSection'
@@ -82,11 +82,8 @@ export function ServiceForm({
                     {isFeedChipValues(values) && (
                         <FeedChipSection form={form} targets={roots} />
                     )}
-                    {values.type === 'webview' ? (
-                        <WebviewSection form={form} />
-                    ) : (
-                        <NativeSection form={form} />
-                    )}
+                    {values.type === 'webview' && <WebviewSection form={form} />}
+                    <MarketplaceSection form={form} />
 
                     <div className="flex items-center gap-3">
                         <Button type="submit" disabled={submitting}>

@@ -155,7 +155,9 @@ export const toBody = (v: ServiceFormValues): AdminServiceCreate => {
         auth: webview ? v.auth : false,
         app_bar: webview ? v.app_bar : true,
         nav_items: webview ? v.nav_items.filter((i) => i.value.trim()) : [],
-        marketplace_root: webview ? null : v.marketplace_root.trim() || null,
+        // скоуп каталога не зависит от типа: webview-авторынок тоже шлёт
+        // X-Service-Slug, null здесь ломает ему категории (400 на бэке)
+        marketplace_root: v.marketplace_root.trim() || null,
         enabled: v.enabled,
         position: v.position,
         // у дочернего сервиса группы «Главной» не бывает

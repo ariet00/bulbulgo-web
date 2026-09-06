@@ -47,8 +47,9 @@ export interface AdminService {
     // false — вебвью без нативной шапки (страница рисует свою)
     app_bar: boolean
     nav_items: AdminServiceNavItem[]
-    /** native-marketplace: slug корневой категории каталога, по которой живёт
-     *  экран (недвижимость → real_estate). Слаг сервиса и слаг категории — из
+    /** slug корневой категории каталога, которой бэк скоупит marketplace-API
+     *  по X-Service-Slug (недвижимость → real_estate, webview-авторынок →
+     *  auto). Не зависит от типа сервиса. Слаг сервиса и слаг категории — из
      *  разных пространств имён, поэтому связка явная. */
     marketplace_root: string | null
     enabled: boolean
@@ -77,7 +78,7 @@ export interface AdminServiceCreate {
     auth?: boolean
     app_bar?: boolean
     nav_items?: AdminServiceNavItem[]
-    /** native-marketplace: slug корневой категории каталога */
+    /** slug корневой категории каталога (native и webview) */
     marketplace_root?: string | null
     enabled?: boolean
     position?: number

@@ -15,10 +15,11 @@ import {
 import { useAdminMarketplaceRoots } from '@/hooks/queries/admin'
 import type { ServiceFormValues } from './schema'
 
-/** Нативный сервис маркетплейса: связка с корнем каталога. Слаг сервиса и
- *  слаг категории — из разных пространств имён, поэтому связка явная
- *  (apps/marketplace/deps.py читает её по заголовку X-Service-Slug). */
-export function NativeSection({
+/** Связка сервиса с корнем каталога маркетплейса — для native и webview
+ *  одинаково (недвижимость → real_estate, webview-авторынок → auto). Слаг
+ *  сервиса и слаг категории — из разных пространств имён, поэтому связка
+ *  явная (apps/marketplace/deps.py читает её по заголовку X-Service-Slug). */
+export function MarketplaceSection({
     form,
 }: {
     form: UseFormReturn<ServiceFormValues>
