@@ -12,6 +12,7 @@ export * from './notifications'
 export * from './promotions'
 export * from './app-services'
 export * from './service-groups'
+export * from './marketplace'
 export * from './analytics'
 export * from './rideshare-analytics'
 export * from './booking'
@@ -39,6 +40,7 @@ import { notificationsAdminApi } from './notifications'
 import { promotionsAdminApi } from './promotions'
 import { appServicesAdminApi } from './app-services'
 import { serviceGroupsAdminApi } from './service-groups'
+import { marketplaceAdminApi } from './marketplace'
 import { analyticsAdminApi } from './analytics'
 import { rideshareAnalyticsAdminApi } from './rideshare-analytics'
 import { bookingAdminApi } from './booking'
@@ -68,6 +70,7 @@ export const adminApi = {
     ...promotionsAdminApi,
     ...appServicesAdminApi,
     ...serviceGroupsAdminApi,
+    ...marketplaceAdminApi,
     ...analyticsAdminApi,
     ...rideshareAnalyticsAdminApi,
     ...bookingAdminApi,

@@ -30,6 +30,12 @@ import { LocalizedInputs } from './LocalizedInputs'
 
 const ADD_PLACEHOLDER = '__add__'
 
+/** Мультиязычные тексты равны, если совпали по всем заполненным локалям. */
+const sameText = (a: Record<string, string> = {}, b: Record<string, string> = {}) =>
+    [...new Set([...Object.keys(a), ...Object.keys(b)])].every(
+        (k) => (a[k] ?? '') === (b[k] ?? ''),
+    )
+
 /**
  * Карточка группы: заголовок, видимость, позиция секции и её состав.
  *
@@ -55,7 +61,17 @@ export function ServiceGroupCard({
 
     const bySlug = new Map(services.map((s) => [s.slug, s]))
     const title = (slug: string) => bySlug.get(slug)?.label?.ru ?? slug
-    const available = services.filter((s) => !group.services.includes(s.slug))
+    // Группа — секция «Главной»: дочерние сервисы и чипы ленты в неё не кладут.
+    const available = services.filter(
+        (s) => !s.parent_slug && !group.services.includes(s.slug),
+    )
+
+    // Видимость сохраняется сразу, а тексты и позиция — по кнопке: она и
+    // должна показывать, есть ли что сохранять.
+    const dirty =
+        !sameText(label, group.label ?? {}) ||
+        (icon.trim() || null) !== (group.icon ?? null) ||
+        position !== group.position
 
     const saveItems = (next: string[]) =>
         itemsMutation.mutate({ id: group.id, services: next })
@@ -158,7 +174,7 @@ export function ServiceGroupCard({
                 <Button
                     size="sm"
                     variant="secondary"
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || !dirty}
                     onClick={() =>
                         updateMutation.mutate({
                             id: group.id,
@@ -166,7 +182,7 @@ export function ServiceGroupCard({
                         })
                     }
                 >
-                    Сохранить группу
+                    {dirty ? 'Сохранить группу' : 'Сохранено'}
                 </Button>
 
                 <div className="space-y-2">

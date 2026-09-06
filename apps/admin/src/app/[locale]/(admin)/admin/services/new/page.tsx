@@ -1,22 +1,30 @@
 'use client'
 
-import { useAdminCreateService } from '@/hooks/mutations/admin'
+import { useState } from 'react'
 import { Button } from '@doska/ui'
-import { Link, useRouter } from '@doska/i18n'
+import { useRouter } from '@doska/i18n'
 import { ArrowLeft } from 'lucide-react'
-import { ServiceForm } from '@/components/admin/services/ServiceForm'
+import { useAdminCreateService } from '@/hooks/mutations/admin'
+import { ServiceForm } from '@/components/admin/services/form/ServiceForm'
+import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 export default function AdminServiceNewPage() {
     const createMutation = useAdminCreateService()
     const router = useRouter()
+    const confirm = useConfirm()
+    const [dirty, setDirty] = useState(false)
+
+    const goBack = async () => {
+        if (dirty && !(await confirm('Уйти без сохранения? Правки потеряются.')))
+            return
+        router.push('/admin/services')
+    }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-2">
-                <Button asChild variant="ghost" size="sm">
-                    <Link href="/admin/services">
-                        <ArrowLeft className="size-4 mr-1" /> Назад
-                    </Link>
+                <Button variant="ghost" size="sm" onClick={goBack}>
+                    <ArrowLeft className="size-4 mr-1" /> Назад
                 </Button>
                 <h1 className="text-2xl font-bold">Новый сервис</h1>
             </div>
@@ -24,6 +32,7 @@ export default function AdminServiceNewPage() {
             <ServiceForm
                 submitLabel="Создать"
                 submitting={createMutation.isPending}
+                onDirtyChange={setDirty}
                 onSubmit={(body) =>
                     createMutation.mutate(body, {
                         onSuccess: () => router.push('/admin/services'),

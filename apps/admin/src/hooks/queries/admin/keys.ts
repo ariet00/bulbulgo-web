@@ -48,6 +48,7 @@ export const adminKeys = {
     services: () => [...adminKeys.all, 'services'] as const,
     service: (id: number) => [...adminKeys.services(), id] as const,
     serviceGroups: () => [...adminKeys.services(), 'groups'] as const,
+    marketplaceCategories: () => [...adminKeys.all, 'marketplace', 'categories'] as const,
     appSettings: () => [...adminKeys.all, 'app-settings'] as const,
     regions: (q?: string, limit?: number) =>
         [...adminKeys.all, 'regions', q ?? null, limit ?? null] as const,
