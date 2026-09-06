@@ -5,7 +5,7 @@ import {
     markAsRead,
     markAllAsRead,
     pushPermissionLabel,
-    registerDeviceToken,
+    registerDevice,
 } from "../apis/notification";
 import { Notification } from "../types/notification";
 
@@ -56,7 +56,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     registerToken: async (token: string) => {
         try {
             // Разрешение едет вместе с токеном — одним запросом, как на мобилке.
-            await registerDeviceToken(token, "web", pushPermissionLabel());
+            await registerDevice("web", pushPermissionLabel(), token);
         } catch (error: any) {
             console.error("Failed to register device token", error);
         }

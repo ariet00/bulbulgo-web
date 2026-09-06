@@ -1,5 +1,5 @@
 import { requester } from '../lib/requester'
-import { Notification, DeviceToken } from '../types/notification'
+import { Notification } from '../types/notification'
 
 
 export const getNotifications = async (skip = 0, limit = 100): Promise<Notification[]> => {
@@ -42,34 +42,27 @@ export const pushPermissionLabel = (): string => {
   }
 }
 
-export const registerDeviceToken = async (
-  token: string,
-  deviceType: string,
-  pushPermission?: string,
-): Promise<DeviceToken> => {
-  const response = await requester.post('/notifications/device-token', {
-    token,
-    device_type: deviceType,
-    ...(pushPermission ? { push_permission: pushPermission } : {}),
-  })
-  return response.data
-}
-
 /**
- * Регистрация устройства БЕЗ push-токена.
+ * Регистрация устройства — с push-токеном или без него.
  *
  * Раньше веб-устройство появлялось в БД, только если пользователь разрешил
  * уведомления и Firebase выдал токен. Из-за этого веб-сессии не с чем было
  * связать: device_info и app_version теперь живут на устройстве, а не в сессии.
+ * Поэтому регистрируемся сразу, а токен доезжает этой же функцией, когда его
+ * выдаст Firebase.
  *
  * Upsert по X-Device-Id (его шлёт requester) — существующий токен не затирается.
+ * Отдельная ручка `/notifications/device-token` (токен обязателен) объявлена
+ * deprecated и ждёт ухода старых мобильных сборок — сюда её не тянем.
  */
 export const registerDevice = async (
   deviceType: string = 'web',
   pushPermission?: string,
+  token?: string,
 ): Promise<void> => {
   await requester.post('/notifications/device', {
     device_type: deviceType,
+    ...(token ? { token } : {}),
     ...(pushPermission ? { push_permission: pushPermission } : {}),
   })
 }

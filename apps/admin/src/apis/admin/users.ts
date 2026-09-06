@@ -10,6 +10,8 @@ export interface AdminDeviceToken {
     // null — устройство есть, а пуш-токена нет (пуш запрещён / нет Play Services)
     token: string | null
     push_permission?: string | null
+    // Ответ ОС на гео — тот же словарь статусов, что и у пуша
+    location_permission?: string | null
     // active | logged_out | banned
     status: string
     rooted?: boolean | null
@@ -29,6 +31,7 @@ export interface AdminDeviceListItem {
     app_version: string | null
     token: string | null
     push_permission: string | null
+    location_permission: string | null
     // active | logged_out | banned
     status: string
     rooted: boolean | null

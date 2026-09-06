@@ -163,6 +163,7 @@ export default function DevicesPage() {
                                         <TableHead>Устройство</TableHead>
                                         <TableHead>Версия</TableHead>
                                         <TableHead>Push</TableHead>
+                                        <TableHead>Гео</TableHead>
                                         <TableHead>Root</TableHead>
                                         <TableHead>Установщик</TableHead>
                                         <TableHead>Статус</TableHead>
@@ -217,6 +218,9 @@ export default function DevicesPage() {
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap text-sm">
                                                 {d.push_permission || (d.token ? 'есть токен' : '—')}
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap text-sm">
+                                                {d.location_permission || '—'}
                                             </TableCell>
                                             <TableCell>
                                                 {d.rooted == null ? (

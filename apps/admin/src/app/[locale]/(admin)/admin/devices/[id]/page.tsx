@@ -153,11 +153,14 @@ export default function DeviceDetailPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Push и безопасность</CardTitle>
+                        <CardTitle>Разрешения и безопасность</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <InfoRow label="Push permission">
                             {device.push_permission || '—'}
+                        </InfoRow>
+                        <InfoRow label="Location permission">
+                            {device.location_permission || '—'}
                         </InfoRow>
                         <InfoRow label="FCM токен">
                             {device.token ? (
