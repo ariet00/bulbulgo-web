@@ -3,8 +3,10 @@
 import { Button, Skeleton } from '@doska/ui'
 import {
   THREADS_GEN_MODE_LABELS,
+  THREADS_PERSONA_KIND_LABELS,
   useThreadsGenerationPreview,
   type ThreadsGenMode,
+  type ThreadsPersonaKind,
 } from '@doska/shared'
 import { AlertCircle, RefreshCcw } from 'lucide-react'
 
@@ -40,6 +42,7 @@ export function PromptPreview({ accountId }: { accountId: number }) {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
+            От имени: {THREADS_PERSONA_KIND_LABELS[data.persona_kind as ThreadsPersonaKind] ?? data.persona_kind}.
             Модель {data.model}, режим «{THREADS_GEN_MODE_LABELS[data.mode as ThreadsGenMode] ?? data.mode}»,
             постов за запуск: {data.num_posts}, собранных трендов: {data.trends_count}.
           </p>

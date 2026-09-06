@@ -347,6 +347,15 @@ export interface ThreadsTrendsQuery {
 
 // ───── AI draft generator (lab pipeline) ───────────────────────────────────
 
+// Mirrors backend apps/threeds/service/prompt_builder.py:PERSONA_KINDS — whose
+// voice the generator writes in: a real person, or a company page run SMM-style.
+export const THREADS_PERSONA_KINDS = ['person', 'brand'] as const
+export type ThreadsPersonaKind = (typeof THREADS_PERSONA_KINDS)[number]
+export const THREADS_PERSONA_KIND_LABELS: Record<ThreadsPersonaKind, string> = {
+  person: 'Человек',
+  brand: 'Компания',
+}
+
 // Mirrors backend apps/threeds/service/prompt_builder.py:GEN_MODES.
 export const THREADS_GEN_MODES = ['both', 'recs_only', 'persona_only'] as const
 export type ThreadsGenMode = (typeof THREADS_GEN_MODES)[number]
@@ -369,6 +378,8 @@ export interface ThreadsGenerationPreview {
   modes: string[]
   num_posts: number
   trends_count: number
+  persona_kind: string
+  persona_kinds: string[]
 }
 
 export const getThreadsGenerationPreview = async (

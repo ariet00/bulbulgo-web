@@ -24,18 +24,24 @@ import {
   THREADS_COLLECTOR_SEARCH_TYPES,
   THREADS_GEN_MODE_LABELS,
   THREADS_GEN_MODES,
+  THREADS_PERSONA_KIND_LABELS,
+  THREADS_PERSONA_KINDS,
   THREADS_SEARCH_DAILY_QUERY_LIMIT,
   THREADS_SEARCH_MAX_LIMIT,
   threadsCollectorKeywords,
   useInvalidateThreadsGenerationPreview,
   useUpdateContentAccount,
   type ContentAccount,
+  type ThreadsPersonaKind,
 } from '@doska/shared'
 import { Loader2, Save } from 'lucide-react'
 
+import { Segmented } from '../Segmented'
 import {
   GENERATION_TEMPLATE_PLACEHOLDERS,
-  PERSONA_FIELDS,
+  PERSONA_FIELD_KEYS,
+  PERSONA_FIELDS_BY_KIND,
+  PERSONA_KIND_HINTS,
   PERSONA_TEMPLATE_PLACEHOLDERS,
 } from './personaFields'
 import { KeywordsInput } from './KeywordsInput'
@@ -46,9 +52,14 @@ type Form = Record<string, FormValue>
 
 const NUMERIC_KEYS = ['persona_age', 'gen_num_posts', 'collector_limit', 'collector_window_hours'] as const
 
+const isPersonaKind = (v: unknown): v is ThreadsPersonaKind =>
+  (THREADS_PERSONA_KINDS as readonly string[]).includes(String(v))
+
 function initialForm(data: Record<string, any>): Form {
   const form: Form = {}
-  for (const f of PERSONA_FIELDS) form[f.key] = data[f.key] ?? ''
+  // Accounts set up before the switch existed have no persona_kind: they are people.
+  form.persona_kind = isPersonaKind(data.persona_kind) ? data.persona_kind : THREADS_PERSONA_KINDS[0]
+  for (const key of PERSONA_FIELD_KEYS) form[key] = data[key] ?? ''
   form.gen_num_posts = data.gen_num_posts ?? 1
   form.gen_mode = data.gen_mode || THREADS_GEN_MODES[0]
   form.ai_model = data.ai_model || THREADS_AI_MODELS[0]
@@ -89,9 +100,11 @@ export function PersonaSettingsTab({ account }: { account: ContentAccount }) {
   const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialForm(account.data || {})))
   const dirty = JSON.stringify(form) !== savedSnapshot
 
+  const kind: ThreadsPersonaKind = isPersonaKind(form.persona_kind) ? form.persona_kind : THREADS_PERSONA_KINDS[0]
+  const fields = PERSONA_FIELDS_BY_KIND[kind]
   const missing = useMemo(
-    () => PERSONA_FIELDS.filter((f) => f.required && !String(form[f.key] ?? '').trim()),
-    [form],
+    () => fields.filter((f) => f.required && !String(form[f.key] ?? '').trim()),
+    [fields, form],
   )
 
   const set = (key: string, value: FormValue) => setForm((f) => ({ ...f, [key]: value }))
@@ -110,14 +123,21 @@ export function PersonaSettingsTab({ account }: { account: ContentAccount }) {
       <div className="space-y-6">
         {/* Persona */}
         <section className="space-y-4 rounded-xl border bg-card p-5">
-          <div>
-            <h3 className="font-medium">Персона</h3>
-            <p className="text-sm text-muted-foreground">
-              От чьего имени пишет модель. Поля со звёздочкой обязательны: без них генерация не запустится.
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-medium">Персона</h3>
+              <p className="text-sm text-muted-foreground">{PERSONA_KIND_HINTS[kind]}</p>
+            </div>
+            <Segmented
+              options={THREADS_PERSONA_KINDS}
+              labels={THREADS_PERSONA_KIND_LABELS}
+              value={kind}
+              onChange={(v) => set('persona_kind', v)}
+              label="От чьего имени пишет модель"
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {PERSONA_FIELDS.map((f) => {
+            {fields.map((f) => {
               const id = `persona-${f.key}`
               const value = String(form[f.key] ?? '')
               const empty = f.required && !value.trim()
@@ -218,7 +238,11 @@ export function PersonaSettingsTab({ account }: { account: ContentAccount }) {
                   rows={5}
                   value={String(form.ai_persona_template ?? '')}
                   onChange={(e) => set('ai_persona_template', e.target.value)}
-                  placeholder="Ты — {role}. {context}. Пиши на {languages}, тон: {tone}."
+                  placeholder={
+                    kind === 'brand'
+                      ? 'Ты ведёшь страницу {brand}. {context}. Пиши на {languages}, тон: {tone}.'
+                      : 'Ты — {role}. {context}. Пиши на {languages}, тон: {tone}.'
+                  }
                   className="font-mono text-xs"
                 />
                 <p className="text-xs text-muted-foreground">
