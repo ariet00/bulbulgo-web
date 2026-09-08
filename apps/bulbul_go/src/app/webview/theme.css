@@ -17,7 +17,7 @@
 :root {
     /* Тёмная гамма объявлена один раз: её применяют оба блока ниже —
        анти-FOUC медиазапрос и класс .dark. */
-    --wv-dark-surface: #0b0d0e; /* surface — фон экрана */
+    --wv-dark-surface: #0a0a0b; /* surface — фон экрана */
     /* surfaceContainerLow — карточки, шиты, бары */
     --wv-dark-container: #161618;
     /* surfaceContainerHigh — чипы и прочие вложенные заливки */
@@ -31,7 +31,7 @@
     --wv-dark-error: #d84646;
 
     /* Светлая гамма — сразу в токенах, второго потребителя у неё нет. */
-    --background: #f5f6f8;
+    --background: #f0f1f3;
     --foreground: #1a1a1a;
     --card: #ffffff;
     --card-foreground: #1a1a1a;
