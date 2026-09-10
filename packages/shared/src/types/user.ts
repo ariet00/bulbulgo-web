@@ -3,9 +3,8 @@ export interface User {
     email: string;
     username: string;
     phone?: string;
-    // active | banned — источник истины; is_active — легаси-зеркало
+    // active | banned — источник истины про бан
     status?: string;
-    is_active: boolean;
     avatar?: string;
     created_at?: string;
     role_slug?: string;
