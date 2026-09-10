@@ -36,6 +36,8 @@ export interface ScheduledContent {
   text?: string | null
   media?: ScheduledMedia[]
   platform_options?: Record<string, Record<string, unknown>>
+  // Second post published as a reply to the first (two-message thread).
+  continuation?: { text: string } | null
 }
 
 export interface ScheduledPostAccount {
