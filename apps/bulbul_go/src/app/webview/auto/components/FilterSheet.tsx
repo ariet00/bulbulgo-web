@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { RegionItem } from '../lib/api'
 import type { EffectiveAttribute, ListingFilters } from '../lib/types'
+import { draftToFilters, emptyDraft, type FilterDraft } from '../lib/filters'
 import { pickLabel } from '../lib/format'
 import { BottomSheet } from '../../components/BottomSheet'
 import { RegionField } from './wizard/fields'
@@ -12,50 +12,9 @@ import { RegionField } from './wizard/fields'
 // Строится по метаданным каталога (is_filterable), «Показать N» — живой
 // счётчик по текущему черновику фильтров.
 
-/** Черновик значений: enum → массив, bool → true, int/decimal → {min,max}. */
-export type FilterDraft = {
-    priceMin?: number
-    priceMax?: number
-    priceCurrency: 'USD' | 'KGS'
-    region?: RegionItem
-    enums: Record<string, string[]>
-    bools: Record<string, boolean>
-    ranges: Record<string, { min?: number; max?: number }>
-}
-
-export function emptyDraft(): FilterDraft {
-    return { priceCurrency: 'USD', enums: {}, bools: {}, ranges: {} }
-}
-
-export function draftToFilters(
-    draft: FilterDraft,
-    kind: ListingFilters['kind'],
-    makeModel: { make?: string; models?: string[] },
-): ListingFilters {
-    const eq: Record<string, string | number | boolean> = {}
-    const anyOf: Record<string, string[]> = {}
-    if (makeModel.make) eq.make = makeModel.make
-    if (makeModel.models?.length) anyOf.model = makeModel.models
-    for (const [k, v] of Object.entries(draft.bools)) if (v) eq[k] = true
-    for (const [k, vals] of Object.entries(draft.enums)) {
-        if (vals.length === 1) eq[k] = vals[0]
-        else if (vals.length > 1) anyOf[k] = vals
-    }
-    const ranges: ListingFilters['ranges'] = {}
-    for (const [k, r] of Object.entries(draft.ranges)) {
-        if (r.min !== undefined || r.max !== undefined) ranges[k] = r
-    }
-    return {
-        kind,
-        eq,
-        anyOf,
-        ranges,
-        priceMin: draft.priceMin,
-        priceMax: draft.priceMax,
-        priceCurrency: draft.priceCurrency,
-        regionId: draft.region?.id,
-    }
-}
+// Черновик и конвертация живут в lib/filters.ts (без 'use client' — их
+// читает серверный префетч); здесь реэкспорт для прежних импортов.
+export { draftToFilters, emptyDraft, type FilterDraft }
 
 export function countActiveFilters(draft: FilterDraft): number {
     let n = 0

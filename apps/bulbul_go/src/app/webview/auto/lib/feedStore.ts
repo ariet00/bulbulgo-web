@@ -1,7 +1,12 @@
 'use client'
 
 import { create } from 'zustand'
-import { emptyDraft, type FilterDraft } from '../components/FilterSheet'
+import {
+    DEFAULT_FEED_KIND,
+    DEFAULT_FEED_SORT,
+    emptyDraft,
+    type FilterDraft,
+} from './filters'
 import type { ListingFilters, ListingKind } from './types'
 
 // Глобальный (на сессию вебвью) стор фильтров ленты. Зачем стор, а не useState
@@ -32,11 +37,11 @@ interface FeedState {
 
 export const useFeedStore = create<FeedState>((set) => ({
     tabId: null,
-    kind: 'offer',
+    kind: DEFAULT_FEED_KIND,
     make: undefined,
     models: [],
     draft: emptyDraft(),
-    sort: 'fresh',
+    sort: DEFAULT_FEED_SORT,
 
     setKind: (kind) => set({ kind }),
     setMake: (make) => set({ make }),

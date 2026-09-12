@@ -23,25 +23,14 @@ import {
     fetchRates,
     fetchSimilar,
 } from './api'
+import { PAGE, qk } from './queryKeys'
 import type { Listing, ListingFilters, ListingPage } from './types'
 
-const HOUR = 3_600_000
-export const PAGE = 20
+// Ключи и размер страницы живут в queryKeys.ts (без 'use client' — их читает
+// и серверный префетч page.tsx); здесь реэкспорт для прежних импортов.
+export { PAGE, qk }
 
-export const qk = {
-    catalog: ['am', 'catalog'] as const,
-    attrs: (categoryId: number, side?: string) =>
-        ['am', 'attrs', categoryId, side ?? 'all'] as const,
-    models: (brand: string) => ['am', 'models', brand] as const,
-    rates: ['am', 'rates'] as const,
-    currencies: ['am', 'currencies'] as const,
-    listings: (categoryId: number, filters: ListingFilters) =>
-        ['am', 'listings', categoryId, filters] as const,
-    listing: (id: number) => ['am', 'listing', id] as const,
-    related: (id: number, kind: string) => ['am', 'related', id, kind] as const,
-    mine: (status: string) => ['am', 'mine', status] as const,
-    favorites: ['am', 'favorites'] as const,
-}
+const HOUR = 3_600_000
 
 // ── справочники ──
 

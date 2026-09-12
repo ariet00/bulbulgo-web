@@ -13,6 +13,23 @@ const nextConfig: NextConfig = {
   // (манифест Android + AASA ловят только их). В браузере (нет приложения /
   // десктоп) разворачиваем на обычную страницу сайта: /service/auto/133 →
   // /auto/133 (share-страница с OG; Telegram/WhatsApp следуют редиректу).
+  // HTML вебвью-страниц можно держать в кэше WebView минуту и отдавать
+  // устаревший ещё 10 минут, пока свежий едет фоном: повторное открытие
+  // сервиса из приложения не ждёт ревалидацию на Vercel. Персональных данных
+  // в HTML нет (они приходят после гидрации по токену), JS/CSS и так immutable.
+  async headers() {
+    return [
+      {
+        source: '/webview/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, stale-while-revalidate=600',
+          },
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [
       { source: '/service/:path*', destination: '/:path*', permanent: false },
