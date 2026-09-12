@@ -25,6 +25,7 @@ import {
     type FilterDraft,
 } from './FilterSheet'
 import { Icon } from '../../components/icons'
+import { useReportReady } from '../../useReportReady'
 
 // Экран ленты авторынка: сегмент Продажа|Куплю, чипсы Марка/Модель/Фильтры,
 // бесконечная лента карточек. Данные — React Query: справочники из общего
@@ -191,6 +192,11 @@ export function MarketClient() {
     // ждём и каталог, и ленту — иначе между ними мелькает «нет объявлений»
     const loading = catalogQ.isLoading || activeTab === null || feedQ.isLoading
     const feedError = feedQ.isError
+    // Метрика webview_ready: первый экран готов (лента/пусто/ошибка вместо
+    // скелетона). Данные на самом первом рендере = гидрация с сервера —
+    // клиентский запрос синхронно завершиться не может.
+    const ssrRef = useRef(feedQ.data !== undefined)
+    useReportReady(!loading || catalogError, ssrRef.current)
 
     // бесконечная прокрутка
     const sentinel = useRef<HTMLDivElement>(null)

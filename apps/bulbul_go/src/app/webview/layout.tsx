@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import '../globals.css'
 import './theme.css'
 import { AuthWarmup } from './AuthWarmup'
@@ -78,6 +79,12 @@ export default function WebviewLayout({
                 <WebviewErrorBoundary>
                     <QueryProvider>{children}</QueryProvider>
                 </WebviewErrorBoundary>
+                {/* Web Vitals (LCP/INP/CLS/TTFB) с реальных открытий вебвью —
+                    дашборд Speed Insights проекта на Vercel, по маршрутам.
+                    Дополняет нашу webview_ready: та знает про SSR и прогрев,
+                    эта — стандартные метрики с процентилями. Только здесь, не
+                    на сайте: интересует именно вебвью. */}
+                <SpeedInsights />
             </body>
         </html>
     )
