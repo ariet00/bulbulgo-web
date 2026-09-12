@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/apis/admin'
+import type { SubscriptionStatus } from '@/apis/admin'
 import { adminKeys } from './keys'
 
 export const useAdminTrips = (
@@ -68,8 +69,7 @@ export const useAdminTripSubscriptions = (
         trip_type?: string
         search_role?: string
         user_id?: number
-        is_active?: boolean
-        include_deleted?: boolean
+        status?: SubscriptionStatus
     },
 ) => {
     return useQuery({
@@ -82,8 +82,7 @@ export const useAdminTripSubscriptions = (
                 trip_type: filters?.trip_type ?? null,
                 search_role: filters?.search_role ?? null,
                 user_id: filters?.user_id ?? null,
-                is_active: filters?.is_active ?? null,
-                include_deleted: filters?.include_deleted ?? null,
+                status: filters?.status ?? null,
             },
         ],
         queryFn: () => adminApi.getTripSubscriptions(page, size, filters),

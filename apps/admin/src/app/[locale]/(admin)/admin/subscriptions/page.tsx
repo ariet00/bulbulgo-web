@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAdminTripSubscriptions } from '@/hooks/queries/admin'
 import {
-    useAdminSetTripSubscriptionActive,
+    useAdminSetTripSubscriptionStatus,
     useAdminDeleteTripSubscription,
 } from '@/hooks/mutations/admin'
 import { useDebounce } from '@doska/shared'
@@ -33,7 +33,12 @@ import { Trash2, MapPin, User, Phone, X, RefreshCw, ArrowRight, Banknote, Settin
 import { Link } from '@doska/i18n'
 import { format } from 'date-fns'
 import { UserCombobox } from '@/components/admin/selectors/UserCombobox'
-import type { AdminTripSubscription } from '@/apis/admin'
+import {
+    SUBSCRIPTION_STATUSES,
+    SUBSCRIPTION_STATUS_LABELS,
+    type AdminTripSubscription,
+    type SubscriptionStatus,
+} from '@/apis/admin'
 import { useConfirm } from '@/components/admin/ConfirmProvider'
 
 const ALL = '__all__'
@@ -46,9 +51,8 @@ const FILTER_DEFAULTS = {
     q: '',
     trip_type: ALL,
     search_role: ALL,
-    is_active: ALL,
+    status: ALL,
     user_id: 0,
-    include_deleted: 0,
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -57,15 +61,22 @@ const ROLE_LABELS: Record<string, string> = {
     parcel: 'ищет посылку',
 }
 
+const STATUS_CLS: Record<SubscriptionStatus, string> = {
+    active: 'bg-green-100 text-green-800',
+    paused: 'bg-yellow-100 text-yellow-800',
+    expired: 'bg-red-100 text-red-800',
+    deleted: 'bg-gray-200 text-gray-600',
+}
+
 type SubStatus = { label: string; cls: string }
 
 function subStatus(s: AdminTripSubscription): SubStatus {
-    if (s.is_deleted) return { label: 'удалена', cls: 'bg-gray-200 text-gray-600' }
-    if (!s.is_active) return { label: 'выключена', cls: 'bg-yellow-100 text-yellow-800' }
-    if (s.expire_at && new Date(s.expire_at).getTime() < Date.now())
-        return { label: 'истекла', cls: 'bg-red-100 text-red-800' }
-    return { label: 'активна', cls: 'bg-green-100 text-green-800' }
+    return { label: SUBSCRIPTION_STATUS_LABELS[s.status], cls: STATUS_CLS[s.status] }
 }
+
+// Тумблер «включить/выключить» доступен только живым подпискам; истёкшую
+// включать бессмысленно без нового срока, а его пользователь задаёт в приложении.
+const canToggle = (s: AdminTripSubscription) => s.status === 'active' || s.status === 'paused'
 
 export default function AdminSubscriptionsPage() {
     const { values, setValues, reset } = useFilterParams(FILTER_DEFAULTS)
@@ -84,13 +95,11 @@ export default function AdminSubscriptionsPage() {
             trip_type: values.trip_type === ALL ? undefined : values.trip_type,
             search_role: values.search_role === ALL ? undefined : values.search_role,
             user_id: values.user_id || undefined,
-            is_active:
-                values.is_active === ALL ? undefined : values.is_active === 'true',
-            include_deleted: values.include_deleted ? true : undefined,
+            status: values.status === ALL ? undefined : (values.status as SubscriptionStatus),
         },
     )
 
-    const setActive = useAdminSetTripSubscriptionActive()
+    const setStatus = useAdminSetTripSubscriptionStatus()
     const deleteSub = useAdminDeleteTripSubscription()
     const confirm = useConfirm()
 
@@ -107,9 +116,8 @@ export default function AdminSubscriptionsPage() {
         !!values.q ||
         values.trip_type !== ALL ||
         values.search_role !== ALL ||
-        values.is_active !== ALL ||
-        !!values.user_id ||
-        !!values.include_deleted
+        values.status !== ALL ||
+        !!values.user_id
 
     return (
         <div className="space-y-6">
@@ -184,25 +192,21 @@ export default function AdminSubscriptionsPage() {
                             </SelectContent>
                         </Select>
                         <Select
-                            value={values.is_active}
-                            onValueChange={(v) => setValues({ is_active: v })}
+                            value={values.status}
+                            onValueChange={(v) => setValues({ status: v })}
                         >
                             <SelectTrigger className="w-full sm:w-40">
-                                <SelectValue placeholder="Активность" />
+                                <SelectValue placeholder="Статус" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={ALL}>Все</SelectItem>
-                                <SelectItem value="true">Включена</SelectItem>
-                                <SelectItem value="false">Выключена</SelectItem>
+                                <SelectItem value={ALL}>Все, кроме удалённых</SelectItem>
+                                {SUBSCRIPTION_STATUSES.map((st) => (
+                                    <SelectItem key={st} value={st}>
+                                        {SUBSCRIPTION_STATUS_LABELS[st]}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
-                        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Switch
-                                checked={!!values.include_deleted}
-                                onCheckedChange={(c) => setValues({ include_deleted: c ? 1 : 0 })}
-                            />
-                            Показывать удалённые
-                        </label>
                         {hasActiveFilters && (
                             <Button variant="ghost" size="sm" onClick={resetFilters}>
                                 <X className="h-4 w-4 mr-1" />
@@ -239,7 +243,7 @@ export default function AdminSubscriptionsPage() {
                                     {data?.items.map((s) => {
                                         const st = subStatus(s)
                                         return (
-                                            <TableRow key={s.id} className={s.is_deleted ? 'opacity-60' : ''}>
+                                            <TableRow key={s.id} className={s.status === 'deleted' ? 'opacity-60' : ''}>
                                                 <TableCell className="tabular-nums">{s.id}</TableCell>
                                                 <TableCell>
                                                     <Link
@@ -305,21 +309,24 @@ export default function AdminSubscriptionsPage() {
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center justify-end gap-3">
-                                                        {!s.is_deleted && (
+                                                        {canToggle(s) && (
                                                             <Switch
-                                                                checked={s.is_active}
-                                                                disabled={setActive.isPending}
+                                                                checked={s.status === 'active'}
+                                                                disabled={setStatus.isPending}
                                                                 onCheckedChange={(c) =>
-                                                                    setActive.mutate({ id: s.id, isActive: c })
+                                                                    setStatus.mutate({
+                                                                        id: s.id,
+                                                                        status: c ? 'active' : 'paused',
+                                                                    })
                                                                 }
-                                                                title={s.is_active ? 'Выключить' : 'Включить'}
+                                                                title={s.status === 'active' ? 'Выключить' : 'Включить'}
                                                             />
                                                         )}
                                                         <Button
                                                             variant="destructive"
                                                             size="sm"
                                                             onClick={() => handleDelete(s.id)}
-                                                            disabled={deleteSub.isPending || s.is_deleted}
+                                                            disabled={deleteSub.isPending || s.status === 'deleted'}
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
@@ -343,7 +350,7 @@ export default function AdminSubscriptionsPage() {
                                 return (
                                     <div
                                         key={s.id}
-                                        className={`rounded-lg border p-3 ${s.is_deleted ? 'opacity-60' : ''}`}
+                                        className={`rounded-lg border p-3 ${s.status === 'deleted' ? 'opacity-60' : ''}`}
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <Link
@@ -387,21 +394,24 @@ export default function AdminSubscriptionsPage() {
                                                 {st.label}
                                             </span>
                                             <div className="flex items-center gap-3">
-                                                {!s.is_deleted && (
+                                                {canToggle(s) && (
                                                     <Switch
-                                                        checked={s.is_active}
-                                                        disabled={setActive.isPending}
+                                                        checked={s.status === 'active'}
+                                                        disabled={setStatus.isPending}
                                                         onCheckedChange={(c) =>
-                                                            setActive.mutate({ id: s.id, isActive: c })
+                                                            setStatus.mutate({
+                                                                id: s.id,
+                                                                status: c ? 'active' : 'paused',
+                                                            })
                                                         }
-                                                        title={s.is_active ? 'Выключить' : 'Включить'}
+                                                        title={s.status === 'active' ? 'Выключить' : 'Включить'}
                                                     />
                                                 )}
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
                                                     onClick={() => handleDelete(s.id)}
-                                                    disabled={deleteSub.isPending || s.is_deleted}
+                                                    disabled={deleteSub.isPending || s.status === 'deleted'}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>

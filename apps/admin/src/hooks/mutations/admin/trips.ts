@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/apis/admin'
+import type { SubscriptionStatus } from '@/apis/admin'
 import { adminKeys } from '@/hooks/queries/admin'
 import { toast } from 'sonner'
 
@@ -88,11 +89,11 @@ export const useAdminUnblockAuthor = () => {
     })
 }
 
-export const useAdminSetTripSubscriptionActive = () => {
+export const useAdminSetTripSubscriptionStatus = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-            adminApi.setTripSubscriptionActive(id, isActive),
+        mutationFn: ({ id, status }: { id: number; status: SubscriptionStatus }) =>
+            adminApi.setTripSubscriptionStatus(id, status),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: adminKeys.subscriptions() })
             toast.success('Подписка обновлена')

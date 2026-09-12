@@ -41,6 +41,17 @@ export interface BlockedAuthor {
     blocked_at: string | null
 }
 
+// Бэкенд-зеркало: SUBSCRIPTION_STATUSES в backend/apps/bulbulgo/shared/models/subscription.py
+export const SUBSCRIPTION_STATUSES = ['active', 'paused', 'expired', 'deleted'] as const
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number]
+
+export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
+    active: 'активна',
+    paused: 'выключена',
+    expired: 'истекла',
+    deleted: 'удалена',
+}
+
 export interface AdminTripSubscription {
     id: number
     user_id: number
@@ -54,8 +65,7 @@ export interface AdminTripSubscription {
     trip_type: string | null
     search_role: string
     max_price: number | null
-    is_active: boolean
-    is_deleted: boolean
+    status: SubscriptionStatus
     expire_at: string | null
     created_at: string
 }
@@ -167,8 +177,7 @@ export const tripsAdminApi = {
             trip_type?: string
             search_role?: string
             user_id?: number
-            is_active?: boolean
-            include_deleted?: boolean
+            status?: SubscriptionStatus
         },
     ) => {
         const params = new URLSearchParams({ page: String(page), size: String(size) })
@@ -176,15 +185,14 @@ export const tripsAdminApi = {
         if (filters?.trip_type) params.set('trip_type', filters.trip_type)
         if (filters?.search_role) params.set('search_role', filters.search_role)
         if (filters?.user_id) params.set('user_id', String(filters.user_id))
-        if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
-        if (filters?.include_deleted) params.set('include_deleted', 'true')
+        if (filters?.status) params.set('status', filters.status)
         return requests.get<Page<AdminTripSubscription>>(
             `/admin/rideshare/subscriptions/?${params.toString()}`,
         )
     },
-    setTripSubscriptionActive: (id: number, isActive: boolean) =>
+    setTripSubscriptionStatus: (id: number, status: SubscriptionStatus) =>
         requests.patch<AdminTripSubscription>(`/admin/rideshare/subscriptions/${id}`, {
-            is_active: isActive,
+            status,
         }),
     deleteTripSubscription: (id: number) =>
         requests.delete<any>(`/admin/rideshare/subscriptions/${id}`),
